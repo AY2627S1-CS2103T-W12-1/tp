@@ -1,17 +1,21 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.EMAIL_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_REMARK;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
+import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,6 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
@@ -68,6 +73,28 @@ public class LogicManagerTest {
     public void execute_validCommand_success() throws Exception {
         String listCommand = ListCommand.COMMAND_WORD;
         assertCommandSuccess(listCommand, ListCommand.MESSAGE_SUCCESS, model);
+    }
+
+    @Test
+    public void execute_remarkCommand_savesAndReloadsRemark() throws Exception {
+        Path addressBookPath = temporaryFolder.resolve("remarkAddressBook.json");
+        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(addressBookPath);
+        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("remarkPrefs.json"));
+        StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
+        Model modelWithPersons = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Logic logicWithStorage = new LogicManager(modelWithPersons, storage);
+        String remark = "Likes baseball";
+
+        logicWithStorage.execute(RemarkCommand.COMMAND_WORD + " 1 " + PREFIX_REMARK + remark);
+
+        assertTrue(Files.exists(addressBookPath));
+        ReadOnlyAddressBook reloadedAddressBook = addressBookStorage.readAddressBook().orElseThrow();
+        assertEquals(remark, reloadedAddressBook.getPersonList().get(0).getRemark().value);
+
+        logicWithStorage.execute(RemarkCommand.COMMAND_WORD + " 1 " + PREFIX_REMARK);
+
+        reloadedAddressBook = addressBookStorage.readAddressBook().orElseThrow();
+        assertEquals("", reloadedAddressBook.getPersonList().get(0).getRemark().value);
     }
 
     @Test
