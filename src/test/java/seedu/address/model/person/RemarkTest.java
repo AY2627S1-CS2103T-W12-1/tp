@@ -23,4 +23,9 @@ public class RemarkTest {
     public void toStringMethod() {
         assertEquals("Hello", new Remark("Hello").toString());
     }
+
+    @Test
+    public void hashCode_sameRemark_sameHashCode() {
+        assertEquals(new Remark("Hello").hashCode(), new Remark("Hello").hashCode());
+    }
 }
