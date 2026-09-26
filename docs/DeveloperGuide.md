@@ -241,7 +241,7 @@ _{more aspects and alternatives to be added}_
 
 ### Automatic data saving
 
-#### Implementation
+#### Current AB3 implementation
 
 Automatic data saving is handled by `LogicManager#execute(String)`. After a command is parsed and executed
 successfully, `LogicManager` passes the complete address book from `Model#getAddressBook()` to
@@ -265,6 +265,10 @@ the file cannot be read, TrackCall starts with an empty address book. Startup do
 address book.
 
 #### Proposed handling for planned commands
+
+The [shared behaviour rules](#shared-behaviour-rules) below describe the intended saving policy,
+including read-only commands and the special rollback required for `clear`. These differ from the
+current starter implementation.
 
 When `tagall` and `untagall` are implemented, each valid operation will trigger automatic saving, including a
 valid operation that makes no changes. The proposed `filter` command will not save because it changes only the
@@ -312,326 +316,436 @@ _{Explain here how the data archiving feature will be implemented}_
 
 ## **Appendix: Requirements**
 
-These are the planned requirements for TrackCall. They describe the intended product,
-not a claim that every feature is already implemented. The starting code still uses AB3 behaviour.
+These requirements describe the intended TrackCall product. They are not a claim that every
+feature works in v1.1, which still uses the AB3 starter behaviour.
+
+The requirements are based on the team's [planning workbook][planning-workbook] (the **Narrative**
+and **User Stories** tabs) and [MVP feature specification][feature-specification], reviewed on
+27 September 2026. The narrative records a wider product vision. The feature specification
+defines the selected MVP. Ideas outside that MVP are retained below rather than presented as
+implemented features or promised releases.
+
+[planning-workbook]: https://docs.google.com/spreadsheets/d/1yUrRwuZCovk-RjYpmL3fycJ850GcwzuLhNevJNQymYk/edit?gid=703584466
+[feature-specification]: https://docs.google.com/document/d/1bjGzN0JqTA53ARoBUS9S9BcrwjB0BaFffD3k8ise17M/edit?tab=t.9anhuzxluv4w
 
 ### Product scope
 
-**Target user profile**:
+**Target user profile**
 
-* A membership secretary who maintains an organisation's roster of up to 500 members.
-* Keeps member names, phone numbers, email addresses, and addresses up to date.
-* Organises members by groups, such as committee, year group, or alumni.
-* Is comfortable typing short commands and prefers a desktop app.
-* Needs to update a whole group without editing each member separately.
+* A club or small organisation's membership secretary who maintains its member roster.
+* Works with names, phone numbers, email addresses, addresses, and overlapping groups such as
+  committee, cohort, and alumni.
+* Can type quickly and prefers short keyboard commands to repeated form filling or mouse actions.
+* Regularly adds new members, corrects contact details, looks up members, and updates group tags.
+* Starts by trying sample records and checking results, then learns frequently used commands.
+* Uses the app on their own computer as a single operator. Shared accounts, concurrent editing,
+  and routine shared-file access by several users are outside the product scope.
+* Needs a small local roster. The performance target is 500 members; this is not a limit that
+  rejects a 501st record.
 
-**Value proposition**: Keep member records accurate and organised using short typed commands.
-Search and filter the roster, then add or remove a group tag for everyone shown in one step.
+**Value proposition**
 
-**MVP scope**: Manage contact records, search names, filter by tags, edit tags in bulk,
-show command help, save data locally, and close the app. A member has a name, phone number,
-email address, address, and zero or more tags. Group membership is represented by tags.
-TrackCall does not make calls, send messages, track payments, or automatically renew memberships.
-Sharing or exporting a roster is not part of the specified MVP.
+TrackCall helps a membership secretary keep a club roster accurate and organise overlapping
+groups using short typed commands. The secretary can find members, narrow the displayed group
+by tag, and add or remove a tag for that whole group in one operation. This reduces repetitive
+record-by-record work while keeping unrelated tags and hidden members unchanged. Records are
+stored locally and valid changes are saved automatically, so the core workflow does not need
+an internet connection or a separate save command.
+
+**Selected MVP**
+
+The MVP covers `help`, `add`, `list`, `edit`, `find`, `delete`, `clear`, `exit`, `filter`,
+`tagall`, `untagall`, automatic saving, and manual editing of the local data file. Each member
+has a name, phone number, email address, address, and zero or more tags.
+
+The broader narrative must be read with these MVP decisions:
+
+* Groups are tag assignments, not separate group objects. A label such as "Batch 2026" must be
+  represented by a valid tag such as `Batch2026`; spaces are not allowed inside tags.
+* Bulk selection means everyone in the displayed list after searching or filtering. There is
+  no arbitrary multi-selection or direct edit/delete-by-name command. Individual edits and
+  deletions use the current displayed index, which the secretary must check first.
+* `find` matches complete name words. Substring and phone-number search are considered ideas,
+  not current MVP search behaviour.
+* Import/export, sorting, archiving, global tag renaming, bulk editing of non-tag fields, and
+  an in-app handover/access feature are outside the selected MVP. Grade and class are not
+  dedicated member fields; a cohort can be represented by a tag.
+* Deletion is immediate and has no confirmation or undo. Archiving with retained history is
+  different from deleting a record.
+* TrackCall does not make calls, send messages, track payments, or renew memberships automatically.
 
 ### User stories
 
-Priorities: `* * *` = required for the MVP; `* *` = useful later; `*` = low priority.
-The last three stories record longer-term possibilities. They are outside the MVP and are not release promises.
+Priorities describe importance to the target user: `***` = essential, `**` = useful,
+`*` = convenience. Priority is separate from implementation status. **MVP** means selected for
+the intended core product, not already implemented in v1.1. **Considered** means recorded for
+future decisions, with no delivery commitment.
+
+The tables cover all 32 source stories. Overlapping stories are consolidated: spreadsheet rows
+9 and 14 share US09; rows 22 and 23 share US17, with class-based sorting recorded in US33;
+row 28 is covered by the reviewed group-removal workflow in US10. Row 24 is split between
+complete-word lookup (US05) and substring lookup (US26). Existing story IDs are retained.
+
+#### Stories selected for the MVP
 
 | ID | Priority | As a... | I want to... | So that I can... |
 | --- | --- | --- | --- | --- |
-| US01 | `* * *` | new secretary | see a command summary and help for one command | learn the syntax without leaving the app |
-| US02 | `* * *` | secretary | add a member with contact details and optional tags | keep new members in the roster |
-| US03 | `* * *` | secretary | list all members | review the roster and see current record numbers |
-| US04 | `* * *` | secretary | edit a member's details | keep the roster accurate when details change |
-| US05 | `* * *` | secretary | find members by name | locate their contact details quickly |
-| US06 | `* * *` | secretary | delete one selected member | remove a record I no longer need |
-| US07 | `* * *` | secretary | clear the whole roster | reset the directory when all old records are no longer needed |
-| US08 | `* * *` | secretary | filter the displayed members by a tag | work with one group or an overlap of groups |
-| US09 | `* * *` | secretary | add one tag to all displayed members | assign a group without editing each record |
-| US10 | `* * *` | secretary | remove one tag from all displayed members | update a group's membership in one step |
-| US11 | `* * *` | secretary | have valid changes saved automatically | keep my changes after restarting the app |
-| US12 | `* * *` | secretary | see clear input and storage errors | correct a problem and know whether my changes were saved |
-| US13 | `* * *` | secretary | close the app with a command | finish my work using the keyboard |
-| US14 | `* * *` | experienced secretary | edit a backed-up data file while the app is closed | correct stored data outside the app when needed |
-| US15 | `* *` | secretary | export a roster | share the required member records with an authorised colleague |
-| US16 | `* *` | secretary | hide private contact details on screen | reduce accidental disclosure to people nearby |
-| US17 | `*` | secretary | sort members by name | browse a long roster more easily |
+| US01 | `***` | new secretary | see a command summary and help for one command | check syntax without leaving the app |
+| US02 | `***` | club secretary | add a member with contact details and optional tags | record a new club member |
+| US03 | `***` | club secretary | list every member with their current displayed index | review the roster and select the right record |
+| US04 | `***` | club secretary | edit a member's contact details | correct mistakes and keep the roster up to date |
+| US05 | `***` | club secretary | find members using complete words from their names | retrieve a member's contact details quickly |
+| US06 | `***` | club secretary | delete one selected member record | remove a record that is no longer needed |
+| US07 | `***` | club secretary | clear the whole roster | reset the directory when all existing records are no longer needed |
+| US08 | `***` | club secretary | filter the displayed members by an exact tag | work with one group or an overlap of groups |
+| US09 | `***` | club secretary | add one tag to all displayed members without removing other tags | assign a group without editing each member separately |
+| US10 | `***` | club secretary | review a group and remove one tag from every displayed member | remove an obsolete group assignment while keeping member records and other tags |
+| US11 | `***` | club secretary | have valid changes saved automatically | recover my saved roster when I next open the app |
+| US12 | `***` | club secretary | receive clear input and storage error messages | correct the problem and know whether my changes were saved |
+| US13 | `***` | club secretary | close the app with a command | finish my work using the keyboard |
+| US14 | `***` | experienced secretary | edit a backed-up data file while the app is closed | make awkward data corrections outside the app when necessary |
+| US18 | `***` | prospective club secretary | try TrackCall with sample member data | understand the workflow without risking real records |
+| US20 | `***` | first-time user | read valid command examples and their expected results in help | learn to use commands independently |
+| US23 | `***` | club secretary | assign a valid group tag to a member | represent groups such as Committee or Batch2026 |
+| US24 | `***` | club secretary | add a tag to one member while retaining their other tags | let that member belong to several groups |
+| US25 | `***` | club secretary | view a member's complete contact details and tags | check the correct record before using its details |
+| US28 | `***` | club secretary | remove one member's tag while retaining their other tags | update their group membership without losing unrelated information |
+| US35 | `***` | club secretary | have exact duplicate records rejected during data entry | avoid recording the same contact details twice |
+
+US24 and US28 do not introduce new commands. For an individual `edit`, the secretary supplies
+the complete tag set that should remain. The bulk commands preserve unrelated tags and can
+also be used when the checked displayed list contains exactly one intended member.
+
+#### Considered stories outside the selected MVP
+
+| ID | Priority | As a... | I want to... | So that I can... | Scope decision |
+| --- | --- | --- | --- | --- | --- |
+| US15 | `**` | club secretary | export member records | share a copy for verification or submission | Considered; no export command in the MVP. |
+| US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Retained from the earlier DG; no privacy-display mode in the MVP. |
+| US17 | `*` | club secretary | sort members by name | browse a long roster more easily | Considered; the MVP preserves roster order. |
+| US19 | `**` | first-time user | follow a short in-app getting-started guide | learn the basic workflow step by step | Considered; the MVP provides command help, not an onboarding wizard. |
+| US21 | `**` | club secretary | import an existing membership spreadsheet | avoid entering every member manually | Considered; loading a valid JSON data file is not spreadsheet import. |
+| US22 | `**` | club secretary | review imported member records | confirm that an import completed correctly | Considered with US21. |
+| US26 | `**` | club secretary | search using part of a name word | find someone when I cannot remember the complete word | Considered; the MVP uses complete-word matching. |
+| US27 | `**` | club secretary | search by phone number | identify a member when I only have their number | Considered; the MVP searches names only. |
+| US29 | `**` | club secretary | rename a group tag across its members | correct a group name without rebuilding its membership | Considered; no atomic global rename operation in the MVP. |
+| US30 | `**` | club secretary | update a non-tag field for a group in one operation | handle repeated renewal changes efficiently | Considered; bulk changes in the MVP affect tags only. |
+| US31 | `**` | long-time secretary | archive an inactive member | reduce clutter while keeping their history | Considered; deletion in the MVP does not retain history. |
+| US32 | `*` | long-time secretary | archive an unused group tag | keep old groups out of my active work without losing their history | Considered; no tag archive or separate tag catalogue in the MVP. |
+| US33 | `*` | club secretary | sort members by class | review members in the order relevant to my task | Considered; the MVP has neither a class field nor sorting. |
+| US34 | `**` | club secretary | cancel a deletion before confirming it | avoid losing a record after selecting the wrong member | Not selected; MVP deletion and clearing are immediate, without confirmation or undo. |
+| US36 | `**` | outgoing secretary | hand over my roster and command guidance to my successor | let the next secretary continue club administration | No in-app access-transfer feature. Shared accounts and routine multi-user data access are excluded by the course's single-user constraint. |
 
 ### Shared behaviour rules
 
-These rules apply across the use cases below.
+These rules describe the selected MVP and apply to the use cases below.
 
-1. Commands and prefixes are lowercase. Surrounding spaces and tabs are ignored.
-   Invalid input leaves records, the displayed list, and the saved file unchanged.
-2. Two records are duplicates only when their trimmed name, phone, email, and address
-   all match exactly, including case and internal spaces. Tags do not affect identity.
-   Two members may share a name if another contact field differs.
-3. A tag contains 1 to 30 ASCII letters or digits. Tags are case-sensitive and cannot contain spaces.
-   A record stores each tag once. Display tags in ASCII order: digits, uppercase, then lowercase.
-4. `list` resets the search and tag filters. `find KEYWORD [MORE_KEYWORDS]` searches the full roster
-   and replaces the previous search and filters. It matches complete name words, ignores letter case,
-   and accepts a match on any keyword.
-5. `filter t/TAG` narrows the current list. Repeated filters keep only members who match all applied tags
-   and the active name search. Use `list` first to filter the whole roster.
-6. Record numbers start at 1 and refer to the displayed list when a command is entered.
-   Commands preserve roster order and renumber the visible cards. Users must check the current number
-   before editing or deleting a member.
-7. `edit INDEX ...` changes only supplied fields. Supplied tags replace the member's full tag set.
-   A lone `t/` clears the member's tags. It cannot be combined with a non-empty tag.
-   Edits reapply the active search and filters, so an edited member may disappear from view.
-8. Bulk tag commands fix their target set before making changes: everyone visible when Enter is pressed.
-   Hidden members are untouched. Reapply the active search and filters after the whole batch.
-   Adding an existing tag does not create a duplicate; removing an absent tag skips that member.
-9. Valid `add`, `edit`, `delete`, `clear`, `tagall`, and `untagall` commands attempt to save the whole roster,
-   including valid operations that make no change. An empty bulk target is an error and does not save.
-   `help`, `list`, `find`, `filter`, and `exit` do not save.
-10. Report data-changing command success only after saving succeeds. If saving fails, preserve the previous
-    saved file and show the storage error. Except for `clear`, changes remain in memory and may be lost
-    on exit. A failed `clear` restores the previous records, view, and filters.
-11. `add` restores the full list and appends the new record. `delete` keeps the active search and filters.
-    `clear` removes the whole roster, including hidden members, and resets the view.
-    Deletion and clearing are immediate: the MVP has no confirmation or undo.
-12. Startup reads `data/addressbook.json` relative to the working directory. A missing file loads sample
-    members. An invalid or unreadable file loads zero members and shows an error. Startup and read-only
-    commands do not overwrite that file. A valid empty roster stays empty.
+1. Command keywords and prefixes are lowercase. Trim surrounding spaces and tabs from values.
+   Reject invalid input before changing records, the displayed list, filters, or the saved file.
+   The fields below use the same validation in `add`, `edit`, and manual data loading.
+2. Two records are duplicates only when their trimmed name, phone, email, and address all match
+   exactly, including case and internal spacing. Tags do not affect identity. Different people
+   may share a name when another contact field differs. An edit excludes its own record from
+   this check. Duplicate checking does not establish a person's real-world identity.
+3. A tag contains 1 to 30 ASCII letters or digits and is case-sensitive. It contains no internal
+   whitespace. Store each tag once per member and display tags in ASCII order: digits,
+   uppercase letters, then lowercase letters.
+4. `list` resets all searches and tag filters. `find KEYWORD [MORE_KEYWORDS]` searches the full
+   roster and replaces the previous search and filters. It matches complete name words,
+   ignores letter case, and accepts a match on any keyword. Repeated keywords do not repeat records.
+5. `filter t/TAG` narrows the currently displayed list using exact, case-sensitive tag matching.
+   Repeated filters retain the intersection of the tags and the active name search. A valid
+   zero-match result is successful. Use `list` first to filter the whole roster.
+6. An index is an ASCII-digit integer from 1 through the current displayed count. Leading zeroes
+   are accepted; signs, decimals, and internal whitespace are not. It refers to the list when
+   the command is submitted. Commands preserve roster order and renumber the displayed records.
+7. `edit INDEX ...` changes only supplied fields. At least one field must be supplied.
+   Supplied tags replace the full existing tag set. A lone `t/` clears all tags and cannot be
+   combined with a non-empty tag. Reapply the active search and filters after an edit; an edited
+   member can disappear from the view while remaining stored.
+8. `tagall t/TAG` and `untagall t/TAG` accept exactly one tag and fix their target set to everyone
+   displayed when the command is submitted. Hidden members and unrelated tags are unchanged.
+   Adding an existing tag or removing an absent tag skips that member. Reapply searches and
+   filters after the whole batch. Changed and skipped counts refer to the original target set.
+9. Valid `add`, `edit`, `delete`, `clear`, `tagall`, and `untagall` commands save the complete
+   roster, including valid operations that make no change. An empty bulk target is an error
+   and does not save. `help`, `list`, `find`, `filter`, and `exit` do not save.
+10. Report data-changing command success only after saving succeeds. A failed save preserves
+    the previous saved file and reports a storage error. Except for `clear`, changes remain in
+    memory and can be lost on exit. Failed `clear` restores the previous records, displayed
+    list, and filters. To retry saving, resolve the storage problem and run a valid data-changing
+    command; a valid no-op can be used without making another data change.
+11. `add` restores the full list and appends the record. `delete` removes one indexed record and
+    retains the active search and filters. `clear` removes all records, including hidden ones,
+    resets the view, and preserves application settings. Deletion and clearing have no
+    confirmation or undo. `list`, `clear`, and `exit` reject extra arguments. `exit` closes the
+    app without a final save or another warning about unsaved changes.
+12. Startup reads the local `data/addressbook.json` relative to the working directory. A missing
+    file loads sample members and reports that fact. An invalid or unreadable file loads zero
+    members and reports the error. Startup and read-only commands leave the file untouched.
+    A valid empty roster stays empty. A later successful data-changing command can replace an
+    invalid file, so restore or repair it before making changes if its contents are needed.
+
+#### Member field rules
+
+`add` requires `n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS` and accepts optional repeated `t/TAG`
+parameters. Fields may appear in any order. `edit` uses the same field rules for supplied values.
+Reject unknown prefixes and repeated `n/`, `p/`, `e/`, or `a/` prefixes. Check command structure,
+then values in name/phone/email/address/tag order, then duplicate identity.
+
+| Field | Requirement |
+| --- | --- |
+| Name | ASCII letters, digits, and spaces, with at least one letter or digit. Preserve internal spaces and case. |
+| Phone | At least three ASCII digits, without signs, punctuation, or internal whitespace. This does not verify reachability. |
+| Email | Exactly one `@` and no whitespace. The local part allows ASCII letters, digits, and the punctuation listed below. Domain labels are separated by dots; each starts and ends with a letter or digit, with hyphens allowed internally. Syntax validation does not verify mailbox existence. |
+| Address | Non-empty single-line text after trimming surrounding spaces or tabs. Preserve internal spaces, tabs, and case. |
+| Tags | Rule 3 applies. A member can have zero or more tags. Repeated identical tags collapse into one assignment. An empty tag is invalid except for the lone `t/` edit operation in rule 7. |
+
+Allowed email local-part punctuation:
+
+```text
+! # $ % & ' * + / = ? ^ _ ` { | } ~ . -
+```
 
 ### Use cases
 
-For all use cases, the **system** is TrackCall and the **actor** is the membership secretary.
-**MSS** means the main success scenario. Except for UC07, the app is open.
-These use cases describe planned behaviour; they must be tested as the features are implemented.
+**System:** TrackCall. **Primary actor:** the membership secretary.
+**MSS:** main success scenario. The app is open unless a use case states otherwise.
+These are representative user workflows for the planned product, not implementation instructions.
 
 #### UC01: Register a member
 
-Related story: US02.
-
-**Command syntax**: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]...`. The four
-contact fields are required and can appear in any order. Tags are optional and may be
-repeated. Names are nonblank and contain only ASCII letters, digits, and spaces; phone
-numbers contain only ASCII digits and are at least three digits long. Email addresses use
-the `local-part@domain` format, and addresses are non-empty. Each tag contains 1 to 30 ASCII
-letters or digits and is case-sensitive. Repeated identical tags in one command are stored
-only once. A member is a duplicate when its
-trimmed name, phone, email, and address all match an existing record; tags do not affect
-this comparison.
+**Related stories:** US02, US23, US35. **Goal:** add a new member and retain the record for later sessions.
 
 **MSS**
 
-1. The secretary enters the new member's required contact fields and optional tags.
-2. TrackCall checks the input and checks for a duplicate record.
-3. TrackCall adds the member, saves the roster, and shows the full list with the new member last.
+1. The secretary submits the member's required contact details and optional tags.
+2. TrackCall validates the details and checks for an exact duplicate record.
+3. TrackCall adds the member, saves the roster, and restores the complete member list.
 4. TrackCall reports the added member's details. The use case ends.
 
 **Extensions**
 
-* 2a. A required value is missing, a field is invalid, or the record is a duplicate.
-  TrackCall shows the relevant error and changes nothing. The secretary can return to step 1.
-* 3a. Saving fails. TrackCall shows the storage error instead of success. The new member stays in memory.
-  The secretary fixes the storage problem and runs a valid data-changing command to retry saving.
-  The use case ends without confirmed persistence until that retry succeeds.
+* **2a.** The command structure or a field is invalid, or the member duplicates an existing record.
+  TrackCall explains the error and changes nothing. The secretary can correct the input at step 1.
+* **3a.** Saving fails. TrackCall reports the storage error instead of success. The new member remains
+  in memory, but the saved file is unchanged. The use case ends without confirmed persistence;
+  recovery follows shared rule 10.
 
 #### UC02: Find and update a member
 
-Related stories: US03, US04, US05.
-
-**Command syntax**: `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]...`.
-The index refers to the current displayed list. At least one field must be supplied, and
-fields can appear in any order. Supplied contact fields follow the same validation rules as
-UC01; omitted fields remain unchanged. If one or more tags are supplied, they replace the
-member's existing tags, and repeated identical tags are stored only once. A lone `t/` clears
-all tags and cannot be combined with a non-empty tag. The edited record must not duplicate
-another member under the identity rule in UC01.
+**Related stories:** US03, US04, US05, US24, US25, US28. **Goal:** correct one member's record.
 
 **MSS**
 
-1. The secretary searches for a name.
-2. TrackCall shows matching members with their current record numbers.
-3. The secretary checks the required record and submits its number and the changed fields.
-4. TrackCall validates the edit, updates the record, saves the roster, and reapplies the active filters.
-5. TrackCall reports the updated details. The use case ends.
+1. The secretary searches for complete words from the member's name.
+2. TrackCall lists matching records and their current indices.
+3. The secretary checks the contact details to identify the intended member, then submits its
+   displayed index and the fields to change.
+4. TrackCall validates the edit, updates the record, saves the roster, and reapplies the search and filters.
+5. TrackCall reports the edited details. The use case ends.
 
 **Extensions**
 
-* 2a. No members match. TrackCall shows an empty list. The secretary can search again at step 1 or stop.
-* 3a. The number is invalid, no fields are supplied, a field is invalid, or the edit duplicates another record.
-  TrackCall shows an error without changing records or the view. Resume at step 3.
-* 4a. The edited member no longer matches the search or filters. It disappears from the view but remains
-  stored. Continue at step 5.
-* 4b. Saving fails. The edit remains in memory and TrackCall reports the error. The secretary must fix the
-  storage problem and retry saving with a valid data-changing command before relying on persistence.
+* **1a.** The search has no keyword. TrackCall reports the input error and preserves the view.
+  The secretary can retry step 1.
+* **2a.** No record matches. TrackCall shows an empty result. The secretary can search again at step 1
+  or end the use case without changing data.
+* **4a.** The index or fields are invalid, no field is supplied, or the edit duplicates another record.
+  TrackCall reports the error without changing records or the view. The secretary can retry step 3.
+* **4b.** Saving fails. The edit remains in memory, the saved file is unchanged, and TrackCall reports
+  the storage error. The use case ends without confirmed persistence; recovery follows rule 10.
+
+An edited member that no longer matches the search or filters disappears from the displayed list
+but remains in the roster. The secretary can use `list` to see it again.
 
 #### UC03: Update a group's tags
 
-Related stories: US08, US09, US10.
+**Related stories:** US08, US09, US10. **Goal:** change one group assignment without changing unrelated tags.
 
 **MSS**
 
-1. The secretary lists all members, then searches or filters to select a group.
-2. TrackCall shows the matching members. The secretary checks that the list is the intended group.
-3. The secretary requests adding or removing one tag for everyone shown.
-4. TrackCall validates the tag, fixes the target set, and updates that whole set.
-5. TrackCall saves the roster, reapplies the active search and filters, and reports changed and skipped counts.
-   The use case ends.
+1. The secretary requests the complete roster.
+2. TrackCall lists all members.
+3. The secretary searches or filters to identify the intended group.
+4. TrackCall displays the matching members.
+5. The secretary checks the affected group and requests adding or removing one tag from it.
+6. TrackCall validates the request, fixes the target set, updates its tags, and saves the roster.
+7. TrackCall reapplies the search and filters and reports changed and skipped counts. The use case ends.
 
-**Example**: Enter `list`, then `filter t/year1`, then `tagall t/committee` as separate commands.
-This adds `committee` to all year-one members and keeps their other tags.
+**Example:** enter `list`, `filter t/year1`, and `tagall t/committee` as separate commands.
+This adds `committee` to the displayed year-one members and retains their other tags.
 
 **Extensions**
 
-* 2a. The list is empty. The secretary can return to step 1. A bulk command on this list reports an error
-  and changes nothing.
-* 3a. The tag is empty or invalid, or more than one tag is supplied. TrackCall reports the error and makes
-  no changes. Resume at step 3.
-* 4a. Some members already have the added tag, or lack the removed tag. TrackCall skips those members
-  and includes them in the count at step 5. If none need changes, it reports this without duplicating tags.
-* 5a. Removing a tag makes members fail an active filter. Those cards disappear, but their records remain
-  stored. Counts still refer to the target set from step 4.
-* 5b. Saving fails. The complete batch remains in memory. TrackCall shows the storage error instead of
-  success. Fix the storage problem and retry a valid data-changing command to save the current roster.
+* **3a.** A search or filter request is invalid. TrackCall reports the error and preserves the prior
+  view. The secretary can correct the request at step 3.
+* **4a.** No members match. The secretary can restart at step 1 or end the use case. A bulk update
+  on an empty list is rejected without changing or saving data.
+* **6a.** The tag is empty or invalid, or more than one tag or an unknown prefix is supplied.
+  TrackCall reports the error and changes nothing. The secretary can retry step 5.
+* **6b.** Some targets already have the added tag or lack the removed tag. TrackCall skips those
+  assignments, saves the roster, and continues to step 7. A non-empty target with no changes is
+  still a valid operation; it does not create duplicate tags.
+* **6c.** Saving fails. The complete batch remains in memory, the saved file is unchanged, and
+  TrackCall reports the storage error. The use case ends without confirmed persistence;
+  recovery follows rule 10.
+
+Removing a tag required by an active filter can hide the affected members after step 7. It does
+not delete them. Counts still refer to the target set fixed at step 6.
 
 #### UC04: Remove one member
 
-Related story: US06.
+**Related stories:** US05, US06, US25. **Goal:** remove one unwanted record while retaining other members.
 
 **MSS**
 
-1. The secretary lists, searches, or filters members.
-2. TrackCall displays matching records and their current numbers.
-3. The secretary checks the member's details and requests deletion using that displayed number.
-4. TrackCall removes that one record, saves the roster, and renumbers the remaining visible records.
+1. The secretary lists, searches, or filters the roster.
+2. TrackCall displays the resulting records and their current indices.
+3. The secretary checks the intended member's details and requests deletion using its displayed index.
+4. TrackCall validates the request, removes that record, saves the roster, and renumbers the
+   remaining displayed records while retaining the active search and filters.
 5. TrackCall reports the deleted record. The use case ends.
 
 **Extensions**
 
-* 2a. The list is empty. No member can be selected. The use case ends.
-* 3a. The number or command is invalid. TrackCall shows an error and removes nothing. Resume at step 2.
-* 4a. Saving fails. The member remains deleted in memory but may return after restart. TrackCall shows
-  the storage error. The secretary fixes the problem and retries saving through a valid data-changing command.
+* **1a.** The listing, search, or filter command is invalid. TrackCall reports the error and preserves
+  the current view. The secretary can retry step 1.
+* **2a.** The result is empty. No member can be selected. The use case ends without changes.
+* **4a.** The deletion command or index is invalid. TrackCall reports the error and removes nothing.
+  The secretary checks the current list and retries step 3.
+* **4b.** Saving fails. The record remains deleted in memory but may return after restart. TrackCall
+  reports the storage error and leaves the saved file unchanged. The use case ends without
+  confirmed persistence; recovery follows rule 10.
+
+Deletion has no confirmation or undo. It removes the underlying record, not just its visible card.
 
 #### UC05: Reset the whole roster
 
-Related story: US07.
+**Related story:** US07. **Goal:** remove all member records, including records outside the current view.
 
 **MSS**
 
-1. The secretary decides to remove all records and enters `clear`.
-2. TrackCall removes all members, including hidden ones, and resets the search and filters.
+1. The secretary decides to remove all records and requests clearing the roster.
+2. TrackCall validates the request, removes every member, and resets the search and filters.
 3. TrackCall saves the empty roster and reports the number removed. The use case ends.
 
 **Extensions**
 
-* 1a. The command has extra arguments. TrackCall rejects it without changing anything. Resume at step 1.
-* 2a. The roster is already empty. TrackCall still attempts to save and reports that no changes were needed
-  only after saving succeeds. The use case ends.
-* 3a. Saving fails. TrackCall restores the previous records, displayed list, and filters. It reports that no
-  members were removed. The secretary can fix the storage problem and retry at step 1.
+* **2a.** The command contains extra arguments. TrackCall rejects it without changing anything.
+  The secretary can retry step 1.
+* **2b.** The roster is already empty. TrackCall still attempts to save it and reports that no changes
+  were needed only if saving succeeds. The use case ends. If saving fails, extension 3a applies.
+* **3a.** Saving fails. TrackCall restores the previous records, displayed list, and filters and
+  leaves the saved file unchanged. It reports that no members were removed. The secretary can
+  resolve the storage problem and retry step 1.
 
-There is no confirmation or undo. A successful clear requires a backup for recovery.
+There is no confirmation or undo. Recovery after a successful clear requires a pre-existing backup.
 
 #### UC06: Look up a command
 
-Related story: US01.
-
-**Command syntax**: `help` or `help COMMAND`, where `COMMAND` is one valid, lowercase
-command keyword. Leading and trailing whitespace is ignored, and repeated whitespace
-between tokens is treated as a single separator. At most one command keyword may follow
-`help`.
+**Related stories:** US01, US20. **Goal:** learn how to perform a task without leaving the app.
 
 **MSS**
 
-1. The secretary enters `help` to see the available commands.
-2. TrackCall displays the command syntax quick-reference in the result display and reports
-   `Showing command syntax quick-reference.` The use case ends.
-
-Alternatively:
-
-1. The secretary enters `help COMMAND`, such as `help tagall`.
-2. TrackCall displays a Vim-like help topic containing that command's syntax, description,
-   and usage rules, and reports `Showing help for COMMAND.` The use case ends.
+1. The secretary requests the command summary with `help`.
+2. TrackCall displays the available command syntax.
+3. The secretary requests one command's details, for example `help tagall`.
+4. TrackCall displays that command's purpose, syntax, examples with expected results, parameter
+   rules, and errors. The use case ends.
 
 **Extensions**
 
-* 1a. The secretary supplies an unknown or incorrectly cased topic. TrackCall reports
-  `No help entry found for "COMMAND". Type help for a list of available commands.`
-  The secretary can retry at step 1.
-* 1b. The secretary supplies more than one topic. TrackCall reports
-  `Only one command can be inspected at a time. Usage: help [COMMAND]`. The secretary can
-  retry at step 1.
-* 1c. The secretary uses an invalid help flag format, such as `-help` or `-h`. TrackCall
-  reports `Unknown command format. Usage: help [COMMAND]`. The secretary can retry at step 1.
+* **1a.** The request uses an unknown command keyword, such as `-help`, `-h`, or `HELP`.
+  TrackCall reports `Unknown command. Type help for available commands.` The secretary can retry step 1.
+* **3a.** The topic is unknown or uses the wrong case. TrackCall reports that there is no help entry
+  for that topic and suggests `help` to list commands. The secretary can retry step 3.
+* **3b.** More than one topic is supplied. TrackCall reports that only one command can be inspected
+  at a time and shows `help [COMMAND]` as the usage. The secretary can retry step 3.
 
-All help requests leave member data and the displayed member list unchanged. Help topics
-are case-sensitive; command names must use their standard lowercase spelling.
+The secretary may start at step 3 when the command is already known. Topic keywords are lowercase.
+Surrounding whitespace is ignored and repeated separator whitespace is accepted. All help requests
+leave member data and the displayed member list unchanged and do not save the data file.
 
 #### UC07: Load a manually edited data file
 
-Related stories: US11, US12, US14.
-Precondition: The app is closed and the secretary has backed up the data file.
+**Related stories:** US11, US12, US14. **Goal:** load valid corrections made outside the app.
+**Preconditions:** TrackCall is closed and the secretary has backed up the data file.
 
 **MSS**
 
-1. The secretary edits the JSON data file, keeping the expected structure and valid member fields.
+1. The secretary edits and saves the JSON data file while preserving its structure and valid member fields.
 2. The secretary starts TrackCall.
-3. TrackCall validates the complete file and loads the members in file order.
-4. TrackCall displays the loaded roster. The use case ends.
+3. TrackCall validates the complete file and loads its members in file order.
+4. TrackCall displays the loaded roster. The secretary checks the corrections. The use case ends.
 
 **Extensions**
 
-* 3a. The file is missing. TrackCall loads sample members and reports the missing file. It creates a file
-  only after a valid data-changing command. The use case ends.
-* 3b. The file has invalid JSON, invalid fields, or duplicate members. Invalid fields include a tag that
-  does not meet rule 3 (1 to 30 ASCII letters or digits, case-sensitive, no internal spaces). TrackCall loads
-  zero members, reports the problem, and leaves the original file untouched. The secretary closes the app and
-  repairs or restores the file before returning to step 2. No partial import occurs.
-* 3c. The file cannot be read. TrackCall loads zero members, shows the operating-system error, and leaves
-  the file untouched. The secretary fixes access before returning to step 2.
+* **3a.** The file is missing. TrackCall loads sample members and reports the missing file. It creates
+  the file only after a valid data-changing command saves successfully. The use case ends.
+* **3b.** The file has invalid JSON, structure, fields, or duplicate records. TrackCall loads zero
+  members, reports the problem, and preserves the file. No partial import occurs. The secretary
+  closes the app and repairs or restores the file, then retries step 2.
+* **3c.** The file cannot be read. TrackCall loads zero members, reports the operating-system error,
+  and leaves the file untouched. The secretary closes the app, fixes access, and retries step 2.
 
-A later valid data-changing command can overwrite an invalid file. Restore or repair the backup before
-making further data changes. Do not edit the data file while the app is open.
+The file uses UTF-8 JSON with a `persons` array. Each member has exactly `name`, `phone`, `email`,
+and `address` string fields and a `tagged` array of strings. Missing, null, wrongly typed, unknown,
+or repeated fields, comments, and trailing commas invalidate the file. Member values follow the
+shared field rules, including rule 3 for tags. Repeated identical tags collapse into one assignment;
+duplicate members invalidate the whole file. `{"persons": []}` is a valid empty roster.
+
+Do not edit the data file while TrackCall is running. A later successful data-changing command can
+overwrite an invalid file; restore or repair it first if the original contents are needed.
 
 ### Non-Functional Requirements
 
-These are acceptance targets for the intended product, not results already measured on the starter.
+These are acceptance requirements for the intended product, not results already measured on v1.1.
+They include relevant [course product constraints][course-constraints]. The performance workload
+is a test target, not a restriction on accepted records or command length.
 
-1. **Portability**: The application must run on Windows, macOS, and Linux with a compatible Java 25 runtime.
-2. **Capacity and speed**: With 500 member records, each normal command should finish within 2 seconds
-   on a computer with at least 4 GB RAM and local SSD storage. Measure from Enter to the displayed result,
-   including saving for commands that change data. Record the OS and hardware used for these checks.
-   The 500-member target is a supported workload, not a rule that rejects the 501st record.
-3. **Offline use**: Core member management and in-app command help must work without a network connection.
-4. **Keyboard use**: After launch, users must be able to manage members and request help through the
-   command box without using the mouse.
-5. **Input safety**: Invalid commands must not change records, the view, or the saved file.
-   Error messages must explain what needs correcting.
-6. **Reliable storage**: A successful data-changing command must survive restart. Saving must preserve
-   the last valid file if writing fails. Never report a failed save as success. The special rollback rule
-   for `clear` must preserve both the previous in-memory state and the saved file.
-7. **Local privacy**: Core features must keep member records on the user's computer and must not transmit
-   them to external services. The MVP has no login or file encryption; operating-system access controls
-   are needed to protect the local data file.
-8. **Readable results**: The member list and long help output must be scrollable. All records and their
-   details must remain accessible when they do not fit in the window.
-9. **Consistent results**: Repeating a read-only command without intervening data changes must produce
-   the same records in the same order. Repeated bulk tagging must not create duplicate tags.
+[course-constraints]: https://nus-cs2103-ay2627-s1.github.io/website/admin/tp-constraints.html
+
+| ID | Quality or constraint | Acceptance requirement |
+| --- | --- | --- |
+| NFR01 | Platform compatibility | The released application runs on Windows, macOS, and Linux with Java 25, without needing a second Java version. |
+| NFR02 | Portable distribution | The release is a single JAR no larger than 100 MB. Running it requires no installer or separately installed application dependencies beyond the compatible Java runtime. |
+| NFR03 | Offline availability | Core roster management and in-app help remain usable with networking disabled. They do not depend on a team-operated server. |
+| NFR04 | Keyboard usability | After launch, every in-app MVP operation can be completed using typed commands and keyboard navigation, without a required mouse action. Manual file editing uses an external text editor. |
+| NFR05 | Display usability | At 1920 x 1080 or higher with 100% or 125% scaling, controls and text remain readable without layout overlap. At 1280 x 720 or higher with 150% scaling, every function remains usable. Long rosters and help text remain accessible by scrolling. |
+| NFR06 | Local data privacy | Core operations do not transmit member records to external services. The MVP provides no login or encryption; protection of the local file relies on the user's operating-system access controls. |
+| NFR07 | Inspectable storage | Member data is stored locally as human-editable UTF-8 JSON, with no DBMS required. The saved data can be read and corrected using an ordinary text editor while the app is closed. |
+| NFR08 | Response time | With 500 members and a writable data file of at most 1 MB, each valid in-app command of at most 256 characters completes within 2 seconds on a computer with a 2 GHz dual-core CPU, 4 GB RAM, local SSD, and no competing heavy workload. Measure from submission to displayed result, including any save; exclude startup and shutdown. Record the OS, Java version, hardware, dataset, and timings when testing. |
+| NFR09 | Persistence reliability | After a data-changing command reports success, a normal restart retains the saved roster. A simulated write failure leaves the previous saved file intact and is never reported as success. In-memory recovery follows rule 10, including the rollback required for `clear`. |
+
+Input validation, duplicate rejection, filtering, and no-op behaviour are functional requirements
+and are recorded in the shared rules instead of being counted as NFRs. Development-process rules,
+such as incremental delivery, are also not product NFRs.
 
 ### Glossary
 
 | Term | Meaning |
 | --- | --- |
-| Membership secretary | The person who maintains an organisation's member records. |
-| Roster | The complete set of stored member records, including members hidden by a filter. |
-| Member record | One person's name, phone number, email address, address, and tags. |
-| Tag | A case-sensitive group label, such as `committee` or `year1`. |
-| Displayed list | The members currently shown after any active search and filters. |
-| Index | A member's current displayed number, starting at 1. It is not a permanent member ID. |
-| Bulk tag update | Adding or removing one tag for every member in the displayed list. |
-| Duplicate record | A record with the same trimmed name, phone, email, and address as another record. |
-| No-op | A valid operation that leaves record values unchanged. It can still retry saving. |
-| In-memory data | The working roster held by the running app. Unsaved changes can be lost on exit. |
-| JSON | The structured text format used for the local data file. |
-| MVP | Minimum viable product: the first version containing the required core features. |
+| Membership secretary | The single operator responsible for keeping a club or organisation's member roster up to date. |
+| Roster / address book | The complete collection of member records, including records hidden from the displayed list. The file and starter code use the term address book. |
+| Member record | One member's name, phone number, email address, address, and tag assignments. |
+| Group | A set of members sharing a tag, such as a committee or cohort. Groups are not separate stored objects in the MVP. |
+| Tag | A case-sensitive label containing 1 to 30 ASCII letters or digits, assigned at most once to each member. |
+| Displayed list | The records currently visible after the active search and tag filters. It is the target set for a bulk tag command. |
+| Active search and filters | The current name-search condition and cumulative tag conditions used to determine which records are displayed. A new `find` replaces them; `list` clears them. |
+| Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
+| Complete-word matching | Matching a whole word in a name. For example, `John` matches `John Tan`, but `Jo` does not. |
+| Bulk tag update | Adding or removing one tag for the fixed set of members displayed when the command is submitted. |
+| Duplicate record | A record whose trimmed name, phone, email, and address all exactly match another record, including case and internal spacing. Tags are ignored. |
+| No-op | A valid operation that leaves record values unchanged. A valid data-changing no-op can still retry saving; a bulk command with no targets is an error. |
+| In-memory data | The working roster held by the running app. After a save failure it can differ from the file and may be lost on exit. |
+| Persisted data | The roster successfully written to the local data file and available for a later session. |
+| Data-changing command | `add`, `edit`, `delete`, `clear`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
+| Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
+| JSON | The structured text format of the local data file. TrackCall's schema uses a `persons` array and each member's `tagged` array. |
+| Archive | Retain an inactive record or tag and its history separately from active work. This considered feature is different from MVP deletion. |
+| MVP | Minimum viable product: the selected core feature set in the team specification. It does not mean that all those features exist in v1.1. |
+
 
 --------------------------------------------------------------------------------------------------------------------
 
