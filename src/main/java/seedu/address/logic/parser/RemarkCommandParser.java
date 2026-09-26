@@ -7,6 +7,9 @@ import seedu.address.logic.commands.RemarkCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Remark;
 
+/**
+ * Parses input arguments and creates a new RemarkCommand object.
+ */
 public class RemarkCommandParser implements Parser<RemarkCommand> {
 
     public static final String MESSAGE_INVALID_COMMAND_FORMAT = "Invalid command format! \n%1$s";

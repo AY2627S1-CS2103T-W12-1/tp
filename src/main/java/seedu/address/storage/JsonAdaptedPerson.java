@@ -15,8 +15,8 @@ import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
-import seedu.address.model.tag.Tag;
 import seedu.address.model.person.Remark;
+import seedu.address.model.tag.Tag;
 
 /**
  * Jackson-friendly version of {@link Person}.
@@ -107,7 +107,8 @@ class JsonAdaptedPerson {
         final Address modelAddress = new Address(address);
 
         final Set<Tag> modelTags = new HashSet<>(personTags);
-        return new Person(modelName, modelPhone, modelEmail, modelAddress, new Remark(remark == null ? "" : remark), modelTags);
+        final Remark modelRemark = new Remark(remark == null ? "" : remark);
+        return new Person(modelName, modelPhone, modelEmail, modelAddress, modelRemark, modelTags);
     }
 
 }
