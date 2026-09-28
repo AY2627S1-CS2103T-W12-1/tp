@@ -7,7 +7,9 @@ We are a team based in the [School of Computing, National University of Singapor
 
 ## Project team
 
-### Calvin
+### Calvin Yoel Pandiangan
+
+<img src="images/cayopan.png" width="200px" alt="Calvin Yoel Pandiangan">
 
 [[github](https://github.com/CAYOPAN)]
 
