@@ -559,6 +559,14 @@ These are representative user workflows for the planned product, not implementat
 An edited member that no longer matches the search or filters disappears from the displayed list
 but remains in the roster. The secretary can use `list` to see it again.
 
+The search command is `find KEYWORD [MORE_KEYWORDS]`. It accepts one or more whitespace-separated
+keywords, ignores case, matches complete name words, and returns records matching any keyword in
+address-book order. A successful search reports `1 member listed.`, `N members listed.`, or
+`0 members listed.` and does not save the data file. `find` with no keyword reports
+`Invalid command format. Usage: find KEYWORD [MORE_KEYWORDS]`; a wrong-case command such as
+`FIND John` reports `Unknown command. Type help for available commands.` A new `find` searches the
+complete roster and replaces the previous search and filters.
+
 #### UC03: Update a group's tags
 
 **Related stories:** US08, US09, US10. **Goal:** change one group assignment without changing unrelated tags.
@@ -619,6 +627,12 @@ not delete them. Counts still refer to the target set fixed at step 6.
   confirmed persistence; recovery follows rule 10.
 
 Deletion has no confirmation or undo. It removes the underlying record, not just its visible card.
+The command is `delete INDEX`, where `INDEX` is one positive ASCII-digit index from the current
+displayed list; leading zeroes are accepted. Signs, decimals, letters, whitespace inside the index,
+extra arguments, and out-of-range indices are rejected. A successful deletion reports
+`Deleted member: NAME; Phone: PHONE; Email: EMAIL; Address: ADDRESS; Tags: [TAG1, TAG2]` after
+the updated roster is saved. A save failure reports `Could not save data to file: [DETAILS]`; the
+deletion remains in memory, but the previous saved file is preserved.
 
 #### UC05: Reset the whole roster
 
@@ -698,6 +712,34 @@ duplicate members invalidate the whole file. `{"persons": []}` is a valid empty 
 Do not edit the data file while TrackCall is running. A later successful data-changing command can
 overwrite an invalid file; restore or repair it first if the original contents are needed.
 
+#### UC08: Finish a TrackCall session
+
+**Related stories:** US11, US12, US13. **Goal:** close TrackCall after the secretary has finished
+working without changing the persisted roster.
+
+**MSS**
+
+1. The secretary finishes reviewing or changing the roster.
+2. The secretary confirms that the latest data-changing command reported a successful save, then
+   submits `exit`.
+3. TrackCall validates the parameterless command and closes the main window and application process.
+4. The secretary can start TrackCall again later and retrieve the last successfully saved roster. The
+   use case ends.
+
+**Extensions**
+
+* **2a.** The previous data-changing command reported a saving failure. The secretary may resolve the
+  storage problem and retry a data-changing command before returning to step 2. If the secretary
+  proceeds with `exit`, TrackCall still closes, but changes that exist only in memory are not
+  guaranteed to be present after restart.
+* **3a.** The command contains an argument or uses the wrong command spelling or case. TrackCall
+  reports `Invalid command format. Usage: exit` for extra arguments, or the unknown-command error
+  `Unknown command. Type help for available commands.` for a wrong-case command such as `EXIT`.
+  TrackCall keeps the window open, and the secretary can retry step 2.
+
+`exit` does not restore the full list, clear active searches or filters, display a success message, or
+perform a separate final save. The operating-system close button has the same termination behaviour.
+
 ### Non-Functional Requirements
 
 These are acceptance requirements for the intended product, not results already measured on v1.1.
@@ -716,7 +758,7 @@ is a test target, not a restriction on accepted records or command length.
 | NFR06 | Local data privacy | Core operations do not transmit member records to external services. The MVP provides no login or encryption; protection of the local file relies on the user's operating-system access controls. |
 | NFR07 | Inspectable storage | Member data is stored locally as human-editable UTF-8 JSON, with no DBMS required. The saved data can be read and corrected using an ordinary text editor while the app is closed. |
 | NFR08 | Response time | With 500 members and a writable data file of at most 1 MB, each valid in-app command of at most 256 characters completes within 2 seconds on a computer with a 2 GHz dual-core CPU, 4 GB RAM, local SSD, and no competing heavy workload. Measure from submission to displayed result, including any save; exclude startup and shutdown. Record the OS, Java version, hardware, dataset, and timings when testing. |
-| NFR09 | Persistence reliability | After a data-changing command reports success, a normal restart retains the saved roster. A simulated write failure leaves the previous saved file intact and is never reported as success. In-memory recovery follows rule 10, including the rollback required for `clear`. |
+| NFR09 | Persistence reliability | After a data-changing command reports success, a normal restart retains the saved roster. A simulated write failure leaves the previous saved file intact and is never reported as success. In-memory recovery follows rule 10, including the rollback required for `clear`. The `exit` command closes normally without performing an extra save or corrupting the last successfully saved roster. |
 
 Input validation, duplicate rejection, filtering, and no-op behaviour are functional requirements
 and are recorded in the shared rules instead of being counted as NFRs. Development-process rules,
@@ -740,6 +782,8 @@ such as incremental delivery, are also not product NFRs.
 | No-op | A valid operation that leaves record values unchanged. A valid data-changing no-op can still retry saving; a bulk command with no targets is an error. |
 | In-memory data | The working roster held by the running app. After a save failure it can differ from the file and may be lost on exit. |
 | Persisted data | The roster successfully written to the local data file and available for a later session. |
+| Session | One period of use beginning when TrackCall starts and ending when the application closes. |
+| Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
 | Data-changing command | `add`, `edit`, `delete`, `clear`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
 | JSON | The structured text format of the local data file. TrackCall's schema uses a `persons` array and each member's `tagged` array. |
