@@ -559,6 +559,14 @@ These are representative user workflows for the planned product, not implementat
 An edited member that no longer matches the search or filters disappears from the displayed list
 but remains in the roster. The secretary can use `list` to see it again.
 
+The search command is `find KEYWORD [MORE_KEYWORDS]`. It accepts one or more whitespace-separated
+keywords, ignores case, matches complete name words, and returns records matching any keyword in
+address-book order. A successful search reports `1 member listed.`, `N members listed.`, or
+`0 members listed.` and does not save the data file. `find` with no keyword reports
+`Invalid command format. Usage: find KEYWORD [MORE_KEYWORDS]`; a wrong-case command such as
+`FIND John` reports `Unknown command. Type help for available commands.` A new `find` searches the
+complete roster and replaces the previous search and filters.
+
 #### UC03: Update a group's tags
 
 **Related stories:** US08, US09, US10. **Goal:** change one group assignment without changing unrelated tags.
@@ -619,6 +627,12 @@ not delete them. Counts still refer to the target set fixed at step 6.
   confirmed persistence; recovery follows rule 10.
 
 Deletion has no confirmation or undo. It removes the underlying record, not just its visible card.
+The command is `delete INDEX`, where `INDEX` is one positive ASCII-digit index from the current
+displayed list; leading zeroes are accepted. Signs, decimals, letters, whitespace inside the index,
+extra arguments, and out-of-range indices are rejected. A successful deletion reports
+`Deleted member: NAME; Phone: PHONE; Email: EMAIL; Address: ADDRESS; Tags: [TAG1, TAG2]` after
+the updated roster is saved. A save failure reports `Could not save data to file: [DETAILS]`; the
+deletion remains in memory, but the previous saved file is preserved.
 
 #### UC05: Reset the whole roster
 
@@ -719,7 +733,9 @@ working without changing the persisted roster.
   proceeds with `exit`, TrackCall still closes, but changes that exist only in memory are not
   guaranteed to be present after restart.
 * **3a.** The command contains an argument or uses the wrong command spelling or case. TrackCall
-  reports the command-format error, keeps the window open, and the secretary can retry step 2.
+  reports `Invalid command format. Usage: exit` for extra arguments, or the unknown-command error
+  `Unknown command. Type help for available commands.` for a wrong-case command such as `EXIT`.
+  TrackCall keeps the window open, and the secretary can retry step 2.
 
 `exit` does not restore the full list, clear active searches or filters, display a success message, or
 perform a separate final save. The operating-system close button has the same termination behaviour.
