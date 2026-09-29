@@ -17,6 +17,11 @@ public class ListCommand extends Command {
     public static final String MESSAGE_EMPTY = "No members in the address book.";
 
     @Override
+    public boolean isReadOnly() {
+        return true;
+    }
+
+    @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);

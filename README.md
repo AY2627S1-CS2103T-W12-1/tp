@@ -5,24 +5,26 @@
 
 TrackCall helps membership secretaries keep their organisation's member records up to date.
 It is a desktop app with a planned performance target of 500 members, not a hard record limit.
-Type commands to find members, update contact details, and organise groups without editing each record one at a time.
+Type commands to find members and update their contact details.
 
-## Planned features
+## Current development build
 
-* Add and edit member records with `add` and `edit`, and view or remove records as needed.
-* Find members by name and narrow the results by group tags.
-* Add or remove a tag for everyone in the displayed list with one command.
-* Look up command syntax with `help` or `help COMMAND`, and save changes to a local data file automatically.
+The working branch begins v1.2; v1.1 was the documentation practice iteration.
+
+* Add, edit, list, find, delete, and clear member records.
+* Open offline instructions for all eight available commands with `help`, or one command with `help COMMAND`.
+* Read labeled member cards and multiline feedback in a light beige interface, with wrapping and scrolling.
+* Save data changes locally, with clear recovery guidance if saving fails and rollback for a failed clear.
+* Leave the roster file unchanged when running read-only commands.
+
+Tag filtering and bulk tag changes are planned for the MVP and are not available in this build.
 
 ## Planned interface
 
 ![TrackCall mockup showing committee members after filtering by tag](docs/images/Ui.png)
 
-The intended interface mockup was prepared with AI assistance and includes planned tag filtering.
-
-This is a mockup of the intended product. It keeps AB3's command box, result display,
-member list, and data-file status bar. The TrackCall features above are planned;
-the current application still contains the AB3 starter behaviour.
+This AI-assisted mockup shows the intended product, including planned tag filtering. It is not a
+screenshot of the current development build.
 
 ## Documentation
 
@@ -31,12 +33,12 @@ the current application still contains the AB3 starter behaviour.
 * [Developer Guide](https://ay2627s1-cs2103t-w12-1.github.io/tp/DeveloperGuide.html)
 * [About Us](https://ay2627s1-cs2103t-w12-1.github.io/tp/AboutUs.html)
 
-The Developer Guide describes the planned requirements. The User Guide still describes
-the starter application and will be updated as TrackCall features are implemented.
+The User Guide describes the working build. The Developer Guide separates the current implementation
+from planned MVP requirements. Published documentation follows the team's merged default branch.
 
 ## Local development
 
-Use Java 25. Start the application with:
+Use Java 25. On macOS, select the course-compatible JDK+FX distribution. Start the application with:
 
 ```shell
 ./gradlew run

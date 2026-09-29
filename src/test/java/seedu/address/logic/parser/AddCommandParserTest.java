@@ -45,6 +45,7 @@ import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
+/** Tests member creation syntax and field validation. */
 public class AddCommandParserTest {
     private AddCommandParser parser = new AddCommandParser();
 
@@ -63,6 +64,21 @@ public class AddCommandParserTest {
         assertParseSuccess(parser,
                 NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB + ADDRESS_DESC_BOB + TAG_DESC_HUSBAND + TAG_DESC_FRIEND,
                 new AddCommand(expectedPersonMultipleTags));
+    }
+
+    @Test
+    public void parse_tabSeparatedFields_success() {
+        String arguments = "\tn/" + VALID_NAME_BOB + "\tp/" + VALID_PHONE_BOB
+                + "\te/" + VALID_EMAIL_BOB + "\ta/" + VALID_ADDRESS_BOB + "\tt/" + VALID_TAG_FRIEND;
+        Person expected = new PersonBuilder(BOB).withTags(VALID_TAG_FRIEND).build();
+        assertParseSuccess(parser, arguments, new AddCommand(expected));
+    }
+
+    @Test
+    public void parse_tabSeparatedDuplicatePrefix_failure() {
+        String arguments = NAME_DESC_BOB + "\tn/" + VALID_NAME_BOB + PHONE_DESC_BOB
+                + EMAIL_DESC_BOB + ADDRESS_DESC_BOB;
+        assertParseFailure(parser, arguments, Messages.getErrorMessageForDuplicatePrefixes(PREFIX_NAME));
     }
 
     @Test
