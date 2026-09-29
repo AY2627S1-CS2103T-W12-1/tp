@@ -1,15 +1,19 @@
 package seedu.address.ui;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
@@ -128,15 +132,25 @@ public class MainWindow extends UiPart<Stage> {
     }
 
     /**
-     * Sets the default size based on {@code guiSettings}.
+     * Restores the saved bounds while keeping the window accessible after display changes.
      */
     private void setWindowDefaultSize(GuiSettings guiSettings) {
-        primaryStage.setHeight(guiSettings.getWindowHeight());
-        primaryStage.setWidth(guiSettings.getWindowWidth());
-        if (guiSettings.getWindowCoordinates() != null) {
-            primaryStage.setX(guiSettings.getWindowCoordinates().getX());
-            primaryStage.setY(guiSettings.getWindowCoordinates().getY());
+        List<Rectangle2D> screens = new ArrayList<>();
+        Screen primaryScreen = Screen.getPrimary();
+        screens.add(primaryScreen.getVisualBounds());
+        for (Screen screen : Screen.getScreens()) {
+            if (!screen.equals(primaryScreen)) {
+                screens.add(screen.getVisualBounds());
+            }
         }
+        Rectangle2D placement = WindowPlacement.restore(guiSettings, screens,
+                primaryStage.getMinWidth(), primaryStage.getMinHeight());
+        primaryStage.setMinWidth(Math.min(primaryStage.getMinWidth(), placement.getWidth()));
+        primaryStage.setMinHeight(Math.min(primaryStage.getMinHeight(), placement.getHeight()));
+        primaryStage.setWidth(placement.getWidth());
+        primaryStage.setHeight(placement.getHeight());
+        primaryStage.setX(placement.getMinX());
+        primaryStage.setY(placement.getMinY());
     }
 
     /**
@@ -144,11 +158,7 @@ public class MainWindow extends UiPart<Stage> {
      */
     @FXML
     public void handleHelp() {
-        if (!helpWindow.isShowing()) {
-            helpWindow.show();
-        } else {
-            helpWindow.focus();
-        }
+        helpWindow.show();
     }
 
     void show() {
@@ -183,7 +193,7 @@ public class MainWindow extends UiPart<Stage> {
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
 
             if (commandResult.isShowHelp()) {
-                handleHelp();
+                helpWindow.show(commandResult.getHelpTopic());
             }
 
             if (commandResult.isExit()) {

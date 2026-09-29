@@ -9,6 +9,14 @@ import seedu.address.model.Model;
 public abstract class Command {
 
     /**
+     * Returns whether this command can run without writing the roster to storage.
+     * Commands that change member data must keep the default value of false.
+     */
+    public boolean isReadOnly() {
+        return false;
+    }
+
+    /**
      * Executes the command and returns the result message.
      *
      * @param model {@code Model} which the command should operate on.

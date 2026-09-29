@@ -42,7 +42,7 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_clear() throws Exception {
         assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD) instanceof ClearCommand);
-        assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD + " 3") instanceof ClearCommand);
+        assertTrue(parser.parseCommand(" \tclear \t") instanceof ClearCommand);
     }
 
     @Test
@@ -64,7 +64,7 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_exit() throws Exception {
         assertTrue(parser.parseCommand(ExitCommand.COMMAND_WORD) instanceof ExitCommand);
-        assertTrue(parser.parseCommand(ExitCommand.COMMAND_WORD + " 3") instanceof ExitCommand);
+        assertTrue(parser.parseCommand(" \texit \t") instanceof ExitCommand);
     }
 
     @Test
@@ -78,13 +78,33 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_help() throws Exception {
         assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD) instanceof HelpCommand);
-        assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " 3") instanceof HelpCommand);
+        assertEquals(new HelpCommand("edit"), parser.parseCommand("help edit"));
+        String expectedError = String.format(HelpCommand.MESSAGE_UNKNOWN_TOPIC, "3");
+        assertThrows(ParseException.class, expectedError, () -> parser.parseCommand("help 3"));
     }
 
     @Test
     public void parseCommand_list() throws Exception {
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
-        assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD + " 3") instanceof ListCommand);
+        assertTrue(parser.parseCommand(" \tlist \t") instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_parameterlessCommandWithArguments_rejectsBeforeExecution() {
+        String clearError = String.format(MESSAGE_INVALID_COMMAND_FORMAT, ClearCommand.MESSAGE_USAGE);
+        String listError = String.format(MESSAGE_INVALID_COMMAND_FORMAT, ListCommand.MESSAGE_USAGE);
+        String exitError = String.format(MESSAGE_INVALID_COMMAND_FORMAT, ExitCommand.MESSAGE_USAGE);
+        assertThrows(ParseException.class, clearError, () -> parser.parseCommand("clear accidental"));
+        assertThrows(ParseException.class, listError, () -> parser.parseCommand("list 1"));
+        assertThrows(ParseException.class, exitError, () -> parser.parseCommand("exit now"));
+    }
+
+    @Test
+    public void parseCommand_malformedDelete_rejectsBeforeExecution() {
+        String expectedError = String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteCommand.MESSAGE_USAGE);
+        for (String input : new String[] {"delete", "delete 0", "delete -1", "delete 1 2", "delete one"}) {
+            assertThrows(ParseException.class, expectedError, () -> parser.parseCommand(input));
+        }
     }
 
     @Test

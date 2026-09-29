@@ -33,6 +33,12 @@ public class CommandResultTest {
 
         // different exit value -> returns false
         assertFalse(commandResult.equals(new CommandResult("feedback", false, true)));
+
+        // the selected help topic must survive result comparison
+        assertNotEquals(new CommandResult("feedback", true, false, "add"),
+                new CommandResult("feedback", true, false, "edit"));
+        assertEquals(new CommandResult("feedback", true, false, "add"),
+                new CommandResult("feedback", true, false, "add"));
     }
 
     @Test
@@ -57,7 +63,7 @@ public class CommandResultTest {
         CommandResult commandResult = new CommandResult("feedback");
         String expected = CommandResult.class.getCanonicalName() + "{feedbackToUser="
                 + commandResult.getFeedbackToUser() + ", showHelp=" + commandResult.isShowHelp()
-                + ", exit=" + commandResult.isExit() + "}";
+                + ", exit=" + commandResult.isExit() + ", helpTopic=" + commandResult.getHelpTopic() + "}";
         assertEquals(expected, commandResult.toString());
     }
 }

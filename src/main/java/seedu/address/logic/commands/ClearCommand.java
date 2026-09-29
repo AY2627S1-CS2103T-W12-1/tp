@@ -11,13 +11,16 @@ import seedu.address.model.Model;
 public class ClearCommand extends Command {
 
     public static final String COMMAND_WORD = "clear";
-    public static final String MESSAGE_SUCCESS = "Address book has been cleared!";
+    public static final String MESSAGE_USAGE = "clear: Permanently removes every member. No arguments are accepted.";
+    public static final String MESSAGE_SUCCESS = "Cleared %1$d member(s).";
+    public static final String MESSAGE_EMPTY = "No members to clear.";
 
 
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
+        int removedCount = model.getAddressBook().getPersonList().size();
         model.setAddressBook(new AddressBook());
-        return new CommandResult(MESSAGE_SUCCESS);
+        return new CommandResult(removedCount == 0 ? MESSAGE_EMPTY : String.format(MESSAGE_SUCCESS, removedCount));
     }
 }
