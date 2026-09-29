@@ -19,7 +19,10 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 1. Ensure that Java `25` or later is installed on your computer.<br>
    **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
-1. Download the latest `.jar` file from [here](https://github.com/se-edu/addressbook-level3/releases).
+1. Use the **team's** application, not the upstream AB3 release. During v1.1 there is no team release JAR.
+   Developers can clone the [team repository](https://github.com/AY2627S1-CS2103T-W12-1/tp),
+   run `./gradlew shadowJar` (Windows: `gradlew.bat shadowJar`), and use `build/libs/addressbook.jar`.
+   Future published builds will appear on the [team releases page](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases).
 
 1. Copy the file to the folder you want to use as the _home folder_ for your AddressBook.
 
@@ -162,20 +165,23 @@ AddressBook automatically saves data after every command. You do not need to sav
 
 ### Editing the data file
 
-AddressBook data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
+AddressBook data is saved automatically as a JSON file `data/addressbook.json`, relative to the folder from which you start the app.
+Start it from the same folder each time to use the same records.
+Close the app and back up the file before editing it. The current starter uses a `persons` array
+and each person has `name`, `phone`, `email`, `address`, and `tags` fields.
+The proposed TrackCall `tagged` schema in the DG is not implemented yet. Advanced users are welcome to update data directly by editing that data file.
 
 <div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
-If your changes make the data file invalid, AddressBook starts with an empty address book at the next run. The invalid file remains on disk until you run a command (AddressBook saves after every command). Still, we recommend backing up the file before editing it.<br>
+Malformed JSON normally causes AddressBook to start with an empty address book at the next run.
+Known defects in the current version mean a JSON `null` root, null person, or null tag can prevent startup instead.
+Close the app and repair the file or restore your backup if startup fails.
+The invalid file remains on disk until you run a successful command (AddressBook saves after every successful command).<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
 ### Filtering persons by tag `[coming soon]`
 
 Displays members with a specified tag without changing or deleting member data.
-
-### Archiving data files `[coming in v2.0]`
-
-_Details coming soon ..._
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -204,3 +210,4 @@ Action | Format, Examples
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List** | `list`
 **Help** | `help`
+**Exit** | `exit`

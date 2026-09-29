@@ -3,7 +3,8 @@ layout: page
 title: TrackCall
 ---
 
-TrackCall helps membership secretaries keep a roster of up to 500 members up to date.
+TrackCall helps membership secretaries keep their organisation's member records up to date.
+The planned performance target is 500 members; this is not a hard record limit.
 Use typed commands to manage contact details, find members, and organise groups.
 
 ## Planned interface

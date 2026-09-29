@@ -9,7 +9,13 @@ title: Developer Guide
 
 ## **Acknowledgements**
 
-* _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the originals.}_
+* TrackCall builds on [AddressBook Level 3](https://se-education.org/addressbook-level3/) by the
+  [SE-EDU initiative](https://se-education.org/). The starter supplies the architecture, source code, tests,
+  and original diagrams.
+* The application uses [JavaFX](https://openjfx.io/) for its interface and
+  [Jackson](https://github.com/FasterXML/jackson) for JSON storage.
+* [JUnit](https://junit.org/junit5/), [Gradle](https://gradle.org/),
+  [Checkstyle](https://checkstyle.org/), and [JaCoCo](https://www.jacoco.org/jacoco/) support testing and builds.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -36,7 +42,7 @@ The following provides a quick overview of the main components and their interac
 
 **Main components of the architecture**
 
-**`Main`** (consisting of classes [`Main`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
+**`Main`** (consisting of classes [`Main`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
 * At app launch, it initializes the other components in the correct sequence, and connects them up with each other.
 * At shut down, it shuts down the other components and invokes cleanup methods where necessary.
 
@@ -68,13 +74,13 @@ The sections below give more details of each component.
 
 ### UI component
 
-The **API** of this component is specified in [`Ui.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/Ui.java)
+The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/ui/Ui.java)
 
 ![Structure of the UI Component](images/UiClassDiagram.png)
 
 The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
 
-The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
+The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
 
 The `UI` component,
 
@@ -85,7 +91,7 @@ The `UI` component,
 
 ### Logic component
 
-**API** : [`Logic.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/logic/Logic.java)
+**API** : [`Logic.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/logic/Logic.java)
 
 Here's a (partial) class diagram of the `Logic` component:
 
@@ -115,7 +121,7 @@ How the parsing works:
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 
 ### Model component
-**API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
+**API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
 
 <img src="images/ModelClassDiagram.png" width="450" />
 
@@ -136,7 +142,7 @@ The `Model` component,
 
 ### Storage component
 
-**API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
+**API** : [`Storage.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/storage/Storage.java)
 
 <img src="images/StorageClassDiagram.png" width="550" />
 
@@ -155,89 +161,8 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 This section describes some noteworthy details on how certain features are implemented.
 
-### \[Proposed\] Undo/redo feature
-
-#### Proposed Implementation
-
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the following operations:
-
-* `VersionedAddressBook#commit()` — Saves the current address book state in its history.
-* `VersionedAddressBook#undo()` — Restores the previous address book state from its history.
-* `VersionedAddressBook#redo()` — Restores a previously undone address book state from its history.
-
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and `Model#redoAddressBook()` respectively.
-
-Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
-
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the initial address book state, and the `currentStatePointer` pointing to that single address book state.
-
-![UndoRedoState0](images/UndoRedoState0.png)
-
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
-
-![UndoRedoState1](images/UndoRedoState1.png)
-
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
-
-![UndoRedoState2](images/UndoRedoState2.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
-
-</div>
-
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
-
-![UndoRedoState3](images/UndoRedoState3.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
-than attempting to perform the undo.
-
-</div>
-
-The following sequence diagram shows how an undo operation goes through the `Logic` component:
-
-![UndoSequenceDiagram](images/UndoSequenceDiagram-Logic.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `UndoCommand` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
-
-</div>
-
-Similarly, how an undo operation goes through the `Model` component is shown below:
-
-![UndoSequenceDiagram](images/UndoSequenceDiagram-Model.png)
-
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the address book to that state.
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
-
-</div>
-
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as `list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus, the `addressBookStateList` remains unchanged.
-
-![UndoRedoState4](images/UndoRedoState4.png)
-
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …​` command. This is the behavior that most modern desktop applications follow.
-
-![UndoRedoState5](images/UndoRedoState5.png)
-
-The following activity diagram summarizes what happens when a user executes a new command:
-
-<img src="images/CommitActivityDiagram.png" width="250" />
-
-#### Design considerations:
-
-**Aspect: How undo & redo execute:**
-
-* **Alternative 1 (current choice):** Saves the entire address book.
-  * Pros: Easy to implement.
-  * Cons: May have performance issues in terms of memory usage.
-
-* **Alternative 2:** Individual command knows how to undo/redo by
-  itself.
-  * Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
-  * Cons: We must ensure that the implementation of each individual command is correct.
-
-_{more aspects and alternatives to be added}_
+Undo/redo is not implemented or selected for the TrackCall MVP. Deletion and clearing are immediate;
+users need a backup to recover data after a successful save.
 
 ### Automatic data saving
 
@@ -263,6 +188,11 @@ Any model change made before the failed save remains in memory, including a chan
 At startup, an existing data file is loaded into the model. If the file is missing, sample data is loaded. If
 the file cannot be read, TrackCall starts with an empty address book. Startup does not immediately save the
 address book.
+
+Known loading defects are tracked in [issue #36](https://github.com/AY2627S1-CS2103T-W12-1/tp/issues/36)
+for v1.2. A JSON `null` root, a null person entry, or a null tag entry can currently prevent startup
+instead of producing the normal empty-roster fallback. The planned requirements below describe
+the intended handling, not fixes already delivered in v1.1.
 
 #### Proposed handling for planned commands
 
@@ -297,11 +227,6 @@ or empty tag, invalid characters or spaces, a tag longer than 30 characters, mul
 prefixes.
 
 ![Filter members by tag UI mock-up](images/FilterTag.png)
-
-### \[Proposed\] Data archiving
-
-_{Explain here how the data archiving feature will be implemented}_
-
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -795,52 +720,65 @@ such as incremental delivery, are also not product NFRs.
 
 ## **Appendix: Instructions for manual testing**
 
-Given below are instructions to test the app manually.
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** These instructions only provide a starting point for testers to work on;
-testers are expected to do more *exploratory* testing.
-
-</div>
+These checks cover the current starter commands. Planned TrackCall features in the requirements
+appendix must receive their own acceptance tests as they are implemented.
+Use a disposable folder and synthetic contacts. Never run `clear` on the only copy of real data.
 
 ### Launch and shutdown
 
-1. Initial launch
+1. Build the team repository with Java 25 using `./gradlew shadowJar` (Windows: `gradlew.bat shadowJar`).
+2. Copy `build/libs/addressbook.jar` to an empty test folder. In a terminal, change to that folder
+   and run `java -jar addressbook.jar`. On macOS, use the JDK+FX distribution in the
+   [course installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html).
+3. Check that sample contacts appear, `list` displays them, and `exit` closes the app.
+4. Restart the app, resize and move the window, close it, and restart from the same folder. Check the saved position
+   and size. Also test after disconnecting a second display; see the current UG's known issue.
 
-   1. Download the JAR file and copy it into an empty folder.
+### Commands and displayed indices
 
-   1. Double-click the JAR file.<br>
-      Expected: The GUI opens with a set of sample contacts. The window size may not be optimal.
+1. Run `clear`, then `add n/Alice Tan p/12345678 e/alice@example.com a/Main Street t/committee`.
+   Expect one contact with those details.
+2. Add `Bob Tan` with a different phone and email. Run `find Alice`, then `delete 1`.
+   Expect Alice to be removed and Bob to remain when `list` is run.
+3. Try `delete 0`, `delete -1`, `delete 999999999999999999999`, and `delete 2` with only one
+   displayed contact. Expect an error, with records unchanged.
+4. Run `edit 1 t/committee t/year1`, then `edit 1 t/`.
+   Expect both tags to be added and then removed. A lone `edit 1` must report an error.
+5. Try an `add` with a missing required field, a repeated `n/`, and an invalid phone.
+   Expect an error and no new contact. A second contact with exactly the same name is currently
+   rejected even when other fields differ; the planned TrackCall identity rule is broader.
+6. Run `find Nobody`, then `list`. Expect zero results followed by the complete roster.
+7. Run `help`, then close its window. The current command opens the help window; it does not
+   implement the planned `help COMMAND` interface.
 
-1. Saving window preferences
+### Persistence and invalid files
 
-   1. Resize the window to an optimal size. Move the window to a different location. Close the window.
+1. Add a contact, exit, and restart from the same working directory. Check that its fields and tags remain.
+2. Close the app and back up `data/addressbook.json`. Delete the original file and restart.
+   Expect sample contacts. This does not recover the deleted roster; restore the backup if needed.
+3. With the app closed, replace the test file with malformed JSON, such as an unmatched `{`.
+   Restart. Expect an empty roster without a crash; inspect the log for the loading error.
+4. Check the invalid file remains unchanged immediately after startup. Close using the window control
+   and restore the backup before entering a command: the current starter saves after every successful
+   command, including `list`, `help`, and `exit`, and can overwrite the invalid file.
+5. In a disposable test folder, replace `data/addressbook.json` with a directory of that name.
+   Start the app and try adding a contact. Expect a save error rather than a success message.
+   The current implementation retains changes in memory after a failed save, including a failed clear.
+   Planned atomic file replacement and clear rollback still need implementation and tests.
 
-   1. Relaunch the app by double-clicking the JAR file.<br>
-       Expected: The most recent window size and location are retained.
+The following regression checks belong to pending [issue #36](https://github.com/AY2627S1-CS2103T-W12-1/tp/issues/36),
+not the expected behaviour of the current version: a data file containing `null`, a `persons` array
+containing `null`,
+and a valid person's `tags` array changed to `[null]`. These inputs can currently prevent startup.
+After the Java fixes are integrated, verify that each input loads an empty roster without crashing,
+reports the loading error, and leaves the invalid file untouched until a successful command.
+Restore the original test file with the app closed after each check.
 
-1. _{ more test cases …​ }_
+### Release acceptance checks still required
 
-### Deleting a person
-
-1. Deleting a person while all persons are being shown
-
-   1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
-
-   1. Test case: `delete 1`<br>
-      Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
-
-   1. Test case: `delete 0`<br>
-      Expected: No person is deleted. The status message shows error details.
-
-   1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
-      Expected: Similar to previous.
-
-1. _{ more test cases …​ }_
-
-### Saving data
-
-1. Dealing with missing/corrupted data files
-
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
-
-1. _{ more test cases …​ }_
+Before peer testing, test the actual release JAR on Windows, macOS, and Linux with the course JDK.
+Check startup from a path containing spaces, offline use, complete long contact details, and the
+required screen resolutions/scales. Run every UG example and compare the actual output. Once
+filtering and bulk tag editing exist, test empty groups, overlapping filters, hidden members,
+changed/skipped counts, invalid input, save failures, and restart persistence. Record results against
+the release commit; passing unit tests alone does not establish release readiness.
