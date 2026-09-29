@@ -203,7 +203,10 @@ Exact feedback follows Ian's feature specification:
 | Failed clear save | `Unable to clear the address book because the changes could not be saved. No members were removed.` |
 
 Regression coverage is in `ListClearIntegrationTest`, the two command tests, parser tests, and
-`FileUtilTest`. Tests cover singular/plural/empty feedback, hidden members, no-match views, order,
+`FileUtilTest`. `PersonCardTest` lays out member cards off-screen and verifies complete field values,
+alphabetical tag order, hidden empty tag rows, and wrapping at narrow widths. Linux CI supplies a
+virtual display with `xvfb-run` for JavaFX; no application window or real user data is opened.
+Command tests cover singular/plural/empty feedback, hidden members, no-match views, order,
 repetition, rejected arguments, no-save listing, persisted empty data, settings, predicate reset,
 failed-save rollback, retry, and temporary-file cleanup. `filter` is not implemented here;
 model predicates are used to verify integration with a future filter without claiming that command exists.
