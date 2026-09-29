@@ -74,6 +74,12 @@ public class MainWindow extends UiPart<Stage> {
         setAccelerators();
 
         helpWindow = new HelpWindow();
+        helpWindow.getRoot().initOwner(primaryStage);
+        helpWindow.getRoot().setOnHidden(event -> {
+            if (primaryStage.isShowing()) {
+                primaryStage.requestFocus();
+            }
+        });
     }
 
     public Stage getPrimaryStage() {
