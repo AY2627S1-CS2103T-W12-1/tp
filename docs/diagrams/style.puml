@@ -1,79 +1,81 @@
-/'
- 'Commonly used styles and colors across diagrams.
- 'Refer to https://plantuml-documentation.readthedocs.io/en/latest for a more
- 'comprehensive list of skinparams.
- '/
+/' TrackCall documentation palette: beige surfaces, dark text, and restrained component accents. '/
+!define UI_COLOR #DFE8D4
+!define UI_COLOR_T1 #F0F4EA
+!define UI_COLOR_T2 #CFDDC0
+!define UI_COLOR_T3 #5C7050
+!define UI_COLOR_T4 #40513A
 
+!define LOGIC_COLOR #E8DDCA
+!define LOGIC_COLOR_T1 #F5EFE5
+!define LOGIC_COLOR_T2 #DACEB8
+!define LOGIC_COLOR_T3 #7B684A
+!define LOGIC_COLOR_T4 #5E4D35
 
-'T1 through T4 are shades of the original color from lightest to darkest
+!define MODEL_COLOR #EFDDCE
+!define MODEL_COLOR_T1 #FAF1E9
+!define MODEL_COLOR_T2 #E2C7AF
+!define MODEL_COLOR_T3 #8A614A
+!define MODEL_COLOR_T4 #654531
 
-!define UI_COLOR #1D8900
-!define UI_COLOR_T1 #83E769
-!define UI_COLOR_T2 #3FC71B
-!define UI_COLOR_T3 #166800
-!define UI_COLOR_T4 #0E4100
+!define STORAGE_COLOR #E9E4CA
+!define STORAGE_COLOR_T1 #F7F4E7
+!define STORAGE_COLOR_T2 #DAD3AF
+!define STORAGE_COLOR_T3 #7D754B
+!define STORAGE_COLOR_T4 #5C5537
 
-!define LOGIC_COLOR #3333C4
-!define LOGIC_COLOR_T1 #C8C8FA
-!define LOGIC_COLOR_T2 #6A6ADC
-!define LOGIC_COLOR_T3 #1616B0
-!define LOGIC_COLOR_T4 #101086
+!define USER_COLOR #382E25
 
-!define MODEL_COLOR #9D0012
-!define MODEL_COLOR_T1 #F97181
-!define MODEL_COLOR_T2 #E41F36
-!define MODEL_COLOR_T3 #7B000E
-!define MODEL_COLOR_T4 #51000A
-
-!define STORAGE_COLOR #A38300
-!define STORAGE_COLOR_T1 #FFE374
-!define STORAGE_COLOR_T2 #EDC520
-!define STORAGE_COLOR_T3 #806600
-!define STORAGE_COLOR_T2 #544400
-
-!define USER_COLOR #000000
-
+skinparam BackgroundColor #FFFDF8
+skinparam DefaultFontName Arial
+skinparam DefaultFontColor #382E25
+skinparam ArrowColor #796750
+skinparam ArrowFontColor #382E25
+skinparam NoteBackgroundColor #F5EFE5
+skinparam NoteBorderColor #C7B79F
+skinparam NoteFontColor #382E25
 skinparam Package {
-    BackgroundColor #FFFFFF
+    BackgroundColor #FFFDF8
+    BorderColor #C7B79F
     BorderThickness 1
+    FontColor #382E25
     FontSize 16
 }
-
 skinparam Class {
-    FontColor #FFFFFF
+    FontColor #382E25
     FontSize 15
     BorderThickness 1
-    BorderColor #FFFFFF
-    StereotypeFontColor #FFFFFF
+    BorderColor #A48D71
+    StereotypeFontColor #554636
     FontName Arial
 }
-
 skinparam Actor {
     BorderColor USER_COLOR
     Color USER_COLOR
+    FontColor USER_COLOR
     FontName Arial
 }
-
 skinparam Sequence {
     MessageAlign center
     BoxFontSize 15
     BoxPadding 0
-    BoxFontColor #FFFFFF
+    BoxFontColor #382E25
+    LifeLineBorderColor #A48D71
+    LifeLineBackgroundColor #FFFDF8
+    GroupBackgroundColor #F5EFE5
+    GroupBorderColor #C7B79F
+    GroupFontColor #382E25
     FontName Arial
 }
-
 skinparam Participant {
-    FontColor #FFFFFFF
+    FontColor #382E25
+    BorderColor #A48D71
     Padding 20
 }
-
 skinparam ArrowFontStyle bold
 skinparam MinClassWidth 50
-skinparam ParticipantPadding 10
 skinparam Shadowing false
 skinparam DefaultTextAlignment center
 skinparam packageStyle Rectangle
-
 hide footbox
 hide members
 hide circle
