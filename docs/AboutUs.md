@@ -9,45 +9,45 @@ We are a team based in the [School of Computing, National University of Singapor
 
 ### Calvin Yoel Pandiangan
 
-<img src="images/cayopan.png" width="200px" alt="Calvin Yoel Pandiangan">
+<img src="images/cayopan.png" width="200" alt="Calvin Yoel Pandiangan">
 
-[[github](https://github.com/CAYOPAN)]
+[[GitHub](https://github.com/CAYOPAN)]
 
 * Role: Developer
-* Responsibilities: Exit Program, Delete Member, and Find Member features
+* Responsibilities: Exit, delete, and find commands.
 
 ### Eron Dathan
 
-<img src="images/rondth.png" width="200px" alt="Eron Dathan">
+<img src="images/rondth.png" width="200" alt="Eron Dathan">
 
-[[github](https://github.com/rondth)]
+[[GitHub](https://github.com/rondth)]
 
 * Role: Developer
-* Responsibilities: Automatic Data Saving and Filter Member by Tag (filter) features
+* Responsibilities: Automatic saving and planned tag filtering (`filter`).
 
 ### Glory Charity Lion
 
-<img src="images/glory-lion.png" width="200px" alt="Glory Charity Lion">
+<img src="images/glory-lion.png" width="200" alt="Glory Charity Lion">
 
-[[github](https://github.com/glory-lion)]
+[[GitHub](https://github.com/glory-lion)]
 
 * Role: Developer
-* Responsibilities: Editing the Data File and Bulk Tag Editing features
+* Responsibilities: Manual data-file editing and planned bulk tag editing.
 
 ### Ian Abiel Wangsa
 
-<img src="images/manutd1234.png" width="200px" alt="Ian Abiel Wangsa">
+<img src="images/manutd1234.png" width="200" alt="Ian Abiel Wangsa">
 
-[[github](https://github.com/Manutd1234)]
+[[GitHub](https://github.com/Manutd1234)]
 
 * Role: Developer
-* Responsibilities: List All Persons (`list`) and Clear All Entries (`clear`) features
+* Responsibilities: List members (`list`) and clear the roster (`clear`).
 
 ### Noah
 
-<img src="images/asdao.png" width="200px" alt="Noah">
+<img src="images/asdao.png" width="200" alt="Noah">
 
-[[github](https://github.com/Asdao)]
+[[GitHub](https://github.com/Asdao)]
 
 * Role: Developer
 * Responsibilities: CLI workflows for adding and editing member records, and command help.
