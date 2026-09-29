@@ -7,6 +7,21 @@ title: Developer Guide
 
 --------------------------------------------------------------------------------------------------------------------
 
+## **Value proposition**
+
+TrackCall helps a membership secretary keep a club roster accurate and organise overlapping
+groups using short typed commands. The secretary can find members, narrow the displayed group
+by tag, and add or remove a tag for that whole group in one operation. This reduces repetitive
+record-by-record work while keeping unrelated tags and hidden members unchanged. Records are
+stored locally and valid changes are saved automatically, so the core workflow does not need
+an internet connection or a separate save command.
+
+This describes the intended MVP. The **v1.2 development build** already supports individual
+member management, name search, offline command help, and local saving. Tag filtering and
+bulk tag changes remain planned; see [implementation status](#differences-still-to-implement-for-the-mvp).
+
+--------------------------------------------------------------------------------------------------------------------
+
 ## **Acknowledgements**
 
 * TrackCall builds on [AddressBook Level 3](https://se-education.org/addressbook-level3/) by the
@@ -378,14 +393,7 @@ functional changes, including offline help and clearer feedback, belong to v1.2 
 * Needs a small local roster. The performance target is 500 members; this is not a limit that
   rejects a 501st record.
 
-**Value proposition**
-
-TrackCall helps a membership secretary keep a club roster accurate and organise overlapping
-groups using short typed commands. The secretary can find members, narrow the displayed group
-by tag, and add or remove a tag for that whole group in one operation. This reduces repetitive
-record-by-record work while keeping unrelated tags and hidden members unchanged. Records are
-stored locally and valid changes are saved automatically, so the core workflow does not need
-an internet connection or a separate save command.
+**Value proposition:** See the [product value proposition](#value-proposition) at the start of this guide.
 
 **Selected MVP**
 

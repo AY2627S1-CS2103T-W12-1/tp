@@ -14,9 +14,15 @@
       id: your-data
     - title: Current limitations
       id: current-limitations
+    - title: FAQ
+      id: faq
+    - title: Command summary
+      id: command-summary
 - title: Developer Guide
   url: /DeveloperGuide.html
   children:
+    - title: Value proposition
+      id: value-proposition
     - title: Acknowledgements
       id: acknowledgements
     - title: Setting up

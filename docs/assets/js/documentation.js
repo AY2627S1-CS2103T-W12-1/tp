@@ -129,7 +129,7 @@
   }
 
   if (outline) {
-    const compactOutline = window.matchMedia('(max-width: 1180px)');
+    const compactOutline = window.matchMedia('(max-width: 1320px)');
     const setOutlineDefault = () => { outline.open = !compactOutline.matches; };
     setOutlineDefault();
     compactOutline.addEventListener('change', setOutlineDefault);

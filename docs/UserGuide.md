@@ -40,16 +40,7 @@ Command keywords are lowercase, with no leading slash: type `help`, not `/help`.
 Square brackets mark optional input; `[t/TAG]...` means zero or more tags.
 Do not type these brackets or the ellipsis. Submit each command on one line.
 
-| Task | Format | Example and result |
-| --- | --- | --- |
-| Open help | `help [COMMAND]` | `help add` opens the add instructions. |
-| Add a member | `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...` | The quick-start example adds Alice. |
-| Show everyone | `list` | `list` restores the complete roster. |
-| Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
-| Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
-| Delete one member | `delete INDEX` | `delete 1` removes the first currently displayed member. |
-| Clear the roster | `clear` | `clear` removes all members, including those hidden by a search. |
-| Close the app | `exit` | `exit` ends the session. |
+Use the [command summary](#command-summary) for a compact reference, or read the details below.
 
 ### Offline help: `help`
 
@@ -197,3 +188,38 @@ adding or clearing records, because a successful data change replaces the file.
   displayed member details after adding or editing.
 
 The [Developer Guide](DeveloperGuide.md#appendix-requirements) records the intended MVP and later ideas.
+
+## FAQ
+
+**How do I move my roster to another computer?**
+Close TrackCall and copy `data/addressbook.json` to the corresponding location on your other
+computer. See [Your data](#your-data) for the working-folder and backup instructions.
+
+**Why did a member disappear after a search?**
+A search changes the displayed list, not the saved roster. Run `list` to show everyone, then
+check the current displayed number before editing or deleting a member.
+
+**Can I filter by tag or update a whole group's tags?**
+Those commands are planned. This build supports tags on individual members through `add` and
+`edit`; see [Current limitations](#current-limitations).
+
+**What should I do after a save error?**
+Follow [Correcting errors](#correcting-errors) before exiting. Recovery differs between
+`clear`, which restores the roster after a failed save, and `add`, `edit`, or `delete`, whose
+unsaved changes remain visible in memory.
+
+## Command summary
+
+| Task | Format | Example and result |
+| --- | --- | --- |
+| Open help | `help [COMMAND]` | `help add` opens the add instructions. |
+| Add a member | `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...` | The quick-start example adds Alice. |
+| Show everyone | `list` | `list` restores the complete roster. |
+| Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
+| Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
+| Delete one member | `delete INDEX` | `delete 1` removes the first currently displayed member. |
+| Clear the roster | `clear` | `clear` removes all members, including those hidden by a search. |
+| Close the app | `exit` | `exit` ends the session. |
+
+`INDEX` always refers to the currently displayed list. Check the member details before using
+`edit` or `delete`. See [Commands](#commands) for parameter rules and expected results.
