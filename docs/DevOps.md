@@ -13,6 +13,9 @@ title: DevOps guide
 This project uses Gradle for **build automation and dependency management**. **We recommend reading [this Gradle tutorial from se-edu/guides](https://se-education.org/guides/tutorials/gradle.html).**
 
 
+Use Java **25** for every build and test task. On macOS with SDKMAN, select it with
+`sdk use java 25.0.3.fx-zulu` when needed.
+
 The following commands perform common Gradle tasks.
 
 
@@ -31,6 +34,16 @@ The following commands perform common Gradle tasks.
 * **`test`**
   * `./gradlew test`: Runs all tests.
   * `./gradlew clean test`: Cleans the project before running all tests
+
+### Apple Silicon development and release testing
+
+On an ARM macOS JVM, `run` and `test` select the matching JavaFX native libraries. These local
+runtime dependencies are separate from `shadowJar`: Intel and ARM macOS libraries have colliding
+filenames and cannot simply be combined into the same fat JAR.
+
+For packaged launches on Apple Silicon, use the course-compatible JDK+FX distribution. A passing
+`run` or `test` task is not verification of the release JAR. Test that actual JAR on Windows,
+macOS, and Linux before describing it as a verified portable release.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -71,9 +84,13 @@ Any warnings or errors will be printed out to the console.
 
 ## Making a release
 
-Here are the steps to create a new release.
+The v1.1 documentation practice iteration and v1.2 first increment do not require a release.
+The current application version is `v1.2-dev`; this development build is not a published release.
+For an iteration that requires a release:
 
 1. Update the version number in [`MainApp.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/MainApp.java).
+1. Run the automated tests and code checks with Java 25.
 1. Generate a fat JAR file using Gradle (i.e., `./gradlew shadowJar`).
-1. Tag the repo with the version number. e.g. `v0.1`
+1. Perform the [release acceptance checks](DeveloperGuide.md#release-acceptance-checks-still-required) on that JAR.
+1. Create a lightweight tag for the release commit with the agreed version number, e.g. `v1.3`.
 1. [Create a new release using GitHub](https://help.github.com/articles/creating-releases/). Upload the JAR file you created.

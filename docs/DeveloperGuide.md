@@ -159,22 +159,35 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 ## **Implementation**
 
-This section describes some noteworthy details on how certain features are implemented.
+This section describes the v1.2 working branch. The v1.1 iteration was limited to documentation;
+these functional changes are not a published v1.1 release. The requirements appendix records the
+full intended product, including behaviour still to be implemented.
 
-Undo/redo is not implemented or selected for the TrackCall MVP. Deletion and clearing are immediate;
-users need a backup to recover data after a successful save.
+### Offline command help
 
-### Ian's v1.2 increment: list and clear
+`CommandHelp` stores one local catalogue of the eight implemented commands, including each command's
+purpose, syntax, example, expected result, and common errors. `HelpCommandParser` accepts zero or one
+lowercase topic and rejects unknown or multiple topics. `HelpCommand` returns the topic in `CommandResult`,
+and `MainWindow` passes it to `HelpWindow`.
 
-This implementation covers Ian's two assigned commands. Other command implementations retain
-starter behaviour; the offline help and broader reliability work from PR #42 are not included.
-The requirements appendix continues to describe the complete planned product.
+The help overview groups the eight commands into four compact category cards. Each command shows a
+purpose title, runnable example, and an in-app button for opening its details. The overview reflows
+from two columns to one in a narrower window. `help COMMAND` opens the same detailed command card;
+All commands returns to the overview. F1 and the menu open the overview. Arrow and page keys scroll,
+Home/End move to the ends, and Escape closes help. The catalogue lists only executable commands,
+so planned tag commands cannot be mistaken for available functionality. `CommandHelpTest` checks
+catalogue completeness and executable examples; `HelpWindowTest` checks the rendered overview,
+every detail page, responsive columns, navigation, and keyboard scrolling. `MainWindowTest`
+exercises `help add`, F1, Escape, exit, rejected `/help`, and failed-save recovery through the real
+command box with temporary storage.
+
+### Ian's list and clear commands
 
 `ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, keeps stored order,
 and reports the complete count using singular, plural, or empty-roster wording. `LogicManager`
 returns its result without invoking storage. Extra arguments are rejected by `AddressBookParser`
 before either the view or data changes. Member cards use labelled, wrapping rows and tags, with
-`LightTheme.css` providing the beige main-list palette. No offline-help implementation is added.
+`LightTheme.css` providing the beige main-list palette. The offline guide is described above.
 
 Before executing `ClearCommand`, `LogicManager` snapshots the roster. The command counts and
 removes all records while retaining the old predicate temporarily. After saving succeeds, the
@@ -186,7 +199,7 @@ To meet clear's previous-file preservation requirement, `FileUtil#writeToFile` w
 sibling temporary file and atomically replaces the destination. `JsonAddressBookStorage` no longer
 pre-creates an empty destination. Unsupported atomic replacement produces a handled failure;
 there is no unsafe partial-write fallback. This shared storage helper also benefits existing
-callers, but their command policies and load-validation features are outside this increment.
+callers; their command policies and load validation are described below.
 
 Exact feedback follows Ian's feature specification:
 
@@ -205,53 +218,91 @@ Exact feedback follows Ian's feature specification:
 Regression coverage is in `ListClearIntegrationTest`, the two command tests, parser tests, and
 `FileUtilTest`. `PersonCardTest` lays out member cards off-screen and verifies complete field values,
 alphabetical tag order, hidden empty tag rows, and wrapping at narrow widths. Linux CI supplies a
-virtual display with `xvfb-run` for JavaFX; no application window or real user data is opened.
+virtual display with `xvfb-run` for JavaFX. UI integration tests use synthetic members and temporary
+storage; they never open the user's roster.
 Command tests cover singular/plural/empty feedback, hidden members, no-match views, order,
 repetition, rejected arguments, no-save listing, persisted empty data, settings, predicate reset,
 failed-save rollback, retry, and temporary-file cleanup. `filter` is not implemented here;
 model predicates are used to verify integration with a future filter without claiming that command exists.
 
-### Automatic data saving
+### Readable member details and feedback
 
-#### Current AB3 implementation
+`Messages#format(Person)` formats names, phone numbers, email addresses, addresses, and sorted tags
+as labeled lines. Add, edit, and delete results reuse this format instead of one long semicolon-separated
+message. `ResultDisplay` wraps and scrolls text; a split pane lets the user resize its area.
+`PersonCard` separates the displayed index and name from labeled contact rows and wraps long values
+and tag labels. The JavaFX stylesheet `LightTheme.css` supplies the shared beige palette and dark
+text for the main window, help, and alerts; `HelpWindow.css` adds the help-card layout. A welcome
+message points to `help` and `help add`.
 
-Automatic data saving is handled by `LogicManager#execute(String)`. After a command is parsed and executed
-successfully, `LogicManager` passes the complete address book from `Model#getAddressBook()` to
-`Storage#saveAddressBook(ReadOnlyAddressBook)`. As the complete address book is saved, members hidden from the
-displayed list are included in the data file.
+Find feedback reports `Members found: N`. List and clear use the exact count messages above.
+Data-changing feedback is shown only after saving. Duplicate-name errors explain the existing name rule and suggest `edit`.
 
-`StorageManager` delegates the save operation to `JsonAddressBookStorage`, which serialises the roster
-and uses the shared atomic writer described above. Missing parent directories are created if needed. The file is stored at
-`data/addressbook.json`, relative to the application's working directory, and its path is displayed in the
-status bar.
+`MainWindow` uses `WindowPlacement` to check saved bounds against available display areas at startup. It retains valid
+positions, selects the display with the greatest overlap or the primary display as a fallback,
+and brings oversized or off-screen bounds back within that display. Invalid saved dimensions
+also recover to usable bounds. This handles monitor changes between sessions.
 
-Saving is performed after every successfully executed command except Ian's `list`, including the
-other existing commands that do not change member data. If parsing or command execution fails, saving is not attempted. A normal command result is returned only
-after saving succeeds, so no separate save-success message is shown.
+### Automatic data saving and load recovery
 
-If saving fails, `LogicManager` converts the `IOException` into a `CommandException` for display to the user.
-Model changes from other commands remain in memory on save failure. Ian's `clear` is the exception:
-it restores the roster and view and reports its clear-specific failure message.
+`LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
+`help`, `list`, `find`, and `exit` return without saving member data. Successful `add`, `edit`, `delete`,
+and `clear` commands pass the complete roster, including hidden members, to `Storage#saveAddressBook`.
+Parsing and execution failures do not save. Data-changing commands return normal success only after
+the save succeeds.
 
-At startup, an existing data file is loaded into the model. If the file is missing, sample data is loaded. If
-the file cannot be read, TrackCall starts with an empty address book. Startup does not immediately save the
-address book.
+`StorageManager` delegates JSON storage to `JsonAddressBookStorage`. The default file is
+`data/addressbook.json`, relative to the working directory. `FileUtil#writeToFile` creates missing parent
+directories, writes UTF-8 to a sibling temporary file, and replaces the destination with an atomic move.
+It reports a failure if atomic replacement is unavailable instead of falling back to a potentially
+partial overwrite. An existing saved file remains intact on failure; temporary-file cleanup is attempted.
 
-Known loading defects are tracked in [issue #36](https://github.com/AY2627S1-CS2103T-W12-1/tp/issues/36)
-for v1.2. A JSON `null` root, a null person entry, or a null tag entry can currently prevent startup
-instead of producing the normal empty-roster fallback. The planned requirements below describe
-the intended handling, not fixes already delivered in v1.1.
+If saving fails, `LogicManager` reports a `SaveFailureException`, a `CommandException` subtype that
+also records whether the change remains applied. For `add`, `edit`, and `delete`, the model change
+remains in memory. `CommandBox` clears the already-applied input so pressing Enter cannot accidentally
+repeat an indexed edit or deletion. The result explains that the previous saved roster is unchanged.
+After resolving the storage problem, the user checks the current list and reapplies an existing field
+value with `edit` to save without changing another record; an empty roster can be saved with `clear`.
 
-#### Proposed handling for planned commands
+Before `clear`, `LogicManager` snapshots the roster. A successful save resets the search predicate.
+If saving fails, it restores those records while
+retaining the existing search predicate, so the previous displayed list returns. The result says
+`No members were removed.` and `CommandBox` retains the clear input for a deliberate retry. A failed
+clear of an already-empty roster also reports failure rather than the normal empty result.
+Exiting never retries a save. Application preferences are stored separately at startup and shutdown.
 
-The [shared behaviour rules](#shared-behaviour-rules) below describe the intended saving policy,
-including the complete read-only policy. This increment implements no-save `list` and failed-clear
-rollback; the remaining command policies still need their respective owners' work.
+Startup loads a valid roster in file order, uses samples for a missing file, and uses an empty roster
+after a loading error. A JSON `null` root, null person, and null tag are rejected through the normal
+loading-error path. Errors are logged; an invalid member file is preserved until a successful
+data-changing command replaces it. Null or invalid preferences fall back to defaults, which are saved
+through the usual preferences setup.
 
-When `tagall` and `untagall` are implemented, each valid operation will trigger automatic saving, including a
-valid operation that makes no changes. The proposed `filter` command will not save because it changes only the
-displayed list. The remaining read-only commands (`help`, `find`, `filter`, and `exit`) are planned to skip saving;
-`list` already does so in Ian's increment.
+The current JSON format uses a `persons` array and a `tags` array per member. Existing validation
+still rejects members with identical names. The email validator avoids excessive backtracking on long
+input, and a log-file initialization failure uses the console logger instead of aborting startup.
+
+### Command parsing
+
+`ArgumentTokenizer` recognises the supported lowercase field prefixes when preceded by whitespace,
+including a tab. It trims surrounding value whitespace without removing internal address tabs or
+slashes. `list`, `clear`, and `exit` reject extra arguments before execution. Invalid commands leave
+records, the current list, and the saved file unchanged; the input remains available for correction.
+
+### Differences still to implement for the MVP
+
+* `filter`, `tagall`, and `untagall` remain proposed. Bulk commands must save valid operations,
+  including no-ops; `filter` must remain read-only.
+* Duplicate identity still uses an exact name match. Shared rule 2's comparison of all four contact
+  fields has not been implemented.
+* `edit` currently restores the full list. Retaining the active search and future tag filters is planned.
+* Unknown-prefix rejection still needs a precise grammar that preserves valid free-form addresses.
+  Currently, an unrecognised prefix-like token such as `x/extra` or uppercase `T/committee` inside
+  an address can become literal address text. The parser must not reject ordinary `c/o` or URLs
+  merely because they contain slashes. This does not yet satisfy the intended unknown-prefix rule.
+* Current tags allow alphanumeric text without a 30-character limit, and storage uses `tags`.
+  The intended field rules and `tagged` schema in the requirements appendix are not yet the file contract.
+* Startup loading errors are recorded in the log; the requirements' user-visible load messages remain planned.
+  Undo/redo and deletion confirmation are not selected for the MVP.
 
 ![Automatic data saving UI mock-up](images/AutomaticSavingData.png)
 
@@ -290,9 +341,9 @@ prefixes.
 
 ## **Appendix: Requirements**
 
-These requirements describe the intended TrackCall product. The v1.1 iteration documents the
-product direction and acceptance requirements; it does not implement these planned features.
-The implementation and manual-testing sections describe the existing starter application.
+These requirements describe the intended TrackCall product. They extend beyond the current v1.2
+development build; the implementation section above lists the remaining differences. The v1.1
+iteration recorded the requirements without implementing the planned features.
 
 The requirements are based on the team's [planning workbook][planning-workbook] (the **Narrative**
 and **User Stories** tabs) and [MVP feature specification][feature-specification], reviewed on
@@ -872,77 +923,90 @@ such as incremental delivery, are also not product NFRs.
 
 ## **Appendix: Instructions for manual testing**
 
-These checks cover the current starter commands. Planned TrackCall features in the requirements
-appendix must receive their own acceptance tests as they are implemented.
-Use a disposable folder and synthetic contacts. Never run `clear` on the only copy of real data.
-
-### Ian's list/clear increment
-
-Use a disposable folder and synthetic contacts. These instructions do not claim that other planned features exist.
-
-1. Start with several members, run `find` to display only one, then `list`. Check the exact total,
-   original order, consecutive indices, all contact rows, and unchanged member file. Repeat after
-   a search that matches nobody. Check zero, one, and multiple-member feedback.
-2. Enter `list 1`, `list t/committee`, `clear stop`, and `clear t/committee`. Check exact usage
-   messages and preservation of records and the current view. Check surrounding spaces/tabs and
-   unknown uppercase keywords.
-3. Back up the test data. Run `clear` from a filtered view. Check the total includes hidden members,
-   settings remain unchanged, and restart shows no members. Run `clear` again and check empty feedback.
-4. Make the disposable data destination unwritable, then try `list`: it should still work. Try
-   `clear`: it must report failure, retain the roster and view, and preserve the saved file.
-   Restore write access and retry; only a successful save should produce the clear success message.
-5. Check beige member cards at normal and narrow window sizes. Long values and tags should wrap;
-   use scrolling to reach all members. Help and other commands retain the starter implementation.
+These checks cover the v1.2 working build. They are test instructions, not a claim that every
+platform or release package has been verified. Use a disposable folder and synthetic contacts.
 
 ### Launch and shutdown
 
-1. Build the team repository with Java 25 using `./gradlew shadowJar` (Windows: `gradlew.bat shadowJar`).
-2. Copy `build/libs/addressbook.jar` to an empty test folder. In a terminal, change to that folder
-   and run `java -jar addressbook.jar`. On macOS, use the JDK+FX distribution in the
-   [course installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html).
-3. Check that sample contacts appear, `list` displays them, and `exit` closes the app.
-4. Restart the app, resize and move the window, close it, and restart from the same folder. Check the saved position
-   and size. Also test after disconnecting a second display; see the current UG's known issue.
+1. Select Java 25 and run `./gradlew run` (Windows: `gradlew.bat run`) from the checkout.
+   For a packaged build, use `./gradlew shadowJar`, copy `build/libs/addressbook.jar` into the
+   test folder, and run `java -jar addressbook.jar` there. On macOS, use the JDK+FX distribution in
+   the [course installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html).
+   See [DevOps](DevOps.md#build-automation) for the distinction between local ARM runs and release testing.
+2. With no member file, check that samples appear, `list` displays them, and `exit` closes the app.
+3. Restart. Try `list extra`, `clear extra`, and `exit extra`. Each must report invalid input, preserve the
+   roster, and keep the app open. Surrounding whitespace on a valid command should be accepted.
+4. Restart, resize and move the main window, then restart from the same folder. Check that a
+   valid saved position and size are retained. Close the app, disconnect the display it occupied,
+   and restart: the window must appear within an available display. Also check recovery from
+   oversized or invalid saved bounds. Recovery is performed at startup.
+
+### Offline help and readable feedback
+
+1. Disable networking. Run `help`: verify four category cards containing all eight command names,
+   descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
+   layout when wide and one column when narrowed. Check the beige background, dark readable text,
+   visible keyboard focus, and error styling in the main window, help, and alerts.
+2. Open the edit command using its overview button, then using `help edit`. Both must show its
+   syntax, example, expected result, notes, and errors. Check All commands navigation, Up/Down,
+   Page Up/Page Down, Home/End, and Escape. Resize the guide and check long lines remain readable.
+3. Try `help ADD`, `help unknown`, and `help add edit`. Expect useful errors without record changes.
+   `help filter` must not suggest that the unimplemented command can run.
+4. Add a synthetic member with long name, email, address, and multiple tags. Verify labeled,
+   wrapped member rows and separate feedback lines; no value should be permanently truncated.
+   Resize the result area using its divider and check both feedback and roster scrolling.
+5. Check `add`, `edit`, and `delete` results have the correct action, complete affected member,
+   sorted tags, and `(none)` when no tags exist.
 
 ### Commands and displayed indices
 
 1. Run `clear`, then `add n/Alice Tan p/12345678 e/alice@example.com a/Main Street t/committee`.
-   Expect one contact with those details.
-2. Add `Bob Tan` with a different phone and email. Run `find Alice`, then `delete 1`.
-   Expect Alice to be removed and Bob to remain when `list` is run.
+   Expect one member with those details. Add Bob with a different name, phone, and email.
+2. Run `find Alice`, then `delete 1`. Expect Alice to disappear and Bob to remain when `list` runs.
 3. Try `delete 0`, `delete -1`, `delete 999999999999999999999`, and `delete 2` with only one
-   displayed contact. Expect an error, with records unchanged.
-4. Run `edit 1 t/committee t/year1`, then `edit 1 t/`.
-   Expect both tags to be added and then removed. A lone `edit 1` must report an error.
-5. Try an `add` with a missing required field, a repeated `n/`, and an invalid phone.
-   Expect an error and no new contact. A second contact with exactly the same name is currently
-   rejected even when other fields differ; the planned TrackCall identity rule is broader.
-6. Run `find Nobody`, then `list`. Expect zero results followed by the complete roster.
-7. Run `help`, then close its window. The current command opens the help window; it does not
-   implement the planned `help COMMAND` interface.
+   displayed member. Expect errors with the roster unchanged.
+4. Run `edit 1 t/committee t/year1`, then `edit 1 t/`. Expect the tag set to be replaced, then
+   cleared. A lone `edit 1` must fail. A valid edit currently restores the complete list.
+5. Try an add with a missing required field, a repeated `n/`, an invalid phone, and an invalid email.
+   Expect errors and no new member. Add a second record with exactly Bob's name but different
+   contact details: the current duplicate-name rule must reject it with an explanation of the
+   matching name and a suggestion to use `edit`.
+6. Run `find Nobody`, then `list`. Expect `Members found: 0`, then `Showing N members.` for the
+   total roster size. Test multiple name keywords, case-insensitive complete-word matching, and
+   rejection of `find` with no keyword.
+7. Paste a valid add command with actual tab separators before `n/`, `p/`, `e/`, and `a/`.
+   It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
+   or an internal tab keeps that text. Do not treat the planned unknown-prefix rejection as implemented.
+8. With two stored records and a search showing only one, run `clear`. After saving, expect
+   `Cleared 2 members. The address book is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
+   `The address book is already empty. No changes were made.`
 
 ### Persistence and invalid files
 
-1. Add a contact, exit, and restart from the same working directory. Check that its fields and tags remain.
-2. Close the app and back up `data/addressbook.json`. Delete the original file and restart.
-   Expect sample contacts. This does not recover the deleted roster; restore the backup if needed.
-3. With the app closed, replace the test file with malformed JSON, such as an unmatched `{`.
-   Restart. Expect an empty roster without a crash; inspect the log for the loading error.
-4. Check the invalid file remains unchanged immediately after startup. Close using the window control
-   and restore the backup before entering a command: the current starter saves after every successful
-   command, including `list`, `help`, and `exit`, and can overwrite the invalid file.
-5. In a disposable test folder, replace `data/addressbook.json` with a directory of that name.
-   Start the app and try adding a contact. Expect a save error rather than a success message.
-   The current implementation retains changes in memory after a failed save, including a failed clear.
-   Planned atomic file replacement and clear rollback still need implementation and tests.
+1. Add a member, exit, and restart from the same working directory. Verify all fields and tags remain.
+2. Back up the member file. Run `help`, `list`, `find Alice`, and `exit`; verify the member file's
+   contents and modification time do not change. Preferences may be saved separately.
+3. With the app closed, test each member-file variant: malformed JSON, a `null` root, a null entry
+   in `persons`, and `[null]` in a member's `tags`. Expect an empty roster without a crash and a
+   loading error in the log. Startup and read-only commands must preserve the invalid member file.
+   Restore the backup with the app closed after each check.
+4. Test `preferences.json` containing `null` and then a null `guiSettings`. Expect startup with
+   default preferences. The normal preferences setup may replace that file with valid defaults.
+5. In a disposable folder, make the data directory unwritable or replace the data file with a directory.
+   Try `add`, `edit`, and `delete` separately. Expect a save error and recovery guidance instead of
+   success. Each change remains visible, but the command box clears the already-applied input.
+   Pressing Enter again must not repeat the edit or deletion. Where a previous saved file exists,
+   verify it remains byte-for-byte unchanged. Restore write access, check the current list, and
+   reapply an existing field value with `edit` (or use `clear` for an empty roster); restart to verify
+   that the full roster was saved.
+6. Test a failed `clear` with a search hiding some members. Expect `No members were removed.`,
+   restoration of every record and the previous filtered view, unchanged saved bytes, and the clear
+   input retained for a deliberate retry. Restore write access and retry: success must report the
+   total number removed, including hidden records. Also test failure when the roster is already empty.
+   Restore the test data afterward.
 
-The following regression checks belong to pending [issue #36](https://github.com/AY2627S1-CS2103T-W12-1/tp/issues/36),
-not the expected behaviour of the current version: a data file containing `null`, a `persons` array
-containing `null`,
-and a valid person's `tags` array changed to `[null]`. These inputs can currently prevent startup.
-After the Java fixes are integrated, verify that each input loads an empty roster without crashing,
-reports the loading error, and leaves the invalid file untouched until a successful command.
-Restore the original test file with the app closed after each check.
+The null-loading regressions above correspond to [issue #36](https://github.com/AY2627S1-CS2103T-W12-1/tp/issues/36).
+The automated storage tests also exercise atomic replacement failure and preservation of existing bytes.
 
 ### Release acceptance checks still required
 

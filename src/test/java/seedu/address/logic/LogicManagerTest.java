@@ -1,6 +1,8 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
@@ -9,10 +11,13 @@ import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
+import static seedu.address.testutil.TypicalPersons.BOB;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,7 +27,9 @@ import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.commands.exceptions.SaveFailureException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
@@ -33,6 +40,7 @@ import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PersonBuilder;
 
+/** Tests command execution, persistence failures, and preservation of model state. */
 public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
     private static final IOException DUMMY_AD_EXCEPTION = new AccessDeniedException("dummy access denied exception");
@@ -73,13 +81,115 @@ public class LogicManagerTest {
     @Test
     public void execute_storageThrowsIoException_throwsCommandException() {
         assertCommandFailureForExceptionFromStorage(DUMMY_IO_EXCEPTION, String.format(
-                LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()));
+                LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage())
+                + LogicManager.UNSAVED_CHANGE_GUIDANCE);
     }
 
     @Test
     public void execute_storageThrowsAdException_throwsCommandException() {
         assertCommandFailureForExceptionFromStorage(DUMMY_AD_EXCEPTION, String.format(
-                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, DUMMY_AD_EXCEPTION.getMessage()));
+                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, DUMMY_AD_EXCEPTION.getMessage())
+                + LogicManager.UNSAVED_CHANGE_GUIDANCE);
+    }
+
+    @Test
+    public void execute_readOnlyCommands_doesNotCreateDataFile() throws Exception {
+        for (String command : new String[] {"list", "find Amy", "help", "help add", "exit"}) {
+            logic.execute(command);
+            assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")), command);
+        }
+    }
+
+    @Test
+    public void execute_readOnlyAndInvalidCommands_preservesExistingFile() throws Exception {
+        Path dataFile = temporaryFolder.resolve("addressBook.json");
+        String original = "{ malformed data awaiting repair";
+        Files.writeString(dataFile, original);
+        model.addPerson(AMY);
+        for (String command : new String[] {"list", "find Amy", "help", "help add", "exit"}) {
+            logic.execute(command);
+            assertEquals(original, Files.readString(dataFile), command);
+        }
+        assertThrows(ParseException.class, () -> logic.execute("add invalid"));
+        assertThrows(ParseException.class, () -> logic.execute("unknown"));
+        assertEquals(original, Files.readString(dataFile));
+        assertEquals(1, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
+    public void execute_readOnlyCommandsWithUnwritablePath_stillSucceeds() throws Exception {
+        Files.createDirectory(temporaryFolder.resolve("addressBook.json"));
+        for (String command : new String[] {"list", "find Amy", "help", "help add", "exit"}) {
+            logic.execute(command);
+        }
+    }
+
+    @Test
+    public void execute_failedFilteredDelete_marksCommandAppliedAndRetainsOtherMembers() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        Person hidden = new PersonBuilder(AMY).withName("Hidden Member").build();
+        model.addPerson(hidden);
+        useFailingStorage(DUMMY_IO_EXCEPTION);
+        logic.execute("find Amy Bob");
+
+        SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
+                SaveFailureException.class, () -> logic.execute("delete 1"));
+
+        assertTrue(failure.isChangeApplied());
+        assertEquals(List.of(BOB, hidden), model.getAddressBook().getPersonList());
+        assertEquals(List.of(BOB), model.getFilteredPersonList());
+        assertTrue(failure.getMessage().contains("previous saved roster is unchanged"));
+        // The command box clears applied commands. Submitting blank input cannot delete the next member.
+        assertThrows(ParseException.class, () -> logic.execute(""));
+        assertEquals(List.of(BOB, hidden), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void execute_failedFilteredEdit_marksCommandAppliedAfterListChanges() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        useFailingStorage(DUMMY_IO_EXCEPTION);
+        logic.execute("find Bob");
+
+        SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
+                SaveFailureException.class, () -> logic.execute("edit 1 p/99988877"));
+
+        assertTrue(failure.isChangeApplied());
+        Person editedBob = new PersonBuilder(BOB).withPhone("99988877").build();
+        assertEquals(List.of(AMY, editedBob), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_failedClear_restoresRosterAndExistingFilter() throws Exception {
+        for (IOException error : List.of(DUMMY_IO_EXCEPTION, DUMMY_AD_EXCEPTION)) {
+            model = new ModelManager();
+            model.addPerson(AMY);
+            model.addPerson(BOB);
+            AddressBook original = new AddressBook(model.getAddressBook());
+            useFailingStorage(error);
+            logic.execute("find Amy");
+
+            SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
+                    SaveFailureException.class, () -> logic.execute("clear"));
+
+            assertFalse(failure.isChangeApplied());
+            assertEquals(original, model.getAddressBook());
+            assertEquals(List.of(AMY), model.getFilteredPersonList());
+            assertTrue(failure.getMessage().contains("No members were removed."));
+        }
+    }
+
+    /** Replaces persistence with a deterministic failure after a command has changed the model. */
+    private void useFailingStorage(IOException failure) {
+        JsonAddressBookStorage addressStorage = new JsonAddressBookStorage(temporaryFolder.resolve("roster.json")) {
+            @Override
+            public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+                throw failure;
+            }
+        };
+        JsonUserPrefsStorage preferences = new JsonUserPrefsStorage(temporaryFolder.resolve("preferences.json"));
+        logic = new LogicManager(model, new StorageManager(addressStorage, preferences));
     }
 
     @Test

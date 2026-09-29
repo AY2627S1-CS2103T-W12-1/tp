@@ -64,8 +64,11 @@ public class AddressBookParser {
                 requireNoArguments(arguments, ListCommand.MESSAGE_USAGE);
                 yield new ListCommand();
             }
-            case ExitCommand.COMMAND_WORD -> new ExitCommand();
-            case HelpCommand.COMMAND_WORD -> new HelpCommand();
+            case ExitCommand.COMMAND_WORD -> {
+                requireNoArguments(arguments, String.format(MESSAGE_INVALID_COMMAND_FORMAT, ExitCommand.MESSAGE_USAGE));
+                yield new ExitCommand();
+            }
+            case HelpCommand.COMMAND_WORD -> new HelpCommandParser().parse(arguments);
             default -> {
                 logger.finer("This user input caused a ParseException: " + userInput);
                 throw new ParseException(MESSAGE_UNKNOWN_COMMAND);
@@ -74,7 +77,7 @@ public class AddressBookParser {
     }
 
     /**
-     * Rejects list/clear arguments before changing the roster or displayed view.
+     * Rejects unexpected arguments before a parameterless command can change data or exit the application.
      */
     private void requireNoArguments(String arguments, String usage) throws ParseException {
         if (!arguments.isBlank()) {

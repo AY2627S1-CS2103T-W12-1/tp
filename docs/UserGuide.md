@@ -3,242 +3,197 @@ layout: page
 title: User Guide
 ---
 
-> **Development note:** This v1.2 increment implements Ian's `list` and `clear` features.
-> Other commands retain their existing AB3 behaviour. Member cards use a beige, labelled, wrapping layout.
-> TrackCall-specific requirements are listed in the [Developer Guide](DeveloperGuide.md#appendix-requirements).
-> Planned features, such as tag filtering and bulk tag editing, are not available in this starter version.
-
-AddressBook Level 3 (AB3) is a **desktop application for managing contacts, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). If you type quickly, AB3 can help you manage contacts faster than traditional GUI applications.
+TrackCall helps a club's membership secretary maintain member contact details using typed commands.
+This guide describes the **v1.2 development build**. Tag filtering and bulk tag editing are still planned;
+the eight commands below are available now.
 
 * Table of Contents
 {:toc}
 
---------------------------------------------------------------------------------------------------------------------
-
 ## Quick start
 
-1. Ensure that Java `25` or later is installed on your computer.<br>
-   **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
+1. Install Java **25**. On macOS, use the compatible JDK+FX distribution in the
+   [course installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html).
+2. For this development build, follow the [setup guide](SettingUp.md), then run `./gradlew run`
+   from your project checkout (`gradlew.bat run` on Windows).
+   Published packages will appear on the [team releases page](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases).
+3. On first launch, sample members appear with a welcome hint. Type `help` and press **Enter**
+   to explore the offline command guide.
+4. Close help with **Escape**. Type `list` to see the roster, then try:
+
+   ```text
+   add n/Alice Tan p/91234567 e/alice@example.com a/12 Orchard Road t/committee
+   ```
+
+   After saving, TrackCall reports `Added member` with Name, Phone, Email, Address, and Tags on separate lines.
+   Alice also appears in the member list. In feedback, `Tags: (none)` means no tags are assigned.
+
+The light beige interface places the command box above the result area. Each member card shows
+its current list number, name,
+labeled contact details, and tags. Long details wrap. Scroll to read more, or drag the divider between
+the result area and member list to give feedback more space. At startup, TrackCall restores its
+saved window position within the available screens, including after a monitor has been disconnected.
+
+## Commands
 
-1. Use the **team's** application, not the upstream AB3 release. During v1.1 there is no team release JAR.
-   Developers can clone the [team repository](https://github.com/AY2627S1-CS2103T-W12-1/tp),
-   run `./gradlew shadowJar` (Windows: `gradlew.bat shadowJar`), and use `build/libs/addressbook.jar`.
-   Future published builds will appear on the [team releases page](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases).
+Command keywords are lowercase, with no leading slash: type `help`, not `/help`. Replace `UPPER_CASE` placeholders with your values.
+Square brackets mark optional input; `[t/TAG]...` means zero or more tags.
+Do not type these brackets or the ellipsis. Submit each command on one line.
+
+| Task | Format | Example and result |
+| --- | --- | --- |
+| Open help | `help [COMMAND]` | `help add` opens the add instructions. |
+| Add a member | `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...` | The quick-start example adds Alice. |
+| Show everyone | `list` | `list` restores the complete roster. |
+| Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
+| Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
+| Delete one member | `delete INDEX` | `delete 1` removes the first currently displayed member. |
+| Clear the roster | `clear` | `clear` removes all members, including those hidden by a search. |
+| Close the app | `exit` | `exit` ends the session. |
+
+### Offline help: `help`
 
-1. Copy the file to the folder you want to use as the _home folder_ for your AddressBook.
+Type `help`, press **F1**, or choose **Help → Help** to see all eight commands in four compact
+groups: Browse members, Manage members, Remove records, and Help & session. Each command has
+a short description and a runnable example. The overview uses two columns in a wide window
+and one column when narrowed. The guide works without internet access.
+
+Select a command-name button, or type `help COMMAND`, such as `help edit`, to open its full
+syntax, example, expected result, usage notes, and common errors.
+Select **All commands** to return to the full guide, or close it and type `help`.
+Use **Up/Down**, **Page Up/Page Down**, **Home/End** to scroll, and **Escape** to close it.
+
+Help accepts at most one lowercase topic. For example, `help ADD`, `help unknown`, and
+`help add edit` report errors. `filter`, `tagall`, and `untagall` are not help topics in this build.
+Help does not change or save the roster.
+
+### Add a member: `add`
+
+Provide a name, phone, email, and address. Prefixes may appear in any order; each required prefix
+must appear exactly once. Separate prefixes from the preceding value with whitespace; pasted tabs
+also work. Use a separate `t/` for each optional tag.
 
-1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar addressbook.jar`.<br>
-   A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
-   ![AB3 starter application](images/Ui-ab3.png)
+| Field | Current rule |
+| --- | --- |
+| Name | Letters, digits, and spaces; cannot be blank. |
+| Phone | At least three digits, with no spaces or punctuation. |
+| Email | A local part and domain separated by `@`, without spaces. The local part allows letters/digits separated by single `+`, `_`, `.`, or `-` characters. Domain labels use letters/digits and internal hyphens; the final label needs at least two characters. |
+| Address | Non-blank text. |
+| Tag | Letters and digits, with no spaces. Tags are case-sensitive. |
 
-1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
-   Some example commands you can try:
+For example:
+
+```text
+add n/Bob Lee p/92345678 e/bob@example.com a/20 College Road t/committee t/year1
+```
+
+This adds Bob with two tags, saves the roster, and shows the complete member list.
+Repeated identical tags appear once. A member with **exactly the same name** as an existing member
+is rejected, even if their other details differ. The message is
+`A member with this name already exists. Use edit to update that member.`
 
-   * `list` : Lists all contacts.
+### Show all members: `list`
+
+`list` removes the name-search restriction and shows the full roster in its existing order.
+The result is `Showing 1 member.`, `Showing N members.`, or `No members in the address book.`
+`list` does not change or save records. Extra arguments are rejected with
+`Invalid command format. Usage: list`, without changing the current view.
+
+### Update a member: `edit`
+
+First check the current list number and contact details. Then supply that number and at least one field:
+
+```text
+edit 1 p/98765432 e/alice.new@example.com
+```
+
+This changes the first displayed member's phone and email. Omitted fields stay unchanged.
+After saving, TrackCall shows the updated details and restores the complete list.
+Renaming a member to another member's exact name is rejected.
+
+**Supplied tags replace all existing tags.** To keep both `committee` and `year1`, enter
+`edit 1 t/committee t/year1`. To remove all tags, enter `edit 1 t/`.
+Check the member number again after commands that change the list.
 
-   * `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01` : Adds a contact named `John Doe` to the Address Book.
+### Find members: `find`
 
-   * `delete 3` : Deletes the 3rd contact shown in the current list.
+`find Alice Tan` searches the complete roster for names containing **Alice or Tan**.
+Matching ignores letter case and uses complete words: `Alice` matches `Alice Tan`, but `Ali` does not.
+Each new search replaces the previous one. Phone numbers and tags are not searched.
 
-   * `clear` : Deletes all contacts.
+The result reports `Members found: N`. No matches produce `Members found: 0` and an empty list,
+without deleting anything. Use `list` to show everyone again.
+Supply at least one keyword. Searching does not save the data file.
 
-   * `exit` : Exits the app.
+### Delete a member: `delete`
 
-1. Refer to the [Features](#features) section below for details of each command.
+`delete INDEX` removes one member using a positive number from the **currently displayed list**.
+For example, run `find Alice`, check the results, then use `delete 1` to remove the first match.
+Other records remain, and the remaining matches are renumbered. The result shows the removed member's details.
 
---------------------------------------------------------------------------------------------------------------------
+Deletion is immediate, with no confirmation or undo. Back up records you may need later.
 
-## Features
+### Clear all members: `clear`
 
-<div markdown="block" class="alert alert-info">
+`clear` removes the entire roster, including members hidden by a search, and saves the empty roster.
+After saving, the result is `Cleared 1 member. The address book is now empty.` or
+`Cleared N members. The address book is now empty.`, counting hidden members too.
+An empty roster reports `The address book is already empty. No changes were made.`
+A successful clear also resets the search. It is immediate, with no confirmation or undo.
+Extra arguments are rejected with `Invalid command format. Usage: clear. This command removes all members.`
+If saving fails, TrackCall restores the roster and previous view and reports
+`Unable to clear the address book because the changes could not be saved. No members were removed.`
 
-**:information_source: Notes about the command format:**<br>
+### Finish your session: `exit`
 
-* Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
-  For example, in `add n/NAME`, replace `NAME` with a value such as `John Doe`.
+`exit` closes TrackCall and its help window. It accepts no arguments.
+Successful data changes have already been saved. Exiting does not retry a failed save;
+resolve a storage error first if you need to keep unsaved changes.
 
-* Items in square brackets are optional.<br>
-  For example, `n/NAME [t/TAG]` can be used as `n/John Doe t/friend` or as `n/John Doe`.
+## Correcting errors
 
-* Items followed by `…`​ can appear zero or more times.<br>
-  For example, `[t/TAG]…​` may be omitted, or written as `t/friend` or `t/friend t/family`.
+An unknown command points you to `help`. A known command with missing or invalid input shows the
+problem and its rules. For example, `add n/Alice` is incomplete: use `help add`, then enter all four
+required fields. `delete 0` is invalid: use `list`, check the member, and enter its displayed number.
+Rejected input leaves the roster and current list unchanged.
 
-* Parameters can be in any order.<br>
-  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
+If saving an **add, edit, or deletion fails**, the change remains visible in this session while the
+previous saved file stays unchanged. The command box clears the input to avoid repeating an
+already-applied change. Fix the reported file/folder problem, check the current list, then reapply
+an existing field value with `edit` to save without changing anything else. If the roster is empty,
+use `clear` to retry saving it. Exiting before a successful retry loses those unsaved changes.
 
-* `list` and `clear` reject any extra arguments. Leading and trailing spaces or tabs are accepted.<br>
-  The existing `help` and `exit` commands still ignore extra arguments.
+If saving **clear fails**, TrackCall restores every member and the previous view and reports
+`No members were removed.` The clear input stays in the command box. Fix the storage problem,
+then retry only if you still want to remove the entire roster.
 
-* If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
-</div>
+## Your data
 
-### Viewing help: `help`
+TrackCall automatically saves after successful `add`, `edit`, `delete`, and `clear` commands.
+`help`, `list`, `find`, and `exit` do not save the roster.
 
-Shows a message explaining how to access the help page.
+The default file is `data/addressbook.json`, relative to the folder from which you start TrackCall.
+The status bar shows its location. Start from the same folder to keep using the same roster.
+To back up or move your data, close TrackCall and copy this file. On your own other computer,
+place the copy at the corresponding data-file location before starting the app.
 
-![help message](images/helpMessage.png)
+### Editing the file manually
 
-Format: `help`
+Close TrackCall and make a backup first. Keep the existing JSON structure: a `persons` array,
+with `name`, `phone`, `email`, `address`, and `tags` for each member. The current file uses `tags`,
+not the planned `tagged` field described in the Developer Guide.
 
+An unreadable or invalid member file starts an empty roster; the loading error is recorded in the log.
+A missing file starts sample records instead. Neither startup nor read-only commands replace the
+member file. If an expected roster is missing, close the app and repair or restore the file before
+adding or clearing records, because a successful data change replaces the file.
 
-### Adding a person: `add`
+## Current limitations
 
-Adds a person to the address book.
+* Tag filtering and bulk tag changes are planned; use `edit` for an individual member's tags today.
+* Names determine duplicates in this build. The planned MVP will compare all four contact fields.
+* An unrecognised prefix-like token inside an address can be stored as literal address text.
+  For example, `a/Main Road T/committee` does not assign a tag. Use lowercase `t/` and check the
+  displayed member details after adding or editing.
 
-Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​`
-
-<div markdown="span" class="alert alert-primary">:bulb: **Tip:**
-A person can have any number of tags, including zero.
-</div>
-
-Examples:
-* `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01`
-* `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
-
-### Listing all persons: `list`
-
-Displays every member in the existing address-book order, with consecutive list numbers starting at 1.
-It clears the active search or filter without changing records or saving the data file.
-Names, phone numbers, emails, addresses, and tags appear in labelled, wrapping member cards;
-scroll to reach members that do not fit on screen. A member without tags has no tag labels.
-
-Format: `list`
-
-* One member: `Showing 1 member.`
-* Multiple members: `Showing N members.`
-* Empty roster: `No members in the address book.`
-* `find Tan`, followed by `list`, restores every member, including when the search found no matches.
-* Repeating `list` gives the same order and count until the data changes. Use the newly displayed
-  indices for subsequent commands.
-* `list 1`, `list John`, and `list t/committee` report `Invalid command format. Usage: list`.
-  Invalid input preserves the previous view and records. `LIST` and `li st` are unknown commands.
-* Listing still works if saving is unavailable; it never writes the member file.
-
-### Editing a person: `edit`
-
-Edits an existing person in the address book.
-
-Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`
-
-* Edits the person at the specified `INDEX`. The index refers to the index number shown in the displayed person list. The index **must be a positive integer** 1, 2, 3, …​
-* At least one of the optional fields must be provided.
-* Existing values will be updated to the input values.
-* When editing tags, all of the person's existing tags are removed; adding tags is not cumulative.
-* To remove all of a person's tags, enter `t/` without a tag after it.
-
-Examples:
-*  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
-*  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
-
-### Locating persons by name: `find`
-
-Finds persons whose names contain any of the given keywords.
-
-Format: `find KEYWORD [MORE_KEYWORDS]`
-
-* The search is case-insensitive; for example, `hans` matches `Hans`.
-* Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
-* The search considers only names.
-* Only full words match; for example, `Han` does not match `Hans`.
-* Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
-
-Examples:
-* `find John` returns `john` and `John Doe`
-* `find alex david` returns `Alex Yeoh`, `David Li`<br>
-  ![result for 'find alex david'](images/findAlexDavidResult.png)
-
-### Deleting a person: `delete`
-
-Deletes the specified person from the address book.
-
-Format: `delete INDEX`
-
-* Deletes the person at the specified `INDEX`.
-* The index refers to the index number shown in the displayed person list.
-* The index **must be a positive integer** 1, 2, 3, …​
-
-Examples:
-* `list` followed by `delete 2` deletes the 2nd person in the address book.
-* `find Betsy` followed by `delete 1` deletes the 1st person in the results of the `find` command.
-
-### Clearing all entries: `clear`
-
-Permanently removes every member, including members hidden by a search or filter, and saves an empty roster.
-The data file remains in place and application settings are preserved. There is no confirmation or undo;
-recovering after a successful clear requires a backup made beforehand.
-
-Format: `clear`
-
-* One member removed: `Cleared 1 member. The address book is now empty.`
-* Multiple members removed: `Cleared N members. The address book is now empty.`
-* Already empty: `The address book is already empty. No changes were made.`
-* The count includes hidden members. `find Tan`, followed by `clear`, removes the entire roster,
-  even when the search matched nobody.
-* A successful clear resets the search/filter. Restarting loads the saved empty roster.
-* An already-empty roster is still saved. Success is reported only after the save succeeds.
-* `clear 1`, `clear John`, `clear stop`, and `clear t/committee` are rejected with
-  `Invalid command format. Usage: clear. This command removes all members.` No state changes.
-* If saving fails, the result is `Unable to clear the address book because the changes could not be saved. No members were removed.`
-  The prior records, displayed list, filter, and saved file are preserved. Fix the storage problem
-  and retry `clear` if you still intend to remove all members.
-
-### Exiting the program: `exit`
-
-Exits the program.
-
-Format: `exit`
-
-### Saving the data
-
-AddressBook automatically saves after every successful command except `list` in this increment.
-You do not need to save manually. The shared writer uses atomic replacement so a failed write
-preserves the previous file. A failed `clear` also restores the previous in-memory roster and view.
-
-### Editing the data file
-
-AddressBook data is saved automatically as a JSON file `data/addressbook.json`, relative to the folder from which you start the app.
-Start it from the same folder each time to use the same records.
-Close the app and back up the file before editing it. The current starter uses a `persons` array
-and each person has `name`, `phone`, `email`, `address`, and `tags` fields.
-The proposed TrackCall `tagged` schema in the DG is not implemented yet. Advanced users are welcome to update data directly by editing that data file.
-
-<div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
-Malformed JSON normally causes AddressBook to start with an empty address book at the next run.
-Known defects in the current version mean a JSON `null` root, null person, or null tag can prevent startup instead.
-Close the app and repair the file or restore your backup if startup fails.
-The invalid file remains on disk until you run a successful command (AddressBook saves after every successful command except `list`).<br>
-Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
-</div>
-
-### Filtering persons by tag `[coming soon]`
-
-Displays members with a specified tag without changing or deleting member data.
-
---------------------------------------------------------------------------------------------------------------------
-
-## FAQ
-
-**Q**: How do I transfer my data to another computer?<br>
-**A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous AddressBook home folder.
-
---------------------------------------------------------------------------------------------------------------------
-
-## Known issues
-
-1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
-2. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
-
---------------------------------------------------------------------------------------------------------------------
-
-## Command summary
-
-Action | Format, Examples
---------|------------------
-**Add** | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]…​` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
-**Clear** | `clear`
-**Delete** | `delete INDEX`<br> e.g., `delete 3`
-**Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
-**Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List** | `list`
-**Help** | `help`
-**Exit** | `exit`
+The [Developer Guide](DeveloperGuide.md#appendix-requirements) records the intended MVP and later ideas.

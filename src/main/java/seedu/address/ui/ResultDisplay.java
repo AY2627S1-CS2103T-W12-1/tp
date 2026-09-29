@@ -16,13 +16,22 @@ public class ResultDisplay extends UiPart<Region> {
     @FXML
     private TextArea resultDisplay;
 
+    /**
+     * Creates a wrapped, selectable display for command results and recovery guidance.
+     */
     public ResultDisplay() {
         super(FXML);
+        setFeedbackToUser("Welcome to TrackCall.\nType help to see all commands, or help add to add a member.");
     }
 
+    /**
+     * Shows new feedback from its first line, even if the previous result was scrolled.
+     */
     public void setFeedbackToUser(String feedbackToUser) {
         requireNonNull(feedbackToUser);
         resultDisplay.setText(feedbackToUser);
+        resultDisplay.positionCaret(0);
+        resultDisplay.setScrollTop(0);
     }
 
 }

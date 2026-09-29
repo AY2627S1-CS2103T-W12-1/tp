@@ -3,22 +3,20 @@ package seedu.address.ui;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import seedu.address.model.person.Person;
+import seedu.address.testutil.JavaFxTestUtil;
 import seedu.address.testutil.PersonBuilder;
 
 /**
@@ -28,9 +26,7 @@ public class PersonCardTest {
 
     @BeforeAll
     public static void startJavaFx() throws InterruptedException {
-        CountDownLatch ready = new CountDownLatch(1);
-        Platform.startup(ready::countDown);
-        assertTrue(ready.await(20, TimeUnit.SECONDS), "JavaFX did not start");
+        JavaFxTestUtil.start();
     }
 
     @Test
@@ -94,10 +90,4 @@ public class PersonCardTest {
         return card;
     }
 
-    /** Runs assertions on the JavaFX thread and propagates failures back to JUnit. */
-    private void onJavaFxThread(Runnable assertions) throws Exception {
-        FutureTask<Void> task = new FutureTask<>(assertions, null);
-        Platform.runLater(task);
-        task.get(20, TimeUnit.SECONDS);
-    }
 }

@@ -1,4 +1,4 @@
-/* Warm palette for the main member list and its surrounding controls. */
+/* Shared warm palette for the main window, command guide and dialogs. */
 .root {
     -tc-canvas: #f5efe5;
     -tc-surface: #fffdf8;
