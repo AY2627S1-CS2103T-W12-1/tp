@@ -4,6 +4,7 @@
 
   const content = document.querySelector('.post-content');
   const headings = content ? Array.from(content.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]')) : [];
+  const overview = document.getElementById('overview');
   const sectionTabs = document.getElementById('section-tabs');
   const outline = document.getElementById('page-outline');
   const outlineLinks = document.getElementById('page-outline-links');
@@ -28,16 +29,19 @@
       ? decodeHash(url.hash) : '';
   }
 
-  function headingLink(heading, className) {
+  function headingLink(heading, className, label = heading.textContent.trim()) {
     const link = document.createElement('a');
     link.href = '#' + encodeURIComponent(heading.id);
-    link.textContent = heading.textContent.trim();
+    link.textContent = label;
     link.className = className;
     return link;
   }
 
   // Generate navigation from the actual headings, so guide edits cannot leave a stale outline.
-  if (headings.length && sectionTabs && outline && outlineLinks) {
+  if (overview && headings.length && sectionTabs && outline && outlineLinks) {
+    // Overview has a real anchor and participates in the same navigation as every section.
+    outlineLinks.append(headingLink(overview, 'outline-link', 'Overview'));
+    sectionTabs.append(headingLink(overview, 'section-tab', 'Overview'));
     headings.forEach((heading) => {
       let outlineClass = 'outline-link';
       if (heading.tagName !== 'H2') outlineClass += ' outline-sub';
@@ -85,13 +89,14 @@
       const header = document.querySelector('.docs-header');
       const threshold = (header ? header.getBoundingClientRect().height : 0)
         + 40;
-      let current = headings[0];
+      let current = overview;
       for (const heading of headings) {
         if (heading.getBoundingClientRect().top > threshold) break;
         current = heading;
       }
       // Short final sections cannot always reach the sticky navigation at the top.
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+      if (window.scrollY > 0
+        && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
         current = headings[headings.length - 1];
       }
       highlight(current);
@@ -99,7 +104,7 @@
 
     function updateFromHash() {
       const target = document.getElementById(decodeHash(window.location.hash));
-      let current = null;
+      let current = target === overview ? overview : null;
       if (target && content.contains(target)) {
         for (const heading of headings) {
           if (heading === target || (heading.compareDocumentPosition(target)
