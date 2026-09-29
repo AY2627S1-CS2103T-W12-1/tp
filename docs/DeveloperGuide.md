@@ -241,14 +241,16 @@ prefixes.
 
 ## **Appendix: Requirements**
 
-These requirements describe the intended TrackCall product. They are not a claim that every
-feature works in v1.1, which still uses the AB3 starter behaviour.
+These requirements describe the intended TrackCall product. The v1.1 iteration documents the
+product direction and acceptance requirements; it does not implement these planned features.
+The implementation and manual-testing sections describe the existing starter application.
 
 The requirements are based on the team's [planning workbook][planning-workbook] (the **Narrative**
 and **User Stories** tabs) and [MVP feature specification][feature-specification], reviewed on
-27 September 2026. The narrative records a wider product vision. The feature specification
+29 September 2026. The narrative records a wider product vision. The feature specification
 defines the selected MVP. Ideas outside that MVP are retained below rather than presented as
-implemented features or promised releases.
+implemented features or promised releases. The v1.1 iteration records these requirements;
+functional changes, including offline help and clearer feedback, belong to v1.2 or later iterations.
 
 [planning-workbook]: https://docs.google.com/spreadsheets/d/1yUrRwuZCovk-RjYpmL3fycJ850GcwzuLhNevJNQymYk/edit?gid=703584466
 [feature-specification]: https://docs.google.com/document/d/1bjGzN0JqTA53ARoBUS9S9BcrwjB0BaFffD3k8ise17M/edit?tab=t.9anhuzxluv4w
@@ -259,7 +261,8 @@ implemented features or promised releases.
 
 * A club or small organisation's membership secretary who maintains its member roster.
 * Works with names, phone numbers, email addresses, addresses, and overlapping groups such as
-  committee, cohort, and alumni.
+  committees, cohorts, membership tiers, and alumni. The source persona, Rachel Ng, uses the
+  roster especially during term starts, renewals, and committee changes.
 * Can type quickly and prefers short keyboard commands to repeated form filling or mouse actions.
 * Regularly adds new members, corrects contact details, looks up members, and updates group tags.
 * Starts by trying sample records and checking results, then learns frequently used commands.
@@ -293,11 +296,19 @@ The broader narrative must be read with these MVP decisions:
 * `find` matches complete name words. Substring and phone-number search are considered ideas,
   not current MVP search behaviour.
 * Import/export, sorting, archiving, global tag renaming, bulk editing of non-tag fields, and
-  an in-app handover/access feature are outside the selected MVP. Grade and class are not
-  dedicated member fields; a cohort can be represented by a tag.
+  an in-app handover/access feature are outside the selected MVP. The initial discussion also
+  considered dedicated grade, class, membership-status, and joining-date fields. These remain
+  future ideas; the MVP stores the contact fields and tags listed above. Cohorts, tiers, or
+  paid/unpaid categories may be represented by tags, without calculating fees or payment status.
 * Deletion is immediate and has no confirmation or undo. Archiving with retained history is
   different from deleting a record.
-* TrackCall does not make calls, send messages, track payments, or renew memberships automatically.
+* Sharing for president verification, newsletters, mail merge, phone contacts, or submissions is
+  the motivation for the considered CSV/vCard export story (US15). The selected MVP does not
+  export those formats or import spreadsheets. Reviewing a manually edited JSON file is a
+  separate workflow, not an implementation of import/export.
+* TrackCall does not make calls, send messages, process fees, track payment balances, create
+  invoices, manage events/RSVPs/attendance, or renew memberships automatically. It has no cloud
+  syncing, concurrent editing, or server-backed account system.
 
 ### User stories
 
@@ -315,9 +326,9 @@ complete-word lookup (US05) and substring lookup (US26). Existing story IDs are 
 
 | ID | Priority | As a... | I want to... | So that I can... |
 | --- | --- | --- | --- | --- |
-| US01 | `***` | new secretary | see a command summary and help for one command | check syntax without leaving the app |
+| US01 | `***` | new secretary | see an offline summary of all available commands and help for one command | check syntax without leaving the app |
 | US02 | `***` | club secretary | add a member with contact details and optional tags | record a new club member |
-| US03 | `***` | club secretary | list every member with their current displayed index | review the roster and select the right record |
+| US03 | `***` | club secretary | see every member in a readable list with their current displayed index | review the roster and select the right record |
 | US04 | `***` | club secretary | edit a member's contact details | correct mistakes and keep the roster up to date |
 | US05 | `***` | club secretary | find members using complete words from their names | retrieve a member's contact details quickly |
 | US06 | `***` | club secretary | delete one selected member record | remove a record that is no longer needed |
@@ -326,11 +337,11 @@ complete-word lookup (US05) and substring lookup (US26). Existing story IDs are 
 | US09 | `***` | club secretary | add one tag to all displayed members without removing other tags | assign a group without editing each member separately |
 | US10 | `***` | club secretary | review a group and remove one tag from every displayed member | remove an obsolete group assignment while keeping member records and other tags |
 | US11 | `***` | club secretary | have valid changes saved automatically | recover my saved roster when I next open the app |
-| US12 | `***` | club secretary | receive clear input and storage error messages | correct the problem and know whether my changes were saved |
+| US12 | `***` | club secretary | receive clear error messages for invalid commands and storage failures | correct my input or the storage problem and know whether my changes were saved |
 | US13 | `***` | club secretary | close the app with a command | finish my work using the keyboard |
 | US14 | `***` | experienced secretary | edit a backed-up data file while the app is closed | make awkward data corrections outside the app when necessary |
 | US18 | `***` | prospective club secretary | try TrackCall with sample member data | understand the workflow without risking real records |
-| US20 | `***` | first-time user | read valid command examples and their expected results in help | learn to use commands independently |
+| US20 | `***` | first-time user | read valid command examples and their expected results in offline help | learn to use commands independently |
 | US23 | `***` | club secretary | assign a valid group tag to a member | represent groups such as Committee or Batch2026 |
 | US24 | `***` | club secretary | add a tag to one member while retaining their other tags | let that member belong to several groups |
 | US25 | `***` | club secretary | view a member's complete contact details and tags | check the correct record before using its details |
@@ -341,11 +352,20 @@ US24 and US28 do not introduce new commands. For an individual `edit`, the secre
 the complete tag set that should remain. The bulk commands preserve unrelated tags and can
 also be used when the checked displayed list contains exactly one intended member.
 
+The following source stories remain explicit even where their requirements overlap other workflows.
+The row numbers refer to the **User Stories** tab of the [planning workbook][planning-workbook].
+
+| Source row | Requirement | Coverage in this guide |
+| --- | --- | --- |
+| 29 | Explain invalid commands so the secretary can correct them. | US12; shared rule 13; UC09. US12 also covers storage failures. |
+| 31 | Detect duplicate member records during entry. | US35; shared rule 2; UC01 extension 2a and UC02 extension 4a. |
+| 32 | Show valid examples and expected results. | US20; offline-help acceptance requirements; UC06 and UC09. |
+
 #### Considered stories outside the selected MVP
 
 | ID | Priority | As a... | I want to... | So that I can... | Scope decision |
 | --- | --- | --- | --- | --- | --- |
-| US15 | `**` | club secretary | export member records | share a copy for verification or submission | Considered; no export command in the MVP. |
+| US15 | `**` | club secretary | export member records as CSV or vCard | share a copy for verification, newsletters, submissions, or phone contacts | Considered; no export command in the MVP. |
 | US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Retained from the earlier DG; no privacy-display mode in the MVP. |
 | US17 | `*` | club secretary | sort members by name | browse a long roster more easily | Considered; the MVP preserves roster order. |
 | US19 | `**` | first-time user | follow a short in-app getting-started guide | learn the basic workflow step by step | Considered; the MVP provides command help, not an onboarding wizard. |
@@ -410,13 +430,20 @@ These rules describe the selected MVP and apply to the use cases below.
     members and reports the error. Startup and read-only commands leave the file untouched.
     A valid empty roster stays empty. A later successful data-changing command can replace an
     invalid file, so restore or repair it before making changes if its contents are needed.
+13. An unknown command, including a wrong-case keyword, reports
+    `Unknown command. Type help for available commands.` An invalid known command identifies
+    the format or field problem and provides its usage or a route to `help COMMAND`. A duplicate
+    error identifies the rejected record as a duplicate; it does not merge or overwrite records.
+    These input errors leave records, the current view, and the saved file unchanged. Storage
+    failures are reported separately because a data change may already exist in memory (rule 10).
 
 #### Member field rules
 
 `add` requires `n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS` and accepts optional repeated `t/TAG`
-parameters. Fields may appear in any order. `edit` uses the same field rules for supplied values.
-Reject unknown prefixes and repeated `n/`, `p/`, `e/`, or `a/` prefixes. Check command structure,
-then values in name/phone/email/address/tag order, then duplicate identity.
+parameters. Prefixes begin separate tokens and fields may appear in any order. `edit` uses the
+same field rules for supplied values. Reject unknown prefixes and repeated `n/`, `p/`, `e/`,
+or `a/` prefixes. Check command structure, then values in name/phone/email/address/tag order,
+then duplicate identity.
 
 | Field | Requirement |
 | --- | --- |
@@ -430,6 +457,52 @@ Allowed email local-part punctuation:
 
 ```text
 ! # $ % & ' * + / = ? ^ _ ` { | } ~ . -
+```
+
+### Offline help and readable feedback
+
+These acceptance requirements refine US01, US03, US12, US20, and US25. They describe the intended
+behaviour and must be checked when the corresponding functional increment is delivered.
+They refine the source specification's terminal-style help and semicolon-separated feedback:
+keep the same command information and data semantics, while making help available locally and
+member fields easier to read. The final help presentation may use a scrollable in-app panel
+or window; it must remain keyboard accessible.
+
+**Offline help**
+
+* With networking disabled, `help` shows a concise summary of every executable command in the
+  running version. The completed MVP includes `help`, `add`, `list`, `edit`, `find`, `delete`,
+  `clear`, `exit`, `filter`, `tagall`, and `untagall`. An earlier iteration must not present an
+  unimplemented command as available.
+* `help COMMAND` shows the command purpose, syntax, parameter rules, at least one valid example
+  with its expected result, and relevant errors or limitations. Examples involving an index
+  explain that the user must check the current displayed list first.
+* Help content is bundled with the application. Opening help through the menu or keyboard
+  shortcut also provides the local reference. An optional website link cannot be the only help.
+* Long help remains readable through wrapping and scrolling. Keyboard navigation must reach
+  the command overview, individual topics, and a way back to the command box. Looking up help
+  leaves the roster and current list unchanged and does not save the data file.
+
+**Member details and command feedback**
+
+* Each member card separates its displayed index and name from clearly labeled Phone, Email,
+  and Address fields, followed by its tag labels. Long names and contact details wrap; tags wrap
+  onto another line when needed. All field content remains accessible without overlap or permanent truncation.
+* Successful `add`, `edit`, and `delete` feedback starts with the completed action and shows
+  the affected member using labeled fields on separate lines. Empty tags are shown as `(none)`.
+  Feedback reports success only after saving; a save failure follows shared rule 10.
+* Validation errors name the problem and a correction or help route. The result area keeps
+  long feedback accessible by wrapping and scrolling. Readability checks use NFR05.
+
+For example, after a successful add and save:
+
+```text
+Added member
+Name: Alice Tan
+Phone: 91234567
+Email: alice@example.com
+Address: 10 College Road
+Tags: committee, year1
 ```
 
 ### Use cases
@@ -447,7 +520,7 @@ These are representative user workflows for the planned product, not implementat
 1. The secretary submits the member's required contact details and optional tags.
 2. TrackCall validates the details and checks for an exact duplicate record.
 3. TrackCall adds the member, saves the roster, and restores the complete member list.
-4. TrackCall reports the added member's details. The use case ends.
+4. TrackCall reports the added member's details in the readable field format above. The use case ends.
 
 **Extensions**
 
@@ -554,9 +627,9 @@ not delete them. Counts still refer to the target set fixed at step 6.
 Deletion has no confirmation or undo. It removes the underlying record, not just its visible card.
 The command is `delete INDEX`, where `INDEX` is one positive ASCII-digit index from the current
 displayed list; leading zeroes are accepted. Signs, decimals, letters, whitespace inside the index,
-extra arguments, and out-of-range indices are rejected. A successful deletion reports
-`Deleted member: NAME; Phone: PHONE; Email: EMAIL; Address: ADDRESS; Tags: [TAG1, TAG2]` after
-the updated roster is saved. A save failure reports `Could not save data to file: [DETAILS]`; the
+extra arguments, and out-of-range indices are rejected. After the updated roster is saved,
+successful deletion reports `Deleted member` followed by the readable member fields specified
+above. A save failure reports `Could not save data to file: [DETAILS]`; the
 deletion remains in memory, but the previous saved file is preserved.
 
 #### UC05: Reset the whole roster
@@ -583,12 +656,12 @@ There is no confirmation or undo. Recovery after a successful clear requires a p
 
 #### UC06: Look up a command
 
-**Related stories:** US01, US20. **Goal:** learn how to perform a task without leaving the app.
+**Related stories:** US01, US20. **Goal:** learn how to perform a task offline without leaving the app.
 
 **MSS**
 
 1. The secretary requests the command summary with `help`.
-2. TrackCall displays the available command syntax.
+2. TrackCall displays a local summary of all commands available in the running version.
 3. The secretary requests one command's details, for example `help tagall`.
 4. TrackCall displays that command's purpose, syntax, examples with expected results, parameter
    rules, and errors. The use case ends.
@@ -665,6 +738,34 @@ working without changing the persisted roster.
 `exit` does not restore the full list, clear active searches or filters, display a success message, or
 perform a separate final save. The operating-system close button has the same termination behaviour.
 
+#### UC09: Recover from an invalid command
+
+**Related stories:** US01, US12, US20, US35. **Goal:** understand an input error and complete
+the intended task without unintended data changes.
+
+**MSS**
+
+1. The secretary submits a command with an incorrect keyword or arguments.
+2. TrackCall rejects it, explains the input error, and preserves the roster, current view,
+   and saved file.
+3. The secretary requests the command summary or help for the intended command.
+4. TrackCall provides its syntax, rules, and an example with the expected result, even offline.
+5. The secretary corrects the input and resubmits the command.
+6. TrackCall validates and performs the requested operation, saving first when required, then
+   reports its result. The use case ends.
+
+**Extensions**
+
+* **5a.** The secretary decides not to continue. The use case ends without changes.
+* **6a.** The corrected input is still invalid. TrackCall explains the remaining problem and
+  changes nothing. The secretary can return to step 3 or 5.
+* **6b.** An add or edit would create a duplicate under shared rule 2. TrackCall rejects the
+  duplicate without merging or overwriting records. The secretary checks the existing roster
+  before correcting the input at step 5 or ending the use case.
+* **6c.** A data-changing command cannot save. TrackCall reports the storage failure instead
+  of success. The use case ends without confirmed persistence; shared rule 10 explains
+  which changes remain in memory and how to retry.
+
 ### Non-Functional Requirements
 
 These are acceptance requirements for the intended product, not results already measured on v1.1.
@@ -711,7 +812,9 @@ such as incremental delivery, are also not product NFRs.
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
 | Data-changing command | `add`, `edit`, `delete`, `clear`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
-| JSON | The structured text format of the local data file. TrackCall's schema uses a `persons` array and each member's `tagged` array. |
+| JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.1 starter uses `tags`. |
+| CSV | Comma-separated values, a tabular text format considered for exchanging member data with spreadsheets and other tools. CSV import/export is outside the selected MVP. |
+| vCard | A contact-card file format considered for exporting member contact details to phone or contact applications. It is outside the selected MVP. |
 | Archive | Retain an inactive record or tag and its history separately from active work. This considered feature is different from MVP deletion. |
 | MVP | Minimum viable product: the selected core feature set in the team specification. It does not mean that all those features exist in v1.1. |
 
