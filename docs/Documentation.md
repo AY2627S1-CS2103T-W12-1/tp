@@ -22,7 +22,20 @@ title: Documentation guide
 
 **Diagrams:**
 
-* See the [_[se-edu/guides] **Using PlantUML**_](https://se-education.org/guides/tutorials/plantUml.html)
+* See the [_[se-edu/guides] **Using PlantUML**_](https://se-education.org/guides/tutorials/plantUml.html).
+* Keep diagram sources in `docs/diagrams/` and generated PNGs in `docs/images/`.
+  `style.puml` defines the shared beige, ivory, sage, and dark-text palette. The published diagrams
+  were rendered with PlantUML 1.2026.8 and Java 25 using the built-in Smetana layout engine.
+  For example, from the repository root:
+
+  ```shell
+  java -jar /path/to/plantuml.jar -Playout=smetana -tpng -o ../images docs/diagrams/UiClassDiagram.puml
+  ```
+
+* Review the rendered image for readable arrows, unclipped labels, and diagram warnings before committing it.
+  The required `docs/images/Ui.png` is one intended-interface mockup with the original aspect ratio.
+  UI mockups and the automatic-saving illustration were prepared with AI assistance and are labelled
+  as design illustrations; they are not proof that all proposed features are implemented.
 
 **Converting a document to the PDF format:**
 

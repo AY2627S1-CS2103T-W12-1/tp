@@ -304,7 +304,11 @@ records, the current list, and the saved file unchanged; the input remains avail
 * Startup loading errors are recorded in the log; the requirements' user-visible load messages remain planned.
   Undo/redo and deletion confirmation are not selected for the MVP.
 
-![Automatic data saving UI mock-up](images/AutomaticSavingData.png)
+![Intended automatic-saving workflow for the core commands](images/AutomaticSavingData.png)
+
+AI-assisted design illustration of the intended saving policy for the core commands. Implementation
+status is described above; this figure is not a screenshot or evidence of v1.1 implementation.
+Planned bulk tag commands will use the same save-after-change workflow.
 
 ### \[Proposed\] Filter members by tag
 
@@ -326,7 +330,10 @@ An invalid command leaves the current list, active filter, and member data uncha
 or empty tag, invalid characters or spaces, a tag longer than 30 characters, multiple tags, and unknown
 prefixes.
 
-![Filter members by tag UI mock-up](images/FilterTag.png)
+![Proposed beige TrackCall interface after filtering by committee tag](images/FilterTag.png)
+
+AI-assisted intended-interface mockup using the same palette as the README. `filter t/committee`
+is proposed behaviour; it is not available in the v1.1 starter.
 
 --------------------------------------------------------------------------------------------------------------------
 

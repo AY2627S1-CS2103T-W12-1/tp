@@ -1,7 +1,7 @@
 // Placeholder to allow defining custom styles that override everything else.
 // (Use `_sass/minima/custom-variables.scss` to override variable defaults)
 h2, h3, h4, h5, h6 {
-  color: #e46c0a;
+  color: #654b34;
 }
 
 // Bootstrap style alerts
@@ -32,3 +32,38 @@ h2, h3, h4, h5, h6 {
   }
 }
 
+
+// Match the intended TrackCall interface while retaining readable text contrast.
+body {
+  color: #382e25;
+  background-color: #fffdf8;
+}
+
+.site-header, .site-footer {
+  background-color: #f5efe5;
+  border-color: #c7b79f;
+}
+
+a {
+  color: #405b39;
+  &:visited { color: #6e5141; }
+  &:hover { color: #263d22; }
+}
+
+pre, code {
+  background-color: #f5efe5;
+  border-color: #c7b79f;
+}
+
+table {
+  color: #382e25;
+  border-color: #c7b79f;
+  th { background-color: #e8ddca; }
+  td, th { border-color: #c7b79f; }
+  tr:nth-child(even) { background-color: #f5efe5; }
+}
+
+blockquote {
+  color: #675746;
+  border-left-color: #c7b79f;
+}

@@ -18,8 +18,6 @@ Class ArgumentTokenizer
 Class Prefix
 }
 
-Class HiddenOutside #FFFFFF
-HiddenOutside ..> AddressBookParser
 
 AddressBookParser .down.> XYZCommandParser: <<create>>
 
