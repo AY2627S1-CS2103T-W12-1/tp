@@ -3,7 +3,8 @@ layout: page
 title: User Guide
 ---
 
-> **Development note:** This guide describes the current AB3 starter application.
+> **Development note:** This v1.2 increment implements Ian's `list` and `clear` features.
+> Other commands retain their existing AB3 behaviour. Member cards use a beige, labelled, wrapping layout.
 > TrackCall-specific requirements are listed in the [Developer Guide](DeveloperGuide.md#appendix-requirements).
 > Planned features, such as tag filtering and bulk tag editing, are not available in this starter version.
 
@@ -65,8 +66,8 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 * Parameters can be in any order.<br>
   For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
-  For example, `help 123` is interpreted as `help`.
+* `list` and `clear` reject any extra arguments. Leading and trailing spaces or tabs are accepted.<br>
+  The existing `help` and `exit` commands still ignore extra arguments.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </div>
@@ -96,9 +97,22 @@ Examples:
 
 ### Listing all persons: `list`
 
-Shows a list of all persons in the address book.
+Displays every member in the existing address-book order, with consecutive list numbers starting at 1.
+It clears the active search or filter without changing records or saving the data file.
+Names, phone numbers, emails, addresses, and tags appear in labelled, wrapping member cards;
+scroll to reach members that do not fit on screen. A member without tags has no tag labels.
 
 Format: `list`
+
+* One member: `Showing 1 member.`
+* Multiple members: `Showing N members.`
+* Empty roster: `No members in the address book.`
+* `find Tan`, followed by `list`, restores every member, including when the search found no matches.
+* Repeating `list` gives the same order and count until the data changes. Use the newly displayed
+  indices for subsequent commands.
+* `list 1`, `list John`, and `list t/committee` report `Invalid command format. Usage: list`.
+  Invalid input preserves the previous view and records. `LIST` and `li st` are unknown commands.
+* Listing still works if saving is unavailable; it never writes the member file.
 
 ### Editing a person: `edit`
 
@@ -149,9 +163,24 @@ Examples:
 
 ### Clearing all entries: `clear`
 
-Clears all entries from the address book.
+Permanently removes every member, including members hidden by a search or filter, and saves an empty roster.
+The data file remains in place and application settings are preserved. There is no confirmation or undo;
+recovering after a successful clear requires a backup made beforehand.
 
 Format: `clear`
+
+* One member removed: `Cleared 1 member. The address book is now empty.`
+* Multiple members removed: `Cleared N members. The address book is now empty.`
+* Already empty: `The address book is already empty. No changes were made.`
+* The count includes hidden members. `find Tan`, followed by `clear`, removes the entire roster,
+  even when the search matched nobody.
+* A successful clear resets the search/filter. Restarting loads the saved empty roster.
+* An already-empty roster is still saved. Success is reported only after the save succeeds.
+* `clear 1`, `clear John`, `clear stop`, and `clear t/committee` are rejected with
+  `Invalid command format. Usage: clear. This command removes all members.` No state changes.
+* If saving fails, the result is `Unable to clear the address book because the changes could not be saved. No members were removed.`
+  The prior records, displayed list, filter, and saved file are preserved. Fix the storage problem
+  and retry `clear` if you still intend to remove all members.
 
 ### Exiting the program: `exit`
 
@@ -161,7 +190,9 @@ Format: `exit`
 
 ### Saving the data
 
-AddressBook automatically saves data after every command. You do not need to save manually.
+AddressBook automatically saves after every successful command except `list` in this increment.
+You do not need to save manually. The shared writer uses atomic replacement so a failed write
+preserves the previous file. A failed `clear` also restores the previous in-memory roster and view.
 
 ### Editing the data file
 
@@ -175,7 +206,7 @@ The proposed TrackCall `tagged` schema in the DG is not implemented yet. Advance
 Malformed JSON normally causes AddressBook to start with an empty address book at the next run.
 Known defects in the current version mean a JSON `null` root, null person, or null tag can prevent startup instead.
 Close the app and repair the file or restore your backup if startup fails.
-The invalid file remains on disk until you run a successful command (AddressBook saves after every successful command).<br>
+The invalid file remains on disk until you run a successful command (AddressBook saves after every successful command except `list`).<br>
 Furthermore, certain edits can cause the AddressBook to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </div>
 
