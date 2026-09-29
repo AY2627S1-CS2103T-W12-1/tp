@@ -2,6 +2,35 @@
 (() => {
   'use strict';
 
+  const header = document.querySelector('.docs-header');
+  if (header) {
+    // Keep anchor offsets and sticky rails aligned when text wraps or browser zoom changes.
+    const measureHeader = () => document.documentElement.style.setProperty(
+      '--sticky-header-height', Math.ceil(header.getBoundingClientRect().height) + 'px');
+    measureHeader();
+    new ResizeObserver(measureHeader).observe(header);
+  }
+
+  const buildVersion = document.body.dataset.docsVersion;
+  const docsRoot = new URL(document.body.dataset.docsRoot || './', window.location.href);
+
+  // A freshly loaded page should not navigate back to another page's cached, older layout.
+  // Same-page fragments stay local so Overview and section jumps do not reload the guide.
+  function documentationUrl(value) {
+    const url = new URL(value, window.location.href);
+    if (buildVersion && url.origin === docsRoot.origin && url.pathname.startsWith(docsRoot.pathname)
+      && (url.pathname.endsWith('.html') || url.pathname.endsWith('/'))) {
+      if (pagePath(url.pathname) === pagePath(window.location.pathname) && url.hash) return url.hash;
+      url.searchParams.set('v', buildVersion);
+    }
+    return url.href;
+  }
+
+  document.querySelectorAll('a[href]').forEach((link) => {
+    const href = link.getAttribute('href');
+    if (href && !href.startsWith('#')) link.href = documentationUrl(href);
+  });
+
   const content = document.querySelector('.post-content');
   const headings = content ? Array.from(content.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]')) : [];
   const overview = document.getElementById('overview');
@@ -75,7 +104,6 @@
 
     function updateFromScroll() {
       scrollPending = false;
-      const header = document.querySelector('.docs-header');
       const threshold = (header ? header.getBoundingClientRect().height : 0)
         + 40;
       let current = overview;
@@ -118,7 +146,7 @@
   }
 
   if (outline) {
-    const compactOutline = window.matchMedia('(max-width: 1320px)');
+    const compactOutline = window.matchMedia('(max-width: 1299.98px)');
     const setOutlineDefault = () => { outline.open = !compactOutline.matches; };
     setOutlineDefault();
     compactOutline.addEventListener('change', setOutlineDefault);
@@ -126,7 +154,7 @@
 
   const menu = document.getElementById('site-menu');
   if (menu) {
-    const mobile = window.matchMedia('(max-width: 860px)');
+    const mobile = window.matchMedia('(max-width: 991.98px)');
     // Apply a suitable default when crossing the breakpoint, leaving the summary user-controlled.
     const setMenuDefault = () => { menu.open = !mobile.matches; };
     setMenuDefault();
@@ -275,7 +303,7 @@
       matches.forEach(({ entry }) => {
         const item = document.createElement('li');
         const link = document.createElement('a');
-        link.href = entry.url;
+        link.href = documentationUrl(entry.url);
         const label = document.createElement('span');
         label.className = 'search-result-heading';
         label.textContent = entry.title + (entry.heading ? ' · ' + entry.heading : '');

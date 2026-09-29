@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html lang="{{ page.lang | default: site.lang | default: 'en' }}">
   {%- include head.html -%}
-  <body>
+  <body data-docs-version="{{ asset_version }}" data-docs-root="{{ "/" | relative_url }}">
     <a class="skip-link" href="#main-content">Skip to content</a>
     {%- include header.html -%}
     <div class="docs-shell">
