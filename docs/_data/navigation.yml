@@ -1,0 +1,35 @@
+# Section IDs follow Kramdown's generated heading IDs in the existing guides.
+- title: Home
+  url: /
+- title: User Guide
+  url: /UserGuide.html
+  children:
+    - title: Quick start
+      id: quick-start
+    - title: Commands
+      id: commands
+    - title: Correcting errors
+      id: correcting-errors
+    - title: Your data
+      id: your-data
+    - title: Current limitations
+      id: current-limitations
+- title: Developer Guide
+  url: /DeveloperGuide.html
+  children:
+    - title: Acknowledgements
+      id: acknowledgements
+    - title: Setting up
+      id: setting-up-getting-started
+    - title: Design
+      id: design
+    - title: Implementation
+      id: implementation
+    - title: Development workflow
+      id: documentation-logging-testing-dev-ops
+    - title: Requirements
+      id: appendix-requirements
+    - title: Manual testing
+      id: appendix-instructions-for-manual-testing
+- title: About Us
+  url: /AboutUs.html

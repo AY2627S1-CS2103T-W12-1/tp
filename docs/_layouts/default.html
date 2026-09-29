@@ -1,18 +1,25 @@
 <!DOCTYPE html>
-<html lang="{{ page.lang | default: site.lang | default: "en" }}">
-
+<html lang="{{ page.lang | default: site.lang | default: 'en' }}">
   {%- include head.html -%}
-
   <body>
-
+    <a class="skip-link" href="#main-content">Skip to content</a>
     {%- include header.html -%}
-
-    <main class="page-content" aria-label="Content">
-      <div class="wrapper">
+    <div class="docs-shell">
+      {%- include sidebar.html -%}
+      <aside class="docs-outline" aria-label="Page sections">
+        <details id="page-outline" open hidden>
+          <summary>On this page</summary>
+          <nav id="page-outline-links" aria-label="On this page"></nav>
+        </details>
+      </aside>
+      <main id="main-content" class="docs-main" tabindex="-1">
         {{ content }}
-      </div>
-    </main>
-
+        <footer class="docs-footer">
+          <span>{{ site.title | escape }} documentation</span>
+          <a href="#main-content">Back to top <span aria-hidden="true">↑</span></a>
+        </footer>
+      </main>
+    </div>
+    <script src="{{ '/assets/js/documentation.js' | relative_url }}" defer></script>
   </body>
-
 </html>
