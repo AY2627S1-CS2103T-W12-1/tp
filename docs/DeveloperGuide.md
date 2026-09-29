@@ -181,7 +181,7 @@ every detail page, responsive columns, navigation, and keyboard scrolling. `Main
 exercises `help add`, F1, Escape, exit, rejected `/help`, and failed-save recovery through the real
 command box with temporary storage.
 
-### Ian's list and clear commands
+### List and clear commands
 
 `ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, keeps stored order,
 and reports the complete count using singular, plural, or empty-roster wording. `LogicManager`
@@ -201,7 +201,7 @@ pre-creates an empty destination. Unsupported atomic replacement produces a hand
 there is no unsafe partial-write fallback. This shared storage helper also benefits existing
 callers; their command policies and load validation are described below.
 
-Exact feedback follows Ian's feature specification:
+Exact feedback follows the list and clear feature specifications:
 
 | Case | Feedback |
 | --- | --- |
