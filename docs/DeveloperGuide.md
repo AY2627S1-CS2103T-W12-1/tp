@@ -164,6 +164,50 @@ This section describes some noteworthy details on how certain features are imple
 Undo/redo is not implemented or selected for the TrackCall MVP. Deletion and clearing are immediate;
 users need a backup to recover data after a successful save.
 
+### Ian's v1.2 increment: list and clear
+
+This implementation covers Ian's two assigned commands. Other command implementations retain
+starter behaviour; the offline help and broader reliability work from PR #42 are not included.
+The requirements appendix continues to describe the complete planned product.
+
+`ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, keeps stored order,
+and reports the complete count using singular, plural, or empty-roster wording. `LogicManager`
+returns its result without invoking storage. Extra arguments are rejected by `AddressBookParser`
+before either the view or data changes. Member cards use labelled, wrapping rows and tags, with
+`LightTheme.css` providing the beige main-list palette. No offline-help implementation is added.
+
+Before executing `ClearCommand`, `LogicManager` snapshots the roster. The command counts and
+removes all records while retaining the old predicate temporarily. After saving succeeds, the
+logic layer resets the predicate to show all and returns the success message. On an `IOException`,
+it restores the snapshot; retaining the original predicate restores the previous displayed view,
+including an empty search result. Settings are never changed. An already-empty clear still saves.
+
+To meet clear's previous-file preservation requirement, `FileUtil#writeToFile` writes UTF-8 to a
+sibling temporary file and atomically replaces the destination. `JsonAddressBookStorage` no longer
+pre-creates an empty destination. Unsupported atomic replacement produces a handled failure;
+there is no unsafe partial-write fallback. This shared storage helper also benefits existing
+callers, but their command policies and load-validation features are outside this increment.
+
+Exact feedback follows Ian's feature specification:
+
+| Case | Feedback |
+| --- | --- |
+| List zero members | `No members in the address book.` |
+| List one member | `Showing 1 member.` |
+| List multiple members | `Showing N members.` |
+| Invalid list arguments | `Invalid command format. Usage: list` |
+| Clear zero members | `The address book is already empty. No changes were made.` |
+| Clear one member | `Cleared 1 member. The address book is now empty.` |
+| Clear multiple members | `Cleared N members. The address book is now empty.` |
+| Invalid clear arguments | `Invalid command format. Usage: clear. This command removes all members.` |
+| Failed clear save | `Unable to clear the address book because the changes could not be saved. No members were removed.` |
+
+Regression coverage is in `ListClearIntegrationTest`, the two command tests, parser tests, and
+`FileUtilTest`. Tests cover singular/plural/empty feedback, hidden members, no-match views, order,
+repetition, rejected arguments, no-save listing, persisted empty data, settings, predicate reset,
+failed-save rollback, retry, and temporary-file cleanup. `filter` is not implemented here;
+model predicates are used to verify integration with a future filter without claiming that command exists.
+
 ### Automatic data saving
 
 #### Current AB3 implementation
@@ -173,17 +217,18 @@ successfully, `LogicManager` passes the complete address book from `Model#getAdd
 `Storage#saveAddressBook(ReadOnlyAddressBook)`. As the complete address book is saved, members hidden from the
 displayed list are included in the data file.
 
-`StorageManager` delegates the save operation to `JsonAddressBookStorage`, which creates the data file and its
-parent directories if needed before serialising the address book as JSON. The file is stored at
+`StorageManager` delegates the save operation to `JsonAddressBookStorage`, which serialises the roster
+and uses the shared atomic writer described above. Missing parent directories are created if needed. The file is stored at
 `data/addressbook.json`, relative to the application's working directory, and its path is displayed in the
 status bar.
 
-Saving is performed after every successfully executed command, including commands that do not change member
-data. If parsing or command execution fails, saving is not attempted. A normal command result is returned only
+Saving is performed after every successfully executed command except Ian's `list`, including the
+other existing commands that do not change member data. If parsing or command execution fails, saving is not attempted. A normal command result is returned only
 after saving succeeds, so no separate save-success message is shown.
 
 If saving fails, `LogicManager` converts the `IOException` into a `CommandException` for display to the user.
-Any model change made before the failed save remains in memory, including a change made by `clear`.
+Model changes from other commands remain in memory on save failure. Ian's `clear` is the exception:
+it restores the roster and view and reports its clear-specific failure message.
 
 At startup, an existing data file is loaded into the model. If the file is missing, sample data is loaded. If
 the file cannot be read, TrackCall starts with an empty address book. Startup does not immediately save the
@@ -197,12 +242,13 @@ the intended handling, not fixes already delivered in v1.1.
 #### Proposed handling for planned commands
 
 The [shared behaviour rules](#shared-behaviour-rules) below describe the intended saving policy,
-including read-only commands and the special rollback required for `clear`. These differ from the
-current starter implementation.
+including the complete read-only policy. This increment implements no-save `list` and failed-clear
+rollback; the remaining command policies still need their respective owners' work.
 
 When `tagall` and `untagall` are implemented, each valid operation will trigger automatic saving, including a
 valid operation that makes no changes. The proposed `filter` command will not save because it changes only the
-displayed list. Read-only commands such as `help`, `list`, `find`, `filter`, and `exit` will also skip saving.
+displayed list. The remaining read-only commands (`help`, `find`, `filter`, and `exit`) are planned to skip saving;
+`list` already does so in Ian's increment.
 
 ![Automatic data saving UI mock-up](images/AutomaticSavingData.png)
 
@@ -826,6 +872,24 @@ such as incremental delivery, are also not product NFRs.
 These checks cover the current starter commands. Planned TrackCall features in the requirements
 appendix must receive their own acceptance tests as they are implemented.
 Use a disposable folder and synthetic contacts. Never run `clear` on the only copy of real data.
+
+### Ian's list/clear increment
+
+Use a disposable folder and synthetic contacts. These instructions do not claim that other planned features exist.
+
+1. Start with several members, run `find` to display only one, then `list`. Check the exact total,
+   original order, consecutive indices, all contact rows, and unchanged member file. Repeat after
+   a search that matches nobody. Check zero, one, and multiple-member feedback.
+2. Enter `list 1`, `list t/committee`, `clear stop`, and `clear t/committee`. Check exact usage
+   messages and preservation of records and the current view. Check surrounding spaces/tabs and
+   unknown uppercase keywords.
+3. Back up the test data. Run `clear` from a filtered view. Check the total includes hidden members,
+   settings remain unchanged, and restart shows no members. Run `clear` again and check empty feedback.
+4. Make the disposable data destination unwritable, then try `list`: it should still work. Try
+   `clear`: it must report failure, retain the roster and view, and preserve the saved file.
+   Restore write access and retry; only a successful save should produce the clear success message.
+5. Check beige member cards at normal and narrow window sizes. Long values and tags should wrap;
+   use scrolling to reach all members. Help and other commands retain the starter implementation.
 
 ### Launch and shutdown
 

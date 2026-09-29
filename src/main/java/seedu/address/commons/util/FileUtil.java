@@ -3,6 +3,7 @@ package seedu.address.commons.util;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 /**
  * Writes and reads files
@@ -44,11 +45,26 @@ public class FileUtil {
     }
 
     /**
-     * Writes given string to a file.
-     * Will create the file if it does not exist yet.
+     * Writes UTF-8 content to a sibling temporary file and atomically replaces the target.
+     * Creates missing parent directories. A write failure leaves an existing target untouched.
+     *
+     * @throws IOException if writing or atomic replacement fails, including unsupported file systems.
      */
     public static void writeToFile(Path file, String content) throws IOException {
-        Files.write(file, content.getBytes(CHARSET));
+        Path target = file.toAbsolutePath();
+        createParentDirsOfFile(target);
+        Path temporary = Files.createTempFile(target.getParent(), ".trackcall-", ".tmp");
+        try {
+            Files.writeString(temporary, content);
+            Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            try {
+                Files.deleteIfExists(temporary);
+            } catch (IOException cleanupError) {
+                e.addSuppressed(cleanupError);
+            }
+            throw e;
+        }
     }
 
 }

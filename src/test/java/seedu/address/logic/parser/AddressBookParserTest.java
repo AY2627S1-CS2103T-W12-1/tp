@@ -42,7 +42,11 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_clear() throws Exception {
         assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD) instanceof ClearCommand);
-        assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD + " 3") instanceof ClearCommand);
+        assertTrue(parser.parseCommand(" \tclear \t") instanceof ClearCommand);
+        for (String extra : List.of(" 1", " John", " t/committee", "\tstop")) {
+            assertThrows(ParseException.class, ClearCommand.MESSAGE_USAGE, ()
+                    -> parser.parseCommand(ClearCommand.COMMAND_WORD + extra));
+        }
     }
 
     @Test
@@ -84,13 +88,24 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_list() throws Exception {
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
-        assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD + " 3") instanceof ListCommand);
+        assertTrue(parser.parseCommand(" \tlist \t") instanceof ListCommand);
+        for (String extra : List.of(" 1", " John", " t/committee", "\tstop")) {
+            assertThrows(ParseException.class, ListCommand.MESSAGE_USAGE, ()
+                    -> parser.parseCommand(ListCommand.COMMAND_WORD + extra));
+        }
     }
 
     @Test
     public void parseCommand_unrecognisedInput_throwsParseException() {
         assertThrows(ParseException.class, String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE), ()
             -> parser.parseCommand(""));
+    }
+
+    @Test
+    public void parseCommand_misspelledListOrClear_throwsParseException() {
+        for (String input : List.of("LIST", "CLEAR", "li st", "cl ear")) {
+            assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand(input));
+        }
     }
 
     @Test

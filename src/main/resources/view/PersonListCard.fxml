@@ -6,31 +6,32 @@
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox id="cardPane" fx:id="cardPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
-  <GridPane HBox.hgrow="ALWAYS">
-    <columnConstraints>
-      <ColumnConstraints hgrow="SOMETIMES" minWidth="10" prefWidth="150" />
-    </columnConstraints>
-    <VBox alignment="CENTER_LEFT" minHeight="105" GridPane.columnIndex="0">
-      <padding>
-        <Insets top="5" right="5" bottom="5" left="15" />
-      </padding>
-      <HBox spacing="0.5" alignment="CENTER_LEFT">
-        <Label fx:id="id" styleClass="cell_big_label">
-          <minWidth>
-            <!-- Ensures that the label text is never truncated -->
-            <Region fx:constant="USE_PREF_SIZE" />
-          </minWidth>
-        </Label>
-        <Label fx:id="name" text="\$first" styleClass="cell_big_label" />
-      </HBox>
-      <FlowPane fx:id="tags" />
-      <Label fx:id="phone" styleClass="cell_small_label" text="\$phone" />
-      <Label fx:id="address" styleClass="cell_small_label" text="\$address" />
-      <Label fx:id="email" styleClass="cell_small_label" text="\$email" />
-    </VBox>
-  </GridPane>
+<HBox id="cardPane" fx:id="cardPane" minWidth="0" xmlns="http://javafx.com/javafx/17"
+      xmlns:fx="http://javafx.com/fxml/1">
+  <!-- USE_PREF_SIZE minimum heights keep wrapped rows from being compressed by the list cell. -->
+  <VBox spacing="10" minWidth="0" minHeight="-Infinity" HBox.hgrow="ALWAYS">
+    <padding><Insets top="14" right="16" bottom="14" left="16" /></padding>
+    <HBox spacing="8" alignment="TOP_LEFT" minWidth="0" minHeight="-Infinity">
+      <Label fx:id="id" styleClass="member-index" minWidth="28" />
+      <Label fx:id="name" styleClass="member-name" wrapText="true" minWidth="0" HBox.hgrow="ALWAYS" />
+    </HBox>
+    <GridPane hgap="12" vgap="6" minWidth="0" minHeight="-Infinity">
+      <columnConstraints>
+        <ColumnConstraints minWidth="62" prefWidth="62" />
+        <ColumnConstraints minWidth="0" hgrow="ALWAYS" />
+      </columnConstraints>
+      <Label text="Phone" styleClass="member-field-label" GridPane.rowIndex="0" />
+      <Label fx:id="phone" styleClass="member-field-value" wrapText="true" minWidth="0"
+             GridPane.columnIndex="1" GridPane.rowIndex="0" />
+      <Label text="Email" styleClass="member-field-label" GridPane.rowIndex="1" />
+      <Label fx:id="email" styleClass="member-field-value" wrapText="true" minWidth="0"
+             GridPane.columnIndex="1" GridPane.rowIndex="1" />
+      <Label text="Address" styleClass="member-field-label" GridPane.rowIndex="2" />
+      <Label fx:id="address" styleClass="member-field-value" wrapText="true" minWidth="0"
+             GridPane.columnIndex="1" GridPane.rowIndex="2" />
+    </GridPane>
+    <FlowPane fx:id="tags" hgap="6" vgap="6" minWidth="0" />
+  </VBox>
 </HBox>
