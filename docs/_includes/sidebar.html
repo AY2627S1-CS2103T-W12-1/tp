@@ -21,7 +21,7 @@
       {% endfor %}
       <div class="sidebar-resources">
         <p class="nav-label">Development</p>
-        {% assign resource_paths = 'SettingUp.md,Testing.md,Documentation.md,DevOps.md' | split: ',' %}
+        {% assign resource_paths = 'SettingUp.md,Testing.md,Documentation.md,Logging.md,DevOps.md' | split: ',' %}
         {% for resource_path in resource_paths %}
         {% assign resource = site.pages | where: 'path', resource_path | first %}
         {% if resource %}

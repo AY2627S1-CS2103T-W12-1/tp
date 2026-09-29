@@ -5,24 +5,25 @@ title: Developer Guide
 * Table of Contents
 {:toc}
 
---------------------------------------------------------------------------------------------------------------------
 
-## **Value proposition**
+## Value proposition
 
-TrackCall helps a membership secretary keep a club roster accurate and organise overlapping
-groups using short typed commands. The secretary can find members, narrow the displayed group
-by tag, and add or remove a tag for that whole group in one operation. This reduces repetitive
-record-by-record work while keeping unrelated tags and hidden members unchanged. Records are
-stored locally and valid changes are saved automatically, so the core workflow does not need
-an internet connection or a separate save command.
+TrackCall helps a membership secretary keep a club roster accurate using short typed commands.
+The intended MVP supports overlapping groups without repetitive edits to each record.
 
-This describes the intended MVP. The **v1.2 development build** already supports individual
-member management, name search, offline command help, and local saving. Tag filtering and
-bulk tag changes remain planned; see [implementation status](#differences-still-to-implement-for-the-mvp).
+The secretary can:
 
---------------------------------------------------------------------------------------------------------------------
+* Find members by name and narrow the displayed group by tag.
+* Add or remove a tag for the whole displayed group in one operation.
+* Keep unrelated tags and hidden members unchanged.
+* Save valid changes automatically to a local file.
+* Complete the core workflow without an internet connection or a separate save command.
 
-## **Acknowledgements**
+The **v1.2 development build** supports individual member management, name search, offline command help, and local saving.
+Tag filtering and bulk tag changes remain planned.
+See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining work.
+
+## Acknowledgements
 
 * TrackCall builds on [AddressBook Level 3](https://se-education.org/addressbook-level3/) by the
   [SE-EDU initiative](https://se-education.org/). The starter supplies the architecture, source code, tests,
@@ -32,147 +33,156 @@ bulk tag changes remain planned; see [implementation status](#differences-still-
 * [JUnit](https://junit.org/junit5/), [Gradle](https://gradle.org/),
   [Checkstyle](https://checkstyle.org/), and [JaCoCo](https://www.jacoco.org/jacoco/) support testing and builds.
 
---------------------------------------------------------------------------------------------------------------------
 
-## **Setting up, getting started**
+## Setting up, getting started
 
 Refer to the guide [_Setting up and getting started_](SettingUp.md).
 
---------------------------------------------------------------------------------------------------------------------
 
-## **Design**
+## Design
 
 <div markdown="span" class="alert alert-primary">
 
-:bulb: **Tip:** The `.puml` files used to create diagrams are in `docs/diagrams`. Refer to the [_PlantUML Tutorial_ at se-edu/guides](https://se-education.org/guides/tutorials/plantUml.html) to learn how to create and edit diagrams.
+:bulb: **Tip:** Diagram sources are in `docs/diagrams`.
+See the [PlantUML tutorial](https://se-education.org/guides/tutorials/plantUml.html) to create or edit a diagram.
 </div>
 
 ### Architecture
 
-<img src="images/ArchitectureDiagram.png" width="280" />
+<img src="images/ArchitectureDiagram.png" width="280" alt="TrackCall architecture and component dependencies">
 
-The ***Architecture Diagram*** given above explains the high-level design of the App.
+The architecture diagram shows the main components and their dependencies.
 
-The following provides a quick overview of the main components and their interactions.
+#### Main components
 
-**Main components of the architecture**
+`Main` manages startup and shutdown through two classes:
+[`Main`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/Main.java)
+and [`MainApp`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/MainApp.java).
 
-**`Main`** (consisting of classes [`Main`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
-* At app launch, it initializes the other components in the correct sequence, and connects them up with each other.
-* At shut down, it shuts down the other components and invokes cleanup methods where necessary.
+* At startup, it initialises the components in order and connects them.
+* At shutdown, it stops the components and runs their cleanup methods.
 
-The bulk of the app's work is done by the following four components:
+| Component | Responsibility |
+| --- | --- |
+| [UI](#ui-component) | Display the interface and receive user input. |
+| [Logic](#logic-component) | Parse and execute commands. |
+| [Model](#model-component) | Hold the app's data in memory. |
+| [Storage](#storage-component) | Read and write data on disk. |
+| [Commons](#common-classes) | Provide classes shared by multiple components. |
 
-* [**`UI`**](#ui-component): The UI of the App.
-* [**`Logic`**](#logic-component): The command executor.
-* [**`Model`**](#model-component): Holds the data of the App in memory.
-* [**`Storage`**](#storage-component): Reads data from, and writes data to, the hard disk.
+#### Component interactions
 
-[**`Commons`**](#common-classes) represents a collection of classes used by multiple other components.
+The sequence diagram shows how the components handle `delete 1`.
 
-**How the architecture components interact with each other**
+<img src="images/ArchitectureSequenceDiagram.png" width="574" alt="Component interactions when executing delete 1">
 
-The *Sequence Diagram* below shows how the components interact with each other for the scenario where the user issues the command `delete 1`.
+Each of the four main components defines an API through an interface with the component's name.
+A corresponding manager class implements that interface.
+For example, `Logic.java` defines the API and `LogicManager.java` implements it.
 
-<img src="images/ArchitectureSequenceDiagram.png" width="574" />
+Components communicate through these interfaces.
+This reduces their dependence on each other's implementation details, as shown below.
 
-Each of the four main components (also shown in the diagram above),
-
-* defines its *API* in an `interface` with the same name as the Component.
-* provides its functionality through a concrete `{Component Name}Manager` class that implements the corresponding API interface.
-
-For example, the `Logic` component defines its API in `Logic.java` and implements it in `LogicManager.java`. Other components interact with a component through its interface rather than its concrete class, preventing them from coupling to that component's implementation, as illustrated in the following partial class diagram.
-
-<img src="images/ComponentManagers.png" width="300" />
-
-The sections below give more details of each component.
+<img src="images/ComponentManagers.png" width="300" alt="Component interfaces and their manager implementations">
 
 ### UI component
 
-The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/ui/Ui.java)
+**API:** [`Ui.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/ui/Ui.java)
 
-![Structure of the UI Component](images/UiClassDiagram.png)
+![Structure of the UI component](images/UiClassDiagram.png)
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
+`MainWindow` contains `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`.
+These classes inherit from `UiPart`, which provides behaviour shared by visible interface parts.
 
-The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
+The interface uses JavaFX. Matching `.fxml` files in `src/main/resources/view` define the layouts.
+For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/resources/view/MainWindow.fxml)
+defines the layout of
+[`MainWindow`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
 
-The `UI` component,
+The UI component:
 
-* executes user commands using the `Logic` component.
-* listens for changes to `Model` data so that the UI can be updated with the modified data.
-* keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
-* depends on some classes in the `Model` component because it displays `Person` objects from the model.
+* Holds a reference to `Logic` and uses it to execute commands.
+* Observes model data so the interface updates when the data changes.
+* Uses model classes, including `Person`, to display member details.
 
 ### Logic component
 
-**API** : [`Logic.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/logic/Logic.java)
+**API:** [`Logic.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/logic/Logic.java)
 
-Here's a (partial) class diagram of the `Logic` component:
+<img src="images/LogicClassDiagram.png" width="550" alt="Main classes in the Logic component">
 
-<img src="images/LogicClassDiagram.png" width="550"/>
+The following sequence diagram illustrates `execute("delete 1")`.
 
-The sequence diagram below illustrates the interactions within the `Logic` component, taking `execute("delete 1")` API call as an example.
+![Logic interactions for the delete 1 command](images/DeleteSequenceDiagram.png)
 
-![Interactions Inside the Logic Component for the `delete 1` Command](images/DeleteSequenceDiagram.png)
-
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The lifeline for `DeleteCommandParser` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
+<div markdown="span" class="alert alert-info">
+:information_source: **Note:** PlantUML extends the `DeleteCommandParser` lifeline beyond its destroy marker (X).
+The lifeline should end at that marker.
 </div>
 
-How the `Logic` component works:
+#### Command execution
 
-1. When `Logic` is called upon to execute a command, the command is passed to an `AddressBookParser` object, which in turn creates a parser that matches the command (e.g., `DeleteCommandParser`) and uses it to parse the command.
-1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
-1. The command can communicate with the `Model` when it is executed (e.g. to delete a person).<br>
-   Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
-1. The result of the command execution is encapsulated as a `CommandResult` object which is returned from `Logic`.
+1. `AddressBookParser` selects the matching parser, such as `DeleteCommandParser`.
+2. That parser produces a `Command` subclass, such as `DeleteCommand`.
+3. `LogicManager` executes the command. The command interacts with `Model` as needed.
+4. `Logic` returns a `CommandResult` containing the result.
 
-Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
+The diagram groups model interactions into one step for clarity.
+An implementation may need several calls to complete that step.
 
-<img src="images/ParserClasses.png" width="600"/>
+#### Parsing classes
 
-How the parsing works:
-* When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
-* All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
+<img src="images/ParserClasses.png" width="600" alt="Command parser classes and their shared helpers">
+
+`AddressBookParser` creates a command-specific parser, represented here as `XYZCommandParser`.
+For example, `AddCommandParser` uses the helper classes to create an `AddCommand`.
+`AddressBookParser` returns the result as a `Command`.
+
+Command-specific parsers implement the shared `Parser` interface.
+This allows common handling where appropriate, including in tests.
 
 ### Model component
-**API** : [`Model.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
 
-<img src="images/ModelClassDiagram.png" width="450" />
+**API:** [`Model.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
 
+<img src="images/ModelClassDiagram.png" width="450" alt="Member records, preferences, and filtered data in the Model component">
 
-The `Model` component,
+The Model component stores:
 
-* stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
-* stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
-* stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
-* does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
+* **Member data:** `Person` objects held in a `UniquePersonList`.
+* **Displayed data:** a filtered list, such as name-search results.
+  An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
+* **Preferences:** a `UserPrefs` object, currently containing GUI settings.
+  Other components access it through `ReadOnlyUserPrefs`.
 
-<div markdown="span" class="alert alert-info">:information_source: **Note:** The alternative, arguably more object-oriented, design below keeps a unique list of tags in `AddressBook`, and each `Person` references tags from that list. This lets `AddressBook` maintain one `Tag` object per unique tag instead of each `Person` holding its own `Tag` objects.<br>
+Model does not depend on UI, Logic, or Storage.
+Its data entities can be used independently of those components.
 
-<img src="images/BetterModelClassDiagram.png" width="450" />
+<div markdown="block" class="alert alert-info">
+
+**Alternative design:** `AddressBook` could keep one shared `Tag` object for each unique tag.
+Each `Person` would reference those shared objects instead of holding its own copies.
+
+<img src="images/BetterModelClassDiagram.png" width="450" alt="Alternative model with a shared list of unique tags">
 
 </div>
-
 
 ### Storage component
 
-**API** : [`Storage.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/storage/Storage.java)
+**API:** [`Storage.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/storage/Storage.java)
 
-<img src="images/StorageClassDiagram.png" width="550" />
+<img src="images/StorageClassDiagram.png" width="550" alt="StorageManager and the JSON storage classes">
 
-The `Storage` component,
-* can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
-* is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
-* depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
+Storage reads and writes member data and preferences as JSON.
+`StorageManager` delegates file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage`, one class per file.
+It depends on model classes because it saves and restores model objects.
 
 ### Common classes
 
 Classes used by multiple components are in the `seedu.address.commons` package.
 
---------------------------------------------------------------------------------------------------------------------
 
-## **Implementation**
+## Implementation
 
 This section describes the v1.2 working branch. The v1.1 iteration was limited to documentation;
 these functional changes are not a published v1.1 release. The requirements appendix records the
@@ -180,29 +190,47 @@ full intended product, including behaviour still to be implemented.
 
 ### Offline command help
 
-`CommandHelp` stores one local catalogue of the eight implemented commands, including each command's
-purpose, syntax, example, expected result, and common errors. `HelpCommandParser` accepts zero or one
-lowercase topic and rejects unknown or multiple topics. `HelpCommand` returns the topic in `CommandResult`,
-and `MainWindow` passes it to `HelpWindow`.
+#### Catalogue and command flow
 
-The help overview groups the eight commands into four compact category cards. Each command shows a
-purpose title, runnable example, and an in-app button for opening its details. The overview reflows
-from two columns to one in a narrower window. `help COMMAND` opens the same detailed command card;
-All commands returns to the overview. F1 and the menu open the overview. Arrow and page keys scroll,
-Home/End move to the ends, and Escape closes help. The catalogue lists only executable commands,
-so planned tag commands cannot be mistaken for available functionality. `CommandHelpTest` checks
-catalogue completeness and executable examples; `HelpWindowTest` checks the rendered overview,
-every detail page, responsive columns, navigation, and keyboard scrolling. `MainWindowTest`
-exercises `help add`, F1, Escape, exit, rejected `/help`, and failed-save recovery through the real
-command box with temporary storage.
+`CommandHelp` stores the eight implemented commands in one local catalogue.
+Each entry contains its purpose, syntax, example, expected result, and common errors.
+Only executable commands appear, so planned tag commands are not shown as available.
+
+1. `HelpCommandParser` accepts zero or one lowercase topic. It rejects unknown or multiple topics.
+2. `HelpCommand` returns the topic through `CommandResult`.
+3. `MainWindow` passes the topic to `HelpWindow`.
+
+#### Help navigation
+
+The overview groups commands into four category cards.
+Each command shows a purpose, runnable example, and button for its details.
+The layout uses two columns in a wide window and one in a narrow window.
+
+* `help COMMAND` opens the same detail card as its overview button.
+* **All commands** returns to the overview.
+* **F1** and the Help menu open the overview.
+* Arrow and page keys scroll. **Home/End** move to the ends, and **Escape** closes help.
+
+#### Test coverage
+
+* `CommandHelpTest` checks catalogue completeness and executable examples.
+* `HelpWindowTest` checks the overview, detail pages, responsive columns, navigation, and keyboard scrolling.
+* `MainWindowTest` exercises `help add`, F1, Escape, exit, rejected `/help`, and failed-save recovery.
+  It uses the real command box with temporary storage.
 
 ### List and clear commands
+
+#### List behaviour
 
 `ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, keeps stored order,
 and reports the complete count using singular, plural, or empty-roster wording. `LogicManager`
 returns its result without invoking storage. Extra arguments are rejected by `AddressBookParser`
-before either the view or data changes. Member cards use labelled, wrapping rows and tags, with
-`LightTheme.css` providing the beige main-list palette. The offline guide is described above.
+before either the view or data changes.
+
+Member cards use labelled, wrapping rows and tags.
+`LightTheme.css` provides the beige main-list palette. See [Offline command help](#offline-command-help) for the bundled guide.
+
+#### Clear and save recovery
 
 Before executing `ClearCommand`, `LogicManager` snapshots the roster. The command counts and
 removes all records while retaining the old predicate temporarily. After saving succeeds, the
@@ -216,7 +244,9 @@ pre-creates an empty destination. Unsupported atomic replacement produces a hand
 there is no unsafe partial-write fallback. This shared storage helper also benefits existing
 callers; their command policies and load validation are described below.
 
-Exact feedback follows the list and clear feature specifications:
+#### Exact feedback
+
+These messages follow the list and clear feature specifications:
 
 | Case | Feedback |
 | --- | --- |
@@ -230,28 +260,39 @@ Exact feedback follows the list and clear feature specifications:
 | Invalid clear arguments | `Invalid command format. Usage: clear. This command removes all members.` |
 | Failed clear save | `Unable to clear the address book because the changes could not be saved. No members were removed.` |
 
+#### Test coverage
+
 Regression coverage is in `ListClearIntegrationTest`, the two command tests, parser tests, and
 `FileUtilTest`. `PersonCardTest` lays out member cards off-screen and verifies complete field values,
 alphabetical tag order, hidden empty tag rows, and wrapping at narrow widths. Linux CI supplies a
 virtual display with `xvfb-run` for JavaFX. UI integration tests use synthetic members and temporary
 storage; they never open the user's roster.
-Command tests cover singular/plural/empty feedback, hidden members, no-match views, order,
-repetition, rejected arguments, no-save listing, persisted empty data, settings, predicate reset,
-failed-save rollback, retry, and temporary-file cleanup. `filter` is not implemented here;
-model predicates are used to verify integration with a future filter without claiming that command exists.
+Command tests cover:
+
+* Singular, plural, and empty-roster feedback.
+* Hidden members, no-match views, order, repetition, and rejected arguments.
+* Read-only listing, persisted empty data, settings, and predicate reset.
+* Failed-save rollback, retry, and temporary-file cleanup.
+
+`filter` is not implemented here. Model predicates verify compatibility with a future filter.
 
 ### Readable member details and feedback
 
+#### Member rows and results
+
 `Messages#format(Person)` formats names, phone numbers, email addresses, addresses, and sorted tags
-as labeled lines. Add, edit, and delete results reuse this format instead of one long semicolon-separated
+as labelled lines. Add, edit, and delete results reuse this format instead of one long semicolon-separated
 message. `ResultDisplay` wraps and scrolls text; a split pane lets the user resize its area.
-`PersonCard` separates the displayed index and name from labeled contact rows and wraps long values
-and tag labels. The JavaFX stylesheet `LightTheme.css` supplies the shared beige palette and dark
-text for the main window, help, and alerts; `HelpWindow.css` adds the help-card layout. A welcome
-message points to `help` and `help add`.
+`PersonCard` separates the displayed index and name from labelled contact rows and wraps long values
+and tag labels.
+
+`LightTheme.css` supplies the beige palette and dark text for the main window, help, and alerts.
+`HelpWindow.css` adds the help-card layout. A welcome message points to `help` and `help add`.
 
 Find feedback reports `Members found: N`. List and clear use the exact count messages above.
 Data-changing feedback is shown only after saving. Duplicate-name errors explain the existing name rule and suggest `edit`.
+
+#### Window placement
 
 `MainWindow` uses `WindowPlacement` to check saved bounds against available display areas at startup. It retains valid
 positions, selects the display with the greatest overlap or the primary display as a fallback,
@@ -260,11 +301,15 @@ also recover to usable bounds. This handles monitor changes between sessions.
 
 ### Automatic data saving and load recovery
 
+#### Save policy
+
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
 `help`, `list`, `find`, and `exit` return without saving member data. Successful `add`, `edit`, `delete`,
 and `clear` commands pass the complete roster, including hidden members, to `Storage#saveAddressBook`.
 Parsing and execution failures do not save. Data-changing commands return normal success only after
 the save succeeds.
+
+#### File writes
 
 `StorageManager` delegates JSON storage to `JsonAddressBookStorage`. The default file is
 `data/addressbook.json`, relative to the working directory. `FileUtil#writeToFile` creates missing parent
@@ -272,12 +317,18 @@ directories, writes UTF-8 to a sibling temporary file, and replaces the destinat
 It reports a failure if atomic replacement is unavailable instead of falling back to a potentially
 partial overwrite. An existing saved file remains intact on failure; temporary-file cleanup is attempted.
 
+#### Failed saves
+
 If saving fails, `LogicManager` reports a `SaveFailureException`, a `CommandException` subtype that
-also records whether the change remains applied. For `add`, `edit`, and `delete`, the model change
+also records whether the change remains applied.
+
+For `add`, `edit`, and `delete`, the model change
 remains in memory. `CommandBox` clears the already-applied input so pressing Enter cannot accidentally
 repeat an indexed edit or deletion. The result explains that the previous saved roster is unchanged.
-After resolving the storage problem, the user checks the current list and reapplies an existing field
-value with `edit` to save without changing another record; an empty roster can be saved with `clear`.
+
+To retry, the user resolves the storage problem and checks the current list.
+They reapply an existing field value with `edit`, or use `clear` if the roster is empty.
+This saves without changing another record.
 
 Before `clear`, `LogicManager` snapshots the roster. A successful save resets the search predicate.
 If saving fails, it restores those records while
@@ -286,15 +337,17 @@ retaining the existing search predicate, so the previous displayed list returns.
 clear of an already-empty roster also reports failure rather than the normal empty result.
 Exiting never retries a save. Application preferences are stored separately at startup and shutdown.
 
-Startup loads a valid roster in file order, uses samples for a missing file, and uses an empty roster
-after a loading error. A JSON `null` root, null person, and null tag are rejected through the normal
+#### Startup and validation
+
+Startup loads a valid roster in file order.
+A missing file produces sample members; a loading error produces an empty roster. A JSON `null` root, null person, and null tag are rejected through the normal
 loading-error path. Errors are logged; an invalid member file is preserved until a successful
 data-changing command replaces it. Null or invalid preferences fall back to defaults, which are saved
 through the usual preferences setup.
 
 The current JSON format uses a `persons` array and a `tags` array per member. Existing validation
 still rejects members with identical names. The email validator avoids excessive backtracking on long
-input, and a log-file initialization failure uses the console logger instead of aborting startup.
+input, and a log-file initialisation failure uses the console logger instead of aborting startup.
 
 ### Command parsing
 
@@ -310,6 +363,7 @@ records, the current list, and the saved file unchanged; the input remains avail
 * Duplicate identity still uses an exact name match. Shared rule 2's comparison of all four contact
   fields has not been implemented.
 * `edit` currently restores the full list. Retaining the active search and future tag filters is planned.
+* `find` currently reports `Members found: N`. The use cases describe the intended member-list count wording.
 * Unknown-prefix rejection still needs a precise grammar that preserves valid free-form addresses.
   Currently, an unrecognised prefix-like token such as `x/extra` or uppercase `T/committee` inside
   an address can become literal address text. The parser must not reject ordinary `c/o` or URLs
@@ -327,7 +381,7 @@ Planned bulk tag commands will use the same save-after-change workflow.
 
 ### \[Proposed\] Filter members by tag
 
-#### Proposed Implementation
+#### Proposed implementation
 
 The `filter` command displays members with a specified tag without changing member data. Its format is:
 
@@ -341,45 +395,42 @@ restores hidden members. Running `list` clears the active search and filters. Re
 order, are renumbered from 1, and use the message `N member(s) listed with tag "TAG".` A zero-match result is
 still successful, and later index-based commands use the displayed indices. No save is attempted.
 
-An invalid command leaves the current list, active filter, and member data unchanged. Errors include a missing
-or empty tag, invalid characters or spaces, a tag longer than 30 characters, multiple tags, and unknown
-prefixes.
+An invalid command leaves the current list, active filter, and member data unchanged.
+Reject missing or empty tags, invalid characters, internal spaces, tags over 30 characters, multiple tags, and unknown prefixes.
 
 ![Proposed beige TrackCall interface after filtering by committee tag](images/FilterTag.png)
 
 AI-assisted intended-interface mockup using the same palette as the README. `filter t/committee`
-is proposed behaviour; it is not available in the v1.1 starter.
+is proposed behaviour. It is not available in the v1.2 development build.
 
---------------------------------------------------------------------------------------------------------------------
 
-## **Documentation, logging, testing, dev-ops**
+## Documentation, logging, testing, dev-ops
 
 * [Documentation guide](Documentation.md)
 * [Testing guide](Testing.md)
 * [Logging guide](Logging.md)
 * [DevOps guide](DevOps.md)
 
---------------------------------------------------------------------------------------------------------------------
 
-## **Appendix: Requirements**
+## Appendix: Requirements
 
-These requirements describe the intended TrackCall product. They extend beyond the current v1.2
-development build; the implementation section above lists the remaining differences. The v1.1
-iteration recorded the requirements without implementing the planned features.
+These requirements describe the intended product, including features beyond the v1.2 development build.
+See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining differences.
+The v1.1 iteration documented requirements; functional changes belong to v1.2 or later.
 
-The requirements are based on the team's [planning workbook][planning-workbook] (the **Narrative**
-and **User Stories** tabs) and [MVP feature specification][feature-specification], reviewed on
-29 September 2026. The narrative records a wider product vision. The feature specification
-defines the selected MVP. Ideas outside that MVP are retained below rather than presented as
-implemented features or promised releases. The v1.1 iteration records these requirements;
-functional changes, including offline help and clearer feedback, belong to v1.2 or later iterations.
+The requirements were reviewed on **29 September 2026** against two sources:
+
+* The [planning workbook][planning-workbook], especially its **Narrative** and **User Stories** tabs, records the wider product vision.
+* The [feature specification][feature-specification] defines the selected MVP.
+
+Ideas outside that MVP are retained for future decisions. They are not implemented features or promised releases.
 
 [planning-workbook]: https://docs.google.com/spreadsheets/d/1yUrRwuZCovk-RjYpmL3fycJ850GcwzuLhNevJNQymYk/edit?gid=703584466
 [feature-specification]: https://docs.google.com/document/d/1bjGzN0JqTA53ARoBUS9S9BcrwjB0BaFffD3k8ise17M/edit?tab=t.9anhuzxluv4w
 
 ### Product scope
 
-**Target user profile**
+#### Target user profile
 
 * A club or small organisation's membership secretary who maintains its member roster.
 * Works with names, phone numbers, email addresses, addresses, and overlapping groups such as
@@ -395,11 +446,19 @@ functional changes, including offline help and clearer feedback, belong to v1.2 
 
 **Value proposition:** See the [product value proposition](#value-proposition) at the start of this guide.
 
-**Selected MVP**
+#### Selected MVP
 
-The MVP covers `help`, `add`, `list`, `edit`, `find`, `delete`, `clear`, `exit`, `filter`,
-`tagall`, `untagall`, automatic saving, and manual editing of the local data file. Each member
-has a name, phone number, email address, address, and zero or more tags.
+The MVP includes these commands:
+
+* **Help and session:** `help`, `exit`.
+* **Individual records:** `add`, `edit`, `delete`.
+* **Roster and search:** `list`, `find`, `clear`, `filter`.
+* **Group tags:** `tagall`, `untagall`.
+
+It also includes automatic saving and manual editing of the local data file.
+Each member has a name, phone number, email address, address, and zero or more tags.
+
+#### Scope boundaries
 
 The broader narrative must be read with these MVP decisions:
 
@@ -429,13 +488,16 @@ The broader narrative must be read with these MVP decisions:
 
 Priorities describe importance to the target user: `***` = essential, `**` = useful,
 `*` = convenience. Priority is separate from implementation status. **MVP** means selected for
-the intended core product, not already implemented in v1.1. **Considered** means recorded for
+the intended core product, not necessarily implemented in the current build. **Considered** means recorded for
 future decisions, with no delivery commitment.
 
-The tables cover all 32 source stories. Overlapping stories are consolidated: spreadsheet rows
-9 and 14 share US09; rows 22 and 23 share US17, with class-based sorting recorded in US33;
-row 28 is covered by the reviewed group-removal workflow in US10. Row 24 is split between
-complete-word lookup (US05) and substring lookup (US26). Existing story IDs are retained.
+The tables cover all 32 source stories. Existing story IDs are retained.
+Overlapping stories are consolidated as follows:
+
+* Rows 9 and 14 share US09.
+* Rows 22 and 23 share US17. Class-based sorting is recorded in US33.
+* Row 28 is covered by the group-removal workflow in US10.
+* Row 24 is split between complete-word lookup (US05) and substring lookup (US26).
 
 #### Stories selected for the MVP
 
@@ -583,7 +645,7 @@ keep the same command information and data semantics, while making help availabl
 member fields easier to read. The final help presentation may use a scrollable in-app panel
 or window; it must remain keyboard accessible.
 
-**Offline help**
+#### Offline help
 
 * With networking disabled, `help` shows a concise summary of every executable command in the
   running version. The completed MVP includes `help`, `add`, `list`, `edit`, `find`, `delete`,
@@ -598,13 +660,13 @@ or window; it must remain keyboard accessible.
   the command overview, individual topics, and a way back to the command box. Looking up help
   leaves the roster and current list unchanged and does not save the data file.
 
-**Member details and command feedback**
+#### Member details and command feedback
 
-* Each member card separates its displayed index and name from clearly labeled Phone, Email,
+* Each member card separates its displayed index and name from clearly labelled Phone, Email,
   and Address fields, followed by its tag labels. Long names and contact details wrap; tags wrap
   onto another line when needed. All field content remains accessible without overlap or permanent truncation.
 * Successful `add`, `edit`, and `delete` feedback starts with the completed action and shows
-  the affected member using labeled fields on separate lines. Empty tags are shown as `(none)`.
+  the affected member using labelled fields on separate lines. Empty tags are shown as `(none)`.
   Feedback reports success only after saving; a save failure follows shared rule 10.
 * Validation errors name the problem and a correction or help route. The result area keeps
   long feedback accessible by wrapping and scrolling. Readability checks use NFR05.
@@ -622,13 +684,18 @@ Tags: committee, year1
 
 ### Use cases
 
-**System:** TrackCall. **Primary actor:** the membership secretary.
-**MSS:** main success scenario. The app is open unless a use case states otherwise.
+**System:** TrackCall.
+
+**Primary actor:** the membership secretary.
+**MSS:** main success scenario.
+ The app is open unless a use case states otherwise.
 These are representative user workflows for the planned product, not implementation instructions.
 
 #### UC01: Register a member
 
-**Related stories:** US02, US23, US35. **Goal:** add a new member and retain the record for later sessions.
+**Related stories:** US02, US23, US35.
+
+**Goal:** add a new member and retain the record for later sessions.
 
 **MSS**
 
@@ -647,7 +714,9 @@ These are representative user workflows for the planned product, not implementat
 
 #### UC02: Find and update a member
 
-**Related stories:** US03, US04, US05, US24, US25, US28. **Goal:** correct one member's record.
+**Related stories:** US03, US04, US05, US24, US25, US28.
+
+**Goal:** correct one member's record.
 
 **MSS**
 
@@ -674,7 +743,9 @@ but remains in the roster. The secretary can use `list` to see it again.
 
 The search command is `find KEYWORD [MORE_KEYWORDS]`. It accepts one or more whitespace-separated
 keywords, ignores case, matches complete name words, and returns records matching any keyword in
-address-book order. A successful search reports `1 member listed.`, `N members listed.`, or
+address-book order.
+
+A successful search reports `1 member listed.`, `N members listed.`, or
 `0 members listed.` and does not save the data file. `find` with no keyword reports
 `Invalid command format. Usage: find KEYWORD [MORE_KEYWORDS]`; a wrong-case command such as
 `FIND John` reports `Unknown command. Type help for available commands.` A new `find` searches the
@@ -682,7 +753,9 @@ complete roster and replaces the previous search and filters.
 
 #### UC03: Update a group's tags
 
-**Related stories:** US08, US09, US10. **Goal:** change one group assignment without changing unrelated tags.
+**Related stories:** US08, US09, US10.
+
+**Goal:** change one group assignment without changing unrelated tags.
 
 **MSS**
 
@@ -717,7 +790,9 @@ not delete them. Counts still refer to the target set fixed at step 6.
 
 #### UC04: Remove one member
 
-**Related stories:** US05, US06, US25. **Goal:** remove one unwanted record while retaining other members.
+**Related stories:** US05, US06, US25.
+
+**Goal:** remove one unwanted record while retaining other members.
 
 **MSS**
 
@@ -740,16 +815,21 @@ not delete them. Counts still refer to the target set fixed at step 6.
   confirmed persistence; recovery follows rule 10.
 
 Deletion has no confirmation or undo. It removes the underlying record, not just its visible card.
+
 The command is `delete INDEX`, where `INDEX` is one positive ASCII-digit index from the current
 displayed list; leading zeroes are accepted. Signs, decimals, letters, whitespace inside the index,
-extra arguments, and out-of-range indices are rejected. After the updated roster is saved,
+extra arguments, and out-of-range indices are rejected.
+
+After the updated roster is saved,
 successful deletion reports `Deleted member` followed by the readable member fields specified
 above. A save failure reports `Could not save data to file: [DETAILS]`; the
 deletion remains in memory, but the previous saved file is preserved.
 
 #### UC05: Reset the whole roster
 
-**Related story:** US07. **Goal:** remove all member records, including records outside the current view.
+**Related story:** US07.
+
+**Goal:** remove all member records, including records outside the current view.
 
 **MSS**
 
@@ -771,7 +851,9 @@ There is no confirmation or undo. Recovery after a successful clear requires a p
 
 #### UC06: Look up a command
 
-**Related stories:** US01, US20. **Goal:** learn how to perform a task offline without leaving the app.
+**Related stories:** US01, US20.
+
+**Goal:** learn how to perform a task offline without leaving the app.
 
 **MSS**
 
@@ -796,7 +878,10 @@ leave member data and the displayed member list unchanged and do not save the da
 
 #### UC07: Load a manually edited data file
 
-**Related stories:** US11, US12, US14. **Goal:** load valid corrections made outside the app.
+**Related stories:** US11, US12, US14.
+
+**Goal:** load valid corrections made outside the app.
+
 **Preconditions:** TrackCall is closed and the secretary has backed up the data file.
 
 **MSS**
@@ -827,7 +912,9 @@ overwrite an invalid file; restore or repair it first if the original contents a
 
 #### UC08: Finish a TrackCall session
 
-**Related stories:** US11, US12, US13. **Goal:** close TrackCall after the secretary has finished
+**Related stories:** US11, US12, US13.
+
+**Goal:** close TrackCall after the secretary has finished
 working without changing the persisted roster.
 
 **MSS**
@@ -855,7 +942,9 @@ perform a separate final save. The operating-system close button has the same te
 
 #### UC09: Recover from an invalid command
 
-**Related stories:** US01, US12, US20, US35. **Goal:** understand an input error and complete
+**Related stories:** US01, US12, US20, US35.
+
+**Goal:** understand an input error and complete
 the intended task without unintended data changes.
 
 **MSS**
@@ -881,9 +970,9 @@ the intended task without unintended data changes.
   of success. The use case ends without confirmed persistence; shared rule 10 explains
   which changes remain in memory and how to retry.
 
-### Non-Functional Requirements
+### Non-functional requirements
 
-These are acceptance requirements for the intended product, not results already measured on v1.1.
+These are acceptance requirements for the intended product, not verified results for the current build.
 They include relevant [course product constraints][course-constraints]. The performance workload
 is a test target, not a restriction on accepted records or command length.
 
@@ -898,7 +987,7 @@ is a test target, not a restriction on accepted records or command length.
 | NFR05 | Display usability | At 1920 x 1080 or higher with 100% or 125% scaling, controls and text remain readable without layout overlap. At 1280 x 720 or higher with 150% scaling, every function remains usable. Long rosters and help text remain accessible by scrolling. |
 | NFR06 | Local data privacy | Core operations do not transmit member records to external services. The MVP provides no login or encryption; protection of the local file relies on the user's operating-system access controls. |
 | NFR07 | Inspectable storage | Member data is stored locally as human-editable UTF-8 JSON, with no DBMS required. The saved data can be read and corrected using an ordinary text editor while the app is closed. |
-| NFR08 | Response time | With 500 members and a writable data file of at most 1 MB, each valid in-app command of at most 256 characters completes within 2 seconds on a computer with a 2 GHz dual-core CPU, 4 GB RAM, local SSD, and no competing heavy workload. Measure from submission to displayed result, including any save; exclude startup and shutdown. Record the OS, Java version, hardware, dataset, and timings when testing. |
+| NFR08 | Response time | Each valid in-app command completes within 2 seconds under this workload: 500 members, a writable data file up to 1 MB, and commands up to 256 characters. Test hardware: 2 GHz dual-core CPU, 4 GB RAM, and local SSD, with no competing heavy workload. Measure from submission to displayed result, including any save; exclude startup and shutdown. Record the OS, Java version, hardware, dataset, and timings when testing. |
 | NFR09 | Persistence reliability | After a data-changing command reports success, a normal restart retains the saved roster. A simulated write failure leaves the previous saved file intact and is never reported as success. In-memory recovery follows rule 10, including the rollback required for `clear`. The `exit` command closes normally without performing an extra save or corrupting the last successfully saved roster. |
 
 Input validation, duplicate rejection, filtering, and no-op behaviour are functional requirements
@@ -927,16 +1016,14 @@ such as incremental delivery, are also not product NFRs.
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
 | Data-changing command | `add`, `edit`, `delete`, `clear`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
-| JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.1 starter uses `tags`. |
+| JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.2 development build uses `tags`. |
 | CSV | Comma-separated values, a tabular text format considered for exchanging member data with spreadsheets and other tools. CSV import/export is outside the selected MVP. |
 | vCard | A contact-card file format considered for exporting member contact details to phone or contact applications. It is outside the selected MVP. |
 | Archive | Retain an inactive record or tag and its history separately from active work. This considered feature is different from MVP deletion. |
-| MVP | Minimum viable product: the selected core feature set in the team specification. It does not mean that all those features exist in v1.1. |
+| MVP | Minimum viable product: the selected core feature set in the team specification. It does not mean that all those features exist in the current build. |
 
 
---------------------------------------------------------------------------------------------------------------------
-
-## **Appendix: Instructions for manual testing**
+## Appendix: Instructions for manual testing
 
 These checks cover the v1.2 working build. They are test instructions, not a claim that every
 platform or release package has been verified. Use a disposable folder and synthetic contacts.
@@ -967,7 +1054,7 @@ platform or release package has been verified. Use a disposable folder and synth
    Page Up/Page Down, Home/End, and Escape. Resize the guide and check long lines remain readable.
 3. Try `help ADD`, `help unknown`, and `help add edit`. Expect useful errors without record changes.
    `help filter` must not suggest that the unimplemented command can run.
-4. Add a synthetic member with long name, email, address, and multiple tags. Verify labeled,
+4. Add a synthetic member with long name, email, address, and multiple tags. Verify labelled,
    wrapped member rows and separate feedback lines; no value should be permanently truncated.
    Resize the result area using its divider and check both feedback and roster scrolling.
 5. Check `add`, `edit`, and `delete` results have the correct action, complete affected member,
@@ -983,9 +1070,9 @@ platform or release package has been verified. Use a disposable folder and synth
 4. Run `edit 1 t/committee t/year1`, then `edit 1 t/`. Expect the tag set to be replaced, then
    cleared. A lone `edit 1` must fail. A valid edit currently restores the complete list.
 5. Try an add with a missing required field, a repeated `n/`, an invalid phone, and an invalid email.
-   Expect errors and no new member. Add a second record with exactly Bob's name but different
-   contact details: the current duplicate-name rule must reject it with an explanation of the
-   matching name and a suggestion to use `edit`.
+   Expect errors and no new member.
+   Add a second record with Bob's exact name but different contact details.
+   The duplicate-name rule must reject it, explain the matching name, and suggest `edit`.
 6. Run `find Nobody`, then `list`. Expect `Members found: 0`, then `Showing N members.` for the
    total roster size. Test multiple name keywords, case-insensitive complete-word matching, and
    rejection of `find` with no keyword.
@@ -1008,17 +1095,20 @@ platform or release package has been verified. Use a disposable folder and synth
 4. Test `preferences.json` containing `null` and then a null `guiSettings`. Expect startup with
    default preferences. The normal preferences setup may replace that file with valid defaults.
 5. In a disposable folder, make the data directory unwritable or replace the data file with a directory.
-   Try `add`, `edit`, and `delete` separately. Expect a save error and recovery guidance instead of
-   success. Each change remains visible, but the command box clears the already-applied input.
-   Pressing Enter again must not repeat the edit or deletion. Where a previous saved file exists,
-   verify it remains byte-for-byte unchanged. Restore write access, check the current list, and
-   reapply an existing field value with `edit` (or use `clear` for an empty roster); restart to verify
-   that the full roster was saved.
-6. Test a failed `clear` with a search hiding some members. Expect `No members were removed.`,
-   restoration of every record and the previous filtered view, unchanged saved bytes, and the clear
-   input retained for a deliberate retry. Restore write access and retry: success must report the
-   total number removed, including hidden records. Also test failure when the roster is already empty.
-   Restore the test data afterward.
+   Test `add`, `edit`, and `delete` separately:
+   * Expect a save error and recovery guidance instead of success.
+   * Check that the change remains visible and the command box clears the already-applied input.
+   * Press Enter again. It must not repeat the edit or deletion.
+   * Check that any previous saved file remains byte-for-byte unchanged.
+   * Restore write access and check the current list.
+   * Reapply an existing field with `edit`, or use `clear` for an empty roster.
+   * Restart and verify that the full roster was saved.
+6. Test a failed `clear` while a search hides some members:
+   * Expect `No members were removed.` and restoration of every record and the previous filtered view.
+   * Check that saved bytes are unchanged and the clear input remains available for a deliberate retry.
+   * Restore write access and retry. Success must report the total removed, including hidden members.
+   * Repeat the failure check with an already-empty roster.
+   * Restore the test data afterward.
 
 The null-loading regressions above correspond to [issue #36](https://github.com/AY2627S1-CS2103T-W12-1/tp/issues/36).
 The automated storage tests also exercise atomic replacement failure and preservation of existing bytes.

@@ -359,7 +359,7 @@ summary { cursor: pointer; }
     color: var(--brand);
     font-weight: 600;
     line-height: 1.2;
-    strong { font-weight: inherit; }
+    strong, em, code { font-size: inherit; font-weight: inherit; }
   }
   h2 {
     margin: 32px 0 16px;
@@ -383,6 +383,7 @@ summary { cursor: pointer; }
 }
 .enhanced-toc .post-content #markdown-toc { display: none; }
 .enhanced-toc .post-content > #markdown-toc:first-child + hr { display: none; }
+.enhanced-toc .post-content > #markdown-toc:first-child + h2,
 .enhanced-toc .post-content > #markdown-toc:first-child + hr + h2 {
   margin-top: 0;
   padding-top: 0;
@@ -392,10 +393,11 @@ pre, code {
   background: #f7f3ed;
   border-color: #e8ded0;
   border-radius: 4px;
-  font-size: .88em;
+  font-size: inherit;
 }
 code { color: #625241; padding: 2px 5px; }
 pre {
+  font-size: .875rem;
   padding: 16px 18px;
   line-height: 1.65;
   overflow-x: auto;
