@@ -5,7 +5,6 @@
   const content = document.querySelector('.post-content');
   const headings = content ? Array.from(content.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]')) : [];
   const overview = document.getElementById('overview');
-  const sectionTabs = document.getElementById('section-tabs');
   const outline = document.getElementById('page-outline');
   const outlineLinks = document.getElementById('page-outline-links');
   const sidebarLinks = Array.from(document.querySelectorAll('.sidebar-subnav a[href]'));
@@ -38,27 +37,18 @@
   }
 
   // Generate navigation from the actual headings, so guide edits cannot leave a stale outline.
-  if (overview && headings.length && sectionTabs && outline && outlineLinks) {
+  if (overview && headings.length && outline && outlineLinks) {
     // Overview has a real anchor and participates in the same navigation as every section.
     outlineLinks.append(headingLink(overview, 'outline-link', 'Overview'));
-    sectionTabs.append(headingLink(overview, 'section-tab', 'Overview'));
     headings.forEach((heading) => {
       let outlineClass = 'outline-link';
       if (heading.tagName !== 'H2') outlineClass += ' outline-sub';
       if (Number(heading.tagName.slice(1)) >= 4) outlineClass += ' outline-detail';
       outlineLinks.append(headingLink(heading, outlineClass));
-      if (heading.tagName === 'H2') {
-        const tab = headingLink(heading, 'section-tab');
-        const shortLabel = sidebarLinks.find((link) => localAnchor(link) === heading.id);
-        if (shortLabel) tab.textContent = shortLabel.textContent.trim();
-        sectionTabs.append(tab);
-      }
     });
-    sectionTabs.hidden = !sectionTabs.children.length;
     outline.hidden = false;
     document.body.classList.add('enhanced-toc');
 
-    const tabs = Array.from(sectionTabs.querySelectorAll('a'));
     const links = Array.from(outlineLinks.querySelectorAll('a'));
     let previousHeading = null;
     let scrollPending = false;
@@ -80,7 +70,6 @@
         }
       }
       links.forEach((link) => setCurrent(link, localAnchor(link) === current.id));
-      tabs.forEach((link) => setCurrent(link, localAnchor(link) === section.id));
       sidebarLinks.forEach((link) => setCurrent(link, localAnchor(link) === section.id));
     }
 
