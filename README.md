@@ -18,6 +18,8 @@ Type commands to find members, update contact details, and organise groups witho
 
 ![TrackCall mockup showing committee members after filtering by tag](docs/images/Ui.png)
 
+The intended interface mockup was prepared with AI assistance and includes planned tag filtering.
+
 This is a mockup of the intended product. It keeps AB3's command box, result display,
 member list, and data-file status bar. The TrackCall features above are planned;
 the current application still contains the AB3 starter behaviour.
