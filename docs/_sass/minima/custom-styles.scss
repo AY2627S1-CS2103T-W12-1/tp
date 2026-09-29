@@ -200,7 +200,7 @@ a, button, input, summary { -webkit-tap-highlight-color: transparent; }
 .docs-shell {
   width: 100%;
   display: grid;
-  grid-template-columns: 234px minmax(0, 1fr) 224px;
+  grid-template-columns: 264px minmax(0, 1fr) 280px;
   max-width: 1720px;
   margin: 0 auto;
   min-height: calc(100vh - var(--header-height));
@@ -266,8 +266,8 @@ summary { cursor: pointer; }
     padding: 6px 9px;
     margin: 2px 0;
     color: var(--muted);
-    font-size: 12.5px;
-    line-height: 1.6;
+    font-size: 14px;
+    line-height: 1.65;
     border-radius: 5px;
     text-decoration: none;
     &:hover { color: var(--accent); background: var(--soft); }
@@ -347,7 +347,7 @@ summary { cursor: pointer; }
   grid-column: 3;
   grid-row: 1;
   padding: 33px 20px 30px;
-  font-size: 12px;
+  font-size: 14px;
   summary { margin: 0 0 16px 11px; }
 }
 .outline-link {
@@ -361,8 +361,8 @@ summary { cursor: pointer; }
   &:hover { color: var(--accent); text-decoration: none; }
   &.is-active { border-left-color: var(--accent); color: var(--accent); background: #f2ebe1; }
 }
-.outline-sub { padding-left: 21px; font-size: 11.5px; }
-.outline-detail { padding-left: 31px; }
+.outline-sub { padding-left: 21px; font-size: 13px; }
+.outline-detail { padding-left: 31px; font-size: 12.5px; }
 
 // Reading styles also apply to setup, testing and individual contribution pages.
 .post-content {
@@ -459,12 +459,12 @@ table {
   color: var(--muted);
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1320px) {
   .header-inner { padding: 0 24px; gap: 20px; }
   .primary-nav { gap: 0; }
   .primary-nav a { padding-left: 9px; padding-right: 9px; }
   .primary-nav .github-link span { display: none; }
-  .docs-shell { grid-template-columns: 210px minmax(0, 1fr); }
+  .docs-shell { grid-template-columns: 244px minmax(0, 1fr); }
   .docs-main { grid-column: 2; grid-row: 2; padding: 28px 36px 0; }
   .docs-sidebar { grid-column: 1; grid-row: 1 / 3; padding: 25px 14px; }
   .docs-outline {
