@@ -7,7 +7,7 @@
       <details class="sidebar-group"{% if page.url == item.url %} open{% endif %}>
         <summary>{{ item.title | escape }}</summary>
         <div class="sidebar-subnav">
-          <a class="sidebar-overview" href="{{ item.url | relative_url }}"
+          <a class="sidebar-overview" href="{{ item.url | relative_url }}#overview"
              {% if page.url == item.url %}aria-current="page"{% endif %}>Overview</a>
           {% for child in item.children %}
           <a href="{{ item.url | relative_url }}#{{ child.id }}">{{ child.title | escape }}</a>
