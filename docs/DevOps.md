@@ -4,7 +4,7 @@ title: DevOps guide
 ---
 
 * Table of Contents
-  {:toc}
+{:toc}
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -29,8 +29,8 @@ The following commands perform common Gradle tasks.
   **`checkstyleTest`**: Runs the code style check for the test code base.
 
 * **`test`**
-   * `./gradlew test`: Runs all tests.
-   * `./gradlew clean test`: Cleans the project before running all tests
+  * `./gradlew test`: Runs all tests.
+  * `./gradlew clean test`: Cleans the project before running all tests
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -61,9 +61,9 @@ Any warnings or errors will be printed out to the console.
 * Checks are implemented as executable `check-*` scripts within the `.github` directory. The `run-checks.sh` script will automatically pick up and run files named as such. That is, you can add more such files if you need and the CI will do the rest.
 
 * Check scripts should print out errors in the format `SEVERITY:FILENAME:LINE: MESSAGE`
-   * SEVERITY is either ERROR or WARN.
-   * FILENAME is the path to the file relative to the current directory.
-   * LINE is the line of the file where the error occurred and MESSAGE is the message explaining the error.
+  * SEVERITY is either ERROR or WARN.
+  * FILENAME is the path to the file relative to the current directory.
+  * LINE is the line of the file where the error occurred and MESSAGE is the message explaining the error.
 
 * Check scripts must exit with a non-zero exit code if any errors occur.
 

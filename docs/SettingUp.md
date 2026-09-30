@@ -4,7 +4,7 @@ title: Setting up and getting started
 ---
 
 * Table of Contents
-  {:toc}
+{:toc}
 
 
 --------------------------------------------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ First, **fork** this repo, and **clone** the fork into your computer.
 If you plan to use IntelliJ IDEA (highly recommended):
 1. **Configure the JDK**: Follow the guide [_[se-edu/guides] IDEA: Configuring the JDK_](https://se-education.org/guides/tutorials/intellijJdk.html) to ensure IntelliJ is configured to use **JDK 25**.
 1. **Import the project as a Gradle project**: Follow the guide [_[se-edu/guides] IDEA: Importing a Gradle project_](https://se-education.org/guides/tutorials/intellijImportGradleProject.html) to import the project into IDEA.<br>
-   :exclamation: Note: Importing a Gradle project is slightly different from importing a normal Java project.
+  :exclamation: Note: Importing a Gradle project is slightly different from importing a normal Java project.
 1. **Verify the setup**:
    1. Run `seedu.address.Main` and try a few commands.
    1. [Run the tests](Testing.md) to ensure they all pass.
