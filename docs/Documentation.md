@@ -3,74 +3,27 @@ layout: page
 title: Documentation guide
 ---
 
-Use this guide to update the website, diagrams, and project portfolios.
+**Setting up and maintaining the project website:**
 
-* Table of Contents
-{:toc}
+* We use [**Jekyll**](https://jekyllrb.com/) to manage documentation.
+* The `docs/` folder is used for documentation.
+* To learn how to set up and maintain the project website, follow the guide [_[se-edu/guides] **Using Jekyll for project documentation**_](https://se-education.org/guides/tutorials/jekyll.html).
+* Note these points when adapting the documentation to a different project/product:
+  * The 'Site-wide settings' section of the page linked above has information on how to update site-wide elements such as the top navigation bar.
+  * :bulb: In addition to updating content files, you might have to update the config files `docs/_config.yml` and `docs/_sass/minima/_base.scss`. The latter contains a reference to `AB-3` that is used when converting documentation pages to PDF format.
+* If you are using IntelliJ for editing documentation files, you can consider enabling 'soft wrapping' for `*.md` files, as explained in [_[se-edu/guides] **Intellij IDEA: Useful settings**_](https://se-education.org/guides/tutorials/intellijUsefulSettings.html#enabling-soft-wrapping)
 
-## Update the website
 
-The site uses [Jekyll](https://jekyllrb.com/). Documentation lives in `docs/`.
-See [Using Jekyll for project documentation](https://se-education.org/guides/tutorials/jekyll.html)
-for setup and publishing instructions.
+**Style guidance:**
 
-| Change | File or folder |
-| --- | --- |
-| Guide content | Markdown files in `docs/` |
-| Site name, description, and URL | `docs/_config.yml` |
-| Left-sidebar sections | `docs/_data/navigation.yml` |
-| Shared page structure | `docs/_layouts/` and `docs/_includes/` |
-| Colours, text sizing, and spacing | `docs/_sass/minima/custom-styles.scss` |
-| Search and section navigation | `docs/assets/js/documentation.js` |
+* Follow the [**_Google developer documentation style guide_**](https://developers.google.com/style).
 
-The right-hand outline is generated from each page's headings.
-When changing a heading, check links to its section, including the left-sidebar entry.
-Use the shared styles to keep pages consistent.
+* Also relevant is the [_[se-edu/guides] **Markdown coding standard**_](https://se-education.org/guides/conventions/markdown.html)
 
-For easier Markdown editing in IntelliJ, enable
-[soft wrapping](https://se-education.org/guides/tutorials/intellijUsefulSettings.html#enabling-soft-wrapping).
-Soft wrapping changes the editor view without adding line breaks to the published text.
+**Diagrams:**
 
-## Write readable content
+* See the [_[se-edu/guides] **Using PlantUML**_](https://se-education.org/guides/tutorials/plantUml.html)
 
-* Use short paragraphs and direct sentences.
-* Use headings for sections, numbered lists for steps, and bullets for related points.
-* Keep command syntax and exact application messages in code formatting.
-* Clearly distinguish available features from planned behaviour.
-* Follow the [Google developer documentation style guide](https://developers.google.com/style)
-  and [SE-EDU Markdown standard](https://se-education.org/guides/conventions/markdown.html).
+**Converting a document to the PDF format:**
 
-Before publishing, check section links, search results, narrow screens, and the rendered page.
-
-## Maintain diagrams
-
-Keep PlantUML sources in `docs/diagrams/` and generated PNGs in `docs/images/`.
-See [Using PlantUML](https://se-education.org/guides/tutorials/plantUml.html) for authoring instructions.
-
-`style.puml` defines the shared beige, ivory, sage, and dark-text palette.
-The published diagrams were rendered with PlantUML 1.2026.8 and Java 25, using the Smetana layout engine.
-For example, run this from the repository root:
-
-```shell
-java -jar /path/to/plantuml.jar -Playout=smetana -tpng -o ../images docs/diagrams/UiClassDiagram.puml
-```
-
-Review arrows, labels, clipping, and diagram warnings before committing the image.
-Keep the intended-interface mockup at `docs/images/Ui.png` in its original aspect ratio.
-
-UI mockups and the automatic-saving illustration were prepared with AI assistance.
-They are labelled design illustrations, not evidence that proposed features are implemented.
-
-## Prepare project portfolios
-
-The starter portfolio template is kept in
-[`docs/_templates/project-portfolio.md`](https://github.com/AY2627S1-CS2103T-W12-1/tp/blob/master/docs/_templates/project-portfolio.md).
-It is excluded from the public website and search results.
-
-Create a team member's page in `docs/team/` and link it from About Us when ready.
-Replace all examples with verified contributions and working links before publishing.
-
-## Export a PDF
-
-Follow [Saving web documents as PDF files](https://se-education.org/guides/tutorials/savingPdf.html).
-Check page breaks, tables, and diagrams in the exported file.
+* See the guide [_[se-edu/guides] **Saving web documents as PDF files**_](https://se-education.org/guides/tutorials/savingPdf.html)
