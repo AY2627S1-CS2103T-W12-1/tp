@@ -13,7 +13,7 @@ We are a team based in the [School of Computing, National University of Singapor
 
 [[GitHub](https://github.com/CAYOPAN)]
 
-* Role: Developer
+* Role: Testing & Code Quality Lead
 * Responsibilities: Exit, delete, and find commands.
 
 ### Eron Dathan
@@ -22,7 +22,7 @@ We are a team based in the [School of Computing, National University of Singapor
 
 [[GitHub](https://github.com/rondth)]
 
-* Role: Developer
+* Role: Integration Lead
 * Responsibilities: Automatic saving and planned tag filtering (`filter`).
 
 ### Glory Charity Lion
@@ -31,7 +31,7 @@ We are a team based in the [School of Computing, National University of Singapor
 
 [[GitHub](https://github.com/glory-lion)]
 
-* Role: Developer
+* Role: Documentation Lead
 * Responsibilities: Manual data-file editing and planned bulk tag editing.
 
 ### Ian Abiel Wangsa
@@ -40,7 +40,7 @@ We are a team based in the [School of Computing, National University of Singapor
 
 [[GitHub](https://github.com/Manutd1234)]
 
-* Role: Developer
+* Role: Team Lead
 * Responsibilities: List members (`list`) and clear the roster (`clear`).
 
 ### Noah
@@ -49,5 +49,5 @@ We are a team based in the [School of Computing, National University of Singapor
 
 [[GitHub](https://github.com/Asdao)]
 
-* Role: Developer
+* Role: Developer Lead
 * Responsibilities: CLI workflows for adding and editing member records, and command help.
