@@ -3,34 +3,34 @@ layout: page
 title: Testing guide
 ---
 
-Use Java **25** for test tasks. See [Setup](SettingUp.md) if the checkout is not ready.
-
 * Table of Contents
-{:toc}
+  {:toc}
+
+--------------------------------------------------------------------------------------------------------------------
 
 ## Running tests
 
-### With IntelliJ IDEA
+You can run tests in two ways.
 
-* **All tests:** right-click `src/test/java` and select **Run 'All Tests'**.
-* **Selected tests:** right-click a package, class, or test and select its **Run** action.
+* **Method 1: Using IntelliJ JUnit test runner**
+    * To run all tests, right-click on the `src/test/java` folder and choose `Run 'All Tests'`
+    * To run a subset of tests, you can right-click on a test package,
+      test class, or a test and choose `Run 'ABC'`
+* **Method 2: Using Gradle**
+    * Open a console and run the command `gradlew clean test` (Mac/Linux: `./gradlew clean test`)
 
-### With Gradle
+<div markdown="span" class="alert alert-secondary">:link: **Link**: Read [this Gradle Tutorial from the se-edu/guides](https://se-education.org/guides/tutorials/gradle.html) to learn more about using Gradle.
+</div>
 
-Run the command for your operating system from the repository root:
-
-| Platform | Command |
-| --- | --- |
-| macOS or Linux | `./gradlew clean test` |
-| Windows | `gradlew.bat clean test` |
-
-See the [Gradle tutorial](https://se-education.org/guides/tutorials/gradle.html) for more tasks.
-For interactive checks, use the [manual testing instructions](DeveloperGuide.md#appendix-instructions-for-manual-testing).
+--------------------------------------------------------------------------------------------------------------------
 
 ## Types of tests
 
-| Type | Purpose | Example |
-| --- | --- | --- |
-| Unit | Check individual methods and classes. | `seedu.address.commons.util.StringUtilTest` |
-| Integration | Check how multiple code units work together. | `seedu.address.storage.StorageManagerTest` |
-| Hybrid | Check individual units and their interactions. | `seedu.address.logic.LogicManagerTest` |
+This project has three types of tests:
+
+1. *Unit tests* target the lowest-level methods and classes.<br>
+   For example: `seedu.address.commons.StringUtilTest`
+1. *Integration tests* check how multiple code units work together; the individual units are assumed to work.<br>
+   For example: `seedu.address.storage.StorageManagerTest`
+1. *Hybrid tests* combine unit and integration testing. These tests check both the individual units and how they work together.<br>
+   For example: `seedu.address.logic.LogicManagerTest`

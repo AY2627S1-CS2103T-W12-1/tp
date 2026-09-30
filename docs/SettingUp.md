@@ -3,53 +3,53 @@ layout: page
 title: Setting up and getting started
 ---
 
-Follow these steps in order to prepare a local development checkout.
-
 * Table of Contents
-{:toc}
+  {:toc}
+
+
+--------------------------------------------------------------------------------------------------------------------
 
 ## Setting up the project on your computer
 
-### Get the source
+<div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
 
-Fork the [team repository](https://github.com/AY2627S1-CS2103T-W12-1/tp), then clone your fork.
+Follow the steps below precisely. The setup may fail if you skip or change a step.
+</div>
 
-### Configure IntelliJ IDEA
+First, **fork** this repo, and **clone** the fork into your computer.
 
-1. Configure **JDK 25** using the
-   [IntelliJ JDK guide](https://se-education.org/guides/tutorials/intellijJdk.html).
-2. Import the checkout as a **Gradle project** using the
-   [Gradle import guide](https://se-education.org/guides/tutorials/intellijImportGradleProject.html).
+If you plan to use IntelliJ IDEA (highly recommended):
+1. **Configure the JDK**: Follow the guide [_[se-edu/guides] IDEA: Configuring the JDK_](https://se-education.org/guides/tutorials/intellijJdk.html) to ensure IntelliJ is configured to use **JDK 25**.
+1. **Import the project as a Gradle project**: Follow the guide [_[se-edu/guides] IDEA: Importing a Gradle project_](https://se-education.org/guides/tutorials/intellijImportGradleProject.html) to import the project into IDEA.<br>
+   :exclamation: Note: Importing a Gradle project is slightly different from importing a normal Java project.
+1. **Verify the setup**:
+   1. Run `seedu.address.Main` and try a few commands.
+   1. [Run the tests](Testing.md) to ensure they all pass.
 
-Importing a Gradle project differs from importing a regular Java project.
-Follow the linked steps to keep the dependencies configured correctly.
-
-### Verify the setup
-
-1. Run `./gradlew run`. On Windows, use `gradlew.bat run`.
-   This selects the matching JavaFX libraries for local development, including Apple Silicon.
-2. Try a few commands in the app.
-3. [Run the tests](Testing.md) and confirm that they pass.
+--------------------------------------------------------------------------------------------------------------------
 
 ## Before writing code
 
-### Configure the coding style
+1. **Configure the coding style**
 
-Follow the [IntelliJ code-style guide](https://se-education.org/guides/tutorials/intellijCodeStyle.html)
-to match the project's coding style.
-Optionally, configure [Checkstyle in IntelliJ](https://se-education.org/guides/tutorials/checkstyle.html)
-to see style problems while editing.
+   If using IDEA, follow the guide [_[se-edu/guides] IDEA: Configuring the code style_](https://se-education.org/guides/tutorials/intellijCodeStyle.html) to set up IDEA's coding style to match ours.
 
-### Check continuous integration
+   <div markdown="span" class="alert alert-primary">:bulb: **Tip:**
 
-GitHub Actions runs CI for every push and pull request.
-Workflow files are in `.github/workflows`. No additional setup is required.
+   Optionally, follow the guide [_[se-edu/guides] Using Checkstyle_](https://se-education.org/guides/tutorials/checkstyle.html) to learn how to use Checkstyle in IDEA, for example to report problems _as_ you write code.
+   </div>
 
-### Learn the design
+1. **Set up CI**
 
-Read [TrackCall's architecture](DeveloperGuide.md#architecture) before changing the code.
-These starter-code tutorials explain common development tasks:
+   This project includes GitHub Actions configuration files in `.github/workflows`. GitHub runs CI automatically for every push and pull request. No setup is required.
 
-* [Trace code](https://se-education.org/guides/tutorials/ab3TracingCode.html).
-* [Add a command](https://se-education.org/guides/tutorials/ab3AddRemark.html).
-* [Remove fields](https://se-education.org/guides/tutorials/ab3RemovingFields.html).
+1. **Learn the design**
+
+   When you are ready to start coding, we recommend that you get some sense of the overall design by reading about [AddressBook’s architecture](DeveloperGuide.md#architecture).
+
+1. **Do the tutorials**
+   These tutorials will help you get acquainted with the codebase.
+
+   * [Tracing code](https://se-education.org/guides/tutorials/ab3TracingCode.html)
+   * [Adding a new command](https://se-education.org/guides/tutorials/ab3AddRemark.html)
+   * [Removing fields](https://se-education.org/guides/tutorials/ab3RemovingFields.html)
