@@ -4,8 +4,8 @@
 [![codecov](https://codecov.io/gh/AY2627S1-CS2103T-W12-1/tp/branch/master/graph/badge.svg)](https://app.codecov.io/gh/AY2627S1-CS2103T-W12-1/tp)
 
 TrackCall helps membership secretaries keep their organisation's member records up to date.
-It is a desktop app with a planned performance target of 500 members, not a hard record limit.
-Type commands to find members and update their contact details.
+It is a desktop app to help to keep track for around 500 members, not a hard limit.
+We can type commands in the command line to find members and update their contact details quickly.
 
 ## Current development build
 
