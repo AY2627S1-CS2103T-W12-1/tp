@@ -24,7 +24,7 @@ public class CommandHelpTest {
                 .collect(Collectors.toSet());
         assertEquals(Set.of(AddCommand.COMMAND_WORD, EditCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD,
                 ClearCommand.COMMAND_WORD, FindCommand.COMMAND_WORD, ListCommand.COMMAND_WORD,
-                HelpCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD), keywords);
+                HelpCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD, SortCommand.COMMAND_WORD), keywords);
         assertEquals(CommandHelp.values().length, keywords.size());
     }
 

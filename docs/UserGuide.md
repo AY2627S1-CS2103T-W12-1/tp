@@ -62,7 +62,7 @@ Use the [command summary](#command-summary) for a compact reference.
 Open help by typing `help`, pressing **F1**, or choosing **Help → Help**.
 The guide works without internet access and does not change or save the roster.
 
-The overview groups all eight commands into four categories:
+The overview groups all nine commands into four categories:
 Browse members, Manage members, Remove records, and Help & session.
 Each command has a short description and a runnable example.
 The overview uses two columns in a wide window and one in a narrow window.
@@ -117,6 +117,15 @@ It does not change or save records.
 
 The result is `Showing 1 member.`, `Showing N members.`, or `No members in the address book.`
 Extra arguments produce `Invalid command format. Usage: list` without changing the current view.
+
+### Sort members by name: `sort`
+
+`sort` orders the currently displayed members by full name from A to Z, ignoring letter case.
+It preserves the current search restriction and does not change or save the stored roster order.
+Sorting stays active as members are added, edited, deleted, or searched. Use `list` to restore
+the complete roster in stored order, or restart the app to return to stored order.
+Check the displayed member numbers again before using `edit` or `delete`.
+Extra arguments such as `sort date` produce `Invalid command format. Usage: sort`.
 
 ### Update a member: `edit`
 
@@ -223,7 +232,7 @@ Fix the storage problem. Retry only if you still want to remove the entire roste
 ## Your data
 
 TrackCall automatically saves after successful `add`, `edit`, `delete`, and `clear` commands.
-`help`, `list`, `find`, and `exit` do not save the roster.
+`help`, `list`, `sort`, `find`, and `exit` do not save the roster.
 
 ### Locate or back up your roster
 
@@ -294,6 +303,7 @@ Unsaved changes from `add`, `edit`, and `delete` remain visible in memory.
 | Open help | `help [COMMAND]` | `help add` opens the add instructions. |
 | Add a member | `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...` | The quick-start example adds Alice. |
 | Show everyone | `list` | `list` restores the complete roster. |
+| Sort by name | `sort` | Sorts the current view from A to Z, ignoring letter case. |
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
 | Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
 | Delete one member | `delete INDEX` | `delete 1` removes the first currently displayed member. |

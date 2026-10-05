@@ -151,6 +151,7 @@ The Model component stores:
 
 * **Member data:** `Person` objects held in a `UniquePersonList`.
 * **Displayed data:** a filtered list, such as name-search results.
+  A `SortedList` wraps it for optional name sorting while the stored roster keeps its original order.
   An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
 * **Preferences:** a `UserPrefs` object, currently containing GUI settings.
   Other components access it through `ReadOnlyUserPrefs`.
@@ -192,7 +193,7 @@ full intended product, including behaviour still to be implemented.
 
 #### Catalogue and command flow
 
-`CommandHelp` stores the eight implemented commands in one local catalogue.
+`CommandHelp` stores the nine implemented commands in one local catalogue.
 Each entry contains its purpose, syntax, example, expected result, and common errors.
 Only executable commands appear, so planned tag commands are not shown as available.
 
@@ -222,7 +223,7 @@ The layout uses two columns in a wide window and one in a narrow window.
 
 #### List behaviour
 
-`ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, keeps stored order,
+`ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, clears the sorting comparator,
 and reports the complete count using singular, plural, or empty-roster wording. `LogicManager`
 returns its result without invoking storage. Extra arguments are rejected by `AddressBookParser`
 before either the view or data changes.
@@ -304,7 +305,7 @@ also recover to usable bounds. This handles monitor changes between sessions.
 #### Save policy
 
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
-`help`, `list`, `find`, and `exit` return without saving member data. Successful `add`, `edit`, `delete`,
+`help`, `list`, `sort`, `find`, and `exit` return without saving member data. Successful `add`, `edit`, `delete`,
 and `clear` commands pass the complete roster, including hidden members, to `Storage#saveAddressBook`.
 Parsing and execution failures do not save. Data-changing commands return normal success only after
 the save succeeds.
@@ -469,7 +470,8 @@ The broader narrative must be read with these MVP decisions:
   deletions use the current displayed index, which the secretary must check first.
 * `find` matches complete name words. Substring and phone-number search are considered ideas,
   not current MVP search behaviour.
-* Import/export, sorting, archiving, global tag renaming, bulk editing of non-tag fields, and
+* Name sorting is available through `sort`; `list` restores stored order. Other sorting criteria remain future work.
+* Import/export, archiving, global tag renaming, bulk editing of non-tag fields, and
   an in-app handover/access feature are outside the selected MVP. The initial discussion also
   considered dedicated grade, class, membership-status, and joining-date fields. These remain
   future ideas; the MVP stores the contact fields and tags listed above. Cohorts, tiers, or
@@ -544,7 +546,7 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 | --- | --- | --- | --- | --- | --- |
 | US15 | `**` | club secretary | export member records as CSV or vCard | share a copy for verification, newsletters, submissions, or phone contacts | Considered; no export command in the MVP. |
 | US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Retained from the earlier DG; no privacy-display mode in the MVP. |
-| US17 | `*` | club secretary | sort members by name | browse a long roster more easily | Considered; the MVP preserves roster order. |
+| US17 | `*` | club secretary | sort members by name | browse a long roster more easily | Implemented by `sort`; saved roster order is preserved. |
 | US19 | `**` | first-time user | follow a short in-app getting-started guide | learn the basic workflow step by step | Considered; the MVP provides command help, not an onboarding wizard. |
 | US21 | `**` | club secretary | import an existing membership spreadsheet | avoid entering every member manually | Considered; loading a valid JSON data file is not spreadsheet import. |
 | US22 | `**` | club secretary | review imported member records | confirm that an import completed correctly | Considered with US21. |
@@ -554,7 +556,7 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 | US30 | `**` | club secretary | update a non-tag field for a group in one operation | handle repeated renewal changes efficiently | Considered; bulk changes in the MVP affect tags only. |
 | US31 | `**` | long-time secretary | archive an inactive member | reduce clutter while keeping their history | Considered; deletion in the MVP does not retain history. |
 | US32 | `*` | long-time secretary | archive an unused group tag | keep old groups out of my active work without losing their history | Considered; no tag archive or separate tag catalogue in the MVP. |
-| US33 | `*` | club secretary | sort members by class | review members in the order relevant to my task | Considered; the MVP has neither a class field nor sorting. |
+| US33 | `*` | club secretary | sort members by class | review members in the order relevant to my task | Considered; no class field or class sorting is implemented. |
 | US34 | `**` | club secretary | cancel a deletion before confirming it | avoid losing a record after selecting the wrong member | Not selected; MVP deletion and clearing are immediate, without confirmation or undo. |
 | US36 | `**` | outgoing secretary | hand over my roster and command guidance to my successor | let the next secretary continue club administration | No in-app access-transfer feature. Shared accounts and routine multi-user data access are excluded by the course's single-user constraint. |
 
@@ -1045,7 +1047,7 @@ platform or release package has been verified. Use a disposable folder and synth
 
 ### Offline help and readable feedback
 
-1. Disable networking. Run `help`: verify four category cards containing all eight command names,
+1. Disable networking. Run `help`: verify four category cards containing all nine command names,
    descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
    layout when wide and one column when narrowed. Check the beige background, dark readable text,
    visible keyboard focus, and error styling in the main window, help, and alerts.
