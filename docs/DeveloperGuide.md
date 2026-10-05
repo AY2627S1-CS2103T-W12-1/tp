@@ -19,7 +19,8 @@ The secretary can:
 * Save valid changes automatically to a local file.
 * Complete the core workflow without an internet connection or a separate save command.
 
-The **v1.2 development build** supports individual member management, name search, offline command help, and local saving.
+The **v1.2 development build** supports individual member management, name search, offline command help, local saving,
+and CSV export.
 Tag filtering and bulk tag changes remain planned.
 See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining work.
 
@@ -177,6 +178,11 @@ Storage reads and writes member data and preferences as JSON.
 `StorageManager` delegates file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage`, one class per file.
 It depends on model classes because it saves and restores model objects.
 
+CSV export is implemented as a separate `CsvAddressBookExporter` in the `storage` package. `ExportCommand` supplies the
+complete address book person list and the destination path; the exporter writes a UTF-8 CSV file with a header row and
+one row per person. Apache Commons CSV handles RFC 4180 quoting and escaping. This export is a user-requested copy and
+does not replace or modify the JSON file used for automatic persistence.
+
 ### Common classes
 
 Classes used by multiple components are in the `seedu.address.commons` package.
@@ -192,7 +198,7 @@ full intended product, including behaviour still to be implemented.
 
 #### Catalogue and command flow
 
-`CommandHelp` stores the eight implemented commands in one local catalogue.
+`CommandHelp` stores the nine implemented commands in one local catalogue.
 Each entry contains its purpose, syntax, example, expected result, and common errors.
 Only executable commands appear, so planned tag commands are not shown as available.
 
@@ -469,7 +475,7 @@ The broader narrative must be read with these MVP decisions:
   deletions use the current displayed index, which the secretary must check first.
 * `find` matches complete name words. Substring and phone-number search are considered ideas,
   not current MVP search behaviour.
-* Import/export, sorting, archiving, global tag renaming, bulk editing of non-tag fields, and
+* Spreadsheet import, vCard export, sorting, archiving, global tag renaming, bulk editing of non-tag fields, and
   an in-app handover/access feature are outside the selected MVP. The initial discussion also
   considered dedicated grade, class, membership-status, and joining-date fields. These remain
   future ideas; the MVP stores the contact fields and tags listed above. Cohorts, tiers, or
@@ -477,9 +483,9 @@ The broader narrative must be read with these MVP decisions:
 * Deletion is immediate and has no confirmation or undo. Archiving with retained history is
   different from deleting a record.
 * Sharing for president verification, newsletters, mail merge, phone contacts, or submissions is
-  the motivation for the considered CSV/vCard export story (US15). The selected MVP does not
-  export those formats or import spreadsheets. Reviewing a manually edited JSON file is a
-  separate workflow, not an implementation of import/export.
+  the motivation for the CSV/vCard export story (US15). CSV export is now available through
+  `export [FILEPATH]` as an extension to the original MVP. vCard export and spreadsheet import
+  remain outside scope. Reviewing a manually edited JSON file is a separate workflow.
 * TrackCall does not make calls, send messages, process fees, track payment balances, create
   invoices, manage events/RSVPs/attendance, or renew memberships automatically. It has no cloud
   syncing, concurrent editing, or server-backed account system.
@@ -538,11 +544,11 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 | 31 | Detect duplicate member records during entry. | US35; shared rule 2; UC01 extension 2a and UC02 extension 4a. |
 | 32 | Show valid examples and expected results. | US20; offline-help acceptance requirements; UC06 and UC09. |
 
-#### Considered stories outside the selected MVP
+#### Considered stories and extensions to the selected MVP
 
 | ID | Priority | As a... | I want to... | So that I can... | Scope decision |
 | --- | --- | --- | --- | --- | --- |
-| US15 | `**` | club secretary | export member records as CSV or vCard | share a copy for verification, newsletters, submissions, or phone contacts | Considered; no export command in the MVP. |
+| US15 | `**` | club secretary | export member records as CSV or vCard | share a copy for verification, newsletters, submissions, or phone contacts | CSV export implemented with `export [FILEPATH]`; vCard remains outside scope. |
 | US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Retained from the earlier DG; no privacy-display mode in the MVP. |
 | US17 | `*` | club secretary | sort members by name | browse a long roster more easily | Considered; the MVP preserves roster order. |
 | US19 | `**` | first-time user | follow a short in-app getting-started guide | learn the basic workflow step by step | Considered; the MVP provides command help, not an onboarding wizard. |
@@ -1017,7 +1023,7 @@ such as incremental delivery, are also not product NFRs.
 | Data-changing command | `add`, `edit`, `delete`, `clear`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
 | JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.2 development build uses `tags`. |
-| CSV | Comma-separated values, a tabular text format considered for exchanging member data with spreadsheets and other tools. CSV import/export is outside the selected MVP. |
+| CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; spreadsheet import remains outside scope. |
 | vCard | A contact-card file format considered for exporting member contact details to phone or contact applications. It is outside the selected MVP. |
 | Archive | Retain an inactive record or tag and its history separately from active work. This considered feature is different from MVP deletion. |
 | MVP | Minimum viable product: the selected core feature set in the team specification. It does not mean that all those features exist in the current build. |
@@ -1045,7 +1051,7 @@ platform or release package has been verified. Use a disposable folder and synth
 
 ### Offline help and readable feedback
 
-1. Disable networking. Run `help`: verify four category cards containing all eight command names,
+1. Disable networking. Run `help`: verify four category cards containing all nine command names,
    descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
    layout when wide and one column when narrowed. Check the beige background, dark readable text,
    visible keyboard focus, and error styling in the main window, help, and alerts.
