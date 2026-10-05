@@ -7,6 +7,7 @@ import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
+import static seedu.address.testutil.TypicalPersons.CARL;
 
 import java.util.List;
 
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.AddressBookBuilder;
 
 public class ModelManagerTest {
@@ -71,6 +73,38 @@ public class ModelManagerTest {
     @Test
     public void getFilteredPersonList_modifyList_throwsUnsupportedOperationException() {
         assertThrows(UnsupportedOperationException.class, () -> modelManager.getFilteredPersonList().remove(0));
+    }
+
+    @Test
+    public void filterFilteredPersonList_narrowsExistingView() {
+        modelManager.addPerson(ALICE);
+        modelManager.addPerson(BENSON);
+        modelManager.addPerson(CARL);
+        modelManager.updateFilteredPersonList(person -> !person.equals(CARL));
+
+        modelManager.filterFilteredPersonList(person -> person.getTags().contains(new Tag("owesMoney")));
+        assertEquals(List.of(BENSON), modelManager.getFilteredPersonList());
+
+        modelManager.filterFilteredPersonList(person -> person.getTags().contains(new Tag("friends")));
+        assertEquals(List.of(BENSON), modelManager.getFilteredPersonList());
+
+        modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+        assertEquals(List.of(ALICE, BENSON, CARL), modelManager.getFilteredPersonList());
+    }
+
+    @Test
+    public void filterFilteredPersonList_noExistingPredicate_appliesFilter() {
+        AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build();
+        modelManager = new ModelManager(addressBook, new UserPrefs());
+
+        modelManager.filterFilteredPersonList(person -> person.equals(BENSON));
+
+        assertEquals(List.of(BENSON), modelManager.getFilteredPersonList());
+    }
+
+    @Test
+    public void filterFilteredPersonList_nullPredicate_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> modelManager.filterFilteredPersonList(null));
     }
 
     @Test
