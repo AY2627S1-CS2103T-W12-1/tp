@@ -51,7 +51,7 @@ public class EditCommand extends Command {
     public static final String MESSAGE_EDIT_PERSON_SUCCESS = "Updated member\n%1$s";
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
     public static final String MESSAGE_DUPLICATE_PERSON =
-            "A member with this name already exists. Use edit to update that member.";
+            "A member with these contact details already exists. Use edit to update that member.";
 
     private final Index index;
     private final EditPersonDescriptor editPersonDescriptor;
