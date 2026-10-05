@@ -5,9 +5,9 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers the **v1.2 development build** and its eight available commands.
+This guide covers the **v1.2 development build** and its nine available commands.
 Tag filtering and bulk tag editing remain planned.
-CSV import and export, and sorting the displayed list by name, are also planned.
+CSV export is available. CSV import and sorting the displayed list by name remain planned.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
 
@@ -38,6 +38,8 @@ Start with [Quick start](#quick-start), or use the [command summary](#command-su
 After saving, TrackCall reports `Added member`. Name, Phone, Email, Address, and Tags appear on separate lines.
 Alice also appears in the member list. `Tags: (none)` means the member has no tags.
 
+Type `export` to create a CSV copy of the full roster.
+
 ### Read the interface
 
 * **Command box:** enter a command above the result area.
@@ -63,7 +65,7 @@ Use the [command summary](#command-summary) for a compact reference.
 Open help by typing `help`, pressing **F1**, or choosing **Help → Help**.
 The guide works without internet access and does not change or save the roster.
 
-The overview groups all eight commands into four categories:
+The overview groups all nine commands into four categories:
 Browse members, Manage members, Remove records, and Help & session.
 Each command has a short description and a runnable example.
 The overview uses two columns in a wide window and one in a narrow window.
@@ -185,6 +187,23 @@ If saving fails, TrackCall restores the roster and previous view. It reports:
 `Unable to clear the address book because the changes could not be saved. No members were removed.`
 See [Correcting errors](#correcting-errors) for recovery steps.
 
+### Export members to CSV: `export`
+
+`export [FILEPATH]` writes every member to a UTF-8 CSV file, including members hidden by a search.
+The columns are `Name`, `Phone`, `Email`, `Address`, and `Tags`.
+Tags for each member are sorted alphabetically and joined with semicolons.
+
+* Without `FILEPATH`, the file is written to `addressbook.csv` in the application's current directory.
+* The path may be relative or absolute. The parent directory must already exist and be writable.
+* An existing destination file is overwritten.
+* Export leaves the roster, current search, and automatic JSON data file unchanged.
+* An empty roster produces a file containing only the column headers.
+
+Examples:
+
+* `export` writes `addressbook.csv` in the current directory.
+* `export backups/members.csv` writes `members.csv` in the existing `backups` directory.
+
 ### Finish your session: `exit`
 
 `exit` closes TrackCall and its help window. It accepts no arguments.
@@ -224,7 +243,7 @@ Fix the storage problem. Retry only if you still want to remove the entire roste
 ## Your data
 
 TrackCall automatically saves after successful `add`, `edit`, `delete`, and `clear` commands.
-`help`, `list`, `find`, and `exit` do not save the roster.
+`help`, `list`, `find`, `export`, and `exit` do not save the roster.
 
 ### Locate or back up your roster
 
@@ -258,8 +277,8 @@ A successful data change replaces the file.
 ## Current limitations
 
 * Tag filtering and bulk tag changes are planned. Use `edit` for an individual member's tags today.
-* Exporting members to a CSV file, importing members from a CSV file, and sorting the displayed list
-  by name are planned. They are not available in this build.
+* CSV import and sorting the displayed list by name are planned and not available in this build.
+  CSV export is available through `export [FILEPATH]`.
 * Names determine duplicates in this build. The planned MVP will compare all four contact fields.
 * An unrecognised prefix-like token inside an address can be stored as literal address text.
   For example, `a/Main Road T/committee` does not assign a tag.
@@ -301,6 +320,7 @@ Unsaved changes from `add`, `edit`, and `delete` remain visible in memory.
 | Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
 | Delete one member | `delete INDEX` | `delete 1` removes the first currently displayed member. |
 | Clear the roster | `clear` | `clear` removes all members, including those hidden by a search. |
+| Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |
 | Close the app | `exit` | `exit` ends the session. |
 
 `INDEX` always refers to the currently displayed list. Check the member details before using `edit` or `delete`.

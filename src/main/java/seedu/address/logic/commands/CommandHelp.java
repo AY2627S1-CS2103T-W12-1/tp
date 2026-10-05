@@ -34,6 +34,13 @@ public enum CommandHelp {
             "Use a current positive list number and supply at least one field. Invalid values or a duplicate name "
                     + "are rejected. If saving fails, the edit remains in this session and the command box clears; "
                     + "follow the recovery guidance before exiting."),
+    EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
+            "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
+            "Creates members.csv with Name, Phone, Email, Address and Tags columns.",
+            "The default path is addressbook.csv in the current directory. Existing destination files are overwritten. "
+                    + "Tags are sorted and joined with semicolons. The roster and current search stay unchanged.",
+            "Use a valid output path whose parent directory exists and is writable. "
+                    + "An invalid path or a failed write reports an error."),
     DELETE("Remove records", "delete", "Delete one member", "delete INDEX", "delete 2",
             "Permanently removes the member at a displayed list number.",
             "Deletes the second member in the current list and shows their details after saving.",
