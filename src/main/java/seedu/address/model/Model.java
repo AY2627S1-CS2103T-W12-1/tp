@@ -1,6 +1,5 @@
 package seedu.address.model;
 
-import java.util.Comparator;
 import java.util.function.Predicate;
 
 import javafx.collections.ObservableList;
@@ -65,11 +64,12 @@ public interface Model {
     ObservableList<Person> getFilteredPersonList();
 
     /**
-     * Sorts the displayed persons without changing the filter or stored roster order.
+     * Sets whether displayed persons are sorted by name, ignoring letter case.
+     * The filter and stored roster order are unchanged.
      *
-     * @param comparator The ordering to apply, or null to restore stored order.
+     * @param enabled True for alphabetical order, false for stored order.
      */
-    void sortFilteredPersonList(Comparator<Person> comparator);
+    void setNameSorting(boolean enabled);
 
     /**
      * Updates the filter of the filtered person list to filter by the given {@code predicate}.

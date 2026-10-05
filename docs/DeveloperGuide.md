@@ -223,7 +223,7 @@ The layout uses two columns in a wide window and one in a narrow window.
 
 #### List behaviour
 
-`ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, clears the sorting comparator,
+`ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, disables name sorting,
 and reports the complete count using singular, plural, or empty-roster wording. `LogicManager`
 returns its result without invoking storage. Extra arguments are rejected by `AddressBookParser`
 before either the view or data changes.

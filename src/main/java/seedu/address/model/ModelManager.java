@@ -3,7 +3,6 @@ package seedu.address.model;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
-import java.util.Comparator;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -110,8 +109,10 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public void sortFilteredPersonList(Comparator<Person> comparator) {
-        sortedPersons.setComparator(comparator);
+    public void setNameSorting(boolean enabled) {
+        sortedPersons.setComparator(enabled
+                ? (first, second) -> first.getName().fullName.compareToIgnoreCase(second.getName().fullName)
+                : null);
     }
 
     @Override

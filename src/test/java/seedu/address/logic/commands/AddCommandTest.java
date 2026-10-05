@@ -8,7 +8,6 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -139,7 +138,7 @@ public class AddCommandTest {
         }
 
         @Override
-        public void sortFilteredPersonList(Comparator<Person> comparator) {
+        public void setNameSorting(boolean enabled) {
             throw new AssertionError("This method should not be called.");
         }
 

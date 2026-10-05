@@ -2,8 +2,6 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.Comparator;
-
 import seedu.address.model.Model;
 
 /**
@@ -22,8 +20,7 @@ public class SortCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.sortFilteredPersonList(Comparator.comparing(person -> person.getName().fullName,
-                String.CASE_INSENSITIVE_ORDER));
+        model.setNameSorting(true);
         return new CommandResult(MESSAGE_SUCCESS);
     }
 }
