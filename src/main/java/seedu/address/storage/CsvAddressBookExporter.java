@@ -14,26 +14,34 @@ import org.apache.commons.csv.CSVPrinter;
 
 import seedu.address.model.person.Person;
 
-/** Writes address book contacts to a CSV file. */
+/**
+ * Writes address book contacts to a CSV file.
+ */
 public final class CsvAddressBookExporter {
 
-    private static final String[] HEADERS = {"Name", "Phone", "Email", "Address", "Tags"};
+    private static final List<String> HEADERS = List.of("Name", "Phone", "Email", "Address", "Tags");
 
     private CsvAddressBookExporter() {
         // Utility class.
     }
 
-    /** Writes the given contacts to {@code filePath} using UTF-8 and RFC 4180 CSV formatting. */
+    /**
+     * Writes the given contacts using UTF-8 and RFC 4180 CSV formatting, replacing any existing destination file.
+     * The parent directory must already exist. An empty contact list produces a header-only file.
+     *
+     * @throws IOException if the destination cannot be opened or written.
+     */
     public static void export(List<Person> people, Path filePath) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8);
                 CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.RFC4180)) {
-            csvPrinter.printRecord((Object[]) HEADERS);
+            csvPrinter.printRecord(HEADERS);
             for (Person person : people) {
                 String tags = person.getTags().stream()
                         .map(tag -> tag.tagName)
                         .sorted()
                         .collect(joining(";"));
-                csvPrinter.printRecord(person.getName(), person.getPhone(), person.getEmail(), person.getAddress(), tags);
+                csvPrinter.printRecord(person.getName(), person.getPhone(), person.getEmail(),
+                        person.getAddress(), tags);
             }
         }
     }

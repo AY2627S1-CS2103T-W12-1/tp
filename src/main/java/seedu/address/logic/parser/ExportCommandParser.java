@@ -8,7 +8,9 @@ import java.nio.file.Path;
 import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
-/** Parses arguments for the {@code export} command. */
+/**
+ * Parses arguments for the {@code export} command.
+ */
 public class ExportCommandParser implements Parser<ExportCommand> {
 
     @Override

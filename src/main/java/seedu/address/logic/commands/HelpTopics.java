@@ -56,7 +56,8 @@ public final class HelpTopics {
                 + "INDEX must be a positive integer.");
         topics.put("export", "export [FILEPATH]\n"
                 + "Exports all people to a CSV file.\n"
-                + "FILEPATH is optional; when omitted, the file is written as addressbook.csv in the current directory.");
+                + "FILEPATH defaults to addressbook.csv in the current directory.\n"
+                + "The parent directory must exist. An existing destination file is overwritten.");
         topics.put("find", "find KEYWORD [MORE_KEYWORDS]...\n"
                 + "Displays people whose names contain any supplied keyword.\n"
                 + "Name matching is case-insensitive.");

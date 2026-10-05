@@ -4,12 +4,16 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
+import seedu.address.model.person.Person;
 import seedu.address.storage.CsvAddressBookExporter;
 
-/** Exports the address book to a CSV file. */
+/**
+ * Exports the address book to a CSV file.
+ */
 public class ExportCommand extends Command {
 
     public static final String COMMAND_WORD = "export";
@@ -22,7 +26,9 @@ public class ExportCommand extends Command {
 
     private final Path filePath;
 
-    /** Creates an export command for the specified output path. */
+    /**
+     * Creates an export command for the specified output path.
+     */
     public ExportCommand(Path filePath) {
         this.filePath = requireNonNull(filePath);
     }
@@ -30,12 +36,13 @@ public class ExportCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
+        List<Person> people = model.getAddressBook().getPersonList();
         try {
-            CsvAddressBookExporter.export(model.getAddressBook().getPersonList(), filePath);
+            CsvAddressBookExporter.export(people, filePath);
         } catch (IOException e) {
             throw new CommandException(String.format(MESSAGE_FAILURE, filePath, e.getMessage()), e);
         }
         return new CommandResult(String.format(MESSAGE_SUCCESS,
-                model.getAddressBook().getPersonList().size(), filePath.toAbsolutePath().normalize()));
+                people.size(), filePath.toAbsolutePath().normalize()));
     }
 }
