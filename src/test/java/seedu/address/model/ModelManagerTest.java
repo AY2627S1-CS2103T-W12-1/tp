@@ -93,6 +93,16 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void filterFilteredPersonList_noExistingPredicate_appliesFilter() {
+        AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build();
+        modelManager = new ModelManager(addressBook, new UserPrefs());
+
+        modelManager.filterFilteredPersonList(person -> person.equals(BENSON));
+
+        assertEquals(List.of(BENSON), modelManager.getFilteredPersonList());
+    }
+
+    @Test
     public void filterFilteredPersonList_nullPredicate_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> modelManager.filterFilteredPersonList(null));
     }
