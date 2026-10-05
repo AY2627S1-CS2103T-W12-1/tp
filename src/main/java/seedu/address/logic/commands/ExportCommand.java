@@ -50,4 +50,14 @@ public class ExportCommand extends Command {
         return new CommandResult(String.format(MESSAGE_SUCCESS,
                 people.size(), filePath.toAbsolutePath().normalize()));
     }
+
+    @Override
+    public boolean equals(Object other) {
+        return other == this || other instanceof ExportCommand otherExport && filePath.equals(otherExport.filePath);
+    }
+
+    @Override
+    public int hashCode() {
+        return filePath.hashCode();
+    }
 }

@@ -13,6 +13,14 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class ExportCommandParser implements Parser<ExportCommand> {
 
+    /**
+     * Parses an optional destination path, preserving spaces within the path.
+     * Blank arguments select the default filename in the application's current directory.
+     *
+     * @param args the arguments following the export command word.
+     * @return an export command for the supplied path or the default filename.
+     * @throws ParseException if the path is invalid for the current filesystem.
+     */
     @Override
     public ExportCommand parse(String args) throws ParseException {
         String filePath = args.trim();

@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -122,6 +123,24 @@ public class LogicManagerTest {
         for (String command : new String[] {"list", "find Amy", "help", "help add", "exit"}) {
             logic.execute(command);
         }
+    }
+
+    @Test
+    public void execute_export_preservesExistingRosterFileContentsAndModificationTime() throws Exception {
+        Path rosterFile = temporaryFolder.resolve("addressBook.json");
+        String original = "{ malformed roster awaiting repair";
+        Files.writeString(rosterFile, original);
+        Files.setLastModifiedTime(rosterFile, FileTime.fromMillis(946684800000L));
+        FileTime originalTime = Files.getLastModifiedTime(rosterFile);
+        model.addPerson(AMY);
+        Path csvFile = temporaryFolder.resolve("members.csv");
+
+        logic.execute("export " + csvFile);
+
+        assertTrue(Files.isRegularFile(csvFile));
+        assertEquals(original, Files.readString(rosterFile));
+        assertEquals(originalTime, Files.getLastModifiedTime(rosterFile));
+        assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
     }
 
     @Test
