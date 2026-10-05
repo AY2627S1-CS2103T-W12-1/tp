@@ -7,6 +7,7 @@ import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +19,7 @@ import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.commands.ExitCommand;
+import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ListCommand;
@@ -66,6 +68,14 @@ public class AddressBookParserTest {
     public void parseCommand_exit() throws Exception {
         assertTrue(parser.parseCommand(ExitCommand.COMMAND_WORD) instanceof ExitCommand);
         assertTrue(parser.parseCommand(" \texit \t") instanceof ExitCommand);
+    }
+
+    @Test
+    public void parseCommand_export_routesDefaultAndCustomPaths() throws Exception {
+        assertEquals(new ExportCommand(Path.of("addressbook.csv")), parser.parseCommand("export"));
+        assertEquals(new ExportCommand(Path.of("addressbook.csv")), parser.parseCommand("  export   "));
+        assertEquals(new ExportCommand(Path.of("backups/member contacts.csv")),
+                parser.parseCommand("export backups/member contacts.csv"));
     }
 
     @Test
