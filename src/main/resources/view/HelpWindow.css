@@ -1,19 +1,142 @@
-#copyButton, #helpMessage {
-    -fx-text-fill: white;
+/* Guide layout shares its colours and controls with LightTheme.css. */
+.guide-header {
+    -fx-padding: 18 24 16 24;
+    -fx-background-color: -tc-banner;
+    -fx-border-color: transparent transparent -tc-border transparent;
 }
 
-#copyButton {
-    -fx-background-color: dimgray;
+.guide-eyebrow {
+    -fx-text-fill: -tc-sage;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
 }
 
-#copyButton:hover {
-    -fx-background-color: gray;
+.guide-title {
+    -fx-text-fill: -tc-text;
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
 }
 
-#copyButton:armed {
-    -fx-background-color: darkgray;
+.guide-subtitle, .keyboard-hint {
+    -fx-text-fill: -tc-muted;
 }
 
-#helpMessageContainer {
-    -fx-background-color: derive(#1d1d1d, 20%);
+.command-scroll {
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+}
+
+.command-scroll:focused {
+    -fx-border-color: -tc-focus;
+}
+
+.command-cards {
+    -fx-padding: 12 24 20 24;
+}
+
+.category-title {
+    -fx-padding: 20 0 2 0;
+    -fx-text-fill: -tc-sage;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.command-card {
+    -fx-padding: 20;
+    -fx-background-color: -tc-surface;
+    -fx-background-radius: 12;
+    -fx-border-color: -tc-border;
+    -fx-border-radius: 12;
+}
+
+.command-heading {
+    -fx-alignment: center-left;
+}
+
+.command-keyword {
+    -fx-padding: 4 10;
+    -fx-background-color: -tc-sage-soft;
+    -fx-background-radius: 5;
+    -fx-text-fill: -tc-sage;
+    -fx-font-family: "Monospaced";
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.command-title {
+    -fx-text-fill: -tc-text;
+    -fx-font-size: 17px;
+    -fx-font-weight: bold;
+}
+
+.command-purpose {
+    -fx-text-fill: -tc-text;
+    -fx-line-spacing: 2;
+}
+
+.field-caption {
+    -fx-text-fill: -tc-muted;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+
+.command-code {
+    -fx-padding: 10 12;
+    -fx-background-color: -tc-code;
+    -fx-background-radius: 6;
+    -fx-text-fill: #69452f;
+    -fx-font-family: "Monospaced";
+    -fx-font-size: 13px;
+}
+
+.example-result, .command-notes {
+    -fx-text-fill: -tc-muted;
+    -fx-font-size: 13px;
+    -fx-line-spacing: 2;
+}
+
+.guide-footer {
+    -fx-padding: 10 24;
+    -fx-background-color: -tc-banner;
+    -fx-border-color: -tc-border transparent transparent transparent;
+}
+
+.keyboard-hint {
+    -fx-font-size: 12px;
+}
+
+.overview-category {
+    -fx-padding: 16;
+    -fx-background-color: -tc-surface;
+    -fx-background-radius: 10;
+    -fx-border-color: -tc-border;
+    -fx-border-radius: 10;
+}
+
+.overview-category-title {
+    -fx-text-fill: -tc-text;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+}
+
+.overview-keyword {
+    -fx-padding: 4 8;
+    -fx-font-family: "Monospaced";
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.overview-command-title {
+    -fx-text-fill: -tc-text;
+    -fx-font-size: 13px;
+}
+
+.overview-example {
+    -fx-padding: 8;
+    -fx-background-color: -tc-code;
+    -fx-background-radius: 5;
+    -fx-text-fill: #69452f;
+    -fx-font-family: "Monospaced";
+    -fx-font-size: 12px;
 }

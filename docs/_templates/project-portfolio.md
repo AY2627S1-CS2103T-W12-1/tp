@@ -1,3 +1,4 @@
+<!-- Starter example only. Replace every claim and link before publishing a portfolio. -->
 ---
 layout: page
 title: John Doe's Project Portfolio Page

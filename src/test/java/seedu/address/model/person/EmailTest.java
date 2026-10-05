@@ -1,12 +1,42 @@
 package seedu.address.model.person;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.time.Duration;
+
 import org.junit.jupiter.api.Test;
 
+/** Tests email syntax and responsiveness for large inputs. */
 public class EmailTest {
+
+    @Test
+    public void isValidEmail_shortHyphenatedDomain_returnsTrue() {
+        assertTrue(Email.isValidEmail("alice@b-c"));
+    }
+
+    @Test
+    public void isValidEmail_longInvalidDomain_finishesPromptly() {
+        String email = "alice@" + "a".repeat(20000) + "!";
+        assertTimeoutPreemptively(Duration.ofSeconds(2), () -> assertFalse(Email.isValidEmail(email)));
+    }
+
+    @Test
+    public void isValidEmail_longSeparatedParts_finishesPromptly() {
+        String local = "a.".repeat(10000) + "a";
+        String hyphenatedDomain = "a-".repeat(10000) + "aa";
+        String dottedDomain = "a.".repeat(10000) + "aa";
+        assertTimeoutPreemptively(Duration.ofSeconds(2), () -> {
+            assertTrue(Email.isValidEmail(local + "@example.com"));
+            assertTrue(Email.isValidEmail("alice@" + hyphenatedDomain));
+            assertTrue(Email.isValidEmail("alice@" + dottedDomain));
+            assertFalse(Email.isValidEmail(local + ".@example.com"));
+            assertFalse(Email.isValidEmail("alice@" + hyphenatedDomain + "!"));
+            assertFalse(Email.isValidEmail("alice@" + dottedDomain + "!"));
+        });
+    }
 
     @Test
     public void constructor_null_throwsNullPointerException() {

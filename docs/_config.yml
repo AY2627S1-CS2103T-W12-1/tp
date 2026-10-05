@@ -1,4 +1,7 @@
 title: "TrackCall"
+description: "Member records and group tags for membership secretaries."
+url: "https://ay2627s1-cs2103t-w12-1.github.io"
+baseurl: "/tp"
 theme: minima
 
 header_pages:

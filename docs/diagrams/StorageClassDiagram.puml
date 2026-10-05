@@ -1,7 +1,7 @@
 @startuml
 !include style.puml
 skinparam arrowThickness 1.1
-skinparam arrowColor STORAGE_COLOR
+skinparam arrowColor STORAGE_COLOR_T4
 skinparam classBackgroundColor STORAGE_COLOR
 
 package Storage as StoragePackage {
@@ -9,11 +9,11 @@ package Storage as StoragePackage {
 Class "<<interface>>\nStorage" as Storage
 Class StorageManager
 
-package "UserPrefs Storage" #F4F6F6{
+package "UserPrefs Storage" #F5EFE5{
 Class JsonUserPrefsStorage
 }
 
-package "AddressBook Storage" #F4F6F6{
+package "AddressBook Storage" #F5EFE5{
 Class JsonAddressBookStorage
 Class JsonSerializableAddressBook
 Class JsonAdaptedPerson
@@ -22,8 +22,6 @@ Class JsonAdaptedTag
 
 }
 
-Class HiddenOutside #FFFFFF
-HiddenOutside ..> Storage
 
 StorageManager .up.|> Storage
 StorageManager -down-> "1" JsonUserPrefsStorage

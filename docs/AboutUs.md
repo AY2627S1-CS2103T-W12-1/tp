@@ -5,55 +5,49 @@ title: About Us
 
 We are a team based in the [School of Computing, National University of Singapore](https://www.comp.nus.edu.sg).
 
-You can reach us at the email `seer[at]comp.nus.edu.sg`
-
 ## Project team
 
-### John Doe
+### Calvin Yoel Pandiangan
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/cayopan.png" width="200" alt="Calvin Yoel Pandiangan">
 
-[[homepage](http://www.comp.nus.edu.sg/~damithch)]
-[[github](https://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[GitHub](https://github.com/CAYOPAN)]
 
-* Role: Project Advisor
+* Role: Testing & Code Quality Lead
+* Responsibilities: Exit, delete, and find commands.
 
-### Jane Doe
+### Eron Dathan
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/rondth.png" width="200" alt="Eron Dathan">
 
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
+[[GitHub](https://github.com/rondth)]
+
+* Role: Integration Lead
+* Responsibilities: Automatic saving and planned tag filtering (`filter`).
+
+### Glory Charity Lion
+
+<img src="images/glory-lion.png" width="200" alt="Glory Charity Lion">
+
+[[GitHub](https://github.com/glory-lion)]
+
+* Role: Documentation Lead
+* Responsibilities: Manual data-file editing and planned bulk tag editing.
+
+### Ian Abiel Wangsa
+
+<img src="images/manutd1234.png" width="200" alt="Ian Abiel Wangsa">
+
+[[GitHub](https://github.com/Manutd1234)]
 
 * Role: Team Lead
-* Responsibilities: UI
+* Responsibilities: List members (`list`) and clear the roster (`clear`).
 
-### Johnny Doe
+### Noah
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/asdao.png" width="200" alt="Noah">
 
-[[github](http://github.com/johndoe)] [[portfolio](team/johndoe.md)]
+[[GitHub](https://github.com/Asdao)]
 
-* Role: Developer
-* Responsibilities: Data
-
-### Jean Doe
-
-<img src="images/johndoe.png" width="200px">
-
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
-
-* Role: Developer
-* Responsibilities: Dev Ops + Threading
-
-### James Doe
-
-<img src="images/johndoe.png" width="200px">
-
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
-
-* Role: Developer
-* Responsibilities: UI
+* Role: Developer Lead
+* Responsibilities: CLI workflows for adding and editing member records, and command help.

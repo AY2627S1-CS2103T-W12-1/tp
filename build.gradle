@@ -45,9 +45,20 @@ task coverage(type: JacocoReport) {
     }
 }
 
+// Keep development natives separate from the cross-platform release dependencies. Intel and ARM
+// macOS libraries have identical names and cannot simply be merged into the same fat JAR.
+String javaFxVersion = '17.0.7'
+boolean isMacArm64 = System.getProperty('os.name').toLowerCase().contains('mac')
+        && (System.getProperty('os.arch') in ['aarch64', 'arm64'])
+
+configurations {
+    javafxMacArm64 {
+        canBeConsumed = false
+    }
+}
+
 dependencies {
     String jUnitVersion = '5.14.4'
-    String javaFxVersion = '17.0.7'
 
     implementation "org.openjfx:javafx-base:${javaFxVersion}:win"
     implementation "org.openjfx:javafx-base:${javaFxVersion}:mac"
@@ -62,6 +73,14 @@ dependencies {
     implementation "org.openjfx:javafx-graphics:${javaFxVersion}:mac"
     implementation "org.openjfx:javafx-graphics:${javaFxVersion}:linux"
 
+    if (isMacArm64) {
+        ['base', 'controls', 'fxml', 'graphics'].each { module ->
+            javafxMacArm64("org.openjfx:javafx-${module}:${javaFxVersion}:mac-aarch64") {
+                transitive = false
+            }
+        }
+    }
+
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.7.0'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.4'
     implementation 'org.apache.commons:commons-csv:1.14.1'
@@ -70,6 +89,20 @@ dependencies {
 
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${jUnitVersion}"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.14.4'
+}
+
+if (isMacArm64) {
+    // Select ARM natives for local runs and tests without changing the portable release JAR.
+    tasks.named('run', JavaExec) {
+        classpath = sourceSets.main.runtimeClasspath.filter {
+            !it.name.startsWith('javafx-')
+        } + configurations.javafxMacArm64
+    }
+    tasks.withType(Test).configureEach {
+        classpath = sourceSets.test.runtimeClasspath.filter {
+            !it.name.startsWith('javafx-')
+        } + configurations.javafxMacArm64
+    }
 }
 
 shadowJar {

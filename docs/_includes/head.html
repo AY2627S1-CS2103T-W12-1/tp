@@ -3,10 +3,14 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="stylesheet" href="{{ "/assets/css/style.css" | relative_url }}">
+  <link rel="stylesheet" href="{{ "/assets/css/style.css" | relative_url }}?v={{ asset_version }}">
 
   {%- include custom-head.html -%}
 
-  <title>{{page.title}}</title>
+  {%- assign document_title = page.alt_title | default: page.title | default: site.title -%}
+  <title>{{ document_title | escape }}{% unless document_title == site.title %} | {{ site.title | escape }}{% endunless %}</title>
+  <meta name="description" content="{{ site.description | escape }}">
+  <link rel="canonical" href="{{ page.url | absolute_url }}">
+  <meta name="theme-color" content="#171717">
 
 </head>

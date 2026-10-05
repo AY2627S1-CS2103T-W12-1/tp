@@ -17,7 +17,6 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
-import seedu.address.logic.commands.HelpCommandParser;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -58,16 +57,34 @@ public class AddressBookParser {
             case EditCommand.COMMAND_WORD -> new EditCommandParser().parse(arguments);
             case DeleteCommand.COMMAND_WORD -> new DeleteCommandParser().parse(arguments);
             case ExportCommand.COMMAND_WORD -> new ExportCommandParser().parse(arguments);
-            case ClearCommand.COMMAND_WORD -> new ClearCommand();
+            case ClearCommand.COMMAND_WORD -> {
+                requireNoArguments(arguments, ClearCommand.MESSAGE_USAGE);
+                yield new ClearCommand();
+            }
             case FindCommand.COMMAND_WORD -> new FindCommandParser().parse(arguments);
-            case ListCommand.COMMAND_WORD -> new ListCommand();
-            case ExitCommand.COMMAND_WORD -> new ExitCommand();
+            case ListCommand.COMMAND_WORD -> {
+                requireNoArguments(arguments, ListCommand.MESSAGE_USAGE);
+                yield new ListCommand();
+            }
+            case ExitCommand.COMMAND_WORD -> {
+                requireNoArguments(arguments, String.format(MESSAGE_INVALID_COMMAND_FORMAT, ExitCommand.MESSAGE_USAGE));
+                yield new ExitCommand();
+            }
             case HelpCommand.COMMAND_WORD -> new HelpCommandParser().parse(arguments);
             default -> {
                 logger.finer("This user input caused a ParseException: " + userInput);
                 throw new ParseException(MESSAGE_UNKNOWN_COMMAND);
             }
         };
+    }
+
+    /**
+     * Rejects unexpected arguments before a parameterless command can change data or exit the application.
+     */
+    private void requireNoArguments(String arguments, String usage) throws ParseException {
+        if (!arguments.isBlank()) {
+            throw new ParseException(usage);
+        }
     }
 
 }

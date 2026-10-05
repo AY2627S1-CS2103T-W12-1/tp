@@ -1,0 +1,39 @@
+<aside class="docs-sidebar">
+  <details id="site-menu" class="site-menu" open>
+    <summary>Site map</summary>
+    <nav aria-label="Site map">
+      {% for item in site.data.navigation %}
+      {% if item.children %}
+      <details class="sidebar-group"{% if page.url == item.url %} open{% endif %}>
+        <summary>{{ item.title | escape }}</summary>
+        <div class="sidebar-subnav">
+          <a class="sidebar-overview" href="{{ item.url | relative_url }}#overview"
+             {% if page.url == item.url %}aria-current="page"{% endif %}>Overview</a>
+          {% for child in item.children %}
+          <a href="{{ item.url | relative_url }}#{{ child.id }}">{{ child.title | escape }}</a>
+          {% endfor %}
+        </div>
+      </details>
+      {% else %}
+      <a class="sidebar-page" href="{{ item.url | relative_url }}"
+         {% if page.url == item.url %}aria-current="page"{% endif %}>{{ item.title | escape }}</a>
+      {% endif %}
+      {% endfor %}
+      <div class="sidebar-resources">
+        <p class="nav-label">Development</p>
+        {% assign resource_paths = 'SettingUp.md,Testing.md,Documentation.md,Logging.md,DevOps.md' | split: ',' %}
+        {% for resource_path in resource_paths %}
+        {% assign resource = site.pages | where: 'path', resource_path | first %}
+        {% if resource %}
+        <a href="{{ resource.url | relative_url }}"
+           {% if page.url == resource.url %}aria-current="page"{% endif %}>{{ resource.title | escape }}</a>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </nav>
+    <div class="sidebar-note">
+      <span class="nav-label">TrackCall</span>
+      <p>{{ site.description | escape }}</p>
+    </div>
+  </details>
+</aside>

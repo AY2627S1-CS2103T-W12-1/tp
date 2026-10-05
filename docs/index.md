@@ -3,21 +3,43 @@ layout: page
 title: TrackCall
 ---
 
-[![CI Status](https://github.com/AY2627S1-CS2103T-W12-1/tp/workflows/Java%20CI/badge.svg)](https://github.com/AY2627S1-CS2103T-W12-1/tp/actions)
-[![codecov](https://codecov.io/gh/AY2627S1-CS2103T-W12-1/tp/branch/master/graph/badge.svg)](https://app.codecov.io/gh/AY2627S1-CS2103T-W12-1/tp)
+TrackCall helps membership secretaries keep their organisation's member records up to date.
+Use typed commands to manage contact details and find members.
+Tag filtering and bulk group updates remain planned.
 
-TrackCall is being developed for membership secretaries who maintain their organisation's member contact records. The planned product provides a keyboard-based workflow for keeping a roster of up to 500 members accurate and easy to share as members renew, change roles, or move between groups.
+The planned performance target is 500 members. This is not a hard record limit.
+
+## Planned interface
+
+![TrackCall mockup showing committee members after filtering by tag](images/Ui.png)
+
+This AI-assisted mockup shows the intended product, including planned tag filtering.
+It is a design illustration, not a screenshot of the current build.
+
+TrackCall will retain AB3's command box, result display, member list, and data-file status bar.
+Planned features include filtering by tag and adding or removing a tag for everyone in the displayed list.
+Changes will be saved locally.
 
 ## Current development version
 
-The project currently contains the AddressBook Level 3 (AB3) starter application. The screenshot and guides describe this starting point; TrackCall-specific features are under development.
+The **v1.2 development build** provides:
 
-![Current starter application](images/Ui.png)
+* Member record management in a light beige interface.
+* Readable contact details and command results.
+* Offline help for all eight supported commands.
+* Local saving after successful data changes.
+* Recovery guidance for save errors. A failed clear restores the roster.
 
-* To try the application, follow the [Quick Start section of the User Guide](UserGuide.html#quick-start).
-* To work on the codebase, see the [Developer Guide](DeveloperGuide.html) and [setup instructions](SettingUp.html).
+Read-only commands leave the roster file unchanged. Tag filtering and bulk tag changes remain planned.
+
+## Find the right guide
+
+* [User Guide](UserGuide.html): use the development build and look up commands.
+* [Developer Guide](DeveloperGuide.html): understand the implementation and planned requirements.
+* [Setup instructions](SettingUp.html): run and develop the application.
+* [About Us](AboutUs.html): meet the project team.
 
 ## Acknowledgements
 
-* Based on [AddressBook Level 3](https://se-education.org/addressbook-level3) from the [SE-EDU initiative](https://se-education.org).
-* Libraries used: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), [JUnit5](https://github.com/junit-team/junit5).
+Based on [AddressBook Level 3](https://se-education.org/addressbook-level3)
+from the [SE-EDU initiative](https://se-education.org).

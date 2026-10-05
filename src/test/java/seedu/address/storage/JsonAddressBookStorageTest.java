@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalPersons.IDA;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -19,6 +20,7 @@ import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 
+/** Tests complete roster persistence and rejection of invalid data files. */
 public class JsonAddressBookStorageTest {
     private static final Path TEST_DATA_FOLDER = Paths.get("src", "test", "data", "JsonAddressBookStorageTest");
 
@@ -43,6 +45,31 @@ public class JsonAddressBookStorageTest {
     @Test
     public void read_missingFile_emptyResult() throws Exception {
         assertFalse(readAddressBook("NonExistentFile.json").isPresent());
+    }
+
+    @Test
+    public void readAddressBook_nullRoot_throwsDataLoadingException() throws IOException {
+        assertInvalidDataRejected("null");
+    }
+
+    @Test
+    public void readAddressBook_nullPerson_throwsDataLoadingException() throws IOException {
+        assertInvalidDataRejected("{\"persons\":[null]}");
+    }
+
+    @Test
+    public void readAddressBook_nullTag_throwsDataLoadingException() throws IOException {
+        assertInvalidDataRejected("{\"persons\":[{\"name\":\"Alice\",\"phone\":\"123\","
+                + "\"email\":\"alice@example.com\",\"address\":\"Main Street\",\"tags\":[null]}]}");
+    }
+
+    /** Verifies corrupt data is rejected without changing the file or escaping as an unchecked exception. */
+    private void assertInvalidDataRejected(String contents) throws IOException {
+        Path file = testFolder.resolve("invalid.json");
+        Files.writeString(file, contents);
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        assertThrows(DataLoadingException.class, storage::readAddressBook);
+        assertEquals(contents, Files.readString(file));
     }
 
     @Test

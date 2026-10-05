@@ -1,14 +1,12 @@
 ---
 layout: default
 ---
-<article class="post">
-
-  <header class="post-header">
+<article class="post{% if page.name == 'AboutUs.md' %} team-page{% endif %}">
+  <header id="overview" class="post-header">
+    <div class="page-eyebrow">TrackCall <span aria-hidden="true">/</span> Documentation</div>
     <h1 class="post-title">{{ page.title | escape }}</h1>
   </header>
-
   <div class="post-content">
     {{ content }}
   </div>
-
 </article>

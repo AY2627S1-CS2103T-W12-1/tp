@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+/** Tests prefix boundaries without changing whitespace inside field values. */
 public class ArgumentTokenizerTest {
 
     private final Prefix unknownPrefix = new Prefix("--u");
@@ -113,6 +114,29 @@ public class ArgumentTokenizerTest {
         argMultimap = ArgumentTokenizer.tokenize(argsString, pSlash, dashT, hatQ);
         assertArgumentAbsent(argMultimap, unknownPrefix);
         assertPreamblePresent(argMultimap, argsString); // Unknown prefix is taken as part of preamble
+    }
+
+    @Test
+    public void tokenize_tabSeparatedPrefixes_preservesValueWhitespace() {
+        ArgumentMultimap arguments = ArgumentTokenizer.tokenize(
+                "\tp/First\tpart \t-tSecond part\t^QThird", pSlash, dashT, hatQ);
+        assertPreambleEmpty(arguments);
+        assertArgumentPresent(arguments, pSlash, "First\tpart");
+        assertArgumentPresent(arguments, dashT, "Second part");
+        assertArgumentPresent(arguments, hatQ, "Third");
+    }
+
+    @Test
+    public void tokenize_tabSeparatedRepeatedPrefix_retainsAllValues() {
+        ArgumentMultimap arguments = ArgumentTokenizer.tokenize("\tp/first\tp/second", pSlash);
+        assertArgumentPresent(arguments, pSlash, "first", "second");
+    }
+
+    @Test
+    public void tokenize_slashesInsideValue_doesNotCreatePrefix() {
+        ArgumentMultimap arguments = ArgumentTokenizer.tokenize(
+                "\tp/https://example.com/p/123 c/o Alice", pSlash);
+        assertArgumentPresent(arguments, pSlash, "https://example.com/p/123 c/o Alice");
     }
 
     @Test

@@ -1,0 +1,284 @@
+/* Shared warm palette for the main window, command guide and dialogs. */
+.root {
+    -tc-canvas: #f5efe5;
+    -tc-surface: #fffdf8;
+    -tc-banner: #eee3d3;
+    -tc-border: #d6c8b5;
+    -tc-text: #3e3228;
+    -tc-muted: #6f604f;
+    -tc-sage: #40573b;
+    -tc-sage-soft: #e0e8d7;
+    -tc-focus: #5c7554;
+    -tc-terracotta: #93432e;
+    -tc-code: #f4ecde;
+    -tc-error: #a03927;
+    -tc-error-soft: #fff1e9;
+    -fx-font-family: "System";
+    -fx-font-size: 14px;
+    -fx-background-color: -tc-canvas;
+    -fx-base: -tc-banner;
+    -fx-control-inner-background: -tc-surface;
+    -fx-text-base-color: -tc-text;
+    -fx-text-background-color: -tc-text;
+    -fx-accent: -tc-sage-soft;
+    -fx-focus-color: -tc-focus;
+    -fx-faint-focus-color: rgba(92, 117, 84, 0.18);
+    -fx-selection-bar: -tc-sage-soft;
+    -fx-selection-bar-non-focused: #e9eddf;
+    -fx-selection-bar-text: -tc-text;
+    -fx-mark-color: -tc-text;
+}
+
+.label {
+    -fx-text-fill: -tc-text;
+    -fx-opacity: 1;
+}
+
+.stack-pane, .pane-with-border, .split-pane {
+    -fx-background-color: -tc-canvas;
+    -fx-border-color: transparent;
+}
+
+.split-pane > .split-pane-divider {
+    -fx-background-color: -tc-banner;
+    -fx-border-color: -tc-border;
+    -fx-padding: 2;
+}
+
+.split-pane > .split-pane-divider .horizontal-grabber,
+.split-pane > .split-pane-divider .vertical-grabber {
+    -fx-background-color: #9b886e;
+}
+
+.text-input {
+    -fx-text-fill: -tc-text;
+    -fx-highlight-fill: #d6e2cd;
+    -fx-highlight-text-fill: #283820;
+    -fx-prompt-text-fill: -tc-muted;
+}
+
+#commandTextField {
+    -fx-padding: 12 14;
+    -fx-background-color: -tc-surface;
+    -fx-background-insets: 0;
+    -fx-background-radius: 8;
+    -fx-border-color: -tc-border;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 8;
+    -fx-font-size: 16px;
+    -fx-text-fill: -tc-text;
+}
+
+#commandTextField:focused {
+    -fx-border-color: -tc-focus;
+}
+
+.result-display {
+    -fx-background-color: -tc-surface;
+    -fx-background-insets: 0;
+    -fx-background-radius: 8;
+    -fx-border-color: -tc-border;
+    -fx-border-radius: 8;
+    -fx-font-family: "System";
+    -fx-font-size: 14px;
+    -fx-text-fill: -tc-text;
+}
+
+.result-display .content {
+    -fx-background-color: -tc-surface;
+    -fx-background-radius: 8;
+    -fx-padding: 12;
+}
+
+.result-display:focused {
+    -fx-border-color: -tc-focus;
+}
+
+.list-view {
+    -fx-background-color: -tc-canvas;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+    -fx-padding: 0;
+}
+
+.list-view:focused {
+    -fx-border-color: -tc-focus;
+    -fx-border-radius: 8;
+}
+
+.list-cell, .list-cell:filled:even, .list-cell:filled:odd,
+.list-cell:filled:selected, .list-cell:empty {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-graphic-text-gap: 0;
+}
+
+#cardPane {
+    -fx-background-color: -tc-surface;
+    -fx-background-radius: 8;
+    -fx-border-color: -tc-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 8;
+}
+
+.list-cell:filled:hover #cardPane {
+    -fx-border-color: #a69a84;
+}
+
+.list-cell:filled:selected #cardPane {
+    -fx-background-color: #edf1e5;
+    -fx-border-color: -tc-focus;
+}
+
+.member-name {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -tc-text;
+}
+
+.member-index {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -tc-terracotta;
+}
+
+.member-field-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -tc-muted;
+}
+
+.member-field-value {
+    -fx-font-size: 14px;
+    -fx-text-fill: -tc-text;
+}
+
+#tags {
+    -fx-hgap: 7;
+    -fx-vgap: 5;
+}
+
+#tags .label {
+    -fx-background-color: -tc-sage-soft;
+    -fx-background-radius: 5;
+    -fx-text-fill: -tc-sage;
+    -fx-padding: 3 7;
+    -fx-font-size: 12px;
+}
+
+.status-bar {
+    -fx-background-color: -tc-banner;
+    -fx-border-color: -tc-border transparent transparent transparent;
+}
+
+.status-bar .label {
+    -fx-text-fill: -tc-muted;
+    -fx-font-size: 12px;
+    -fx-padding: 7 12;
+}
+
+.menu-bar, .context-menu {
+    -fx-background-color: -tc-banner;
+}
+
+.context-menu {
+    -fx-background-color: -tc-surface;
+    -fx-border-color: -tc-border;
+    -fx-background-radius: 6;
+    -fx-border-radius: 6;
+    -fx-padding: 4;
+}
+
+.menu-bar .label, .context-menu .label {
+    -fx-text-fill: -tc-text;
+    -fx-font-size: 13px;
+}
+
+.menu-bar .menu-button:hover, .menu-bar .menu-button:focused,
+.menu-bar .menu-button:showing, .menu-item:focused {
+    -fx-background-color: -tc-sage-soft;
+}
+
+.button {
+    -fx-background-color: -tc-sage-soft;
+    -fx-background-insets: 0;
+    -fx-background-radius: 6;
+    -fx-border-color: #bdcaae;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 6;
+    -fx-text-fill: -tc-sage;
+    -fx-padding: 8 13;
+    -fx-cursor: hand;
+}
+
+.button:hover, .button:default:hover {
+    -fx-background-color: #d1dfc8;
+}
+
+.button:armed, .button:default:armed {
+    -fx-background-color: #bdceb0;
+}
+
+.button:focused {
+    -fx-border-color: -tc-focus;
+}
+
+.button:disabled {
+    -fx-opacity: 0.55;
+}
+
+.scroll-pane, .scroll-pane > .viewport {
+    -fx-background-color: -tc-canvas;
+}
+
+.scroll-bar, .scroll-bar .track {
+    -fx-background-color: -tc-canvas;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #b5a48c;
+    -fx-background-insets: 3;
+    -fx-background-radius: 6;
+}
+
+.scroll-bar .thumb:hover, .scroll-bar .thumb:pressed {
+    -fx-background-color: #8d7d65;
+}
+
+.scroll-bar .increment-button, .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar .increment-arrow, .scroll-bar .decrement-arrow {
+    -fx-background-color: -tc-muted;
+}
+
+.scroll-pane .corner, .text-area .corner {
+    -fx-background-color: -tc-canvas;
+}
+
+.tooltip {
+    -fx-background-color: -tc-surface;
+    -fx-text-fill: -tc-text;
+    -fx-border-color: -tc-border;
+    -fx-padding: 8 10;
+}
+
+.dialog-pane, .dialog-pane > .button-bar > .container {
+    -fx-background-color: -tc-canvas;
+}
+
+.dialog-pane > .content.label {
+    -fx-text-fill: -tc-text;
+    -fx-font-size: 14px;
+}
+
+.dialog-pane:header .header-panel {
+    -fx-background-color: -tc-banner;
+}
+
+.dialog-pane:header .header-panel .label {
+    -fx-text-fill: -tc-terracotta;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}

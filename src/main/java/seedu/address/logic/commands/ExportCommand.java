@@ -34,6 +34,11 @@ public class ExportCommand extends Command {
     }
 
     @Override
+    public boolean isReadOnly() {
+        return true;
+    }
+
+    @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
         List<Person> people = model.getAddressBook().getPersonList();

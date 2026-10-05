@@ -45,6 +45,7 @@ import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 
+/** Tests member edit syntax and field validation. */
 public class EditCommandParserTest {
 
     private static final String TAG_EMPTY = " " + PREFIX_TAG;
@@ -64,6 +65,14 @@ public class EditCommandParserTest {
 
         // no index and no field specified
         assertParseFailure(parser, "", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void parse_tabSeparatedFields_success() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder()
+                .withPhone(VALID_PHONE_AMY).withAddress(VALID_ADDRESS_AMY).build();
+        String arguments = "1\tp/" + VALID_PHONE_AMY + "\ta/" + VALID_ADDRESS_AMY;
+        assertParseSuccess(parser, arguments, new EditCommand(INDEX_FIRST_PERSON, descriptor));
     }
 
     @Test
