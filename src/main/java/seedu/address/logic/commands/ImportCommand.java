@@ -71,7 +71,7 @@ public class ImportCommand extends Command {
     }
 
     private static String getErrorDetails(IOException exception) {
-        return exception.getMessage() == null ? exception.toString() : exception.getMessage();
+        return Objects.toString(exception.getMessage(), exception.toString());
     }
 
     @Override

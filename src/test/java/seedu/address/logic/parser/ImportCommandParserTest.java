@@ -1,8 +1,10 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
@@ -44,8 +46,12 @@ public class ImportCommandParserTest {
     @Test
     public void parse_repeatedAndUnknownPrefixes_reportsSpecificError() {
         assertParseFailure("p/a.csv p/b.csv", ImportCommandParser.MESSAGE_REPEATED_PATH);
+        assertParseFailure("p/\"a.csv\" p/b.csv", ImportCommandParser.MESSAGE_REPEATED_PATH);
         assertParseFailure("x/a.csv", String.format(ImportCommandParser.MESSAGE_UNKNOWN_PARAMETER, "x/"));
+        assertParseFailure("P/a.csv", String.format(ImportCommandParser.MESSAGE_UNKNOWN_PARAMETER, "P/"));
         assertParseFailure("p/a.csv x/value", String.format(ImportCommandParser.MESSAGE_UNKNOWN_PARAMETER, "x/"));
+        assertParseFailure("p/\"a.csv\" x/value",
+                String.format(ImportCommandParser.MESSAGE_UNKNOWN_PARAMETER, "x/"));
     }
 
     @Test
@@ -53,6 +59,14 @@ public class ImportCommandParserTest {
         assertParseFailure("p/member list.csv", ImportCommandParser.MESSAGE_INVALID_FORMAT);
         assertParseFailure("p/a.csv extra", ImportCommandParser.MESSAGE_INVALID_FORMAT);
         assertParseFailure("p/\"a.csv\" extra", ImportCommandParser.MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void parse_invalidFilesystemPath_reportsImportFailureAndCause() {
+        ParseException error = assertThrows(ParseException.class, () -> parser.parse("p/invalid\u0000path.csv"));
+
+        assertInstanceOf(InvalidPathException.class, error.getCause());
+        assertEquals(String.format(ImportCommand.MESSAGE_FAILURE, error.getCause().getMessage()), error.getMessage());
     }
 
     private void assertParseFailure(String input, String expectedMessage) {

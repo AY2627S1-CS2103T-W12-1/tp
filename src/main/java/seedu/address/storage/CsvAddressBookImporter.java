@@ -56,7 +56,7 @@ public final class CsvAddressBookImporter {
         validateRecordEndings(contents);
 
         String[] records = contents.split("\\r?\\n", -1);
-        if (records.length == 0 || !isExpectedHeader(records[0])) {
+        if (!records[0].equals(EXPECTED_HEADER)) {
             throw new CsvImportException(MESSAGE_INVALID_HEADER);
         }
 
@@ -89,14 +89,6 @@ public final class CsvAddressBookImporter {
                     && (index + 1 == contents.length() || contents.charAt(index + 1) != '\n')) {
                 throw new CsvImportException(MESSAGE_INVALID_RECORD_ENDING);
             }
-        }
-    }
-
-    private static boolean isExpectedHeader(String headerRecord) {
-        try {
-            return parseFields(headerRecord).equals(List.of("name", "phone", "email", "address", "tags"));
-        } catch (CsvImportException e) {
-            return false;
         }
     }
 

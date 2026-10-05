@@ -30,7 +30,7 @@ public class ImportCommandParser implements Parser<ImportCommand> {
             throw new ParseException(MESSAGE_INVALID_FORMAT);
         }
         if (!trimmedArgs.startsWith("p/")) {
-            throwUnknownParameterOrInvalidFormat(trimmedArgs);
+            throw getUnknownParameterOrInvalidFormatError(trimmedArgs);
         }
 
         String rawPath = trimmedArgs.substring(2).trim();
@@ -62,7 +62,7 @@ public class ImportCommandParser implements Parser<ImportCommand> {
             String path = rawPath.substring(1, closingQuote);
             String trailingArguments = rawPath.substring(closingQuote + 1).trim();
             if (!trailingArguments.isEmpty()) {
-                rejectExtraArguments(trailingArguments);
+                throw getExtraArgumentsError(trailingArguments);
             }
             return path;
         }
@@ -72,8 +72,7 @@ public class ImportCommandParser implements Parser<ImportCommand> {
         }
         int whitespaceIndex = findWhitespace(rawPath);
         if (whitespaceIndex >= 0) {
-            rejectExtraArguments(rawPath.substring(whitespaceIndex).trim());
-            throw new ParseException(MESSAGE_INVALID_FORMAT);
+            throw getExtraArgumentsError(rawPath.substring(whitespaceIndex).trim());
         }
         return rawPath;
     }
@@ -87,24 +86,24 @@ public class ImportCommandParser implements Parser<ImportCommand> {
         return -1;
     }
 
-    private static void rejectExtraArguments(String arguments) throws ParseException {
+    private static ParseException getExtraArgumentsError(String arguments) {
         for (String token : arguments.split("\\s+")) {
             if (token.startsWith("p/")) {
-                throw new ParseException(MESSAGE_REPEATED_PATH);
+                return new ParseException(MESSAGE_REPEATED_PATH);
             }
             Matcher matcher = PARAMETER_PREFIX.matcher(token);
             if (matcher.find()) {
-                throw new ParseException(String.format(MESSAGE_UNKNOWN_PARAMETER, matcher.group(1)));
+                return new ParseException(String.format(MESSAGE_UNKNOWN_PARAMETER, matcher.group(1)));
             }
         }
-        throw new ParseException(MESSAGE_INVALID_FORMAT);
+        return new ParseException(MESSAGE_INVALID_FORMAT);
     }
 
-    private static void throwUnknownParameterOrInvalidFormat(String arguments) throws ParseException {
+    private static ParseException getUnknownParameterOrInvalidFormatError(String arguments) {
         Matcher matcher = PARAMETER_PREFIX.matcher(arguments);
         if (matcher.find()) {
-            throw new ParseException(String.format(MESSAGE_UNKNOWN_PARAMETER, matcher.group(1)));
+            return new ParseException(String.format(MESSAGE_UNKNOWN_PARAMETER, matcher.group(1)));
         }
-        throw new ParseException(MESSAGE_INVALID_FORMAT);
+        return new ParseException(MESSAGE_INVALID_FORMAT);
     }
 }
