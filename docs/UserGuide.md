@@ -7,6 +7,7 @@ TrackCall helps a club's membership secretary maintain member contact details us
 
 This guide covers the **v1.2 development build** and its nine available commands.
 Tag filtering and bulk tag editing remain planned.
+CSV export is available. CSV import and sorting the displayed list by name remain planned.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
 
@@ -276,6 +277,8 @@ A successful data change replaces the file.
 ## Current limitations
 
 * Tag filtering and bulk tag changes are planned. Use `edit` for an individual member's tags today.
+* CSV import and sorting the displayed list by name are planned and not available in this build.
+  CSV export is available through `export [FILEPATH]`.
 * Names determine duplicates in this build. The planned MVP will compare all four contact fields.
 * An unrecognised prefix-like token inside an address can be stored as literal address text.
   For example, `a/Main Road T/committee` does not assign a tag.
