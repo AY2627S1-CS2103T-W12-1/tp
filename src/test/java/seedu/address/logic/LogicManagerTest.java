@@ -27,6 +27,7 @@ import org.junit.jupiter.api.io.TempDir;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.commands.exceptions.SaveFailureException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -95,7 +96,7 @@ public class LogicManagerTest {
 
     @Test
     public void execute_readOnlyCommands_doesNotCreateDataFile() throws Exception {
-        for (String command : new String[] {"list", "find Amy", "help", "help add", "exit"}) {
+        for (String command : new String[] {"list", "sort", "find Amy", "help", "help add", "exit"}) {
             logic.execute(command);
             assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")), command);
         }
@@ -107,7 +108,7 @@ public class LogicManagerTest {
         String original = "{ malformed data awaiting repair";
         Files.writeString(dataFile, original);
         model.addPerson(AMY);
-        for (String command : new String[] {"list", "find Amy", "help", "help add", "exit"}) {
+        for (String command : new String[] {"list", "sort", "find Amy", "help", "help add", "exit"}) {
             logic.execute(command);
             assertEquals(original, Files.readString(dataFile), command);
         }
@@ -120,7 +121,7 @@ public class LogicManagerTest {
     @Test
     public void execute_readOnlyCommandsWithUnwritablePath_stillSucceeds() throws Exception {
         Files.createDirectory(temporaryFolder.resolve("addressBook.json"));
-        for (String command : new String[] {"list", "find Amy", "help", "help add", "exit"}) {
+        for (String command : new String[] {"list", "sort", "find Amy", "help", "help add", "exit"}) {
             logic.execute(command);
         }
     }
@@ -158,6 +159,44 @@ public class LogicManagerTest {
         assertTrue(result.getFeedbackToUser().startsWith("Exported 1 people to "));
         assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
         assertTrue(model.getFilteredPersonList().isEmpty());
+    }
+
+    @Test
+    public void execute_sort_ordersFilteredViewIgnoringCaseAndListRestoresStoredOrder() throws Exception {
+        Person amy = new PersonBuilder(AMY).withName("amy Bee").build();
+        Person hidden = new PersonBuilder(AMY).withName("Hidden Member").build();
+        model.addPerson(BOB);
+        model.addPerson(amy);
+        model.addPerson(hidden);
+        model.updateFilteredPersonList(person -> !person.equals(hidden));
+
+        assertEquals(SortCommand.MESSAGE_SUCCESS, logic.execute("sort").getFeedbackToUser());
+        assertEquals(List.of(amy, BOB), model.getFilteredPersonList());
+        assertEquals(List.of(BOB, amy, hidden), model.getAddressBook().getPersonList());
+        logic.execute("sort");
+        assertEquals(List.of(amy, BOB), model.getFilteredPersonList());
+        logic.execute("list");
+        assertEquals(List.of(BOB, amy, hidden), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_sort_keepsLiveOrderingAndUsesDisplayedIndexes() throws Exception {
+        model.addPerson(BOB);
+        model.addPerson(AMY);
+        logic.execute("sort");
+        logic.execute("add n/Aaron p/91234567 e/aaron@example.com a/Orchard Road");
+        Person aaron = model.getFilteredPersonList().get(0);
+        assertEquals("Aaron", aaron.getName().fullName);
+        assertEquals(List.of(aaron, AMY, BOB), model.getFilteredPersonList());
+
+        logic.execute("edit 3 n/Abel");
+        Person abel = new PersonBuilder(BOB).withName("Abel").build();
+        assertEquals(List.of(aaron, abel, AMY), model.getFilteredPersonList());
+        logic.execute("delete 2");
+        assertEquals(List.of(aaron, AMY), model.getFilteredPersonList());
+        assertEquals(List.of(AMY, aaron), model.getAddressBook().getPersonList());
+        logic.execute("find Amy");
+        assertEquals(List.of(AMY), model.getFilteredPersonList());
     }
 
     @Test

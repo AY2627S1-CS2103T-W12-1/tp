@@ -51,12 +51,12 @@ public class HelpWindowTest {
     }
 
     @Test
-    public void overview_allCommands_showsNineExamplesAndReflows() throws Exception {
+    public void overview_allCommands_showsTenExamplesAndReflows() throws Exception {
         onJavaFxThread(() -> {
             help.show();
             Parent root = layout(980, 740);
             assertTrue(help.isShowing());
-            assertEquals(Set.of("list", "find", "add", "edit", "export", "delete", "clear", "help", "exit"),
+            assertEquals(Set.of("list", "sort", "find", "add", "edit", "export", "delete", "clear", "help", "exit"),
                     root.lookupAll(".overview-keyword").stream()
                             .map(node -> ((Button) node).getText()).collect(Collectors.toSet()));
             assertEquals(4, root.lookupAll(".overview-category").size());
@@ -95,7 +95,7 @@ public class HelpWindowTest {
                 assertTrue(root.lookup("#allCommandsButton").isVisible());
                 Button overview = (Button) root.lookup("#allCommandsButton");
                 overview.fire();
-                assertEquals(9, layout(980, 740).lookupAll(".overview-keyword").size());
+                assertEquals(10, layout(980, 740).lookupAll(".overview-keyword").size());
             }
         });
     }

@@ -20,7 +20,7 @@ The secretary can:
 * Complete the core workflow without an internet connection or a separate save command.
 
 The **v1.2 development build** supports individual member management, name search, offline command help, local saving,
-and CSV export.
+CSV export, and name sorting.
 Tag filtering and bulk tag changes remain planned.
 See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining work.
 
@@ -152,6 +152,7 @@ The Model component stores:
 
 * **Member data:** `Person` objects held in a `UniquePersonList`.
 * **Displayed data:** a filtered list, such as name-search results.
+  A `SortedList` wraps it for optional name sorting while the stored roster keeps its original order.
   An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
 * **Preferences:** a `UserPrefs` object, currently containing GUI settings.
   Other components access it through `ReadOnlyUserPrefs`.
@@ -198,7 +199,7 @@ full intended product, including behaviour still to be implemented.
 
 #### Catalogue and command flow
 
-`CommandHelp` stores the nine implemented commands in one local catalogue.
+`CommandHelp` stores the ten implemented commands in one local catalogue.
 Each entry contains its purpose, syntax, example, expected result, and common errors.
 Only executable commands appear, so planned tag commands are not shown as available.
 
@@ -228,7 +229,7 @@ The layout uses two columns in a wide window and one in a narrow window.
 
 #### List behaviour
 
-`ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, keeps stored order,
+`ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, disables name sorting,
 and reports the complete count using singular, plural, or empty-roster wording. `LogicManager`
 returns its result without invoking storage. Extra arguments are rejected by `AddressBookParser`
 before either the view or data changes.
@@ -310,8 +311,9 @@ also recover to usable bounds. This handles monitor changes between sessions.
 #### Save policy
 
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
-`help`, `list`, `find`, and `exit` return without saving member data. Successful `add`, `edit`, `delete`,
-and `clear` commands pass the complete roster, including hidden members, to `Storage#saveAddressBook`.
+`help`, `list`, `sort`, `find`, `export`, and `exit` return without saving member data.
+Successful `add`, `edit`, `delete`, and `clear` commands pass the complete roster, including hidden members,
+to `Storage#saveAddressBook`.
 Parsing and execution failures do not save. Data-changing commands return normal success only after
 the save succeeds.
 
@@ -366,8 +368,8 @@ records, the current list, and the saved file unchanged; the input remains avail
 
 * `filter`, `tagall`, and `untagall` remain proposed. Bulk commands must save valid operations,
   including no-ops; `filter` must remain read-only.
-* CSV import and sorting the displayed list by name are selected for the MVP but not yet implemented.
-  Their command formats and error handling are not yet specified. CSV export is available as `export [FILEPATH]`.
+* CSV import is selected for the MVP but not yet implemented. Its command format and error handling
+  are not yet specified. CSV export is available as `export [FILEPATH]`, and name sorting as `sort`.
 * Duplicate identity still uses an exact name match. Shared rule 2's comparison of all four contact
   fields has not been implemented.
 * `edit` currently restores the full list. Retaining the active search and future tag filters is planned.
@@ -464,8 +466,8 @@ The MVP includes these commands:
 * **Group tags:** `tagall`, `untagall`.
 
 The MVP also includes exporting members to a CSV file, importing members from a CSV file, and
-sorting the displayed list by name. CSV export is available as `export [FILEPATH]`;
-CSV import and name sorting remain planned, with command formats not yet specified.
+sorting the displayed list by name. CSV export is available as `export [FILEPATH]`, and name sorting
+as `sort`. CSV import remains planned, with its command format not yet specified.
 
 It also includes automatic saving and manual editing of the local data file.
 Each member has a name, phone number, email address, address, and zero or more tags.
@@ -481,6 +483,7 @@ The broader narrative must be read with these MVP decisions:
   deletions use the current displayed index, which the secretary must check first.
 * `find` matches complete name words. Substring and phone-number search are considered ideas,
   not current MVP search behaviour.
+* Name sorting is available through `sort`; `list` restores stored order.
 * vCard import/export, sorting by criteria other than name, archiving, global tag renaming,
   bulk editing of non-tag fields, and an in-app handover/access feature are outside the
   selected MVP. The initial discussion also considered dedicated grade, class,
@@ -567,7 +570,7 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 | US30 | `**` | club secretary | update a non-tag field for a group in one operation | handle repeated renewal changes efficiently | Considered; bulk changes in the MVP affect tags only. |
 | US31 | `**` | long-time secretary | archive an inactive member | reduce clutter while keeping their history | Considered; deletion in the MVP does not retain history. |
 | US32 | `*` | long-time secretary | archive an unused group tag | keep old groups out of my active work without losing their history | Considered; no tag archive or separate tag catalogue in the MVP. |
-| US33 | `*` | club secretary | sort members by class | review members in the order relevant to my task | Considered; the MVP has neither a class field nor sorting. |
+| US33 | `*` | club secretary | sort members by class | review members in the order relevant to my task | Considered; no class field or class sorting is implemented. |
 | US34 | `**` | club secretary | cancel a deletion before confirming it | avoid losing a record after selecting the wrong member | Not selected; MVP deletion and clearing are immediate, without confirmation or undo. |
 | US36 | `**` | outgoing secretary | hand over my roster and command guidance to my successor | let the next secretary continue club administration | No in-app access-transfer feature. Shared accounts and routine multi-user data access are excluded by the course's single-user constraint. |
 
@@ -1058,7 +1061,7 @@ platform or release package has been verified. Use a disposable folder and synth
 
 ### Offline help and readable feedback
 
-1. Disable networking. Run `help`: verify four category cards containing all nine command names,
+1. Disable networking. Run `help`: verify four category cards containing all ten command names,
    descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
    layout when wide and one column when narrowed. Check the beige background, dark readable text,
    visible keyboard focus, and error styling in the main window, help, and alerts.
