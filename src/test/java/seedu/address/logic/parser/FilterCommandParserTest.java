@@ -31,8 +31,8 @@ public class FilterCommandParserTest {
     @Test
     public void parse_invalidTag_rejectsCommand() {
         String expected = "A filter tag must contain 1 to 30 letters or digits.";
-        String[] invalidInputs = {"t/", "t/   ", "t/two words", "t/hello!", "t/one t/two",
-                "t/one x/two", "t/" + "a".repeat(31)};
+        String overlongTag = "t/" + "a".repeat(31);
+        String[] invalidInputs = {"t/", "t/   ", "t/two words", "t/hello!", "t/one t/two", "t/one x/two", overlongTag};
         for (String input : invalidInputs) {
             assertParseFailure(parser, input, expected);
         }
