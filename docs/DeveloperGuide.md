@@ -360,6 +360,8 @@ records, the current list, and the saved file unchanged; the input remains avail
 
 * `filter`, `tagall`, and `untagall` remain proposed. Bulk commands must save valid operations,
   including no-ops; `filter` must remain read-only.
+* CSV export, CSV import, and sorting the displayed list by name are selected for the MVP but not
+  implemented. Their command formats, CSV layout, and error handling are not yet specified.
 * Duplicate identity still uses an exact name match. Shared rule 2's comparison of all four contact
   fields has not been implemented.
 * `edit` currently restores the full list. Retaining the active search and future tag filters is planned.
@@ -455,6 +457,9 @@ The MVP includes these commands:
 * **Roster and search:** `list`, `find`, `clear`, `filter`.
 * **Group tags:** `tagall`, `untagall`.
 
+The MVP also includes exporting members to a CSV file, importing members from a CSV file, and
+sorting the displayed list by name. Their command formats are not yet specified.
+
 It also includes automatic saving and manual editing of the local data file.
 Each member has a name, phone number, email address, address, and zero or more tags.
 
@@ -469,17 +474,18 @@ The broader narrative must be read with these MVP decisions:
   deletions use the current displayed index, which the secretary must check first.
 * `find` matches complete name words. Substring and phone-number search are considered ideas,
   not current MVP search behaviour.
-* Import/export, sorting, archiving, global tag renaming, bulk editing of non-tag fields, and
-  an in-app handover/access feature are outside the selected MVP. The initial discussion also
-  considered dedicated grade, class, membership-status, and joining-date fields. These remain
-  future ideas; the MVP stores the contact fields and tags listed above. Cohorts, tiers, or
-  paid/unpaid categories may be represented by tags, without calculating fees or payment status.
+* vCard import/export, sorting by criteria other than name, archiving, global tag renaming,
+  bulk editing of non-tag fields, and an in-app handover/access feature are outside the
+  selected MVP. The initial discussion also considered dedicated grade, class,
+  membership-status, and joining-date fields. These remain future ideas; the MVP stores the
+  contact fields and tags listed above. Cohorts, tiers, or paid/unpaid categories
+  may be represented by tags, without calculating fees or payment status.
 * Deletion is immediate and has no confirmation or undo. Archiving with retained history is
   different from deleting a record.
 * Sharing for president verification, newsletters, mail merge, phone contacts, or submissions is
-  the motivation for the considered CSV/vCard export story (US15). The selected MVP does not
-  export those formats or import spreadsheets. Reviewing a manually edited JSON file is a
-  separate workflow, not an implementation of import/export.
+  the motivation for the CSV export story (US15). The selected MVP exports and imports CSV
+  files only; vCard is not supported. Reviewing a manually edited JSON file is a separate
+  workflow, not an implementation of import/export.
 * TrackCall does not make calls, send messages, process fees, track payment balances, create
   invoices, manage events/RSVPs/attendance, or renew memberships automatically. It has no cloud
   syncing, concurrent editing, or server-backed account system.
@@ -517,8 +523,11 @@ Overlapping stories are consolidated as follows:
 | US12 | `***` | club secretary | receive clear error messages for invalid commands and storage failures | correct my input or the storage problem and know whether my changes were saved |
 | US13 | `***` | club secretary | close the app with a command | finish my work using the keyboard |
 | US14 | `***` | experienced secretary | edit a backed-up data file while the app is closed | make awkward data corrections outside the app when necessary |
+| US15 | `**` | club secretary | export member records as a CSV file | share a copy for verification, newsletters, mail merge, or submissions |
+| US17 | `*` | club secretary | sort the displayed members by name | browse a long roster more easily |
 | US18 | `***` | prospective club secretary | try TrackCall with sample member data | understand the workflow without risking real records |
 | US20 | `***` | first-time user | read valid command examples and their expected results in offline help | learn to use commands independently |
+| US21 | `**` | club secretary | import member records from a CSV file | avoid entering every member manually |
 | US23 | `***` | club secretary | assign a valid group tag to a member | represent groups such as Committee or Batch2026 |
 | US24 | `***` | club secretary | add a tag to one member while retaining their other tags | let that member belong to several groups |
 | US25 | `***` | club secretary | view a member's complete contact details and tags | check the correct record before using its details |
@@ -542,12 +551,9 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 
 | ID | Priority | As a... | I want to... | So that I can... | Scope decision |
 | --- | --- | --- | --- | --- | --- |
-| US15 | `**` | club secretary | export member records as CSV or vCard | share a copy for verification, newsletters, submissions, or phone contacts | Considered; no export command in the MVP. |
 | US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Retained from the earlier DG; no privacy-display mode in the MVP. |
-| US17 | `*` | club secretary | sort members by name | browse a long roster more easily | Considered; the MVP preserves roster order. |
 | US19 | `**` | first-time user | follow a short in-app getting-started guide | learn the basic workflow step by step | Considered; the MVP provides command help, not an onboarding wizard. |
-| US21 | `**` | club secretary | import an existing membership spreadsheet | avoid entering every member manually | Considered; loading a valid JSON data file is not spreadsheet import. |
-| US22 | `**` | club secretary | review imported member records | confirm that an import completed correctly | Considered with US21. |
+| US22 | `**` | club secretary | review imported member records | confirm that an import completed correctly | Considered with US21; no separate review step for imported records in the MVP. |
 | US26 | `**` | club secretary | search using part of a name word | find someone when I cannot remember the complete word | Considered; the MVP uses complete-word matching. |
 | US27 | `**` | club secretary | search by phone number | identify a member when I only have their number | Considered; the MVP searches names only. |
 | US29 | `**` | club secretary | rename a group tag across its members | correct a group name without rebuilding its membership | Considered; no atomic global rename operation in the MVP. |
@@ -1017,7 +1023,7 @@ such as incremental delivery, are also not product NFRs.
 | Data-changing command | `add`, `edit`, `delete`, `clear`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
 | JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.2 development build uses `tags`. |
-| CSV | Comma-separated values, a tabular text format considered for exchanging member data with spreadsheets and other tools. CSV import/export is outside the selected MVP. |
+| CSV | Comma-separated values, a tabular text format considered for exchanging member data with spreadsheets and other tools. CSV import and export are planned for the MVP but not yet implemented. |
 | vCard | A contact-card file format considered for exporting member contact details to phone or contact applications. It is outside the selected MVP. |
 | Archive | Retain an inactive record or tag and its history separately from active work. This considered feature is different from MVP deletion. |
 | MVP | Minimum viable product: the selected core feature set in the team specification. It does not mean that all those features exist in the current build. |
