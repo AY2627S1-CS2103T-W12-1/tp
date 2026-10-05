@@ -145,6 +145,11 @@ The `Storage` component,
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
+CSV export is implemented as a separate `CsvAddressBookExporter` in the `storage` package. `ExportCommand` supplies the
+complete address book person list and the destination path; the exporter writes a UTF-8 CSV file with a header row and
+one row per person. Apache Commons CSV handles RFC 4180 quoting and escaping. This export is a user-requested copy and
+does not replace or modify the JSON file used for automatic persistence.
+
 ### Common classes
 
 Classes used by multiple components are in the `seedu.address.commons` package.

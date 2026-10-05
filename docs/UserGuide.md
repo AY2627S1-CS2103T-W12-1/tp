@@ -28,6 +28,8 @@ AddressBook Level 3 (AB3) is a **desktop application for managing contacts, opti
 
    * `list` : Lists all contacts.
 
+   * `export` : Exports all contacts to `addressbook.csv` in the current directory.
+
    * `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01` : Adds a contact named `John Doe` to the Address Book.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
@@ -146,6 +148,23 @@ Examples:
 * `list` followed by `delete 2` deletes the 2nd person in the address book.
 * `find Betsy` followed by `delete 1` deletes the 1st person in the results of the `find` command.
 
+### Exporting contacts to CSV: `export`
+
+Exports all persons in the address book to a UTF-8 CSV file. The export includes the `Name`, `Phone`, `Email`,
+`Address`, and `Tags` columns. Tags for each person are sorted alphabetically and joined with semicolons.
+
+Format: `export [FILEPATH]`
+
+* If `FILEPATH` is omitted, the file is written to `addressbook.csv` in the application's current directory.
+* `FILEPATH` may be relative to the current directory or an absolute path. The parent directory must already exist.
+* An existing file at the destination is overwritten.
+* Export includes every person in the address book, even if the displayed list is filtered by `find`.
+* Exporting creates a separate CSV copy; it does not change the address book's JSON data file.
+
+Examples:
+* `export` writes `addressbook.csv` in the current directory.
+* `export backups/members.csv` writes the CSV file to `backups/members.csv`.
+
 ### Clearing all entries: `clear`
 
 Clears all entries from the address book.
@@ -199,6 +218,7 @@ Action | Format, Examples
 **Clear** | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit** | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]…​`<br> e.g., `edit 2 n/James Lee e/jameslee@example.com`
+**Export** | `export [FILEPATH]`<br> e.g., `export members.csv`
 **Find** | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List** | `list`
 **Help** | `help`

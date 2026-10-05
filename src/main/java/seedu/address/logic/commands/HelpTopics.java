@@ -54,6 +54,9 @@ public final class HelpTopics {
         topics.put("delete", "delete INDEX\n"
                 + "Deletes the person at INDEX in the displayed list.\n"
                 + "INDEX must be a positive integer.");
+        topics.put("export", "export [FILEPATH]\n"
+                + "Exports all people to a CSV file.\n"
+                + "FILEPATH is optional; when omitted, the file is written as addressbook.csv in the current directory.");
         topics.put("find", "find KEYWORD [MORE_KEYWORDS]...\n"
                 + "Displays people whose names contain any supplied keyword.\n"
                 + "Name matching is case-insensitive.");
