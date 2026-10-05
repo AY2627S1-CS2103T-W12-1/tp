@@ -12,7 +12,11 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.model.person.Address;
+import seedu.address.model.person.Email;
+import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class CsvAddressBookImporterTest {
@@ -43,12 +47,14 @@ public class CsvAddressBookImporterTest {
 
     @Test
     public void read_invalidHeader_rejected() throws Exception {
-        Path file = write("Name,phone,email,address,tags\n");
+        for (String contents : List.of("", "Name,phone,email,address,tags\n")) {
+            Path file = write(contents);
 
-        CsvImportException error = assertThrows(CsvImportException.class, () ->
-                CsvAddressBookImporter.read(file));
+            CsvImportException error = assertThrows(CsvImportException.class, () ->
+                    CsvAddressBookImporter.read(file));
 
-        assertEquals(CsvAddressBookImporter.MESSAGE_INVALID_HEADER, error.getMessage());
+            assertEquals(CsvAddressBookImporter.MESSAGE_INVALID_HEADER, error.getMessage());
+        }
     }
 
     @Test
@@ -70,6 +76,27 @@ public class CsvAddressBookImporterTest {
 
         assertEquals("row 2: Phone numbers should only contain digits, and should be at least 3 digits long",
                 error.getMessage());
+    }
+
+    @Test
+    public void read_invalidNameEmailAddressAndTag_reportsMatchingValidationMessage() throws Exception {
+        List<String> records = List.of(
+                ",123,a@example.com,Home,",
+                "Alice,123,invalid-email,Home,",
+                "Alice,123,a@example.com,   ,",
+                "Alice,123,a@example.com,Home,invalid tag");
+        List<String> reasons = List.of(
+                Name.MESSAGE_CONSTRAINTS,
+                Email.MESSAGE_CONSTRAINTS,
+                Address.MESSAGE_CONSTRAINTS,
+                Tag.MESSAGE_CONSTRAINTS);
+
+        for (int index = 0; index < records.size(); index++) {
+            Path file = write("name,phone,email,address,tags\n" + records.get(index) + "\n");
+            CsvImportException error = assertThrows(CsvImportException.class, () ->
+                    CsvAddressBookImporter.read(file));
+            assertEquals("row 2: " + reasons.get(index), error.getMessage());
+        }
     }
 
     @Test

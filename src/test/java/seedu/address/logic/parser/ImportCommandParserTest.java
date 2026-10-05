@@ -1,9 +1,11 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,16 @@ public class ImportCommandParserTest {
     @Test
     public void parse_nonCsvExtension_rejected() {
         assertParseFailure("p/members.txt", ImportCommandParser.MESSAGE_NON_CSV_FILE);
+    }
+
+    @Test
+    public void parse_invalidFilesystemPath_rejectedWithCause() {
+        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, ImportCommand.MESSAGE_USAGE);
+
+        ParseException error = assertThrows(ParseException.class, () -> parser.parse("p/invalid\u0000path.csv"));
+
+        assertEquals(expected, error.getMessage());
+        assertInstanceOf(InvalidPathException.class, error.getCause());
     }
 
     private void assertParseFailure(String input, String expectedMessage) {

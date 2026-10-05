@@ -1,15 +1,24 @@
 package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.person.Person;
@@ -41,6 +50,33 @@ public class ImportCommandTest {
         assertEquals(String.format(ImportCommand.MESSAGE_SUCCESS, 2, file.toAbsolutePath().normalize(), 2),
                 result.getFeedbackToUser());
         assertEquals(List.of(existing, sameNameNewContact, another), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void execute_missingFile_reportsReadFailure() {
+        Path missingFile = tempDir.resolve("missing.csv");
+
+        CommandException error = assertThrows(CommandException.class, () ->
+                new ImportCommand(missingFile).execute(new ModelManager()));
+
+        assertInstanceOf(IOException.class, error.getCause());
+        assertTrue(error.getMessage().startsWith("Could not import CSV: "));
+    }
+
+    @Test
+    public void equalsAndHashCode_filePaths_defineCommandIdentity() {
+        ImportCommand first = new ImportCommand(tempDir.resolve("members.csv"));
+        ImportCommand samePath = new ImportCommand(tempDir.resolve("members.csv"));
+        ImportCommand differentPath = new ImportCommand(tempDir.resolve("other.csv"));
+
+        assertEquals(first, first);
+        assertEquals(first, samePath);
+        assertEquals(first.hashCode(), samePath.hashCode());
+        assertNotEquals(first, differentPath);
+        assertFalse(first.equals(null));
+        assertFalse(first.equals("members.csv"));
+        Set<ImportCommand> commands = new HashSet<>(List.of(first, samePath, differentPath));
+        assertEquals(2, commands.size());
     }
 
     private Path write(String contents) throws Exception {
