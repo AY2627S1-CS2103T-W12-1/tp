@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -24,6 +25,8 @@ public class ImportCommand extends Command {
     public static final String MESSAGE_SUCCESS =
             "Imported %1$d member(s) from \"%2$s\". Skipped %3$d duplicate record(s).";
     public static final String MESSAGE_FAILURE = "Could not import CSV: %s";
+    public static final String MESSAGE_INVALID_FILE = "Could not import CSV: %s No members were imported.";
+    public static final String MESSAGE_SAVE_FAILURE = "Could not save data to file: %s";
 
     private final Path filePath;
 
@@ -38,8 +41,10 @@ public class ImportCommand extends Command {
         List<Person> candidates;
         try {
             candidates = CsvAddressBookImporter.read(filePath);
-        } catch (IOException | CsvImportException e) {
-            throw new CommandException(String.format(MESSAGE_FAILURE, e.getMessage()), e);
+        } catch (CsvImportException e) {
+            throw new CommandException(String.format(MESSAGE_INVALID_FILE, ensureSentence(e.getMessage())), e);
+        } catch (IOException e) {
+            throw new CommandException(String.format(MESSAGE_FAILURE, getErrorDetails(e)), e);
         }
 
         List<Person> knownPeople = new ArrayList<>(model.getAddressBook().getPersonList());
@@ -55,8 +60,18 @@ public class ImportCommand extends Command {
         }
 
         peopleToAdd.forEach(model::addPerson);
+        model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+        model.setNameSorting(false);
         return new CommandResult(String.format(MESSAGE_SUCCESS, peopleToAdd.size(),
                 filePath.toAbsolutePath().normalize(), duplicateCount));
+    }
+
+    private static String ensureSentence(String message) {
+        return message.endsWith(".") ? message : message + ".";
+    }
+
+    private static String getErrorDetails(IOException exception) {
+        return Objects.toString(exception.getMessage(), exception.toString());
     }
 
     @Override

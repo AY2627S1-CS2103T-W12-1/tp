@@ -181,6 +181,40 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_importSaveFailure_keepsBatchInMemoryAndReportsImportMessage() throws Exception {
+        Path csvFile = temporaryFolder.resolve("members.csv");
+        String csvContents = "name,phone,email,address,tags\n"
+                + "New Member,123,new@example.com,New address,\n";
+        Files.writeString(csvFile, csvContents);
+        useFailingStorage(DUMMY_IO_EXCEPTION);
+
+        SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
+                SaveFailureException.class, () -> logic.execute("import p/" + csvFile));
+
+        assertEquals(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, DUMMY_IO_EXCEPTION.getMessage()),
+                failure.getMessage());
+        assertTrue(failure.isChangeApplied());
+        assertEquals(1, model.getAddressBook().getPersonList().size());
+        assertEquals(csvContents, Files.readString(csvFile));
+    }
+
+    @Test
+    public void execute_importSaveFailureWithoutMessage_usesExceptionDescription() throws Exception {
+        Path csvFile = temporaryFolder.resolve("members.csv");
+        Files.writeString(csvFile, "name,phone,email,address,tags\n"
+                + "New Member,123,new@example.com,New address,\n");
+        IOException failureWithoutMessage = new IOException();
+        useFailingStorage(failureWithoutMessage);
+
+        SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
+                SaveFailureException.class, () -> logic.execute("import p/" + csvFile));
+
+        assertEquals(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, failureWithoutMessage), failure.getMessage());
+        assertTrue(failure.isChangeApplied());
+        assertEquals(1, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
     public void execute_sort_ordersFilteredViewIgnoringCaseAndListRestoresStoredOrder() throws Exception {
         Person amy = new PersonBuilder(AMY).withName("amy Bee").build();
         Person hidden = new PersonBuilder(AMY).withName("Hidden Member").build();
