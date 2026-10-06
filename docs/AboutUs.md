@@ -23,7 +23,7 @@ We are a team based in the [School of Computing, National University of Singapor
 [[GitHub](https://github.com/rondth)]
 
 * Role: Integration Lead
-* Responsibilities: Automatic saving and planned tag filtering (`filter`).
+* Responsibilities: Automatic saving and tag filtering (`filter`).
 
 ### Glory Charity Lion
 

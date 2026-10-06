@@ -116,7 +116,7 @@ with different contact details is allowed.
 
 ### Show all members: `list`
 
-`list` removes the name-search restriction and shows the full roster in its existing order.
+`list` removes name-search and tag-filter restrictions and shows the full roster in its existing order.
 It does not change or save records.
 
 The result is `Showing 1 member.`, `Showing N members.`, or `No members in the address book.`
@@ -165,14 +165,26 @@ The result reports `Members found: N`.
 No matches produce `Members found: 0` and an empty list. No records are deleted.
 Use `list` to show everyone again. Searching does not save the data file.
 
-### Filter members by tag: `filter`
+### Filter displayed members by tag: `filter`
 
-`filter t/TAG` narrows the currently displayed list to members with that exact, case-sensitive tag.
-Filters can be applied repeatedly, and each new filter narrows the current results further.
-The command does not change member records or save the data file.
+Use `filter t/TAG` to show only currently displayed members with that exact tag.
+For example, `filter t/committee` shows members tagged `committee`. Matching is case-sensitive,
+so `Committee` is a different tag. The result keeps roster order, renumbers the visible members,
+and reports `N member(s) listed with tag "TAG".` Zero matches are successful and show an empty list.
 
-For example, enter `filter t/committee` to show visible members tagged `committee`.
-Use `list` to restore the full roster and stored order.
+Run `filter` again to narrow the results by another tag. Run `list` first to filter the whole roster.
+For example, run `filter t/committee` and then `filter t/year1` as two separate commands.
+Only members with **both** tags remain. A single `filter` command accepts only one `t/TAG`.
+`find` starts a new name search over the full roster and replaces previous filters.
+Subsequent index-based commands use the currently displayed numbers. A successful `edit` currently
+restores the full roster. Filtering does not change or save member data.
+
+For example, run `filter t/family`, check the displayed members, then use `edit 1 p/98765432`
+to update the first displayed family member. A successful edit shows everyone again. To search
+all members named Tan after filtering, run `find Tan`.
+
+Supply exactly one tag of 1 to 30 letters or digits with no internal spaces. Spaces around the tag
+are ignored. Missing or extra parameters and invalid tags are rejected without changing the view.
 
 ### Delete a member: `delete`
 
@@ -331,6 +343,7 @@ A successful data change replaces the file.
 ## Current limitations
 
 * Bulk tag changes are planned. Use `edit` for an individual member's tags today.
+* An edit restores the full list instead of retaining an active name search or tag filter.
 * An unrecognised prefix-like token inside an address can be stored as literal address text.
   For example, `a/Main Road T/committee` does not assign a tag.
   Use lowercase `t/` and check the displayed details after adding or editing.
@@ -351,7 +364,8 @@ Check the current displayed number before editing or deleting a member.
 
 ### Can I update a whole group's tags?
 
-Bulk tag-update commands are planned. Use `filter` to view a tagged group and `edit` to update one member.
+Use `filter t/TAG` to narrow the displayed members. Bulk tag changes remain planned;
+use `add` and `edit` to manage individual members' tags in this build.
 See [Current limitations](#current-limitations).
 
 ### What should I do after a save error?
@@ -370,7 +384,7 @@ Unsaved changes from `add`, `edit`, `delete`, and `import` remain visible in mem
 | Sort by name | `sort` | Sorts the current view from A to Z, ignoring letter case. |
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
 | Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
-| Filter by tag | `filter t/TAG` | `filter t/committee` narrows the current list. |
+| Filter by tag | `filter t/TAG` | `filter t/committee` narrows the displayed members. |
 | Delete one member | `delete INDEX` | `delete 1` removes the first currently displayed member. |
 | Clear the roster | `clear` | `clear` removes all members, including those hidden by a search. |
 | Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |
