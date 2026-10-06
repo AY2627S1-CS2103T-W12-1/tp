@@ -50,6 +50,9 @@ import seedu.address.testutil.PersonBuilder;
 public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
     private static final IOException DUMMY_AD_EXCEPTION = new AccessDeniedException("dummy access denied exception");
+    private static final String[] READ_ONLY_COMMANDS = {
+        "list", "sort", "find Amy", "filter t/friend", "help", "help add", "exit"
+    };
 
     @TempDir
     public Path temporaryFolder;
@@ -69,13 +72,13 @@ public class LogicManagerTest {
     @Test
     public void execute_invalidCommandFormat_throwsParseException() {
         String invalidCommand = "uicfhmowqewca";
-        assertParseException(invalidCommand);
+        assertParseException(invalidCommand, MESSAGE_UNKNOWN_COMMAND);
     }
 
     @Test
     public void execute_commandExecutionError_throwsCommandException() {
         String deleteCommand = "delete 9";
-        assertCommandException(deleteCommand);
+        assertCommandException(deleteCommand, MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
     }
 
     @Test
@@ -100,8 +103,7 @@ public class LogicManagerTest {
 
     @Test
     public void execute_readOnlyCommands_doesNotCreateDataFile() throws Exception {
-        for (String command : new String[] {"list", "sort", "find Amy", "filter t/friend", "help",
-            "help add", "exit"}) {
+        for (String command : READ_ONLY_COMMANDS) {
             logic.execute(command);
             assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")), command);
         }
@@ -113,8 +115,7 @@ public class LogicManagerTest {
         String original = "{ malformed data awaiting repair";
         Files.writeString(dataFile, original);
         model.addPerson(AMY);
-        for (String command : new String[] {"list", "sort", "find Amy", "filter t/friend", "help",
-            "help add", "exit"}) {
+        for (String command : READ_ONLY_COMMANDS) {
             logic.execute(command);
             assertEquals(original, Files.readString(dataFile), command);
         }
@@ -127,8 +128,7 @@ public class LogicManagerTest {
     @Test
     public void execute_readOnlyCommandsWithUnwritablePath_stillSucceeds() throws Exception {
         Files.createDirectory(temporaryFolder.resolve("addressBook.json"));
-        for (String command : new String[] {"list", "sort", "find Amy", "filter t/friend", "help",
-            "help add", "exit"}) {
+        for (String command : READ_ONLY_COMMANDS) {
             logic.execute(command);
         }
     }
@@ -156,7 +156,7 @@ public class LogicManagerTest {
         Path rosterFile = temporaryFolder.resolve("addressBook.json");
         Files.createDirectory(rosterFile);
         model.addPerson(AMY);
-        model.updateFilteredPersonList(_ -> false);
+        model.updateFilteredPersonList(unused -> false);
         Path csvFile = temporaryFolder.resolve("members.csv");
 
         CommandResult result = logic.execute("export " + csvFile);
@@ -192,7 +192,7 @@ public class LogicManagerTest {
         model.addPerson(AMY);
         logic.execute("sort");
         logic.execute("add n/Aaron p/91234567 e/aaron@example.com a/Orchard Road");
-        Person aaron = model.getFilteredPersonList().getFirst();
+        Person aaron = model.getFilteredPersonList().get(0);
         assertEquals("Aaron", aaron.getName().fullName);
         assertEquals(List.of(aaron, AMY, BOB), model.getFilteredPersonList());
 
@@ -217,7 +217,8 @@ public class LogicManagerTest {
         clubRoster.setPerson(DANIEL, daniel);
         model.setAddressBook(clubRoster);
 
-        assertEquals("3 member(s) listed with tag \"year1\".", logic.execute("filter t/year1").getFeedbackToUser());
+        assertEquals("3 member(s) listed with tag \"year1\".",
+                logic.execute("filter t/year1").getFeedbackToUser());
         assertEquals(List.of(alice, committeeMember, daniel), logic.getFilteredPersonList());
         assertEquals("1 member(s) listed with tag \"committee\".",
                 logic.execute("filter t/committee").getFeedbackToUser());
@@ -314,8 +315,7 @@ public class LogicManagerTest {
 
     @Test
     public void getFilteredPersonList_modifyList_throwsUnsupportedOperationException() {
-        model.addPerson(ALICE);
-        assertThrows(UnsupportedOperationException.class, () -> logic.getFilteredPersonList().removeFirst());
+        assertThrows(UnsupportedOperationException.class, () -> logic.getFilteredPersonList().remove(0));
     }
 
     /**
@@ -336,16 +336,16 @@ public class LogicManagerTest {
      * Executes the command, confirms that a ParseException is thrown and that the result message is correct.
      * @see #assertCommandFailure(String, Class, String, Model)
      */
-    private void assertParseException(String inputCommand) {
-        assertCommandFailure(inputCommand, ParseException.class, MESSAGE_UNKNOWN_COMMAND);
+    private void assertParseException(String inputCommand, String expectedMessage) {
+        assertCommandFailure(inputCommand, ParseException.class, expectedMessage);
     }
 
     /**
      * Executes the command, confirms that a CommandException is thrown and that the result message is correct.
      * @see #assertCommandFailure(String, Class, String, Model)
      */
-    private void assertCommandException(String inputCommand) {
-        assertCommandFailure(inputCommand, CommandException.class, MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+    private void assertCommandException(String inputCommand, String expectedMessage) {
+        assertCommandFailure(inputCommand, CommandException.class, expectedMessage);
     }
 
     /**
