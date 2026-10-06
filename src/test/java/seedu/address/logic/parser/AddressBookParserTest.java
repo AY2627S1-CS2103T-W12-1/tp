@@ -29,6 +29,7 @@ import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
 import seedu.address.testutil.PersonUtil;
@@ -89,8 +90,8 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_filter() throws Exception {
-        assertTrue(parser.parseCommand("filter t/committee") instanceof FilterCommand);
+    public void parseCommand_filter_returnsFilterCommand() throws Exception {
+        assertEquals(new FilterCommand(new Tag("committee")), parser.parseCommand("filter t/committee"));
     }
 
     @Test

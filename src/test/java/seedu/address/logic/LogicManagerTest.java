@@ -10,8 +10,12 @@ import static seedu.address.logic.commands.CommandTestUtil.EMAIL_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.AMY;
+import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.BOB;
+import static seedu.address.testutil.TypicalPersons.DANIEL;
+import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
@@ -47,6 +51,9 @@ import seedu.address.testutil.PersonBuilder;
 public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
     private static final IOException DUMMY_AD_EXCEPTION = new AccessDeniedException("dummy access denied exception");
+    private static final String[] READ_ONLY_COMMANDS = {
+        "list", "sort", "find Amy", "filter t/friend", "help", "help add", "exit"
+    };
 
     @TempDir
     public Path temporaryFolder;
@@ -97,7 +104,7 @@ public class LogicManagerTest {
 
     @Test
     public void execute_readOnlyCommands_doesNotCreateDataFile() throws Exception {
-        for (String command : new String[] {"list", "sort", "find Amy", "help", "help add", "exit"}) {
+        for (String command : READ_ONLY_COMMANDS) {
             logic.execute(command);
             assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")), command);
         }
@@ -109,7 +116,7 @@ public class LogicManagerTest {
         String original = "{ malformed data awaiting repair";
         Files.writeString(dataFile, original);
         model.addPerson(AMY);
-        for (String command : new String[] {"list", "sort", "find Amy", "help", "help add", "exit"}) {
+        for (String command : READ_ONLY_COMMANDS) {
             logic.execute(command);
             assertEquals(original, Files.readString(dataFile), command);
         }
@@ -122,7 +129,7 @@ public class LogicManagerTest {
     @Test
     public void execute_readOnlyCommandsWithUnwritablePath_stillSucceeds() throws Exception {
         Files.createDirectory(temporaryFolder.resolve("addressBook.json"));
-        for (String command : new String[] {"list", "sort", "find Amy", "help", "help add", "exit"}) {
+        for (String command : READ_ONLY_COMMANDS) {
             logic.execute(command);
         }
     }
@@ -250,6 +257,45 @@ public class LogicManagerTest {
         assertEquals(List.of(AMY, aaron), model.getAddressBook().getPersonList());
         logic.execute("find Amy");
         assertEquals(List.of(AMY), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_filterByYearAndCommittee_narrowsAndResetsView() throws Exception {
+        AddressBook clubRoster = getTypicalAddressBook();
+        Person alice = new PersonBuilder(ALICE).withTags("year1").build();
+        Person committeeMember = new PersonBuilder(BENSON).withTags("year1", "committee").build();
+        Person daniel = new PersonBuilder(DANIEL).withTags("year1").build();
+        clubRoster.setPerson(ALICE, alice);
+        clubRoster.setPerson(BENSON, committeeMember);
+        clubRoster.setPerson(DANIEL, daniel);
+        model.setAddressBook(clubRoster);
+
+        assertEquals("3 member(s) listed with tag \"year1\".",
+                logic.execute("filter t/year1").getFeedbackToUser());
+        assertEquals(List.of(alice, committeeMember, daniel), logic.getFilteredPersonList());
+        assertEquals("1 member(s) listed with tag \"committee\".",
+                logic.execute("filter t/committee").getFeedbackToUser());
+        assertEquals(List.of(committeeMember), logic.getFilteredPersonList());
+        assertEquals("0 member(s) listed with tag \"missing\".",
+                logic.execute("filter t/missing").getFeedbackToUser());
+        assertEquals(List.of(), logic.getFilteredPersonList());
+
+        logic.execute("find Alice");
+        assertEquals(List.of(alice), logic.getFilteredPersonList());
+        logic.execute("filter t/year1");
+        assertEquals(List.of(alice), logic.getFilteredPersonList());
+        logic.execute("list");
+        assertEquals(clubRoster.getPersonList(), logic.getFilteredPersonList());
+        logic.execute("filter t/Year1");
+        assertEquals(List.of(), logic.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_invalidFilter_preservesDisplayedList() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("filter t/friends");
+        assertThrows(ParseException.class, () -> logic.execute("filter t/friends t/committee"));
+        assertEquals(List.of(ALICE, BENSON, DANIEL), logic.getFilteredPersonList());
     }
 
     @Test
