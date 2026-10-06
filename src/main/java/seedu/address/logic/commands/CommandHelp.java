@@ -22,10 +22,13 @@ public enum CommandHelp {
             "A new search replaces the previous search. Jo does not match John; use list to show everyone again.",
             "Supply at least one name word. Searches use names, not phone numbers or tags."),
     FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
-            "Narrows the currently displayed members to those assigned the specified tag.",
-            "Shows only currently visible members tagged committee.",
-            "Filters can be applied repeatedly. Use list to restore the complete roster.",
-            "Supply one tag containing 1 to 30 ASCII letters or digits."),
+            "Shows currently displayed members with the specified tag without changing saved data.",
+            "Shows only members tagged committee, in their current order with new displayed numbers.",
+            "Matching is exact and case-sensitive. Repeated filters narrow the list further. Use list to show "
+                    + "everyone or find to search all members by name. Edit and delete use displayed numbers; "
+                    + "a successful edit shows everyone again.",
+            "Supply exactly one tag of 1 to 30 ASCII letters or digits. Empty tags, internal spaces, "
+                    + "multiple tags, and extra arguments are rejected."),
     ADD("Manage members", "add", "Add a member",
             "add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...",
             "add n/Alice Tan p/91234567 e/alice@example.com a/12 Orchard Road t/committee",
