@@ -34,7 +34,7 @@ public class CsvAddressBookExporterTest {
 
         CsvAddressBookExporter.export(List.of(person), destination);
 
-        assertEquals("Name,Phone,Email,Address,Tags\r\n"
+        assertEquals("name,phone,email,address,tags\r\n"
                 + "Alice,001234,alice@example.com,\"Block 1, \"\"Caf\u00e9\"\"\",colleague;friend\r\n",
                 Files.readString(destination));
     }
@@ -46,7 +46,7 @@ public class CsvAddressBookExporterTest {
 
         CsvAddressBookExporter.export(List.of(), destination);
 
-        assertEquals("Name,Phone,Email,Address,Tags\r\n", Files.readString(destination));
+        assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
     }
 
     @Test
@@ -65,7 +65,7 @@ public class CsvAddressBookExporterTest {
                 CSVParser csvParser = CSVFormat.RFC4180.parse(reader)) {
             List<CSVRecord> records = csvParser.getRecords();
             assertEquals(501, records.size());
-            assertEquals(List.of("Name", "Phone", "Email", "Address", "Tags"), records.getFirst().toList());
+            assertEquals(List.of("name", "phone", "email", "address", "tags"), records.getFirst().toList());
             for (int i = 0; i < people.size(); i++) {
                 Person person = people.get(i);
                 assertEquals(List.of(person.getName().fullName, person.getPhone().value, person.getEmail().value,
@@ -83,8 +83,19 @@ public class CsvAddressBookExporterTest {
 
         CsvAddressBookExporter.export(List.of(bob), destination);
 
-        assertEquals("Name,Phone,Email,Address,Tags\r\n"
+        assertEquals("name,phone,email,address,tags\r\n"
                 + "Bob,85355255,amy@gmail.com,Block 2,\r\n", Files.readString(destination));
+    }
+
+    @Test
+    public void export_validPeople_canBeReadByImporter() throws Exception {
+        Path destination = tempDir.resolve("contacts.csv");
+        Person alice = new PersonBuilder().withName("Alice").withAddress("Block 1, Main Street")
+                .withTags("friend", "committee").build();
+
+        CsvAddressBookExporter.export(List.of(alice), destination);
+
+        assertEquals(List.of(alice), CsvAddressBookImporter.read(destination));
     }
 
     @Test
