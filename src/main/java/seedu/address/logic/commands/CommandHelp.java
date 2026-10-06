@@ -8,7 +8,7 @@ import java.util.Optional;
 public enum CommandHelp {
     LIST("Browse members", "list", "Show the full roster", "list", "list",
             "Displays every member and their current list number.",
-            "The complete roster is shown, including members hidden by a previous find.",
+            "The complete roster is shown, including members hidden by a previous find or filter.",
             "Use list before choosing a member by number. List numbers can change after an edit or deletion.",
             "Use the lowercase command list with no extra arguments."),
     SORT("Browse members", "sort", "Sort members by name", "sort", "sort",
@@ -21,6 +21,14 @@ public enum CommandHelp {
             "Shows members whose names contain Alice or Tan. No match produces an empty list.",
             "A new search replaces the previous search. Jo does not match John; use list to show everyone again.",
             "Supply at least one name word. Searches use names, not phone numbers or tags."),
+    FILTER("Browse members", "filter", "Narrow members by tag", "filter t/TAG", "filter t/committee",
+            "Shows currently displayed members with the specified tag.",
+            "Shows only members tagged committee, in their existing order and with new list numbers.",
+            "Matching is exact and case-sensitive. Run filter once per tag; repeated filters narrow the list further. "
+                    + "List shows everyone, "
+                    + "while find starts a new name search across all members. Filtering does not save data.",
+            "Provide exactly one tag of 1 to 30 letters or digits. Empty tags, spaces within a tag, "
+                    + "multiple tags, and extra arguments are rejected."),
     ADD("Manage members", "add", "Add a member",
             "add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...",
             "add n/Alice Tan p/91234567 e/alice@example.com a/12 Orchard Road t/committee",

@@ -126,7 +126,7 @@ public class HelpWindow extends UiPart<Stage> {
     }
 
     /**
-     * Groups the eight available commands into four compact, keyboard-accessible category cards.
+     * Groups the available commands into four compact, keyboard-accessible category cards.
      */
     private void createOverview() {
         overviewGrid = new GridPane();
