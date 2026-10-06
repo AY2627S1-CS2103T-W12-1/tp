@@ -5,9 +5,8 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers the **v1.2 development build** and its ten available commands.
-Tag filtering and bulk tag editing remain planned.
-CSV export and name sorting are available. CSV import remains planned.
+This guide covers the **v1.2 development build** and its twelve available commands.
+Tag filtering, CSV import/export, and name sorting are available. Bulk tag editing remains planned.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
 
@@ -38,7 +37,8 @@ Start with [Quick start](#quick-start), or use the [command summary](#command-su
 After saving, TrackCall reports `Added member`. Name, Phone, Email, Address, and Tags appear on separate lines.
 Alice also appears in the member list. `Tags: (none)` means the member has no tags.
 
-Type `export` to create a CSV copy of the full roster.
+Type `export` to create a CSV copy of the full roster, or use `import p/FILE_PATH` to append members
+from an existing CSV roster.
 
 ### Read the interface
 
@@ -65,7 +65,7 @@ Use the [command summary](#command-summary) for a compact reference.
 Open help by typing `help`, pressing **F1**, or choosing **Help → Help**.
 The guide works without internet access and does not change or save the roster.
 
-The overview groups all ten commands into four categories:
+The overview groups all twelve commands into four categories:
 Browse members, Manage members, Remove records, and Help & session.
 Each command has a short description and a runnable example.
 The overview uses two columns in a wide window and one in a narrow window.
@@ -78,7 +78,7 @@ The overview uses two columns in a wide window and one in a narrow window.
 
 Help accepts at most one lowercase topic.
 `help ADD`, `help unknown`, and `help add edit` report errors.
-`filter`, `tagall`, and `untagall` are not available help topics in this build.
+`tagall` and `untagall` are not available help topics in this build.
 
 ### Add a member: `add`
 
@@ -93,7 +93,7 @@ Use a separate `t/` for each optional tag.
 | Phone | At least three digits. No spaces or punctuation. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text. |
-| Tag | Letters and digits, without spaces. Tags are case-sensitive. |
+| Tag | 1 to 30 ASCII letters or digits, without spaces. Tags are case-sensitive. |
 
 **Email rules:**
 
@@ -110,8 +110,9 @@ add n/Bob Lee p/92345678 e/bob@example.com a/20 College Road t/committee t/year1
 This adds Bob with two tags, saves the roster, and shows the complete member list.
 Repeated identical tags appear once.
 
-A member with **exactly the same name** as an existing member is rejected, even if other details differ.
-The message is `A member with this name already exists. Use edit to update that member.`
+A member is a duplicate only when its trimmed name, phone, email, and address all exactly match an
+existing member, including case and internal spaces. Tags do not affect identity. A same-name member
+with different contact details is allowed.
 
 ### Show all members: `list`
 
@@ -141,7 +142,7 @@ Extra arguments such as `sort date` produce `Invalid command format. Usage: sort
 
 This changes the first displayed member's phone and email. Omitted fields stay unchanged.
 After saving, TrackCall shows the updated details and restores the complete list.
-Renaming a member to another member's exact name is rejected.
+An edit that would make all four contact fields match another member is rejected.
 
 **Supplied tags replace all existing tags.**
 
@@ -163,6 +164,15 @@ Check the member number again after any command that changes the list.
 The result reports `Members found: N`.
 No matches produce `Members found: 0` and an empty list. No records are deleted.
 Use `list` to show everyone again. Searching does not save the data file.
+
+### Filter members by tag: `filter`
+
+`filter t/TAG` narrows the currently displayed list to members with that exact, case-sensitive tag.
+Filters can be applied repeatedly, and each new filter narrows the current results further.
+The command does not change member records or save the data file.
+
+For example, enter `filter t/committee` to show visible members tagged `committee`.
+Use `list` to restore the full roster and stored order.
 
 ### Delete a member: `delete`
 
@@ -199,7 +209,7 @@ See [Correcting errors](#correcting-errors) for recovery steps.
 ### Export members to CSV: `export`
 
 `export [FILEPATH]` writes every member to a UTF-8 CSV file, including members hidden by a search.
-The columns are `Name`, `Phone`, `Email`, `Address`, and `Tags`.
+The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
 Tags for each member are sorted alphabetically and joined with semicolons.
 
 * Without `FILEPATH`, the file is written to `addressbook.csv` in the application's current directory.
@@ -212,6 +222,40 @@ Examples:
 
 * `export` writes `addressbook.csv` in the current directory.
 * `export backups/members.csv` writes `members.csv` in the existing `backups` directory.
+
+### Import members from CSV: `import`
+
+`import p/FILE_PATH` validates a local UTF-8 CSV file, appends unique members in file order, saves the
+complete roster, and restores the full list in stored order. The import always checks the full roster,
+including members hidden by `find` or `filter`.
+
+Use double quotes around a path containing whitespace:
+
+```text
+import p/"data/member list.csv"
+```
+
+The first row must be exactly:
+
+```text
+name,phone,email,address,tags
+```
+
+Every later non-blank row must have exactly five fields. CSV quoting supports commas and doubled double
+quotes. Embedded line breaks are not supported. Separate tags with semicolons; leave the tags field empty
+for no tags. An optional UTF-8 byte-order mark is accepted.
+
+```text
+name,phone,email,address,tags
+John Doe,98765432,johnd@example.com,"John Street, Block 123",year1;committee
+```
+
+The whole file is validated before any member is added. Exact contact-detail duplicates against existing
+members or earlier rows are skipped; tags are not merged. The result reports imported and skipped counts.
+A header-only or duplicate-only file succeeds with zero imports and still retries automatic saving.
+
+If a row, header, CSV structure, or UTF-8 encoding is invalid, no records or view state change. The first
+error identifies the row where applicable. The source CSV is never modified.
 
 ### Finish your session: `exit`
 
@@ -230,7 +274,7 @@ Rejected input leaves the roster and current list unchanged.
 * `add n/Alice` is incomplete. Use `help add`, then enter all four required fields.
 * `delete 0` is invalid. Use `list`, check the member, and enter its displayed number.
 
-### A save fails after add, edit, or delete
+### A save fails after add, edit, delete, or import
 
 The change remains visible in this session, but the previous saved file stays unchanged.
 The command box clears the input to avoid repeating an already-applied change.
@@ -240,7 +284,8 @@ The command box clears the input to avoid repeating an already-applied change.
 3. Use `edit` to reapply an existing field value. This retries saving without changing anything else.
    If the roster is empty, use `clear` to retry saving it.
 
-Exiting before a successful retry loses those unsaved changes.
+For import, the complete imported batch remains in memory and TrackCall reports
+`Could not save data to file: DETAILS`. Exiting before a successful retry loses unsaved changes.
 
 ### A save fails after clear
 
@@ -251,8 +296,8 @@ Fix the storage problem. Retry only if you still want to remove the entire roste
 
 ## Your data
 
-TrackCall automatically saves after successful `add`, `edit`, `delete`, and `clear` commands.
-`help`, `list`, `sort`, `find`, `export`, and `exit` do not save the roster.
+TrackCall automatically saves after successful `add`, `edit`, `delete`, `clear`, and `import` commands.
+`help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` do not save the roster.
 
 ### Locate or back up your roster
 
@@ -285,10 +330,7 @@ A successful data change replaces the file.
 
 ## Current limitations
 
-* Tag filtering and bulk tag changes are planned. Use `edit` for an individual member's tags today.
-* CSV import is planned and not available in this build.
-  CSV export is available through `export [FILEPATH]`.
-* Names determine duplicates in this build. The planned MVP will compare all four contact fields.
+* Bulk tag changes are planned. Use `edit` for an individual member's tags today.
 * An unrecognised prefix-like token inside an address can be stored as literal address text.
   For example, `a/Main Road T/committee` does not assign a tag.
   Use lowercase `t/` and check the displayed details after adding or editing.
@@ -307,16 +349,16 @@ See [Your data](#your-data) for working-folder and backup instructions.
 A search changes the displayed list, not the saved roster. Run `list` to show everyone.
 Check the current displayed number before editing or deleting a member.
 
-### Can I filter by tag or update a whole group's tags?
+### Can I update a whole group's tags?
 
-Those commands are planned. Use `add` and `edit` to manage individual members' tags in this build.
+Bulk tag-update commands are planned. Use `filter` to view a tagged group and `edit` to update one member.
 See [Current limitations](#current-limitations).
 
 ### What should I do after a save error?
 
 Follow [Correcting errors](#correcting-errors) before exiting.
 A failed `clear` save restores the roster.
-Unsaved changes from `add`, `edit`, and `delete` remain visible in memory.
+Unsaved changes from `add`, `edit`, `delete`, and `import` remain visible in memory.
 
 ## Command summary
 
@@ -328,9 +370,11 @@ Unsaved changes from `add`, `edit`, and `delete` remain visible in memory.
 | Sort by name | `sort` | Sorts the current view from A to Z, ignoring letter case. |
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
 | Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
+| Filter by tag | `filter t/TAG` | `filter t/committee` narrows the current list. |
 | Delete one member | `delete INDEX` | `delete 1` removes the first currently displayed member. |
 | Clear the roster | `clear` | `clear` removes all members, including those hidden by a search. |
 | Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |
+| Import members | `import p/FILE_PATH` | `import p/members.csv` appends unique valid records. |
 | Close the app | `exit` | `exit` ends the session. |
 
 `INDEX` always refers to the currently displayed list. Check the member details before using `edit` or `delete`.

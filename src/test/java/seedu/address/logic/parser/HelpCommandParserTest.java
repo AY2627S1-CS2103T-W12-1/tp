@@ -31,7 +31,7 @@ public class HelpCommandParserTest {
 
     @Test
     public void parse_unknownOrWrongCaseTopic_reportsRecovery() {
-        for (String topic : new String[] {"filter", "tagall", "untagall", "unknown", "ADD"}) {
+        for (String topic : new String[] {"tagall", "untagall", "unknown", "ADD"}) {
             assertParseFailure(parser, topic, String.format(HelpCommand.MESSAGE_UNKNOWN_TOPIC, topic));
         }
         // A valid command must still parse after an error.

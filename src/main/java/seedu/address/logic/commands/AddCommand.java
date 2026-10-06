@@ -34,7 +34,7 @@ public class AddCommand extends Command {
 
     public static final String MESSAGE_SUCCESS = "Added member\n%1$s";
     public static final String MESSAGE_DUPLICATE_PERSON =
-            "A member with this name already exists. Use edit to update that member.";
+            "A member with these contact details already exists. Use edit to update that member.";
 
     private final Person toAdd;
 

@@ -23,6 +23,7 @@ import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FilterCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
+import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -99,6 +100,12 @@ public class AddressBookParserTest {
         assertEquals(new HelpCommand("edit"), parser.parseCommand("help edit"));
         String expectedError = String.format(HelpCommand.MESSAGE_UNKNOWN_TOPIC, "3");
         assertThrows(ParseException.class, expectedError, () -> parser.parseCommand("help 3"));
+    }
+
+    @Test
+    public void parseCommand_import() throws Exception {
+        assertEquals(new ImportCommand(Path.of("data/members.csv")),
+                parser.parseCommand("import p/data/members.csv"));
     }
 
     @Test

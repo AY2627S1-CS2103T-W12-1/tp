@@ -10,6 +10,7 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.commands.exceptions.SaveFailureException;
 import seedu.address.logic.parser.AddressBookParser;
@@ -68,6 +69,10 @@ public class LogicManager implements Logic {
                 // Clear changes only the records, so restoring them also restores the prior filtered view.
                 model.setAddressBook(beforeClear);
                 throw new SaveFailureException(ClearCommand.MESSAGE_SAVE_FAILURE, ioe, false);
+            }
+            if (command instanceof ImportCommand) {
+                String details = ioe.getMessage() == null ? ioe.toString() : ioe.getMessage();
+                throw new SaveFailureException(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, details), ioe, true);
             }
             String errorFormat = ioe instanceof AccessDeniedException
                     ? FILE_OPS_PERMISSION_ERROR_FORMAT : FILE_OPS_ERROR_FORMAT;
