@@ -101,7 +101,7 @@ public class LogicManagerTest {
     @Test
     public void execute_readOnlyCommands_doesNotCreateDataFile() throws Exception {
         for (String command : new String[] {"list", "sort", "find Amy", "filter t/friend", "help",
-            "help add", "exit"}) {
+            "help add", "help filter", "exit"}) {
             logic.execute(command);
             assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")), command);
         }
@@ -114,7 +114,7 @@ public class LogicManagerTest {
         Files.writeString(dataFile, original);
         model.addPerson(AMY);
         for (String command : new String[] {"list", "sort", "find Amy", "filter t/friend", "help",
-            "help add", "exit"}) {
+            "help add", "help filter", "exit"}) {
             logic.execute(command);
             assertEquals(original, Files.readString(dataFile), command);
         }
@@ -128,7 +128,7 @@ public class LogicManagerTest {
     public void execute_readOnlyCommandsWithUnwritablePath_stillSucceeds() throws Exception {
         Files.createDirectory(temporaryFolder.resolve("addressBook.json"));
         for (String command : new String[] {"list", "sort", "find Amy", "filter t/friend", "help",
-            "help add", "exit"}) {
+            "help add", "help filter", "exit"}) {
             logic.execute(command);
         }
     }
