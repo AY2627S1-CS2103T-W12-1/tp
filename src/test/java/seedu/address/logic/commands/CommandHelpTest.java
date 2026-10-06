@@ -23,9 +23,9 @@ public class CommandHelpTest {
         Set<String> keywords = Arrays.stream(CommandHelp.values()).map(CommandHelp::getKeyword)
                 .collect(Collectors.toSet());
         assertEquals(Set.of(AddCommand.COMMAND_WORD, EditCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD,
-                ClearCommand.COMMAND_WORD, FindCommand.COMMAND_WORD, FilterCommand.COMMAND_WORD,
-                ListCommand.COMMAND_WORD, HelpCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD,
-                ExportCommand.COMMAND_WORD, SortCommand.COMMAND_WORD), keywords);
+                ClearCommand.COMMAND_WORD, FindCommand.COMMAND_WORD, ListCommand.COMMAND_WORD,
+                HelpCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD,
+                ImportCommand.COMMAND_WORD, FilterCommand.COMMAND_WORD, SortCommand.COMMAND_WORD), keywords);
         assertEquals(CommandHelp.values().length, keywords.size());
     }
 
@@ -47,6 +47,7 @@ public class CommandHelpTest {
         assertTrue(CommandHelp.find("help").isPresent());
         assertTrue(CommandHelp.find("tagall").isEmpty());
         assertTrue(CommandHelp.find("filter").isPresent());
+        assertTrue(CommandHelp.find("import").isPresent());
         assertTrue(CommandHelp.find("EXIT").isEmpty());
     }
 }

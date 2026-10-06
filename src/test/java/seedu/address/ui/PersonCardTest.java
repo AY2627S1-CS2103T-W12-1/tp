@@ -62,9 +62,9 @@ public class PersonCardTest {
         onJavaFxThread(() -> {
             String addressText = "12 Orchard Road, Membership Office, Level 3, Community Building beside the "
                     + "main entrance, Singapore, Visiting hours Monday to Friday, please contact reception for access";
-            String tagText = "A".repeat(120);
+            String tagText = "A".repeat(30);
             Person person = new PersonBuilder().withAddress(addressText).withTags(tagText).build();
-            Region card = layoutCard(person, 1, 400);
+            Region card = layoutCard(person, 1, 160);
             Label address = (Label) card.lookup("#address");
             Label tag = (Label) ((FlowPane) card.lookup("#tags")).getChildren().getFirst();
 

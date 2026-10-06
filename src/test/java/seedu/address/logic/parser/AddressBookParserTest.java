@@ -1,7 +1,7 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -9,6 +9,7 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +23,7 @@ import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FilterCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
+import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -45,8 +47,8 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_clear() throws Exception {
-        assertInstanceOf(ClearCommand.class, parser.parseCommand(ClearCommand.COMMAND_WORD));
-        assertInstanceOf(ClearCommand.class, parser.parseCommand(" \tclear \t"));
+        assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD) instanceof ClearCommand);
+        assertTrue(parser.parseCommand(" \tclear \t") instanceof ClearCommand);
     }
 
     @Test
@@ -67,8 +69,8 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_exit() throws Exception {
-        assertInstanceOf(ExitCommand.class, parser.parseCommand(ExitCommand.COMMAND_WORD));
-        assertInstanceOf(ExitCommand.class, parser.parseCommand(" \texit \t"));
+        assertTrue(parser.parseCommand(ExitCommand.COMMAND_WORD) instanceof ExitCommand);
+        assertTrue(parser.parseCommand(" \texit \t") instanceof ExitCommand);
     }
 
     @Test
@@ -83,32 +85,38 @@ public class AddressBookParserTest {
     public void parseCommand_find() throws Exception {
         List<String> keywords = List.of("foo", "bar", "baz");
         FindCommand command = (FindCommand) parser.parseCommand(
-                FindCommand.COMMAND_WORD + " " + String.join(" ", keywords));
+                FindCommand.COMMAND_WORD + " " + keywords.stream().collect(Collectors.joining(" ")));
         assertEquals(new FindCommand(new NameContainsKeywordsPredicate(keywords)), command);
     }
 
     @Test
-    public void parseCommand_filter() throws Exception {
+    public void parseCommand_filter_returnsFilterCommand() throws Exception {
         assertEquals(new FilterCommand(new Tag("committee")), parser.parseCommand("filter t/committee"));
     }
 
     @Test
     public void parseCommand_help() throws Exception {
-        assertInstanceOf(HelpCommand.class, parser.parseCommand(HelpCommand.COMMAND_WORD));
+        assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD) instanceof HelpCommand);
         assertEquals(new HelpCommand("edit"), parser.parseCommand("help edit"));
         String expectedError = String.format(HelpCommand.MESSAGE_UNKNOWN_TOPIC, "3");
         assertThrows(ParseException.class, expectedError, () -> parser.parseCommand("help 3"));
     }
 
     @Test
+    public void parseCommand_import() throws Exception {
+        assertEquals(new ImportCommand(Path.of("data/members.csv")),
+                parser.parseCommand("import p/data/members.csv"));
+    }
+
+    @Test
     public void parseCommand_list() throws Exception {
-        assertInstanceOf(ListCommand.class, parser.parseCommand(ListCommand.COMMAND_WORD));
-        assertInstanceOf(ListCommand.class, parser.parseCommand(" \tlist \t"));
+        assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
+        assertTrue(parser.parseCommand(" \tlist \t") instanceof ListCommand);
     }
 
     @Test
     public void parseCommand_sort() throws Exception {
-        assertInstanceOf(SortCommand.class, parser.parseCommand(" \tsort \t"));
+        assertTrue(parser.parseCommand(" \tsort \t") instanceof SortCommand);
         assertThrows(ParseException.class, SortCommand.MESSAGE_USAGE, () -> parser.parseCommand("sort date"));
     }
 
