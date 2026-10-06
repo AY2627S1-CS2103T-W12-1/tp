@@ -69,13 +69,13 @@ public class LogicManagerTest {
     @Test
     public void execute_invalidCommandFormat_throwsParseException() {
         String invalidCommand = "uicfhmowqewca";
-        assertParseException(invalidCommand, MESSAGE_UNKNOWN_COMMAND);
+        assertParseException(invalidCommand);
     }
 
     @Test
     public void execute_commandExecutionError_throwsCommandException() {
         String deleteCommand = "delete 9";
-        assertCommandException(deleteCommand, MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandException(deleteCommand);
     }
 
     @Test
@@ -156,7 +156,7 @@ public class LogicManagerTest {
         Path rosterFile = temporaryFolder.resolve("addressBook.json");
         Files.createDirectory(rosterFile);
         model.addPerson(AMY);
-        model.updateFilteredPersonList(unused -> false);
+        model.updateFilteredPersonList(_ -> false);
         Path csvFile = temporaryFolder.resolve("members.csv");
 
         CommandResult result = logic.execute("export " + csvFile);
@@ -192,7 +192,7 @@ public class LogicManagerTest {
         model.addPerson(AMY);
         logic.execute("sort");
         logic.execute("add n/Aaron p/91234567 e/aaron@example.com a/Orchard Road");
-        Person aaron = model.getFilteredPersonList().get(0);
+        Person aaron = model.getFilteredPersonList().getFirst();
         assertEquals("Aaron", aaron.getName().fullName);
         assertEquals(List.of(aaron, AMY, BOB), model.getFilteredPersonList());
 
@@ -314,7 +314,8 @@ public class LogicManagerTest {
 
     @Test
     public void getFilteredPersonList_modifyList_throwsUnsupportedOperationException() {
-        assertThrows(UnsupportedOperationException.class, () -> logic.getFilteredPersonList().remove(0));
+        model.addPerson(ALICE);
+        assertThrows(UnsupportedOperationException.class, () -> logic.getFilteredPersonList().removeFirst());
     }
 
     /**
@@ -335,16 +336,16 @@ public class LogicManagerTest {
      * Executes the command, confirms that a ParseException is thrown and that the result message is correct.
      * @see #assertCommandFailure(String, Class, String, Model)
      */
-    private void assertParseException(String inputCommand, String expectedMessage) {
-        assertCommandFailure(inputCommand, ParseException.class, expectedMessage);
+    private void assertParseException(String inputCommand) {
+        assertCommandFailure(inputCommand, ParseException.class, MESSAGE_UNKNOWN_COMMAND);
     }
 
     /**
      * Executes the command, confirms that a CommandException is thrown and that the result message is correct.
      * @see #assertCommandFailure(String, Class, String, Model)
      */
-    private void assertCommandException(String inputCommand, String expectedMessage) {
-        assertCommandFailure(inputCommand, CommandException.class, expectedMessage);
+    private void assertCommandException(String inputCommand) {
+        assertCommandFailure(inputCommand, CommandException.class, MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
     }
 
     /**
