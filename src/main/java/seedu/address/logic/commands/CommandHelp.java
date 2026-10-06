@@ -28,17 +28,18 @@ public enum CommandHelp {
             "Adds Alice Tan and shows the complete roster after the record is saved.",
             "Fields can appear in any order. Use one t/ prefix per tag; tag names contain letters and digits.",
             "Include all four required fields once. Phone numbers need at least three digits. "
-                    + "An existing member with exactly the same name is rejected. If saving fails, the member remains "
-                    + "in this session and the command box clears; follow the recovery guidance before exiting."),
+                    + "An existing member with the same four contact fields is rejected. If saving fails, the member "
+                    + "remains in this session and the command box clears; follow the recovery guidance before "
+                    + "exiting."),
     EDIT("Manage members", "edit", "Update a member",
             "edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...",
             "edit 1 p/98765432 t/committee t/year1",
             "Updates the member at a displayed list number. Fields you leave out stay unchanged.",
             "Changes member 1's phone and replaces their tags with committee and year1, then shows all members.",
             "Give the full tag set you want to keep. Use edit 1 t/ to remove all tags from member 1.",
-            "Use a current positive list number and supply at least one field. Invalid values or a duplicate name "
-                    + "are rejected. If saving fails, the edit remains in this session and the command box clears; "
-                    + "follow the recovery guidance before exiting."),
+            "Use a current positive list number and supply at least one field. Invalid values or duplicate contact "
+                    + "details are rejected. If saving fails, the edit remains in this session and the command box "
+                    + "clears; follow the recovery guidance before exiting."),
     EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
             "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
             "Creates members.csv with Name, Phone, Email, Address and Tags columns.",

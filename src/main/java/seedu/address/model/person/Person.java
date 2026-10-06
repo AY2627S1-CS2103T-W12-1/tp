@@ -62,8 +62,8 @@ public class Person {
     }
 
     /**
-     * Returns true if both persons have the same name.
-     * This defines a weaker notion of equality between two persons.
+     * Returns true if both persons have the same contact fields.
+     * Tags do not form part of a person's identity.
      */
     public boolean isSamePerson(Person otherPerson) {
         if (otherPerson == this) {
@@ -71,7 +71,10 @@ public class Person {
         }
 
         return otherPerson != null
-                && otherPerson.getName().equals(getName());
+                && otherPerson.getName().equals(getName())
+                && otherPerson.getPhone().equals(getPhone())
+                && otherPerson.getEmail().equals(getEmail())
+                && otherPerson.getAddress().equals(getAddress());
     }
 
     /**

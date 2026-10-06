@@ -26,6 +26,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -159,6 +160,24 @@ public class LogicManagerTest {
         assertTrue(result.getFeedbackToUser().startsWith("Exported 1 people to "));
         assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
         assertTrue(model.getFilteredPersonList().isEmpty());
+    }
+
+    @Test
+    public void execute_import_savesUpdatedRoster() throws Exception {
+        Path csvFile = temporaryFolder.resolve("members.csv");
+        Files.writeString(csvFile, "name,phone,email,address,tags\n"
+                + "New Member,123,new@example.com,New address,committee\n");
+
+        CommandResult result = logic.execute("import p/" + csvFile);
+
+        Person imported = new PersonBuilder().withName("New Member").withPhone("123")
+                .withEmail("new@example.com").withAddress("New address").withTags("committee").build();
+        assertEquals(String.format(ImportCommand.MESSAGE_SUCCESS, 1, csvFile.toAbsolutePath().normalize(), 0),
+                result.getFeedbackToUser());
+        assertEquals(List.of(imported), model.getAddressBook().getPersonList());
+        ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
+                temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
+        assertEquals(List.of(imported), savedAddressBook.getPersonList());
     }
 
     @Test
