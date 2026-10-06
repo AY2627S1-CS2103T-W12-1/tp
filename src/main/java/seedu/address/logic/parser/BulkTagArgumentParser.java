@@ -21,17 +21,22 @@ public class BulkTagArgumentParser {
 
     private static final Pattern VALID_TAG = Pattern.compile("[A-Za-z0-9]{1,30}");
 
+    private BulkTagArgumentParser() {
+        // Prevents instantiation of this utility class.
+    }
+
     /**
      * Parses {@code args} into exactly one tag of 1 to 30 ASCII letters or digits.
      * Surrounding whitespace around the tag is ignored.
      *
      * @param args Arguments following the command word.
      * @param usage Usage message of the calling command, shown when the {@code t/} prefix is missing.
-     * @throws ParseException if the prefix is missing, more than one tag is given, or the tag is empty or invalid.
+     * @throws ParseException If the prefix is missing, more than one tag is given,
+     *         or the tag is empty or invalid.
      */
     public static Tag parse(String args, String usage) throws ParseException {
         requireAllNonNull(args, usage);
-        // A leading space lets the tokenizer recognise a prefix at the very start of the arguments.
+        // A leading space lets the tokenizer recognize a prefix at the very start of the arguments.
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" " + args, PREFIX_TAG);
         List<String> tagValues = argMultimap.getAllValues(PREFIX_TAG);
 

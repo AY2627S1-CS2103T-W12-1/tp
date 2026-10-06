@@ -51,8 +51,8 @@ public class BulkTagArgumentParserTest {
     @Test
     public void parse_missingPrefix_throwsUsageMessage() {
         String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, USAGE);
-        for (String input : new String[] {"", "   ", "committee", " x/committee", " T/committee",
-            " committee t/year1"}) {
+        String[] inputs = {"", "   ", "committee", " x/committee", " T/committee", " committee t/year1"};
+        for (String input : inputs) {
             assertThrows(ParseException.class, expected, () -> BulkTagArgumentParser.parse(input, USAGE));
         }
     }
@@ -68,15 +68,17 @@ public class BulkTagArgumentParserTest {
     @Test
     public void parse_emptyTag_throwsEmptyTagMessage() {
         for (String input : new String[] {" t/", " t/   ", " t/\t"}) {
-            assertThrows(ParseException.class, MESSAGE_EMPTY_TAG, () -> BulkTagArgumentParser.parse(input, USAGE));
+            assertThrows(ParseException.class, MESSAGE_EMPTY_TAG, () ->
+                    BulkTagArgumentParser.parse(input, USAGE));
         }
     }
 
     @Test
     public void parse_invalidTag_throwsInvalidTagMessage() {
-        for (String input : new String[] {" t/year-1", " t/year1 year2", " t/hello!", " t/one x/two",
-            " t/café"}) {
-            assertThrows(ParseException.class, MESSAGE_INVALID_TAG, () -> BulkTagArgumentParser.parse(input, USAGE));
+        String[] inputs = {" t/year-1", " t/year1 year2", " t/hello!", " t/one x/two", " t/caf\u00e9"};
+        for (String input : inputs) {
+            assertThrows(ParseException.class, MESSAGE_INVALID_TAG, () ->
+                    BulkTagArgumentParser.parse(input, USAGE));
         }
     }
 }
