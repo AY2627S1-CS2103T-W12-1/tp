@@ -42,7 +42,7 @@ public class ExportCommandTest {
 
         CommandResult result = parser.parseCommand("export   " + destination + "   ").execute(model);
 
-        assertEquals("Name,Phone,Email,Address,Tags\r\n"
+        assertEquals("name,phone,email,address,tags\r\n"
                 + "Alice,85355255,amy@gmail.com,Block 1,\r\n", Files.readString(destination));
         assertEquals(String.format(ExportCommand.MESSAGE_SUCCESS, 1, destination.toAbsolutePath().normalize()),
                 result.getFeedbackToUser());
@@ -73,7 +73,7 @@ public class ExportCommandTest {
         try {
             CommandResult result = parser.parseCommand("export " + destination).execute(new ModelManager());
 
-            assertEquals("Name,Phone,Email,Address,Tags\r\n", Files.readString(destination));
+            assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
             assertEquals(String.format(ExportCommand.MESSAGE_SUCCESS, 0, destination.toAbsolutePath().normalize()),
                     result.getFeedbackToUser());
         } finally {
@@ -89,7 +89,7 @@ public class ExportCommandTest {
 
         CommandResult result = new ExportCommand(destination).execute(model);
 
-        assertEquals("Name,Phone,Email,Address,Tags\r\n", Files.readString(destination));
+        assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
         assertEquals(String.format(ExportCommand.MESSAGE_SUCCESS, 0, destination.toAbsolutePath().normalize()),
                 result.getFeedbackToUser());
         assertTrue(model.getAddressBook().getPersonList().isEmpty());
@@ -107,7 +107,7 @@ public class ExportCommandTest {
 
         CommandResult result = new ExportCommand(destination).execute(model);
 
-        assertEquals(List.of("Name,Phone,Email,Address,Tags", "Bob,85355255,amy@gmail.com,Block 2,",
+        assertEquals(List.of("name,phone,email,address,tags", "Bob,85355255,amy@gmail.com,Block 2,",
                 "Alice,85355255,amy@gmail.com,Block 1,"), Files.readAllLines(destination));
         assertEquals(String.format(ExportCommand.MESSAGE_SUCCESS, 2, destination.toAbsolutePath().normalize()),
                 result.getFeedbackToUser());

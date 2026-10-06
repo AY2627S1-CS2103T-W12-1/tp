@@ -21,6 +21,11 @@ public enum CommandHelp {
             "Shows members whose names contain Alice or Tan. No match produces an empty list.",
             "A new search replaces the previous search. Jo does not match John; use list to show everyone again.",
             "Supply at least one name word. Searches use names, not phone numbers or tags."),
+    FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
+            "Narrows the currently displayed members to those assigned the specified tag.",
+            "Shows only currently visible members tagged committee.",
+            "Filters can be applied repeatedly. Use list to restore the complete roster.",
+            "Supply one tag containing 1 to 30 ASCII letters or digits."),
     ADD("Manage members", "add", "Add a member",
             "add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...",
             "add n/Alice Tan p/91234567 e/alice@example.com a/12 Orchard Road t/committee",
@@ -42,11 +47,19 @@ public enum CommandHelp {
                     + "clears; follow the recovery guidance before exiting."),
     EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
             "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
-            "Creates members.csv with Name, Phone, Email, Address and Tags columns.",
+            "Creates members.csv with name, phone, email, address and tags columns.",
             "The default path is addressbook.csv in the current directory. Existing destination files are overwritten. "
                     + "Tags are sorted and joined with semicolons. The roster and current search stay unchanged.",
             "Use a valid output path whose parent directory exists and is writable. "
                     + "An invalid path or a failed write reports an error."),
+    IMPORT("Manage members", "import", "Import members from CSV", "import p/FILE_PATH",
+            "import p/\"data/member list.csv\"",
+            "Validates a UTF-8 CSV file and appends member records without overwriting existing members.",
+            "Imports valid new members, skips exact contact-detail duplicates and restores the complete roster.",
+            "The header must be name,phone,email,address,tags. Quote paths containing whitespace. "
+                    + "Tags in the final column are separated with semicolons.",
+            "Supply one readable .csv path after p/. Invalid files do not change the roster. If saving fails, the "
+                    + "imported batch remains in this session and can be saved by a later data-changing command."),
     DELETE("Remove records", "delete", "Delete one member", "delete INDEX", "delete 2",
             "Permanently removes the member at a displayed list number.",
             "Deletes the second member in the current list and shows their details after saving.",

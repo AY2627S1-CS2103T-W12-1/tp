@@ -19,7 +19,7 @@ import seedu.address.model.person.Person;
  */
 public final class CsvAddressBookExporter {
 
-    private static final List<String> HEADERS = List.of("Name", "Phone", "Email", "Address", "Tags");
+    private static final List<String> HEADERS = List.of("name", "phone", "email", "address", "tags");
 
     private CsvAddressBookExporter() {
         // Utility class.

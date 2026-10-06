@@ -19,9 +19,8 @@ The secretary can:
 * Save valid changes automatically to a local file.
 * Complete the core workflow without an internet connection or a separate save command.
 
-The **v1.2 development build** supports individual member management, name search, offline command help, local saving,
-CSV export, and name sorting.
-Tag filtering and bulk tag changes remain planned.
+The **v1.2 development build** supports individual member management, name search, tag filtering, offline command
+help, local saving, CSV import/export, and name sorting. Bulk tag changes remain planned.
 See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining work.
 
 ## Acknowledgements
@@ -199,7 +198,7 @@ full intended product, including behaviour still to be implemented.
 
 #### Catalogue and command flow
 
-`CommandHelp` stores the ten implemented commands in one local catalogue.
+`CommandHelp` stores the twelve implemented commands in one local catalogue.
 Each entry contains its purpose, syntax, example, expected result, and common errors.
 Only executable commands appear, so planned tag commands are not shown as available.
 
@@ -353,8 +352,8 @@ loading-error path. Errors are logged; an invalid member file is preserved until
 data-changing command replaces it. Null or invalid preferences fall back to defaults, which are saved
 through the usual preferences setup.
 
-The current JSON format uses a `persons` array and a `tags` array per member. Existing validation
-still rejects members with identical names. The email validator avoids excessive backtracking on long
+The current JSON format uses a `persons` array and a `tags` array per member. Duplicate identity compares
+all four contact fields exactly and ignores tags. The email validator avoids excessive backtracking on long
 input, and a log-file initialisation failure uses the console logger instead of aborting startup.
 
 ### Command parsing
@@ -364,22 +363,35 @@ including a tab. It trims surrounding value whitespace without removing internal
 slashes. `list`, `clear`, and `exit` reject extra arguments before execution. Invalid commands leave
 records, the current list, and the saved file unchanged; the input remains available for correction.
 
+### CSV import
+
+`ImportCommandParser` accepts exactly one `p/FILE_PATH` parameter. It removes matching outer quotes,
+requires quotes around paths containing whitespace, rejects repeated or unknown prefixes, and accepts the
+`.csv` extension case-insensitively while preserving path case.
+
+`CsvAddressBookImporter` reads the complete source as strict UTF-8, accepts an optional byte-order mark,
+checks the exact lowercase five-column header, and parses one physical CSV record per line. It validates
+every decoded field before returning an immutable member list, so syntax or row errors cannot cause a
+partial import. Completely blank records are skipped but still contribute to reported row numbers.
+
+`ImportCommand` compares each valid candidate with the complete stored roster and earlier accepted rows
+using `Person#isSamePerson`. It appends only unique members in source order, then clears search, filter,
+and sort state. `LogicManager` performs the normal automatic save even for a header-only or duplicate-only
+import. If saving fails, the imported batch remains in memory and an import-specific save error is shown.
+The source CSV is read-only throughout the workflow.
+
 ### Differences still to implement for the MVP
 
-* `filter`, `tagall`, and `untagall` remain proposed. Bulk commands must save valid operations,
-  including no-ops; `filter` must remain read-only.
-* CSV import is selected for the MVP but not yet implemented. Its command format and error handling
-  are not yet specified. CSV export is available as `export [FILEPATH]`, and name sorting as `sort`.
-* Duplicate identity still uses an exact name match. Shared rule 2's comparison of all four contact
-  fields has not been implemented.
-* `edit` currently restores the full list. Retaining the active search and future tag filters is planned.
+* `tagall` and `untagall` remain proposed. Bulk commands must save valid operations, including no-ops.
+  `filter` is available as a read-only command.
+* CSV import is available as `import p/FILE_PATH`, CSV export as `export [FILEPATH]`, and name sorting as `sort`.
+* `edit` currently restores the full list. Retaining the active search and tag filters is planned.
 * `find` currently reports `Members found: N`. The use cases describe the intended member-list count wording.
 * Unknown-prefix rejection still needs a precise grammar that preserves valid free-form addresses.
   Currently, an unrecognised prefix-like token such as `x/extra` or uppercase `T/committee` inside
   an address can become literal address text. The parser must not reject ordinary `c/o` or URLs
   merely because they contain slashes. This does not yet satisfy the intended unknown-prefix rule.
-* Current tags allow alphanumeric text without a 30-character limit, and storage uses `tags`.
-  The intended field rules and `tagged` schema in the requirements appendix are not yet the file contract.
+* Storage uses `tags` rather than the intended `tagged` schema in the requirements appendix.
 * Startup loading errors are recorded in the log; the requirements' user-visible load messages remain planned.
   Undo/redo and deletion confirmation are not selected for the MVP.
 
@@ -466,8 +478,8 @@ The MVP includes these commands:
 * **Group tags:** `tagall`, `untagall`.
 
 The MVP also includes exporting members to a CSV file, importing members from a CSV file, and
-sorting the displayed list by name. CSV export is available as `export [FILEPATH]`, and name sorting
-as `sort`. CSV import remains planned, with its command format not yet specified.
+sorting the displayed list by name. CSV export is available as `export [FILEPATH]`, CSV import as
+`import p/FILE_PATH`, and name sorting as `sort`.
 
 It also includes automatic saving and manual editing of the local data file.
 Each member has a name, phone number, email address, address, and zero or more tags.
@@ -493,8 +505,8 @@ The broader narrative must be read with these MVP decisions:
 * Deletion is immediate and has no confirmation or undo. Archiving with retained history is
   different from deleting a record.
 * Sharing for president verification, newsletters, mail merge, phone contacts, or submissions is
-  the motivation for the CSV export story (US15). `export [FILEPATH]` is available; CSV import
-  is planned for the MVP. vCard is not supported. Reviewing a manually edited JSON file is a
+  the motivation for the CSV export story (US15). `export [FILEPATH]` and `import p/FILE_PATH`
+  are available. vCard is not supported. Reviewing a manually edited JSON file is a
   separate workflow, not an implementation of import/export.
 * TrackCall does not make calls, send messages, process fees, track payment balances, create
   invoices, manage events/RSVPs/attendance, or renew memberships automatically. It has no cloud
@@ -1030,10 +1042,10 @@ such as incremental delivery, are also not product NFRs.
 | Persisted data | The roster successfully written to the local data file and available for a later session. |
 | Session | One period of use beginning when TrackCall starts and ending when the application closes. |
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
-| Data-changing command | `add`, `edit`, `delete`, `clear`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
+| Data-changing command | `add`, `edit`, `delete`, `clear`, `import`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
 | JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.2 development build uses `tags`. |
-| CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; CSV import is planned for the MVP but not yet implemented. |
+| CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; `import p/FILE_PATH` validates and imports it. |
 | vCard | A contact-card file format considered for exporting member contact details to phone or contact applications. It is outside the selected MVP. |
 | Archive | Retain an inactive record or tag and its history separately from active work. This considered feature is different from MVP deletion. |
 | MVP | Minimum viable product: the selected core feature set in the team specification. It does not mean that all those features exist in the current build. |
@@ -1061,7 +1073,7 @@ platform or release package has been verified. Use a disposable folder and synth
 
 ### Offline help and readable feedback
 
-1. Disable networking. Run `help`: verify four category cards containing all ten command names,
+1. Disable networking. Run `help`: verify four category cards containing all twelve command names,
    descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
    layout when wide and one column when narrowed. Check the beige background, dark readable text,
    visible keyboard focus, and error styling in the main window, help, and alerts.
@@ -1133,7 +1145,7 @@ The automated storage tests also exercise atomic replacement failure and preserv
 
 Before peer testing, test the actual release JAR on Windows, macOS, and Linux with the course JDK.
 Check startup from a path containing spaces, offline use, complete long contact details, and the
-required screen resolutions/scales. Run every UG example and compare the actual output. Once
-filtering and bulk tag editing exist, test empty groups, overlapping filters, hidden members,
+required screen resolutions/scales. Run every UG example and compare the actual output. For filtering,
+CSV import, and future bulk tag editing, test empty groups or files, overlapping filters, hidden members,
 changed/skipped counts, invalid input, save failures, and restart persistence. Record results against
 the release commit; passing unit tests alone does not establish release readiness.
