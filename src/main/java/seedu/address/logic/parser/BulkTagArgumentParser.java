@@ -30,9 +30,10 @@ public class BulkTagArgumentParser {
      * Surrounding whitespace around the tag is ignored.
      *
      * @param args Arguments following the command word.
-     * @param usage Usage message of the calling command, shown when the {@code t/} prefix is missing.
-     * @throws ParseException If the prefix is missing, more than one tag is given,
-     *         or the tag is empty or invalid.
+     * @param usage Usage message of the calling command, shown when the {@code t/} prefix is missing
+     *         or other text appears before it.
+     * @throws ParseException If the prefix is missing, other text appears before it,
+     *         more than one tag is given, or the tag is empty or invalid.
      */
     public static Tag parse(String args, String usage) throws ParseException {
         requireAllNonNull(args, usage);

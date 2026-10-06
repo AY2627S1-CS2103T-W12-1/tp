@@ -51,7 +51,16 @@ public class BulkTagArgumentParserTest {
     @Test
     public void parse_missingPrefix_throwsUsageMessage() {
         String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, USAGE);
-        String[] inputs = {"", "   ", "committee", " x/committee", " T/committee", " committee t/year1"};
+        String[] inputs = {"", "   ", "committee", " x/committee", " T/committee"};
+        for (String input : inputs) {
+            assertThrows(ParseException.class, expected, () -> BulkTagArgumentParser.parse(input, USAGE));
+        }
+    }
+
+    @Test
+    public void parse_textBeforePrefix_throwsUsageMessage() {
+        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, USAGE);
+        String[] inputs = {" committee t/year1", " 1 t/year1", " x/a t/year1"};
         for (String input : inputs) {
             assertThrows(ParseException.class, expected, () -> BulkTagArgumentParser.parse(input, USAGE));
         }
