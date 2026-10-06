@@ -45,7 +45,7 @@ public class HelpCommandTest {
     @Test
     public void constructor_invalidTopic_rejectsInput() {
         assertThrows(NullPointerException.class, () -> new HelpCommand(null));
-        assertThrows(IllegalArgumentException.class, () -> new HelpCommand("filter"));
+        assertThrows(IllegalArgumentException.class, () -> new HelpCommand("tagall"));
     }
 
     @Test
