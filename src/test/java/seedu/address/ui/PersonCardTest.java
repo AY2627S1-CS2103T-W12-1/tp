@@ -32,13 +32,15 @@ public class PersonCardTest {
     @Test
     public void card_memberWithTags_showsEveryFieldAndSortedTags() throws Exception {
         onJavaFxThread(() -> {
-            Person person = new PersonBuilder().withTags("year1", "Committee", "2026").build();
+            Person person = new PersonBuilder().withRemark("Likes swimming.")
+                    .withTags("year1", "Committee", "2026").build();
             Region card = layoutCard(person, 3, 700);
             assertEquals("3", ((Label) card.lookup("#id")).getText());
             assertEquals(person.getName().fullName, ((Label) card.lookup("#name")).getText());
             assertEquals(person.getPhone().value, ((Label) card.lookup("#phone")).getText());
             assertEquals(person.getEmail().value, ((Label) card.lookup("#email")).getText());
             assertEquals(person.getAddress().value, ((Label) card.lookup("#address")).getText());
+            assertEquals(person.getRemark().value, ((Label) card.lookup("#remark")).getText());
             FlowPane tags = (FlowPane) card.lookup("#tags");
             assertTrue(tags.isVisible());
             assertEquals(List.of("2026", "Committee", "year1"), tags.getChildren().stream()

@@ -1,0 +1,44 @@
+package seedu.address.model.person;
+
+import static java.util.Objects.requireNonNull;
+
+/**
+ * Represents a person's remark in the address book.
+ * Guarantees: immutable; may be empty.
+ */
+public class Remark {
+
+    public final String value;
+
+    /**
+     * Constructs a {@code Remark}.
+     *
+     * @param remark the remark text, which may be empty
+     */
+    public Remark(String remark) {
+        value = requireNonNull(remark);
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other == this) {
+            return true;
+        }
+
+        if (!(other instanceof Remark otherRemark)) {
+            return false;
+        }
+
+        return value.equals(otherRemark.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
+}

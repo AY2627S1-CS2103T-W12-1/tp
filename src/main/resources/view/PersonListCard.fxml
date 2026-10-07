@@ -31,6 +31,9 @@
       <Label text="Address" styleClass="member-field-label" GridPane.rowIndex="2" />
       <Label fx:id="address" styleClass="member-field-value" wrapText="true" minWidth="0"
              GridPane.columnIndex="1" GridPane.rowIndex="2" />
+      <Label text="Remark" styleClass="member-field-label" GridPane.rowIndex="3" />
+      <Label fx:id="remark" styleClass="member-field-value" wrapText="true" minWidth="0"
+             GridPane.columnIndex="1" GridPane.rowIndex="3" />
     </GridPane>
     <FlowPane fx:id="tags" hgap="6" vgap="6" minWidth="0" />
   </VBox>

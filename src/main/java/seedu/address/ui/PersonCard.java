@@ -38,6 +38,8 @@ public class PersonCard extends UiPart<Region> {
     @FXML
     private Label address;
     @FXML
+    private Label remark;
+    @FXML
     private Label email;
     @FXML
     private FlowPane tags;
@@ -53,6 +55,7 @@ public class PersonCard extends UiPart<Region> {
         configureWrappedField(phone, 106);
         configureWrappedField(email, 106);
         configureWrappedField(address, 106);
+        configureWrappedField(remark, 106);
         tags.prefWrapLengthProperty().bind(Bindings.max(0, cardPane.prefWidthProperty().subtract(32)));
         tags.setMinHeight(Region.USE_PREF_SIZE);
         tags.setVisible(!person.getTags().isEmpty());
@@ -60,6 +63,7 @@ public class PersonCard extends UiPart<Region> {
         name.setText(person.getName().fullName);
         phone.setText(person.getPhone().value);
         address.setText(person.getAddress().value);
+        remark.setText(person.getRemark().value);
         email.setText(person.getEmail().value);
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))
