@@ -11,8 +11,8 @@ We can type commands in the command line to find members and update their contac
 
 The working branch begins v1.2; v1.1 was the documentation practice iteration.
 
-* Add, edit, list, find, delete, and clear member records.
-* Open offline instructions for all eight available commands with `help`, or one command with `help COMMAND`.
+* Add, edit, remark, list, find, delete, and clear member records.
+* Open offline instructions for all available commands with `help`, or one command with `help COMMAND`.
 * Read labeled member cards and multiline feedback in a light beige interface, with wrapping and scrolling.
 * Save data changes locally, with clear recovery guidance if saving fails and rollback for a failed clear.
 * Leave the roster file unchanged when running read-only commands.

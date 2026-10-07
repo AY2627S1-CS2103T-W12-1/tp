@@ -5,7 +5,7 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers the **v1.2 development build** and its ten available commands.
+This guide covers the **v1.2 development build** and its eleven available commands.
 Tag filtering and bulk tag editing remain planned.
 CSV export and name sorting are available. CSV import remains planned.
 
@@ -65,7 +65,7 @@ Use the [command summary](#command-summary) for a compact reference.
 Open help by typing `help`, pressing **F1**, or choosing **Help → Help**.
 The guide works without internet access and does not change or save the roster.
 
-The overview groups all ten commands into four categories:
+The overview groups all eleven commands into four categories:
 Browse members, Manage members, Remove records, and Help & session.
 Each command has a short description and a runnable example.
 The overview uses two columns in a wide window and one in a narrow window.
@@ -149,6 +149,23 @@ Renaming a member to another member's exact name is rejected.
 * Remove all tags: `edit 1 t/`.
 
 Check the member number again after any command that changes the list.
+
+### Add or remove a member remark: `remark`
+
+`remark INDEX r/REMARK` replaces the remark shown for the member at a positive number in the **currently displayed list**.
+
+```text
+remark 1 r/Likes swimming
+```
+
+Remarks may contain spaces and are shown on each member card. To remove a remark, leave the value empty:
+
+```text
+remark 1 r/
+```
+
+The `r/` prefix is optional when clearing a remark. A remark change is saved automatically and restores the complete list.
+Use `list` or `find` first if you need to choose a member from a particular view.
 
 ### Find members: `find`
 
@@ -251,7 +268,7 @@ Fix the storage problem. Retry only if you still want to remove the entire roste
 
 ## Your data
 
-TrackCall automatically saves after successful `add`, `edit`, `delete`, and `clear` commands.
+TrackCall automatically saves after successful `add`, `edit`, `remark`, `delete`, and `clear` commands.
 `help`, `list`, `sort`, `find`, `export`, and `exit` do not save the roster.
 
 ### Locate or back up your roster
@@ -269,7 +286,7 @@ The status bar shows its location. Start from the same folder to keep using the 
 Close TrackCall and make a backup first. Keep the existing JSON structure:
 
 * A `persons` array contains the members.
-* Each member has `name`, `phone`, `email`, `address`, and `tags` fields.
+* Each member has `name`, `phone`, `email`, `address`, `remark`, and `tags` fields.
 * This build uses `tags`. The Developer Guide's planned `tagged` field is not the current file format.
 
 ### Missing or invalid files
@@ -316,7 +333,7 @@ See [Current limitations](#current-limitations).
 
 Follow [Correcting errors](#correcting-errors) before exiting.
 A failed `clear` save restores the roster.
-Unsaved changes from `add`, `edit`, and `delete` remain visible in memory.
+Unsaved changes from `add`, `edit`, `remark`, and `delete` remain visible in memory.
 
 ## Command summary
 
@@ -327,6 +344,7 @@ Unsaved changes from `add`, `edit`, and `delete` remain visible in memory.
 | Show everyone | `list` | `list` restores the complete roster. |
 | Sort by name | `sort` | Sorts the current view from A to Z, ignoring letter case. |
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
+| Add or remove a remark | `remark INDEX r/[REMARK]` | `remark 1 r/Likes swimming` updates member 1's remark. |
 | Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
 | Delete one member | `delete INDEX` | `delete 1` removes the first currently displayed member. |
 | Clear the roster | `clear` | `clear` removes all members, including those hidden by a search. |
