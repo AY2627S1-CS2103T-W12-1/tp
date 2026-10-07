@@ -1,0 +1,47 @@
+package seedu.address.logic.parser;
+
+import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_REMARK;
+import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
+import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
+
+import org.junit.jupiter.api.Test;
+
+import seedu.address.logic.commands.RemarkCommand;
+import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.Remark;
+
+public class RemarkCommandParserTest {
+
+    private final RemarkCommandParser parser = new RemarkCommandParser();
+
+    @Test
+    public void parse_indexSpecified_success() throws Exception {
+        String nonEmptyRemark = "Likes swimming.";
+        String userInput = INDEX_FIRST_PERSON.getOneBased() + " " + PREFIX_REMARK + nonEmptyRemark;
+        RemarkCommand expectedCommand = new RemarkCommand(INDEX_FIRST_PERSON, new Remark(nonEmptyRemark));
+
+        assertParseSuccess(parser, userInput, expectedCommand);
+    }
+
+    @Test
+    public void parse_noRemark_success() throws Exception {
+        String userInput = INDEX_FIRST_PERSON.getOneBased() + " " + PREFIX_REMARK;
+        RemarkCommand expectedCommand = new RemarkCommand(INDEX_FIRST_PERSON, new Remark(""));
+
+        assertParseSuccess(parser, userInput, expectedCommand);
+    }
+
+    @Test
+    public void parse_missingRemarkPrefix_success() throws Exception {
+        assertParseSuccess(parser, Integer.toString(INDEX_FIRST_PERSON.getOneBased()),
+                new RemarkCommand(INDEX_FIRST_PERSON, new Remark("")));
+    }
+
+    @Test
+    public void parse_invalidIndex_throwsParseException() {
+        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, RemarkCommand.MESSAGE_USAGE);
+        assertThrows(ParseException.class, expectedMessage, () -> parser.parse("not a number"));
+    }
+}

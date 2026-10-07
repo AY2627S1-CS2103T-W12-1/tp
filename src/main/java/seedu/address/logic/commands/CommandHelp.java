@@ -39,6 +39,12 @@ public enum CommandHelp {
             "Use a current positive list number and supply at least one field. Invalid values or a duplicate name "
                     + "are rejected. If saving fails, the edit remains in this session and the command box clears; "
                     + "follow the recovery guidance before exiting."),
+    REMARK("Manage members", "remark", "Add or remove a member remark",
+            "remark INDEX r/[REMARK]", "remark 1 r/Likes swimming",
+            "Replaces the remark shown for the member at a displayed list number.",
+            "Adds a remark to member 1 and shows the updated roster.",
+            "Use remark 1 r/ to remove member 1's remark. The index is always based on the currently displayed list.",
+            "Supply a current positive list number. The remark may be empty, but the r/ prefix is optional."),
     EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
             "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
             "Creates members.csv with Name, Phone, Email, Address and Tags columns.",
