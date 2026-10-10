@@ -12,6 +12,7 @@ import java.util.List;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
+import seedu.address.commons.util.FileUtil;
 import seedu.address.model.person.Person;
 
 /**
@@ -32,6 +33,7 @@ public final class CsvAddressBookExporter {
      * @throws IOException if the destination cannot be opened or written.
      */
     public static void export(List<Person> people, Path filePath) throws IOException {
+        filePath = FileUtil.resolvePath(filePath);
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8);
                 CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.RFC4180)) {
             csvPrinter.printRecord(HEADERS);

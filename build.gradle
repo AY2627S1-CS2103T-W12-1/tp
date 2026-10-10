@@ -73,11 +73,9 @@ dependencies {
     implementation "org.openjfx:javafx-graphics:${javaFxVersion}:mac"
     implementation "org.openjfx:javafx-graphics:${javaFxVersion}:linux"
 
-    if (isMacArm64) {
-        ['base', 'controls', 'fxml', 'graphics'].each { module ->
-            javafxMacArm64("org.openjfx:javafx-${module}:${javaFxVersion}:mac-aarch64") {
-                transitive = false
-            }
+    ['base', 'controls', 'fxml', 'graphics'].each { module ->
+        javafxMacArm64("org.openjfx:javafx-${module}:${javaFxVersion}:mac-aarch64") {
+            transitive = false
         }
     }
 
@@ -107,6 +105,22 @@ if (isMacArm64) {
 
 shadowJar {
     archiveFileName = 'addressbook.jar'
+    // Keep Mac architectures separate; Main selects the matching natives at startup.
+    eachFile {
+        if (name.endsWith('.dylib') && !path.startsWith('natives/')) {
+            exclude()
+        }
+    }
+    from({ project.configurations.javafxMacArm64.collect { zipTree(it) } }) {
+        include '*.dylib'
+        into 'natives/mac-arm64'
+    }
+    from({ project.configurations.runtimeClasspath.findAll {
+        it.name.startsWith('javafx-') && it.name.endsWith('-mac.jar')
+    }.collect { zipTree(it) } }) {
+        include '*.dylib'
+        into 'natives/mac-x64'
+    }
 }
 
 defaultTasks 'clean', 'test'
