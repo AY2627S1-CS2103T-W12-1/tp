@@ -15,8 +15,10 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.AddressBookBuilder;
+import seedu.address.testutil.PersonBuilder;
 
 public class ModelManagerTest {
 
@@ -105,6 +107,22 @@ public class ModelManagerTest {
     @Test
     public void filterFilteredPersonList_nullPredicate_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> modelManager.filterFilteredPersonList(null));
+    }
+
+    @Test
+    public void setNameSorting_extraSpaces_ignoresSpacingWithoutChangingRecords() {
+        Person later = new PersonBuilder(ALICE).withName("Alice  Zoe ").build();
+        Person earlier = new PersonBuilder(BENSON).withName("alice Bob").build();
+        modelManager.addPerson(later);
+        modelManager.addPerson(earlier);
+
+        modelManager.setNameSorting(true);
+
+        assertEquals(List.of(earlier, later), modelManager.getFilteredPersonList());
+        assertEquals("Alice  Zoe ", later.getName().fullName);
+        assertEquals(List.of(later, earlier), modelManager.getAddressBook().getPersonList());
+        modelManager.setNameSorting(false);
+        assertEquals(List.of(later, earlier), modelManager.getFilteredPersonList());
     }
 
     @Test
