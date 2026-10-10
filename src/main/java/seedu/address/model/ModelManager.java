@@ -111,7 +111,11 @@ public class ModelManager implements Model {
     @Override
     public void setNameSorting(boolean enabled) {
         sortedPersons.setComparator(enabled
-                ? (first, second) -> first.getName().fullName.compareToIgnoreCase(second.getName().fullName)
+                ? (first, second) -> {
+                    String firstName = first.getName().fullName.trim().replaceAll(" +", " ");
+                    String secondName = second.getName().fullName.trim().replaceAll(" +", " ");
+                    return firstName.compareToIgnoreCase(secondName);
+                }
                 : null);
     }
 

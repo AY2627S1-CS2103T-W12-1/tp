@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import seedu.address.commons.util.FileUtil;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
@@ -48,6 +49,7 @@ public final class CsvAddressBookImporter {
      */
     public static List<Person> read(Path filePath) throws IOException, CsvImportException {
         requireNonNull(filePath);
+        filePath = FileUtil.resolvePath(filePath);
         byte[] bytes = Files.readAllBytes(filePath);
         String contents = decodeUtf8(bytes);
         if (!contents.isEmpty() && contents.charAt(0) == BYTE_ORDER_MARK) {

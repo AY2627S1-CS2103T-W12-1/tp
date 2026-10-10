@@ -52,14 +52,14 @@ public class JsonUtil {
             Path filePath, Class<T> classOfObjectToDeserialize) throws DataLoadingException {
         requireNonNull(filePath);
 
-        if (!Files.exists(filePath)) {
-            return Optional.empty();
-        }
-        logger.info("JSON file " + filePath + " found.");
-
         T jsonFile;
 
         try {
+            filePath = FileUtil.resolvePath(filePath);
+            if (!Files.exists(filePath)) {
+                return Optional.empty();
+            }
+            logger.info("JSON file " + filePath + " found.");
             jsonFile = deserializeObjectFromJsonFile(filePath, classOfObjectToDeserialize);
             if (jsonFile == null) {
                 throw new IOException("The JSON file must contain an object, not null.");

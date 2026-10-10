@@ -3,12 +3,17 @@ package seedu.address.commons.core;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+
+import seedu.address.commons.util.FileUtil;
 
 /**
  * Configures and manages loggers and handlers, including their logging level.
@@ -84,7 +89,15 @@ public class LogsCenter {
 
         // add a FileHandler to log to a file
         try {
-            FileHandler fileHandler = new FileHandler(LOG_FILE, MAX_FILE_SIZE_IN_BYTES, MAX_FILE_COUNT, true);
+            // Rotation and lock files must also stay inside the application folder.
+            try (DirectoryStream<Path> logs = Files.newDirectoryStream(FileUtil.getHomeFolder(), LOG_FILE + "*")) {
+                for (Path log : logs) {
+                    FileUtil.resolvePath(log);
+                }
+            }
+            Path logFile = FileUtil.resolvePath(FileUtil.getHomeFolder().resolve(LOG_FILE));
+            FileHandler fileHandler = new FileHandler(logFile.toString().replace("%", "%%"),
+                    MAX_FILE_SIZE_IN_BYTES, MAX_FILE_COUNT, true);
             fileHandler.setFormatter(new SimpleFormatter());
             fileHandler.setLevel(Level.ALL);
             baseLogger.addHandler(fileHandler);
