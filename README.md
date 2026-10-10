@@ -12,18 +12,19 @@ We can type commands in the command line to find members and update their contac
 The working branch begins v1.2; v1.1 was the documentation practice iteration.
 
 * Add, edit, list, find, delete, and clear member records.
-* Open offline instructions for all eight available commands with `help`, or one command with `help COMMAND`.
+* Open offline instructions for all twelve available commands with `help`, or one command with `help COMMAND`.
 * Read labeled member cards and multiline feedback in a light beige interface, with wrapping and scrolling.
 * Save data changes locally, with clear recovery guidance if saving fails and rollback for a failed clear.
 * Leave the roster file unchanged when running read-only commands.
+* Narrow the displayed members by an exact tag using `filter t/TAG`, then use their displayed numbers to edit or delete.
 
-Tag filtering and bulk tag changes are planned for the MVP and are not available in this build.
+Bulk tag changes are planned for the MVP and are not available in this build.
 
 ## Planned interface
 
 ![TrackCall mockup showing committee members after filtering by tag](docs/images/Ui.png)
 
-This AI-assisted mockup shows the intended product, including planned tag filtering. It is not a
+This AI-assisted mockup shows the intended product, including tag filtering. It is not a
 screenshot of the current development build.
 
 ## Documentation

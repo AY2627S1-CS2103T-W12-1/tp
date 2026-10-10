@@ -200,7 +200,7 @@ full intended product, including behaviour still to be implemented.
 
 `CommandHelp` stores the twelve implemented commands in one local catalogue.
 Each entry contains its purpose, syntax, example, expected result, and common errors.
-Only executable commands appear, so planned tag commands are not shown as available.
+Only executable commands appear, so planned bulk tag commands are not shown as available.
 
 1. `HelpCommandParser` accepts zero or one lowercase topic. It rejects unknown or multiple topics.
 2. `HelpCommand` returns the topic through `CommandResult`.
@@ -280,7 +280,8 @@ Command tests cover:
 * Read-only listing, persisted empty data, settings, and predicate reset.
 * Failed-save rollback, retry, and temporary-file cleanup.
 
-`filter` is not implemented here. Model predicates verify compatibility with a future filter.
+`filter` narrows the current model predicate with an exact tag match. `find` and `list` replace that
+predicate, while `edit` currently restores the full list.
 
 ### Readable member details and feedback
 
@@ -310,7 +311,7 @@ also recover to usable bounds. This handles monitor changes between sessions.
 #### Save policy
 
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
-`help`, `list`, `sort`, `find`, `export`, and `exit` return without saving member data.
+`help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` return without saving member data.
 Successful `add`, `edit`, `delete`, and `clear` commands pass the complete roster, including hidden members,
 to `Storage#saveAddressBook`.
 Parsing and execution failures do not save. Data-changing commands return normal success only after
@@ -401,9 +402,9 @@ AI-assisted design illustration of the intended saving policy for the core comma
 status is described above; this figure is not a screenshot or evidence of v1.1 implementation.
 Planned bulk tag commands will use the same save-after-change workflow.
 
-### \[Proposed\] Filter members by tag
+### Filter members by tag
 
-#### Proposed implementation
+#### Implemented v1.2 behavior
 
 The `filter` command displays members with a specified tag without changing member data. Its format is:
 
@@ -417,13 +418,19 @@ restores hidden members. Running `list` clears the active search and filters. Re
 order, are renumbered from 1, and use the message `N member(s) listed with tag "TAG".` A zero-match result is
 still successful, and later index-based commands use the displayed indices. No save is attempted.
 
+An `edit` or `delete` after `filter` uses the current displayed index. A successful edit restores the
+complete roster, while `find` searches the complete roster and replaces the active filter.
+
+For example, `filter t/committee` followed by `filter t/year1` shows only members with both tags.
+These are two separate commands; `filter t/committee t/year1` is invalid.
+
 An invalid command leaves the current list, active filter, and member data unchanged.
 Reject missing or empty tags, invalid characters, internal spaces, tags over 30 characters, multiple tags, and unknown prefixes.
 
 ![Proposed beige TrackCall interface after filtering by committee tag](images/FilterTag.png)
 
-AI-assisted intended-interface mockup using the same palette as the README. `filter t/committee`
-is proposed behaviour. It is not available in the v1.2 development build.
+AI-assisted intended-interface mockup using the same palette as the README. It illustrates
+`filter t/committee` but is not a screenshot of the v1.2 development build.
 
 
 ## Documentation, logging, testing, dev-ops
@@ -1081,7 +1088,7 @@ platform or release package has been verified. Use a disposable folder and synth
    syntax, example, expected result, notes, and errors. Check All commands navigation, Up/Down,
    Page Up/Page Down, Home/End, and Escape. Resize the guide and check long lines remain readable.
 3. Try `help ADD`, `help unknown`, and `help add edit`. Expect useful errors without record changes.
-   `help filter` must not suggest that the unimplemented command can run.
+   `help filter` must show the implemented command.
 4. Add a synthetic member with long name, email, address, and multiple tags. Verify labelled,
    wrapped member rows and separate feedback lines; no value should be permanently truncated.
    Resize the result area using its divider and check both feedback and roster scrolling.
@@ -1104,6 +1111,9 @@ platform or release package has been verified. Use a disposable folder and synth
 6. Run `find Nobody`, then `list`. Expect `Members found: 0`, then `Showing N members.` for the
    total roster size. Test multiple name keywords, case-insensitive complete-word matching, and
    rejection of `find` with no keyword.
+   Run `filter t/committee`, then another filter. Check that the second filter narrows the current
+   view, `find` starts again from the full roster, and `list` restores everyone. A missing tag,
+   repeated tag, or invalid tag must leave the view unchanged. Filtering must not save the file.
 7. Paste a valid add command with actual tab separators before `n/`, `p/`, `e/`, and `a/`.
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
    or an internal tab keeps that text. Do not treat the planned unknown-prefix rejection as implemented.
@@ -1114,7 +1124,7 @@ platform or release package has been verified. Use a disposable folder and synth
 ### Persistence and invalid files
 
 1. Add a member, exit, and restart from the same working directory. Verify all fields and tags remain.
-2. Back up the member file. Run `help`, `list`, `find Alice`, and `exit`; verify the member file's
+2. Back up the member file. Run `help`, `list`, `find Alice`, `filter t/committee`, and `exit`; verify the member file's
    contents and modification time do not change. Preferences may be saved separately.
 3. With the app closed, test each member-file variant: malformed JSON, a `null` root, a null entry
    in `persons`, and `[null]` in a member's `tags`. Expect an empty roster without a crash and a

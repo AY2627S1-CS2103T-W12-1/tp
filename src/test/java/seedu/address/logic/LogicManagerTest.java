@@ -52,7 +52,7 @@ public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
     private static final IOException DUMMY_AD_EXCEPTION = new AccessDeniedException("dummy access denied exception");
     private static final String[] READ_ONLY_COMMANDS = {
-        "list", "sort", "find Amy", "filter t/friend", "help", "help add", "exit"
+        "list", "sort", "find Amy", "filter t/friend", "help", "help add", "help filter", "exit"
     };
 
     @TempDir
