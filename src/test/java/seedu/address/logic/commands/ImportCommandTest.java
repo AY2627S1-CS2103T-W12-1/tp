@@ -114,7 +114,8 @@ public class ImportCommandTest {
 
         CommandException error = assertThrows(CommandException.class, () -> new ImportCommand(file).execute(model));
 
-        assertEquals("Could not import CSV: invalid header. Expected name,phone,email,address,tags. "
+        assertEquals("Could not import CSV: invalid header. Expected the columns name, phone, email, address, and tags "
+                + "exactly once. "
                 + "No members were imported.", error.getMessage());
         assertTrue(model.getAddressBook().getPersonList().isEmpty());
     }

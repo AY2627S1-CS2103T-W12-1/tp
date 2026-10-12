@@ -38,8 +38,8 @@ public class CsvAddressBookImporterTest {
     @Test
     public void read_validRecords_decodesBomQuotesBlankRowsAndTags() throws Exception {
         Path file = write("\uFEFFname,phone,email,address,tags\r\n"
-                + " John Doe , 98765432 , john@example.com ,\"John \"\"Main\"\" Street, Block 1\","
-                + " year1;committee;year1 \r\n\r\n"
+                + "John Doe,98765432,john@example.com,\"John \"\"Main\"\" Street, Block 1\","
+                + "year1;committee;year1\r\n\r\n"
                 + "Jane Doe,123,jane@example.com,Second Street,\"year2\"\r\n");
         Person john = new PersonBuilder().withName("John Doe").withPhone("98765432")
                 .withEmail("john@example.com").withAddress("John \"Main\" Street, Block 1")
@@ -51,15 +51,45 @@ public class CsvAddressBookImporterTest {
     }
 
     @Test
+    public void read_reorderedColumnsAndTrailingSpaces_preservesValues() throws Exception {
+        Person person = new PersonBuilder().withName("Alice ").withPhone("123")
+                .withEmail("alice@example.com").withAddress("Main Street, Suite 2 ")
+                .withTags("club").build();
+        Path file = write("address,tags,email,name,phone\r\n"
+                + "\"Main Street, Suite 2 \",club,alice@example.com,Alice ,123\r\n");
+
+        assertEquals(List.of(person), CsvAddressBookImporter.read(file));
+    }
+
+    @Test
+    public void read_exportedRecord_preservesTrailingSpaces() throws Exception {
+        Person person = new PersonBuilder().withName("Alice ").withAddress("Main Street ").build();
+        Path file = tempDir.resolve("exported.csv");
+
+        CsvAddressBookExporter.export(List.of(person), file);
+
+        assertEquals(List.of(person), CsvAddressBookImporter.read(file));
+    }
+
+    @Test
     public void read_invalidHeader_rejectsEmptyIncorrectAndExtraColumns() throws Exception {
-        for (String contents : List.of("", "Name,phone,email,address,tags\n",
-                "name,phone,email,address,tags,extra\n", "\"name\",phone,email,address,tags\n",
-                "\"name,phone,email,address,tags\n")) {
+        for (String contents : List.of("", "Name,phone,email,address,tags\n", "name,phone,email,address\n",
+                "name,phone,email,address,tags,extra\n", "name,name,email,address,tags\n")) {
             Path file = write(contents);
             CsvImportException error = assertThrows(CsvImportException.class, () ->
                     CsvAddressBookImporter.read(file));
             assertEquals(MESSAGE_INVALID_HEADER, error.getMessage());
         }
+    }
+
+    @Test
+    public void read_malformedHeader_rejectsCsvSyntax() throws Exception {
+        Path file = write("\"name,phone,email,address,tags\n");
+
+        CsvImportException error = assertThrows(CsvImportException.class, () ->
+                CsvAddressBookImporter.read(file));
+
+        assertEquals(MESSAGE_INVALID_CSV, error.getMessage());
     }
 
     @Test
@@ -86,7 +116,7 @@ public class CsvAddressBookImporterTest {
                 "expected 5 fields but found 4.",
                 MESSAGE_INVALID_CSV,
                 MESSAGE_INVALID_CSV,
-                MESSAGE_INVALID_CSV,
+                Name.MESSAGE_CONSTRAINTS,
                 Tag.MESSAGE_CONSTRAINTS,
                 Tag.MESSAGE_CONSTRAINTS);
 
@@ -94,18 +124,10 @@ public class CsvAddressBookImporterTest {
             Path file = write("name,phone,email,address,tags\n" + invalidRecords.get(index) + "\n");
             CsvImportException error = assertThrows(CsvImportException.class, () ->
                     CsvAddressBookImporter.read(file));
-            assertEquals("row 2: " + expectedReasons.get(index), error.getMessage());
+            String expectedMessage = expectedReasons.get(index).equals(MESSAGE_INVALID_CSV)
+                    ? MESSAGE_INVALID_CSV : "row 2: " + expectedReasons.get(index);
+            assertEquals(expectedMessage, error.getMessage());
         }
-    }
-
-    @Test
-    public void read_embeddedLineBreak_rejectsAtOpeningRecord() throws Exception {
-        Path file = write("name,phone,email,address,tags\nAlice,123,a@example.com,\"First\nSecond\",\n");
-
-        CsvImportException error = assertThrows(CsvImportException.class, () ->
-                CsvAddressBookImporter.read(file));
-
-        assertEquals("row 2: " + MESSAGE_INVALID_CSV, error.getMessage());
     }
 
     @Test
