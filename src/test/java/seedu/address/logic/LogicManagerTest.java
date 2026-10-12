@@ -33,6 +33,7 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.SortCommand;
+import seedu.address.logic.commands.TagAllCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.commands.exceptions.SaveFailureException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -42,6 +43,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -296,6 +298,46 @@ public class LogicManagerTest {
         logic.execute("filter t/friends");
         assertThrows(ParseException.class, () -> logic.execute("filter t/friends t/committee"));
         assertEquals(List.of(ALICE, BENSON, DANIEL), logic.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_tagAllOnFilteredList_tagsDisplayedMembersAndSaves() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("filter t/friends");
+
+        assertEquals("Added tag \"committee\" to 3 member(s).",
+                logic.execute("tagall t/committee").getFeedbackToUser());
+
+        ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
+                temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+        Tag committee = new Tag("committee");
+        for (Person person : model.getAddressBook().getPersonList()) {
+            boolean wasDisplayed = person.isSamePerson(ALICE) || person.isSamePerson(BENSON)
+                    || person.isSamePerson(DANIEL);
+            assertEquals(wasDisplayed, person.getTags().contains(committee), person.getName().fullName);
+        }
+    }
+
+    @Test
+    public void execute_tagAllWithNoChanges_stillSaves() throws Exception {
+        model.addPerson(BOB);
+        Path dataFile = temporaryFolder.resolve("addressBook.json");
+
+        assertEquals("Added tag \"friend\" to 0 member(s). 1 already had this tag.",
+                logic.execute("tagall t/friend").getFeedbackToUser());
+        assertTrue(Files.exists(dataFile));
+    }
+
+    @Test
+    public void execute_tagAllOnEmptyList_doesNotSave() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("filter t/missing");
+
+        assertThrows(CommandException.class, TagAllCommand.MESSAGE_EMPTY_LIST, () ->
+                logic.execute("tagall t/committee"));
+        assertEquals(getTypicalAddressBook(), model.getAddressBook());
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
     }
 
     @Test
