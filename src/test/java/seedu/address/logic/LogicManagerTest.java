@@ -293,6 +293,21 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_filterAfterSort_retainsNameOrderWithoutChangingStoredOrder() throws Exception {
+        Person amy = new PersonBuilder(AMY).withTags("committee").build();
+        Person bob = new PersonBuilder(BOB).withTags("committee").build();
+        model.addPerson(bob);
+        model.addPerson(ALICE);
+        model.addPerson(amy);
+
+        logic.execute("sort");
+        assertEquals("2 member(s) listed with tag \"committee\".",
+                logic.execute("filter t/committee").getFeedbackToUser());
+        assertEquals(List.of(amy, bob), logic.getFilteredPersonList());
+        assertEquals(List.of(bob, ALICE, amy), model.getAddressBook().getPersonList());
+    }
+
+    @Test
     public void execute_invalidFilter_preservesDisplayedList() throws Exception {
         model.setAddressBook(getTypicalAddressBook());
         logic.execute("filter t/friends");
