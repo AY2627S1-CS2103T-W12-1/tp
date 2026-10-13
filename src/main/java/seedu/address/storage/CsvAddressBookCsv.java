@@ -10,7 +10,9 @@ import org.apache.commons.csv.CSVFormat;
 final class CsvAddressBookCsv {
 
     static final List<String> HEADERS = List.of("name", "phone", "email", "address", "tags");
-    static final CSVFormat FORMAT = CSVFormat.RFC4180;
+    static final CSVFormat FORMAT = CSVFormat.RFC4180.builder()
+            .setIgnoreSurroundingSpaces(true)
+            .get();
 
     private CsvAddressBookCsv() {
         // Utility class.

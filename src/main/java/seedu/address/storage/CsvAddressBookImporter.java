@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +42,7 @@ public final class CsvAddressBookImporter {
     public static final String MESSAGE_INVALID_UTF8 = "invalid UTF-8 encoding.";
     public static final String MESSAGE_INVALID_RECORD_ENDING = "invalid CSV record ending.";
     public static final String MESSAGE_INVALID_CSV = "invalid CSV syntax.";
+    public static final String MESSAGE_MULTILINE_FIELD = "line breaks inside fields are not supported.";
     public static final String MESSAGE_WRONG_FIELD_COUNT = "expected 5 fields but found %d.";
 
     private static final int FIELD_COUNT = CsvAddressBookCsv.HEADERS.size();
@@ -71,16 +73,17 @@ public final class CsvAddressBookImporter {
 
     static List<Person> parseRecords(Reader reader) throws CsvImportException {
         try (CSVParser parser = CSVParser.parse(reader, CsvAddressBookCsv.FORMAT)) {
-            List<CSVRecord> records = parser.getRecords();
-            if (records.isEmpty()) {
+            Iterator<CSVRecord> records = parser.iterator();
+            CSVRecord header = nextRecord(parser, records);
+            if (header == null) {
                 throw new CsvImportException(MESSAGE_INVALID_HEADER);
             }
 
-            Map<String, Integer> headerIndexes = parseHeaders(records.getFirst());
+            Map<String, Integer> headerIndexes = parseHeaders(header);
             List<Person> people = new ArrayList<>();
-            for (int index = 1; index < records.size(); index++) {
-                CSVRecord record = records.get(index);
-                if (record.size() == 1 && record.get(0).isEmpty()) {
+            CSVRecord record;
+            while ((record = nextRecord(parser, records)) != null) {
+                if (record.size() == 1 && record.get(0).trim().isEmpty()) {
                     continue;
                 }
                 people.add(parsePerson(record, headerIndexes));
@@ -88,9 +91,30 @@ public final class CsvAddressBookImporter {
             return List.copyOf(people);
         } catch (IOException e) {
             throw new CsvImportException(MESSAGE_INVALID_CSV, e);
-        } catch (UncheckedIOException e) {
-            throw new CsvImportException(MESSAGE_INVALID_CSV, e.getCause());
         }
+    }
+
+    /**
+     * Reads one record, reporting syntax errors at its starting physical row.
+     * Multiline fields are rejected before trimming so line breaks cannot disappear during normalisation.
+     */
+    private static CSVRecord nextRecord(CSVParser parser, Iterator<CSVRecord> records) throws CsvImportException {
+        long row = parser.getCurrentLineNumber() + 1;
+        CSVRecord record;
+        try {
+            if (!records.hasNext()) {
+                return null;
+            }
+            record = records.next();
+        } catch (UncheckedIOException e) {
+            throw new CsvImportException("row " + row + ": " + MESSAGE_INVALID_CSV, e.getCause());
+        }
+        for (String value : record) {
+            if (value.indexOf('\r') >= 0 || value.indexOf('\n') >= 0) {
+                throw rowError(row, MESSAGE_MULTILINE_FIELD);
+            }
+        }
+        return record;
     }
 
     private static String decodeUtf8(byte[] bytes) throws CsvImportException {
@@ -134,11 +158,11 @@ public final class CsvAddressBookImporter {
             throw rowError(row, String.format(MESSAGE_WRONG_FIELD_COUNT, record.size()));
         }
 
-        String nameValue = record.get(headerIndexes.get("name"));
-        String phoneValue = record.get(headerIndexes.get("phone"));
-        String emailValue = record.get(headerIndexes.get("email"));
-        String addressValue = record.get(headerIndexes.get("address"));
-        String tagsValue = record.get(headerIndexes.get("tags"));
+        String nameValue = record.get(headerIndexes.get("name")).trim();
+        String phoneValue = record.get(headerIndexes.get("phone")).trim();
+        String emailValue = record.get(headerIndexes.get("email")).trim();
+        String addressValue = record.get(headerIndexes.get("address")).trim();
+        String tagsValue = record.get(headerIndexes.get("tags")).trim();
 
         if (!Name.isValidName(nameValue)) {
             throw rowError(row, Name.MESSAGE_CONSTRAINTS);
@@ -164,6 +188,7 @@ public final class CsvAddressBookImporter {
             return tags;
         }
         for (String tagValue : tagsValue.split(";", -1)) {
+            tagValue = tagValue.trim();
             if (!Tag.isValidTagName(tagValue)) {
                 throw rowError(row, Tag.MESSAGE_CONSTRAINTS);
             }

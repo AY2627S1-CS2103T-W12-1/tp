@@ -371,9 +371,12 @@ requires quotes around paths containing whitespace, rejects repeated or unknown 
 `.csv` extension case-insensitively while preserving path case.
 
 `CsvAddressBookImporter` reads the complete source as strict UTF-8, accepts an optional byte-order mark,
-checks the exact lowercase five-column header, and parses one physical CSV record per line. It validates
-every decoded field before returning an immutable member list, so syntax or row errors cannot cause a
-partial import. Completely blank records are skipped but still contribute to reported row numbers.
+checks the exact lowercase five-column header in any column order, and uses the shared Apache Commons CSV
+format for quoting and escaping. It rejects embedded line breaks and trims surrounding whitespace from
+field values and individual tags before validation. Records are parsed and validated in source order,
+with syntax and field errors identifying the physical row. It returns an immutable member list only after
+validating the whole file, so errors cannot cause a partial import. Completely blank records are skipped
+but still contribute to reported row numbers.
 
 `ImportCommand` compares each valid candidate with the complete stored roster and earlier accepted rows
 using `Person#isSamePerson`. It appends only unique members in source order, then clears search, filter,
