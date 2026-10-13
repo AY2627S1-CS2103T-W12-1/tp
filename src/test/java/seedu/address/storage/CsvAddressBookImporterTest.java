@@ -8,6 +8,8 @@ import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_RECOR
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_UTF8;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -128,6 +130,38 @@ public class CsvAddressBookImporterTest {
                     ? MESSAGE_INVALID_CSV : "row 2: " + expectedReasons.get(index);
             assertEquals(expectedMessage, error.getMessage());
         }
+    }
+
+    @Test
+    public void read_singleColumnRow_reportsFieldCount() throws Exception {
+        Path file = write("name,phone,email,address,tags\nnot a record\n");
+
+        CsvImportException error = assertThrows(CsvImportException.class, () ->
+                CsvAddressBookImporter.read(file));
+
+        assertEquals("row 2: expected 5 fields but found 1.", error.getMessage());
+    }
+
+    @Test
+    public void parseRecords_readerCloseFailure_reportsInvalidCsv() {
+        Reader reader = new Reader() {
+            private final StringReader source = new StringReader("name,phone,email,address,tags\n");
+
+            @Override
+            public int read(char[] buffer, int offset, int length) throws IOException {
+                return source.read(buffer, offset, length);
+            }
+
+            @Override
+            public void close() throws IOException {
+                throw new IOException("close failed");
+            }
+        };
+
+        CsvImportException error = assertThrows(CsvImportException.class, () ->
+                CsvAddressBookImporter.parseRecords(reader));
+
+        assertEquals(MESSAGE_INVALID_CSV, error.getMessage());
     }
 
     @Test

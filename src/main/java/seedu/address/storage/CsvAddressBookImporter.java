@@ -3,6 +3,7 @@ package seedu.address.storage;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
@@ -65,7 +66,11 @@ public final class CsvAddressBookImporter {
         }
         validateRecordEndings(contents);
 
-        try (CSVParser parser = CSVParser.parse(new StringReader(contents), CsvAddressBookCsv.FORMAT)) {
+        return parseRecords(new StringReader(contents));
+    }
+
+    static List<Person> parseRecords(Reader reader) throws CsvImportException {
+        try (CSVParser parser = CSVParser.parse(reader, CsvAddressBookCsv.FORMAT)) {
             List<CSVRecord> records = parser.getRecords();
             if (records.isEmpty()) {
                 throw new CsvImportException(MESSAGE_INVALID_HEADER);
