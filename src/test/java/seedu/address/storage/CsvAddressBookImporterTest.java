@@ -6,8 +6,11 @@ import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_CSV;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_HEADER;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_RECORD_ENDING;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_UTF8;
+import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_MULTILINE_FIELD;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,8 +41,8 @@ public class CsvAddressBookImporterTest {
     @Test
     public void read_validRecords_decodesBomQuotesBlankRowsAndTags() throws Exception {
         Path file = write("\uFEFFname,phone,email,address,tags\r\n"
-                + " John Doe , 98765432 , john@example.com ,\"John \"\"Main\"\" Street, Block 1\","
-                + " year1;committee;year1 \r\n\r\n"
+                + "John Doe,98765432,john@example.com,\"John \"\"Main\"\" Street, Block 1\","
+                + "year1;committee;year1\r\n\r\n"
                 + "Jane Doe,123,jane@example.com,Second Street,\"year2\"\r\n");
         Person john = new PersonBuilder().withName("John Doe").withPhone("98765432")
                 .withEmail("john@example.com").withAddress("John \"Main\" Street, Block 1")
@@ -51,15 +54,46 @@ public class CsvAddressBookImporterTest {
     }
 
     @Test
+    public void read_reorderedColumnsAndPaddedValues_trimsSurroundingWhitespace() throws Exception {
+        Person person = new PersonBuilder().withName("Alice").withPhone("123")
+                .withEmail("alice@example.com").withAddress("Main Street, Suite 2")
+                .withTags("club").build();
+        Path file = write("address,tags,email,name,phone\r\n"
+                + "\" \tMain Street, Suite 2 \t\", club ; club , alice@example.com ,Alice ,\t123 \r\n");
+
+        assertEquals(List.of(person), CsvAddressBookImporter.read(file));
+    }
+
+    @Test
+    public void read_exportedRecord_normalisesSurroundingWhitespace() throws Exception {
+        Person person = new PersonBuilder().withName("Alice ").withAddress("Main Street ").build();
+        Person expected = new PersonBuilder(person).withName("Alice").withAddress("Main Street").build();
+        Path file = tempDir.resolve("exported.csv");
+
+        CsvAddressBookExporter.export(List.of(person), file);
+
+        assertEquals(List.of(expected), CsvAddressBookImporter.read(file));
+    }
+
+    @Test
     public void read_invalidHeader_rejectsEmptyIncorrectAndExtraColumns() throws Exception {
-        for (String contents : List.of("", "Name,phone,email,address,tags\n",
-                "name,phone,email,address,tags,extra\n", "\"name\",phone,email,address,tags\n",
-                "\"name,phone,email,address,tags\n")) {
+        for (String contents : List.of("", "Name,phone,email,address,tags\n", "name,phone,email,address\n",
+                "name,phone,email,address,tags,extra\n", "name,name,email,address,tags\n")) {
             Path file = write(contents);
             CsvImportException error = assertThrows(CsvImportException.class, () ->
                     CsvAddressBookImporter.read(file));
             assertEquals(MESSAGE_INVALID_HEADER, error.getMessage());
         }
+    }
+
+    @Test
+    public void read_malformedHeader_rejectsCsvSyntax() throws Exception {
+        Path file = write("\"name,phone,email,address,tags\n");
+
+        CsvImportException error = assertThrows(CsvImportException.class, () ->
+                CsvAddressBookImporter.read(file));
+
+        assertEquals("row 1: " + MESSAGE_INVALID_CSV, error.getMessage());
     }
 
     @Test
@@ -86,7 +120,7 @@ public class CsvAddressBookImporterTest {
                 "expected 5 fields but found 4.",
                 MESSAGE_INVALID_CSV,
                 MESSAGE_INVALID_CSV,
-                MESSAGE_INVALID_CSV,
+                Name.MESSAGE_CONSTRAINTS,
                 Tag.MESSAGE_CONSTRAINTS,
                 Tag.MESSAGE_CONSTRAINTS);
 
@@ -99,13 +133,91 @@ public class CsvAddressBookImporterTest {
     }
 
     @Test
-    public void read_embeddedLineBreak_rejectsAtOpeningRecord() throws Exception {
-        Path file = write("name,phone,email,address,tags\nAlice,123,a@example.com,\"First\nSecond\",\n");
+    public void read_paddedValues_preservesInternalWhitespaceAndCase() throws Exception {
+        Person person = new PersonBuilder().withName("Alice  Smith").withPhone("00123")
+                .withEmail("Alice@example.com").withAddress("Main\tStreet  Block 1")
+                .withTags("Club", "club").build();
+        Path file = write("name,phone,email,address,tags\n"
+                + " Alice  Smith , 00123 , Alice@example.com , Main\tStreet  Block 1 , Club ; club \n");
+
+        assertEquals(List.of(person), CsvAddressBookImporter.read(file));
+    }
+
+    @Test
+    public void read_spacesBeforeQuotedFields_decodesQuotesAndCommas() throws Exception {
+        Person person = new PersonBuilder().withName("Alice").withPhone("00123")
+                .withEmail("alice@example.com").withAddress("Main \"Street\", Block 1")
+                .withTags("club").build();
+        Path file = write("name,phone,email,address,tags\n"
+                + " \" Alice \" , \" 00123 \" , alice@example.com ,"
+                + " \t\" Main \"\"Street\"\", Block 1 \" , \" club \" \n");
+
+        assertEquals(List.of(person), CsvAddressBookImporter.read(file));
+    }
+
+    @Test
+    public void read_blankWhitespaceRows_countsTowardsSyntaxErrorRow() throws Exception {
+        Path file = write("name,phone,email,address,tags\r\n \t \r\n"
+                + "Alice,123,a@example.com,\"Unclosed address\r\n");
+
+        CsvImportException error = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
+
+        assertEquals("row 3: " + MESSAGE_INVALID_CSV, error.getMessage());
+    }
+
+    @Test
+    public void read_earlierInvalidFieldBeforeLaterSyntaxError_reportsFirstRow() throws Exception {
+        Path file = write("name,phone,email,address,tags\nAlice,12,a@example.com,Home,\n"
+                + "Bob,123,b@example.com,\"Unclosed address\n");
+
+        CsvImportException error = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
+
+        assertEquals("row 2: Phone numbers should only contain digits, and should be at least 3 digits long",
+                error.getMessage());
+    }
+
+    @Test
+    public void read_multilineFields_reportsClearErrorBeforeTrimming() throws Exception {
+        for (String record : List.of("Alice,123,a@example.com,\"Main\nStreet\",",
+                "Alice,123,a@example.com,\"Home\r\n\",", "Alice,123,a@example.com,Home,\"\n\"")) {
+            Path file = write("name,phone,email,address,tags\n\n" + record + "\n");
+
+            CsvImportException error = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
+
+            assertEquals("row 3: " + MESSAGE_MULTILINE_FIELD, error.getMessage());
+        }
+    }
+
+    @Test
+    public void read_singleColumnRow_reportsFieldCount() throws Exception {
+        Path file = write("name,phone,email,address,tags\nnot a record\n");
 
         CsvImportException error = assertThrows(CsvImportException.class, () ->
                 CsvAddressBookImporter.read(file));
 
-        assertEquals("row 2: " + MESSAGE_INVALID_CSV, error.getMessage());
+        assertEquals("row 2: expected 5 fields but found 1.", error.getMessage());
+    }
+
+    @Test
+    public void parseRecords_readerCloseFailure_reportsInvalidCsv() {
+        Reader reader = new Reader() {
+            private final StringReader source = new StringReader("name,phone,email,address,tags\n");
+
+            @Override
+            public int read(char[] buffer, int offset, int length) throws IOException {
+                return source.read(buffer, offset, length);
+            }
+
+            @Override
+            public void close() throws IOException {
+                throw new IOException("close failed");
+            }
+        };
+
+        CsvImportException error = assertThrows(CsvImportException.class, () ->
+                CsvAddressBookImporter.parseRecords(reader));
+
+        assertEquals(MESSAGE_INVALID_CSV, error.getMessage());
     }
 
     @Test

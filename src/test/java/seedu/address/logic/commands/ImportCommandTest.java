@@ -53,6 +53,50 @@ public class ImportCommandTest {
     }
 
     @Test
+    public void execute_paddedDuplicates_skipsExistingAndEarlierImportedMembers() throws Exception {
+        Person existing = new PersonBuilder().withName("Alice").withPhone("111")
+                .withEmail("alice@example.com").withAddress("Home").withTags("old").build();
+        Person bob = new PersonBuilder().withName("Bob").withPhone("222")
+                .withEmail("bob@example.com").withAddress("New address").withTags("first").build();
+        Model model = new ModelManager();
+        model.addPerson(existing);
+        model.updateFilteredPersonList(unused -> false);
+        Path file = write("name,phone,email,address,tags\n"
+                + "Alice ,111,alice@example.com,Home ,replacement\n"
+                + " Bob , 222 , bob@example.com , New address , first \n"
+                + "Bob ,222,bob@example.com,New address ,second\n");
+
+        CommandResult result = new ImportCommand(file).execute(model);
+
+        assertEquals(String.format(ImportCommand.MESSAGE_SUCCESS, 1, file.toAbsolutePath().normalize(), 2),
+                result.getFeedbackToUser());
+        assertEquals(List.of(existing, bob), model.getAddressBook().getPersonList());
+        assertEquals(List.of(existing, bob), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_laterSyntaxError_preservesRosterAndView() throws Exception {
+        Person existing = new PersonBuilder().withName("Zulu").build();
+        Person another = new PersonBuilder().withName("Alpha").build();
+        Model model = new ModelManager();
+        model.addPerson(existing);
+        model.addPerson(another);
+        model.setNameSorting(true);
+        model.updateFilteredPersonList(unused -> false);
+        Path file = write("name,phone,email,address,tags\nValid,123,valid@example.com,Home,\n"
+                + "Invalid,123,invalid@example.com,\"Unclosed address\n");
+
+        CommandException error = assertThrows(CommandException.class, () -> new ImportCommand(file).execute(model));
+
+        assertEquals("Could not import CSV: row 3: invalid CSV syntax. No members were imported.",
+                error.getMessage());
+        assertEquals(List.of(existing, another), model.getAddressBook().getPersonList());
+        assertEquals(List.of(), model.getFilteredPersonList());
+        model.updateFilteredPersonList(unused -> true);
+        assertEquals(List.of(another, existing), model.getFilteredPersonList());
+    }
+
+    @Test
     public void execute_headerOnly_resetsFilteredAndSortedView() throws Exception {
         Person first = new PersonBuilder().withName("Zulu Member").withPhone("111")
                 .withEmail("zulu@example.com").withAddress("First address").build();
@@ -114,7 +158,8 @@ public class ImportCommandTest {
 
         CommandException error = assertThrows(CommandException.class, () -> new ImportCommand(file).execute(model));
 
-        assertEquals("Could not import CSV: invalid header. Expected name,phone,email,address,tags. "
+        assertEquals("Could not import CSV: invalid header. Expected the columns name, phone, email, address, and tags "
+                + "exactly once. "
                 + "No members were imported.", error.getMessage());
         assertTrue(model.getAddressBook().getPersonList().isEmpty());
     }

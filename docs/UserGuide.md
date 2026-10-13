@@ -276,15 +276,16 @@ Use double quotes around a path containing whitespace:
 import p/"data/member list.csv"
 ```
 
-The first row must be exactly:
+The first row must contain these column names exactly once, in any order:
 
 ```text
 name,phone,email,address,tags
 ```
 
 Every later non-blank row must have exactly five fields. CSV quoting supports commas and doubled double
-quotes. Embedded line breaks are not supported. Separate tags with semicolons; leave the tags field empty
-for no tags. An optional UTF-8 byte-order mark is accepted.
+quotes. Surrounding spaces and tabs are trimmed from field values and individual tags before validation;
+internal spaces, tabs, and case are preserved. Line breaks inside fields are not supported. Separate tags
+with semicolons; leave the tags field empty for no tags. An optional UTF-8 byte-order mark is accepted.
 
 ```text
 name,phone,email,address,tags

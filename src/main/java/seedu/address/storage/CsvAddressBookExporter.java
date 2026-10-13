@@ -9,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
 import seedu.address.commons.util.FileUtil;
@@ -19,8 +18,6 @@ import seedu.address.model.person.Person;
  * Writes address book contacts to a CSV file.
  */
 public final class CsvAddressBookExporter {
-
-    private static final List<String> HEADERS = List.of("name", "phone", "email", "address", "tags");
 
     private CsvAddressBookExporter() {
         // Utility class.
@@ -35,8 +32,8 @@ public final class CsvAddressBookExporter {
     public static void export(List<Person> people, Path filePath) throws IOException {
         filePath = FileUtil.resolvePath(filePath);
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8);
-                CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.RFC4180)) {
-            csvPrinter.printRecord(HEADERS);
+                CSVPrinter csvPrinter = new CSVPrinter(writer, CsvAddressBookCsv.FORMAT)) {
+            csvPrinter.printRecord(CsvAddressBookCsv.HEADERS);
             for (Person person : people) {
                 String tags = person.getTags().stream()
                         .map(tag -> tag.tagName)
