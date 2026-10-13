@@ -410,13 +410,14 @@ The `filter` command displays members with a specified tag without changing memb
 
 `filter t/TAG`
 
-Exactly one `t/TAG` parameter is accepted. The tag must contain 1 to 30 letters or numbers with no internal
+Exactly one `t/TAG` parameter is accepted. The tag must contain 1 to 30 ASCII letters or digits with no internal
 spaces. Surrounding spaces are ignored, while matching is exact and case-sensitive.
 
 `filter` narrows the currently displayed list, so it can be applied after `find` or another `filter`. It never
-restores hidden members. Running `list` clears the active search and filters. Results keep their address-book
-order, are renumbered from 1, and use the message `N member(s) listed with tag "TAG".` A zero-match result is
-still successful, and later index-based commands use the displayed indices. No save is attempted.
+restores hidden members. Running `list` clears the active search and filters. Results keep their current
+display order, including an active name sort. Visible members are renumbered from 1, and the result uses
+`N member(s) listed with tag "TAG".` A zero-match result is still successful, and later index-based commands
+use the displayed indices. No save is attempted.
 
 An `edit` or `delete` after `filter` uses the current displayed index. A successful edit restores the
 complete roster, while `find` searches the complete roster and replaces the active filter.
