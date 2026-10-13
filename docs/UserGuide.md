@@ -168,8 +168,9 @@ Use `list` to show everyone again. Searching does not save the data file.
 
 Use `filter t/TAG` to show only currently displayed members with that exact tag.
 For example, `filter t/committee` shows members tagged `committee`. Matching is case-sensitive,
-so `Committee` is a different tag. The result keeps roster order, renumbers the visible members,
-and reports `N member(s) listed with tag "TAG".` Zero matches are successful and show an empty list.
+so `Committee` is a different tag. Filtering keeps the current display order, including an active
+name sort, and renumbers the visible members. It reports `N member(s) listed with tag "TAG".`
+Zero matches are successful and show an empty list.
 
 Run `filter` again to narrow the results by another tag. Run `list` first to filter the whole roster.
 For example, run `filter t/committee` and then `filter t/year1` as two separate commands.
@@ -182,7 +183,7 @@ For example, run `filter t/family`, check the displayed members, then use `edit 
 to update the first displayed family member. A successful edit shows everyone again. To search
 all members named Tan after filtering, run `find Tan`.
 
-Supply exactly one tag of 1 to 30 letters or digits with no internal spaces. Spaces around the tag
+Supply exactly one tag of 1 to 30 ASCII letters or digits with no internal spaces. Spaces around the tag
 are ignored. Missing or extra parameters and invalid tags are rejected without changing the view.
 
 ### Tag or untag a group: `tagall`, `untagall`
