@@ -273,6 +273,8 @@ complete roster, and restores the full list in stored order. The import always c
 including members hidden by `find` or `filter`.
 Packaged builds read CSV files only from the JAR folder or its subfolders. Relative paths start there;
 absolute paths outside that folder are rejected. During development, relative paths start in the working directory.
+To import a file from Downloads in a packaged build, copy it into the same folder as the JAR file,
+then run `import p/filename.csv`.
 
 Use double quotes around a path containing whitespace:
 
