@@ -48,6 +48,26 @@ public enum CommandHelp {
             "Use a current positive list number and supply at least one field. Invalid values or duplicate contact "
                     + "details are rejected. If saving fails, the edit remains in this session and the command box "
                     + "clears; follow the recovery guidance before exiting."),
+    TAGALL("Manage members", "tagall", "Tag every displayed member", "tagall t/TAG", "tagall t/committee",
+            "Adds one tag to every member in the current list. Hidden members and other tags stay unchanged.",
+            "Adds committee to each displayed member, skips members who already have it, and reports both counts "
+                    + "after saving.",
+            "Use find or filter first to choose the group, then check the list. The current search, filters and "
+                    + "sorting stay applied.",
+            "Supply exactly one tag of 1 to 30 ASCII letters or digits after t/. Empty tags, internal spaces, "
+                    + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
+                    + "If saving fails, the changes remain in this session and the command box clears; follow the "
+                    + "recovery guidance before exiting."),
+    UNTAGALL("Manage members", "untagall", "Untag every displayed member", "untagall t/TAG", "untagall t/committee",
+            "Removes one tag from every member in the current list. Hidden members and other tags stay unchanged.",
+            "Removes committee from each displayed member, skips members without it, and reports both counts "
+                    + "after saving.",
+            "Use find or filter first to choose the group, then check the list. Removing the tag used by an active "
+                    + "filter hides the updated members; use list to show everyone again.",
+            "Supply exactly one tag of 1 to 30 ASCII letters or digits after t/. Empty tags, internal spaces, "
+                    + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
+                    + "If saving fails, the changes remain in this session and the command box clears; follow the "
+                    + "recovery guidance before exiting."),
     EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
             "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
             "Creates members.csv with name, phone, email, address and tags columns.",
