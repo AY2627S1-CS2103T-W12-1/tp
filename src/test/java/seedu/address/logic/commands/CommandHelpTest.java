@@ -25,7 +25,8 @@ public class CommandHelpTest {
         assertEquals(Set.of(AddCommand.COMMAND_WORD, EditCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD,
                 ClearCommand.COMMAND_WORD, FindCommand.COMMAND_WORD, ListCommand.COMMAND_WORD,
                 HelpCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD,
-                ImportCommand.COMMAND_WORD, FilterCommand.COMMAND_WORD, SortCommand.COMMAND_WORD), keywords);
+                ImportCommand.COMMAND_WORD, FilterCommand.COMMAND_WORD, SortCommand.COMMAND_WORD,
+                TagAllCommand.COMMAND_WORD, UntagAllCommand.COMMAND_WORD), keywords);
         assertEquals(CommandHelp.values().length, keywords.size());
     }
 
@@ -43,9 +44,11 @@ public class CommandHelpTest {
     }
 
     @Test
-    public void find_unavailableTopic_hasNoHelpEntry() {
+    public void find_exactKeyword_onlyMatchesAvailableCommands() {
         assertTrue(CommandHelp.find("help").isPresent());
-        assertTrue(CommandHelp.find("tagall").isEmpty());
+        assertTrue(CommandHelp.find("tagall").isPresent());
+        assertTrue(CommandHelp.find("untagall").isPresent());
+        assertTrue(CommandHelp.find("tag").isEmpty());
         assertTrue(CommandHelp.find("filter").isPresent());
         assertTrue(CommandHelp.find("import").isPresent());
         assertTrue(CommandHelp.find("EXIT").isEmpty());

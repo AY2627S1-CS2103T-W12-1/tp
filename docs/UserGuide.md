@@ -5,8 +5,8 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers the **v1.2 development build** and its twelve available commands.
-Tag filtering, CSV import/export, and name sorting are available. Bulk tag editing remains planned.
+This guide covers the **v1.2 development build** and its fourteen available commands.
+Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
 
@@ -65,7 +65,7 @@ Use the [command summary](#command-summary) for a compact reference.
 Open help by typing `help`, pressing **F1**, or choosing **Help → Help**.
 The guide works without internet access and does not change or save the roster.
 
-The overview groups all twelve commands into four categories:
+The overview groups all fourteen commands into four categories:
 Browse members, Manage members, Remove records, and Help & session.
 Each command has a short description and a runnable example.
 The overview uses two columns in a wide window and one in a narrow window.
@@ -78,7 +78,6 @@ The overview uses two columns in a wide window and one in a narrow window.
 
 Help accepts at most one lowercase topic.
 `help ADD`, `help unknown`, and `help add edit` report errors.
-`tagall` and `untagall` are not available help topics in this build.
 
 ### Add a member: `add`
 
@@ -186,6 +185,35 @@ all members named Tan after filtering, run `find Tan`.
 Supply exactly one tag of 1 to 30 letters or digits with no internal spaces. Spaces around the tag
 are ignored. Missing or extra parameters and invalid tags are rejected without changing the view.
 
+### Tag or untag a group: `tagall`, `untagall`
+
+`tagall t/TAG` adds one tag to every member in the **currently displayed list**.
+`untagall t/TAG` removes one tag from every displayed member.
+Members hidden by a search or filter are not changed, and each member's other tags are kept.
+
+1. Use `find` or `filter` to show the group, then check the displayed members.
+2. Run `tagall` or `untagall` with one tag.
+
+For example, run `filter t/year1` and then `tagall t/committee` as two separate commands.
+Every displayed `year1` member now also has the `committee` tag.
+
+Members who already have the tag (for `tagall`) or do not have it (for `untagall`) are skipped.
+The result reports both counts:
+
+* `Added tag "committee" to 9 member(s). 3 already had this tag.`
+* `Removed tag "committee" from 12 member(s).`
+
+The current search, filters, and sorting stay applied after the update.
+If you remove the tag used by the active filter, the updated members disappear from view
+because they no longer match. They are not deleted; run `list` to show everyone.
+
+Supply exactly one tag of 1 to 30 ASCII letters or digits with no internal spaces. Spaces around the tag
+are ignored, and matching is case-sensitive. Missing `t/`, empty tags, invalid tags, and more than one tag
+are rejected without changing any member. If no members are displayed, TrackCall reports
+`There are no members in the current list to update.` and changes nothing.
+
+There is no confirmation or undo. A valid command saves the roster, even when every member is skipped.
+
 ### Delete a member: `delete`
 
 `delete INDEX` removes one member using a positive number from the **currently displayed list**.
@@ -286,7 +314,7 @@ Rejected input leaves the roster and current list unchanged.
 * `add n/Alice` is incomplete. Use `help add`, then enter all four required fields.
 * `delete 0` is invalid. Use `list`, check the member, and enter its displayed number.
 
-### A save fails after add, edit, delete, or import
+### A save fails after add, edit, delete, tagall, untagall, or import
 
 The change remains visible in this session, but the previous saved file stays unchanged.
 The command box clears the input to avoid repeating an already-applied change.
@@ -308,7 +336,8 @@ Fix the storage problem. Retry only if you still want to remove the entire roste
 
 ## Your data
 
-TrackCall automatically saves after successful `add`, `edit`, `delete`, `clear`, and `import` commands.
+TrackCall automatically saves after successful `add`, `edit`, `delete`, `tagall`, `untagall`, `clear`,
+and `import` commands.
 `help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` do not save the roster.
 
 ### Locate or back up your roster
@@ -342,7 +371,6 @@ A successful data change replaces the file.
 
 ## Current limitations
 
-* Bulk tag changes are planned. Use `edit` for an individual member's tags today.
 * An edit restores the full list instead of retaining an active name search or tag filter.
 * An unrecognised prefix-like token inside an address can be stored as literal address text.
   For example, `a/Main Road T/committee` does not assign a tag.
@@ -364,15 +392,14 @@ Check the current displayed number before editing or deleting a member.
 
 ### Can I update a whole group's tags?
 
-Use `filter t/TAG` to narrow the displayed members. Bulk tag changes remain planned;
-use `add` and `edit` to manage individual members' tags in this build.
-See [Current limitations](#current-limitations).
+Yes. Use `find` or `filter t/TAG` to display the group, then use `tagall t/TAG` or `untagall t/TAG`.
+Only the displayed members change. See [Tag or untag a group](#tag-or-untag-a-group-tagall-untagall).
 
 ### What should I do after a save error?
 
 Follow [Correcting errors](#correcting-errors) before exiting.
 A failed `clear` save restores the roster.
-Unsaved changes from `add`, `edit`, `delete`, and `import` remain visible in memory.
+Unsaved changes from `add`, `edit`, `delete`, `tagall`, `untagall`, and `import` remain visible in memory.
 
 ## Command summary
 
@@ -385,6 +412,8 @@ Unsaved changes from `add`, `edit`, `delete`, and `import` remain visible in mem
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
 | Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
 | Filter by tag | `filter t/TAG` | `filter t/committee` narrows the displayed members. |
+| Tag a group | `tagall t/TAG` | `tagall t/committee` adds the tag to every displayed member. |
+| Untag a group | `untagall t/TAG` | `untagall t/committee` removes the tag from every displayed member. |
 | Delete one member | `delete INDEX` | `delete 1` removes the first currently displayed member. |
 | Clear the roster | `clear` | `clear` removes all members, including those hidden by a search. |
 | Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |

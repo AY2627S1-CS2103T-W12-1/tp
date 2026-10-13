@@ -92,7 +92,7 @@ public class MainWindowTest {
             guide = guide();
             assertEquals("TrackCall · Command guide", guide.getTitle());
             guide.getScene().getRoot().applyCss();
-            assertEquals(12, guide.getScene().getRoot().lookupAll(".overview-keyword").size());
+            assertEquals(14, guide.getScene().getRoot().lookupAll(".overview-keyword").size());
             enter("exit");
             assertFalse(guide.isShowing());
             assertFalse(window.getPrimaryStage().isShowing());

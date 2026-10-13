@@ -19,8 +19,8 @@ The secretary can:
 * Save valid changes automatically to a local file.
 * Complete the core workflow without an internet connection or a separate save command.
 
-The **v1.2 development build** supports individual member management, name search, tag filtering, offline command
-help, local saving, CSV import/export, and name sorting. Bulk tag changes remain planned.
+The **v1.2 development build** supports individual member management, name search, tag filtering, bulk tag
+editing, offline command help, local saving, CSV import/export, and name sorting.
 See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining work.
 
 ## Acknowledgements
@@ -198,9 +198,9 @@ full intended product, including behaviour still to be implemented.
 
 #### Catalogue and command flow
 
-`CommandHelp` stores the twelve implemented commands in one local catalogue.
+`CommandHelp` stores the fourteen implemented commands in one local catalogue.
 Each entry contains its purpose, syntax, example, expected result, and common errors.
-Only executable commands appear, so planned bulk tag commands are not shown as available.
+Only executable commands appear, so planned commands are never shown as available.
 
 1. `HelpCommandParser` accepts zero or one lowercase topic. It rejects unknown or multiple topics.
 2. `HelpCommand` returns the topic through `CommandResult`.
@@ -312,7 +312,8 @@ also recover to usable bounds. This handles monitor changes between sessions.
 
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
 `help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` return without saving member data.
-Successful `add`, `edit`, `delete`, and `clear` commands pass the complete roster, including hidden members,
+Successful `add`, `edit`, `delete`, `tagall`, `untagall`, `clear`, and `import` commands pass the complete
+roster, including hidden members,
 to `Storage#saveAddressBook`.
 Parsing and execution failures do not save. Data-changing commands return normal success only after
 the save succeeds.
@@ -383,8 +384,6 @@ The source CSV is read-only throughout the workflow.
 
 ### Differences still to implement for the MVP
 
-* `tagall` and `untagall` remain proposed. Bulk commands must save valid operations, including no-ops.
-  `filter` is available as a read-only command.
 * CSV import is available as `import p/FILE_PATH`, CSV export as `export [FILEPATH]`, and name sorting as `sort`.
 * `edit` currently restores the full list. Retaining the active search and tag filters is planned.
 * `find` currently reports `Members found: N`. The use cases describe the intended member-list count wording.
@@ -400,7 +399,7 @@ The source CSV is read-only throughout the workflow.
 
 AI-assisted design illustration of the intended saving policy for the core commands. Implementation
 status is described above; this figure is not a screenshot or evidence of v1.1 implementation.
-Planned bulk tag commands will use the same save-after-change workflow.
+`tagall` and `untagall` use the same save-after-change workflow.
 
 ### Filter members by tag
 
@@ -431,6 +430,60 @@ Reject missing or empty tags, invalid characters, internal spaces, tags over 30 
 
 AI-assisted intended-interface mockup using the same palette as the README. It illustrates
 `filter t/committee` but is not a screenshot of the v1.2 development build.
+
+### Bulk tag editing
+
+`tagall t/TAG` adds one tag, and `untagall t/TAG` removes one tag, for every member in the displayed list.
+
+#### Parsing
+
+`TagAllCommandParser` and `UntagAllCommandParser` both delegate to `BulkTagArgumentParser#parse`, so the two
+commands share one grammar and one set of error messages. It tokenizes only `t/` and accepts exactly one tag of
+1 to 30 ASCII letters or digits. Surrounding spaces are ignored.
+
+* Text before `t/`, or a missing `t/`, reports invalid command format with the calling command's usage.
+* An empty tag reports `Tag cannot be empty.`
+* More than one `t/` reports `Only one tag can be applied per command.`
+* Other invalid tags, including internal spaces and other prefixes after the tag, report the tag-format message.
+
+#### Execution
+
+`TagAllCommand#execute` and `UntagAllCommand#execute` follow the same steps:
+
+1. Copy `Model#getFilteredPersonList()` into a new list. This fixes the target set before any update.
+   The copy matters because each update refreshes the displayed list. For example, removing the tag used by an
+   active filter hides the updated member immediately.
+2. Reject an empty target set with `There are no members in the current list to update.`
+3. For each target that lacks the tag (`tagall`) or has it (`untagall`), build a new `Person` with an updated
+   copy of its tag set and call `Model#setPerson`. Other targets are skipped. Hidden members are never visited.
+4. Report the changed count, and the skipped count when it is non-zero, for example
+   `Added tag "committee" to 9 member(s). 3 already had this tag.` or
+   `Removed tag "committee" from 0 member(s). 3 did not have this tag.`
+
+Neither command changes the search predicate or name sorting, so the current view stays applied after the
+batch. Tags are not part of a member's identity, so an update can never create a duplicate member.
+
+Both commands are data-changing (`isReadOnly()` is `false`). `LogicManager` therefore saves the complete
+roster after every valid invocation, including one where every target is skipped. An empty target set throws
+before saving. A failed save follows the standard `SaveFailureException` path: the whole batch remains in
+memory and the previous saved file is unchanged.
+
+#### Design considerations
+
+* **One shared argument parser:** keeps `tagall` and `untagall` input rules and messages identical.
+  The 1 to 30 character limit is enforced in this parser, as in `FilterCommandParser`, so the shared `Tag`
+  model and the rules for `add`, `edit`, and loading saved data are unchanged.
+* **Skip instead of reject:** a member who already has (or lacks) the tag is skipped and counted, so one
+  overlapping group does not block the rest of the batch (UC03 extension 6b).
+
+#### Test coverage
+
+* `TagAllCommandTest` and `UntagAllCommandTest` cover partial, complete, and zero changes, filtered lists with
+  hidden members, removing the filtered tag, and empty lists.
+* `TagAllCommandParserTest`, `UntagAllCommandParserTest`, and `BulkTagArgumentParserTest` cover valid tags,
+  length boundaries, missing prefixes, preambles, and empty, invalid, or repeated tags.
+* `LogicManagerTest` checks that only displayed members change, that no-op batches save, and that an empty
+  list does not save.
 
 
 ## Documentation, logging, testing, dev-ops
@@ -1080,7 +1133,7 @@ platform or release package has been verified. Use a disposable folder and synth
 
 ### Offline help and readable feedback
 
-1. Disable networking. Run `help`: verify four category cards containing all twelve command names,
+1. Disable networking. Run `help`: verify four category cards containing all fourteen command names,
    descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
    layout when wide and one column when narrowed. Check the beige background, dark readable text,
    visible keyboard focus, and error styling in the main window, help, and alerts.
@@ -1088,7 +1141,7 @@ platform or release package has been verified. Use a disposable folder and synth
    syntax, example, expected result, notes, and errors. Check All commands navigation, Up/Down,
    Page Up/Page Down, Home/End, and Escape. Resize the guide and check long lines remain readable.
 3. Try `help ADD`, `help unknown`, and `help add edit`. Expect useful errors without record changes.
-   `help filter` must show the implemented command.
+   `help filter`, `help tagall`, and `help untagall` must show the implemented commands.
 4. Add a synthetic member with long name, email, address, and multiple tags. Verify labelled,
    wrapped member rows and separate feedback lines; no value should be permanently truncated.
    Resize the result area using its divider and check both feedback and roster scrolling.
@@ -1117,7 +1170,15 @@ platform or release package has been verified. Use a disposable folder and synth
 7. Paste a valid add command with actual tab separators before `n/`, `p/`, `e/`, and `a/`.
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
    or an internal tab keeps that text. Do not treat the planned unknown-prefix rejection as implemented.
-8. With two stored records and a search showing only one, run `clear`. After saving, expect
+8. Add two members tagged `committee` and one member without tags. Run `list`, then `filter t/committee`.
+   Run `tagall t/year1` and
+   expect only the displayed members to gain `year1`, keeping their other tags. Run it again and expect
+   `0 member(s)` changed with all of them skipped. Run `untagall t/committee`: the members disappear
+   from the filtered view, and `list` shows them without `committee`. Run `filter t/missing`, then
+   `tagall t/year1`, and expect `There are no members in the current list to update.`
+   Try `tagall`, `tagall t/`, `tagall t/a t/b`, and `tagall committee`. Expect errors and no changes.
+   Restart and check that the tag changes were saved.
+9. With two stored records and a search showing only one, run `clear`. After saving, expect
    `Cleared 2 members. The address book is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
    `The address book is already empty. No changes were made.`
 
@@ -1133,7 +1194,7 @@ platform or release package has been verified. Use a disposable folder and synth
 4. Test `preferences.json` containing `null` and then a null `guiSettings`. Expect startup with
    default preferences. The normal preferences setup may replace that file with valid defaults.
 5. In a disposable folder, make the data directory unwritable or replace the data file with a directory.
-   Test `add`, `edit`, and `delete` separately:
+   Test `add`, `edit`, `delete`, and `tagall` separately:
    * Expect a save error and recovery guidance instead of success.
    * Check that the change remains visible and the command box clears the already-applied input.
    * Press Enter again. It must not repeat the edit or deletion.
@@ -1156,6 +1217,6 @@ The automated storage tests also exercise atomic replacement failure and preserv
 Before peer testing, test the actual release JAR on Windows, macOS, and Linux with the course JDK.
 Check startup from a path containing spaces, offline use, complete long contact details, and the
 required screen resolutions/scales. Run every UG example and compare the actual output. For filtering,
-CSV import, and future bulk tag editing, test empty groups or files, overlapping filters, hidden members,
+CSV import, and bulk tag editing, test empty groups or files, overlapping filters, hidden members,
 changed/skipped counts, invalid input, save failures, and restart persistence. Record results against
 the release commit; passing unit tests alone does not establish release readiness.

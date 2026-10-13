@@ -34,6 +34,7 @@ import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.TagAllCommand;
+import seedu.address.logic.commands.UntagAllCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.commands.exceptions.SaveFailureException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -336,6 +337,46 @@ public class LogicManagerTest {
 
         assertThrows(CommandException.class, TagAllCommand.MESSAGE_EMPTY_LIST, () ->
                 logic.execute("tagall t/committee"));
+        assertEquals(getTypicalAddressBook(), model.getAddressBook());
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    @Test
+    public void execute_untagAllFilteredTag_hidesUpdatedMembersAndSaves() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("filter t/friends");
+
+        assertEquals("Removed tag \"friends\" from 3 member(s).",
+                logic.execute("untagall t/friends").getFeedbackToUser());
+
+        // The filter stays applied, so the updated members are hidden but still stored.
+        assertEquals(List.of(), logic.getFilteredPersonList());
+        Tag friends = new Tag("friends");
+        assertEquals(getTypicalAddressBook().getPersonList().size(), model.getAddressBook().getPersonList().size());
+        assertTrue(model.getAddressBook().getPersonList().stream().noneMatch(person ->
+                person.getTags().contains(friends)));
+        ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
+                temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+    }
+
+    @Test
+    public void execute_untagAllWithNoChanges_stillSaves() throws Exception {
+        model.addPerson(BOB);
+        Path dataFile = temporaryFolder.resolve("addressBook.json");
+
+        assertEquals("Removed tag \"committee\" from 0 member(s). 1 did not have this tag.",
+                logic.execute("untagall t/committee").getFeedbackToUser());
+        assertTrue(Files.exists(dataFile));
+    }
+
+    @Test
+    public void execute_untagAllOnEmptyList_doesNotSave() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("filter t/missing");
+
+        assertThrows(CommandException.class, UntagAllCommand.MESSAGE_EMPTY_LIST, () ->
+                logic.execute("untagall t/friends"));
         assertEquals(getTypicalAddressBook(), model.getAddressBook());
         assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
     }
