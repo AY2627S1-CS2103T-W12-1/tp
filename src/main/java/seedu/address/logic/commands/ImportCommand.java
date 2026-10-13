@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
@@ -39,8 +40,10 @@ public class ImportCommand extends Command {
         requireNonNull(model);
 
         List<Person> candidates;
+        Path resolvedPath;
         try {
-            candidates = CsvAddressBookImporter.read(filePath);
+            resolvedPath = FileUtil.resolvePath(filePath).toAbsolutePath().normalize();
+            candidates = CsvAddressBookImporter.read(resolvedPath);
         } catch (CsvImportException e) {
             throw new CommandException(String.format(MESSAGE_INVALID_FILE, ensureSentence(e.getMessage())), e);
         } catch (IOException e) {
@@ -63,7 +66,7 @@ public class ImportCommand extends Command {
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
         model.setNameSorting(false);
         return new CommandResult(String.format(MESSAGE_SUCCESS, peopleToAdd.size(),
-                filePath.toAbsolutePath().normalize(), duplicateCount));
+                resolvedPath, duplicateCount));
     }
 
     private static String ensureSentence(String message) {

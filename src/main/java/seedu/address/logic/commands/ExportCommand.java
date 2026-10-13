@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
+import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
@@ -20,7 +21,7 @@ public class ExportCommand extends Command {
     public static final String DEFAULT_FILE_NAME = "addressbook.csv";
     public static final String MESSAGE_USAGE = COMMAND_WORD + " [FILEPATH]\n"
             + "Exports all people to a CSV file. If FILEPATH is omitted, writes " + DEFAULT_FILE_NAME
-            + " in the current directory.";
+            + " beside the JAR, or in the working directory during development.";
     public static final String MESSAGE_SUCCESS = "Exported %1$d people to %2$s.";
     public static final String MESSAGE_FAILURE = "Could not export people to %1$s: %2$s";
 
@@ -42,13 +43,15 @@ public class ExportCommand extends Command {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
         List<Person> people = model.getAddressBook().getPersonList();
+        Path resolvedPath;
         try {
-            CsvAddressBookExporter.export(people, filePath);
+            resolvedPath = FileUtil.resolvePath(filePath).toAbsolutePath().normalize();
+            CsvAddressBookExporter.export(people, resolvedPath);
         } catch (IOException e) {
             throw new CommandException(String.format(MESSAGE_FAILURE, filePath, e.getMessage()), e);
         }
         return new CommandResult(String.format(MESSAGE_SUCCESS,
-                people.size(), filePath.toAbsolutePath().normalize()));
+                people.size(), resolvedPath));
     }
 
     @Override
