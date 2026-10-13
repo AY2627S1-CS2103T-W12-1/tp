@@ -321,8 +321,9 @@ the save succeeds.
 #### File writes
 
 `StorageManager` delegates JSON storage to `JsonAddressBookStorage`. The default file is
-`data/addressbook.json`, relative to the working directory. `FileUtil#writeToFile` creates missing parent
-directories, writes UTF-8 to a sibling temporary file, and replaces the destination with an atomic move.
+`data/addressbook.json`, relative to the JAR folder in packaged builds or the working directory in development.
+`FileUtil#writeToFile` creates missing parent directories, writes UTF-8 to a sibling temporary file,
+and replaces the destination with an atomic move.
 It reports a failure if atomic replacement is unavailable instead of falling back to a potentially
 partial overwrite. An existing saved file remains intact on failure; temporary-file cleanup is attempted.
 
@@ -694,9 +695,10 @@ These rules describe the selected MVP and apply to the use cases below.
     resets the view, and preserves application settings. Deletion and clearing have no
     confirmation or undo. `list`, `clear`, and `exit` reject extra arguments. `exit` closes the
     app without a final save or another warning about unsaved changes.
-12. Startup reads the local `data/addressbook.json` relative to the working directory. A missing
-    file loads sample members and reports that fact. An invalid or unreadable file loads zero
-    members and reports the error. Startup and read-only commands leave the file untouched.
+12. Startup reads the local `data/addressbook.json` relative to the JAR folder in packaged builds
+    or the working directory in development. A missing file loads sample members and reports that
+    fact. An invalid or unreadable file loads zero members and reports the error. Startup and
+    read-only commands leave the file untouched.
     A valid empty roster stays empty. A later successful data-changing command can replace an
     invalid file, so restore or repair it before making changes if its contents are needed.
 13. An unknown command, including a wrong-case keyword, reports
@@ -1163,8 +1165,9 @@ platform or release package has been verified. Use a disposable folder and synth
    cleared. A lone `edit 1` must fail. A valid edit currently restores the complete list.
 5. Try an add with a missing required field, a repeated `n/`, an invalid phone, and an invalid email.
    Expect errors and no new member.
-   Add a second record with Bob's exact name but different contact details.
-   The duplicate-name rule must reject it, explain the matching name, and suggest `edit`.
+   Add a second record with Bob's exact name but different contact details. It must succeed.
+   Add another record matching the original Bob's name, phone, email, and address exactly.
+   It must be rejected with the duplicate contact details message and suggest `edit`.
 6. Run `find Nobody`, then `list`. Expect `Members found: 0`, then `Showing N members.` for the
    total roster size. Test multiple name keywords, case-insensitive complete-word matching, and
    rejection of `find` with no keyword.
@@ -1188,7 +1191,8 @@ platform or release package has been verified. Use a disposable folder and synth
 
 ### Persistence and invalid files
 
-1. Add a member, exit, and restart from the same working directory. Verify all fields and tags remain.
+1. Add a member, exit, and restart from the same working directory for a development run, or from
+   any working directory with the same JAR for a packaged build. Verify all fields and tags remain.
 2. Back up the member file. Run `help`, `list`, `find Alice`, `filter t/committee`, and `exit`; verify the member file's
    contents and modification time do not change. Preferences may be saved separately.
 3. With the app closed, test each member-file variant: malformed JSON, a `null` root, a null entry

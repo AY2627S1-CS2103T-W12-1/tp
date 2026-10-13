@@ -12,13 +12,13 @@ We can type commands in the command line to find members and update their contac
 The working branch begins v1.2; v1.1 was the documentation practice iteration.
 
 * Add, edit, list, find, delete, and clear member records.
-* Open offline instructions for all twelve available commands with `help`, or one command with `help COMMAND`.
+* Open offline instructions for all available commands with `help`, or one command with `help COMMAND`.
 * Read labeled member cards and multiline feedback in a light beige interface, with wrapping and scrolling.
 * Save data changes locally, with clear recovery guidance if saving fails and rollback for a failed clear.
 * Leave the roster file unchanged when running read-only commands.
 * Narrow the displayed members by an exact tag using `filter t/TAG`, then use their displayed numbers to edit or delete.
-
-Bulk tag changes are planned for the MVP and are not available in this build.
+* Add or remove a tag for every displayed member with `tagall t/TAG` or `untagall t/TAG`.
+* Import and export CSV member records, and sort the displayed list by name.
 
 ## Planned interface
 

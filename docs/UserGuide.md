@@ -253,15 +253,17 @@ See [Correcting errors](#correcting-errors) for recovery steps.
 The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
 Tags for each member are sorted alphabetically and joined with semicolons.
 
-* Without `FILEPATH`, the file is written to `addressbook.csv` in the application's current directory.
-* The path may be relative or absolute. The parent directory must already exist and be writable.
+* Without `FILEPATH`, the file is written to `addressbook.csv` beside the JAR. During development,
+  it is written to the working directory.
+* Packaged builds resolve relative paths from the JAR folder and accept absolute paths only inside
+  that folder. The parent directory must already exist and be writable.
 * An existing destination file is overwritten.
 * Export leaves the roster, current search, and automatic JSON data file unchanged.
 * An empty roster produces a file containing only the column headers.
 
 Examples:
 
-* `export` writes `addressbook.csv` in the current directory.
+* `export` writes `addressbook.csv` beside the JAR, or in the working directory during development.
 * `export backups/members.csv` writes `members.csv` in the existing `backups` directory.
 
 ### Import members from CSV: `import`
@@ -269,6 +271,10 @@ Examples:
 `import p/FILE_PATH` validates a local UTF-8 CSV file, appends unique members in file order, saves the
 complete roster, and restores the full list in stored order. The import always checks the full roster,
 including members hidden by `find` or `filter`.
+Packaged builds read CSV files only from the JAR folder or its subfolders. Relative paths start there;
+absolute paths outside that folder are rejected. During development, relative paths start in the working directory.
+To import a file from Downloads in a packaged build, copy it into the same folder as the JAR file,
+then run `import p/filename.csv`.
 
 Use double quotes around a path containing whitespace:
 
@@ -344,8 +350,9 @@ and `import` commands.
 
 ### Locate or back up your roster
 
-The default file is `data/addressbook.json`, relative to the folder where you start TrackCall.
-The status bar shows its location. Start from the same folder to keep using the same roster.
+The default file is `data/addressbook.json` beside the JAR in a packaged build. During development,
+it is relative to the working directory. The status bar shows its location. For development runs,
+start from the same folder to keep using the same roster.
 
 1. Close TrackCall.
 2. Copy the data file to create a backup.

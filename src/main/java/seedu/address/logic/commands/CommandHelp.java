@@ -71,8 +71,10 @@ public enum CommandHelp {
     EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
             "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
             "Creates members.csv with name, phone, email, address and tags columns.",
-            "The default path is addressbook.csv in the current directory. Existing destination files are overwritten. "
-                    + "Tags are sorted and joined with semicolons. The roster and current search stay unchanged.",
+            "The default path is addressbook.csv beside the JAR, or in the working directory during development. "
+                    + "Packaged builds use only paths inside the JAR folder. Existing destination files are "
+                    + "overwritten. Tags are sorted and joined with semicolons. The roster and current search "
+                    + "stay unchanged.",
             "Use a valid output path whose parent directory exists and is writable. "
                     + "An invalid path or a failed write reports an error."),
     IMPORT("Manage members", "import", "Import members from CSV", "import p/FILE_PATH",
@@ -80,7 +82,8 @@ public enum CommandHelp {
             "Validates a UTF-8 CSV file and appends member records without overwriting existing members.",
             "Imports valid new members, skips exact contact-detail duplicates and restores the complete roster.",
             "The header must be name,phone,email,address,tags. Quote paths containing whitespace. "
-                    + "Tags in the final column are separated with semicolons.",
+                    + "Packaged builds read files only inside the JAR folder. Tags in the final column are "
+                    + "separated with semicolons.",
             "Supply one readable .csv path after p/. Invalid files do not change the roster. If saving fails, the "
                     + "imported batch remains in this session and can be saved by a later data-changing command."),
     DELETE("Remove records", "delete", "Delete one member", "delete INDEX", "delete 2",
