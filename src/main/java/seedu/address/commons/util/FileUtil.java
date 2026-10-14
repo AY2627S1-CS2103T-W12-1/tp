@@ -12,7 +12,6 @@ import java.nio.file.StandardCopyOption;
  */
 public class FileUtil {
 
-    private static final String CHARSET = "UTF-8";
     private static final Path CODE_LOCATION = getCodeLocation();
     private static final boolean IS_PACKAGED = !Files.isDirectory(CODE_LOCATION);
     private static final Path HOME_FOLDER = IS_PACKAGED
@@ -23,6 +22,15 @@ public class FileUtil {
      */
     public static Path getHomeFolder() {
         return HOME_FOLDER;
+    }
+
+    /**
+     * Returns the running JAR, or the classes directory during development.
+     *
+     * @return The real code location, which an export must not overwrite.
+     */
+    public static Path getApplicationLocation() {
+        return CODE_LOCATION;
     }
 
     /**
@@ -87,10 +95,14 @@ public class FileUtil {
 
     /**
      * Assumes file exists
+     *
+     * @param file File whose UTF-8 contents should be read.
+     * @return The complete decoded contents.
+     * @throws IOException If reading fails or the file contains malformed UTF-8.
      */
     public static String readFromFile(Path file) throws IOException {
         file = resolvePath(file);
-        return new String(Files.readAllBytes(file), CHARSET);
+        return Files.readString(file);
     }
 
     /**
@@ -102,11 +114,24 @@ public class FileUtil {
     public static void writeToFile(Path file, String content) throws IOException {
         Path target = resolvePath(file).toAbsolutePath();
         createParentDirsOfFile(target);
+        writeAtomically(target, temporary -> Files.writeString(temporary, content));
+    }
+
+    /**
+     * Writes a complete replacement beside an existing destination before atomically replacing it.
+     * The parent directory must already exist. The writer must close its output before returning.
+     *
+     * @param file Destination to replace only after writing succeeds.
+     * @param writer Operation that writes the replacement to the supplied temporary file.
+     * @throws IOException If writing, cleanup, or atomic replacement fails.
+     */
+    public static void writeAtomically(Path file, FileWriter writer) throws IOException {
+        Path target = resolvePath(file).toAbsolutePath();
         Path temporary = Files.createTempFile(target.getParent(), ".trackcall-", ".tmp");
         try {
-            Files.writeString(temporary, content);
+            writer.write(temporary);
             Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-        } catch (IOException e) {
+        } catch (IOException | RuntimeException e) {
             try {
                 Files.deleteIfExists(temporary);
             } catch (IOException cleanupError) {
@@ -114,6 +139,18 @@ public class FileUtil {
             }
             throw e;
         }
+    }
+
+    /** Writes complete file contents to a temporary destination, propagating I/O failures. */
+    @FunctionalInterface
+    public interface FileWriter {
+        /**
+         * Writes and closes the replacement file before it is moved into place.
+         *
+         * @param file Temporary destination inside the final destination's parent directory.
+         * @throws IOException If the replacement cannot be fully written.
+         */
+        void write(Path file) throws IOException;
     }
 
 }

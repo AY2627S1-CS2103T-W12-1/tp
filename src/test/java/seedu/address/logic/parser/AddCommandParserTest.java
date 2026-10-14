@@ -69,12 +69,40 @@ public class AddCommandParserTest {
     public void parse_addressWithSlashes_success() {
         for (String address : new String[] {"c/o Alice", "Main Road c/o Alice", "Main Road C/O Alice",
             "https://example.com/x/extra", "Main Road https://example.com/T/committee",
-            "Block 12/3 #01/02", "Main\tRoad c/o Alice", "Main Road foo/bar", "Main Road annex/x/extra"}) {
+            "Block 12/3 #01/02", "Main\tRoad c/o Alice", "Main Road foo/bar", "Main Road annex/x/extra",
+            "Main Road [Unit 12/3]", "Café Road é/annex"}) {
             Person expected = new PersonBuilder(BOB).withAddress(address).withTags(VALID_TAG_FRIEND).build();
             assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB
                     + " a/" + address + TAG_DESC_FRIEND, new AddCommand(expected));
             assertParseSuccess(parser, " a/" + address + NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB
                     + TAG_DESC_FRIEND, new AddCommand(expected));
+        }
+    }
+
+    @Test
+    public void parse_careOfAtEndOfAddress_success() {
+        for (String address : new String[] {"c/o", "C/O", "c/O", "C/o", "Main Road c/o", "Main Road\tC/O"}) {
+            Person expected = new PersonBuilder(BOB).withAddress(address).withTags().build();
+            assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB + " a/" + address,
+                    new AddCommand(expected));
+        }
+    }
+
+    @Test
+    public void parse_prefixWithoutInitialSeparator_failure() {
+        String validArguments = NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB + ADDRESS_DESC_BOB;
+        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
+        for (String prefix : new String[] {"x/extra", "T/committee", "c/office"}) {
+            assertParseFailure(parser, prefix + validArguments, expectedMessage);
+        }
+    }
+
+    @Test
+    public void parse_careOfWithNonWhitespaceSuffix_failure() {
+        String validArguments = NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB + ADDRESS_DESC_BOB;
+        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
+        for (String suffix : new String[] {"c/", "c/oAlice", "C/OAlice", "c/o,", "C/O/"}) {
+            assertParseFailure(parser, validArguments + " " + suffix, expectedMessage);
         }
     }
 

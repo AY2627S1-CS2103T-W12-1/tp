@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -24,6 +25,8 @@ public class ExportCommand extends Command {
             + " beside the JAR, or in the working directory during development.";
     public static final String MESSAGE_SUCCESS = "Exported %1$d people to %2$s.";
     public static final String MESSAGE_FAILURE = "Could not export people to %1$s: %2$s";
+    public static final String MESSAGE_PROTECTED_DESTINATION =
+            "The export destination is used by TrackCall. Choose a different file.";
 
     private final Path filePath;
 
@@ -41,17 +44,42 @@ public class ExportCommand extends Command {
 
     @Override
     public CommandResult execute(Model model) throws CommandException {
+        return execute(model, new Path[0]);
+    }
+
+    /**
+     * Exports without replacing the running application or files used by automatic storage.
+     *
+     * @param model Model whose complete roster should be exported.
+     * @param protectedFiles Active roster and preferences paths supplied by the logic layer.
+     * @return Export feedback after the complete CSV has been saved.
+     * @throws CommandException If the destination is protected or exporting fails.
+     */
+    public CommandResult execute(Model model, Path... protectedFiles) throws CommandException {
         requireNonNull(model);
         List<Person> people = model.getAddressBook().getPersonList();
         Path targetPath = filePath;
         try {
             targetPath = FileUtil.resolvePath(filePath).toAbsolutePath().normalize();
+            checkDestination(targetPath, FileUtil.getApplicationLocation());
+            for (Path protectedFile : protectedFiles) {
+                checkDestination(targetPath, protectedFile);
+            }
             CsvAddressBookExporter.export(people, targetPath);
         } catch (IOException e) {
             throw new CommandException(String.format(MESSAGE_FAILURE, targetPath, e.getMessage()), e);
         }
         return new CommandResult(String.format(MESSAGE_SUCCESS,
                 people.size(), targetPath));
+    }
+
+    /** Rejects both equivalent path spellings and existing file aliases such as hard links. */
+    private void checkDestination(Path target, Path protectedFile) throws IOException {
+        Path protectedPath = FileUtil.resolvePath(protectedFile).toAbsolutePath().normalize();
+        if (target.equals(protectedPath) || (Files.exists(target) && Files.exists(protectedPath)
+                && Files.isSameFile(target, protectedPath))) {
+            throw new IOException(MESSAGE_PROTECTED_DESTINATION);
+        }
     }
 
     @Override

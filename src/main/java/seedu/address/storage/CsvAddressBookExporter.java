@@ -31,6 +31,11 @@ public final class CsvAddressBookExporter {
      */
     public static void export(List<Person> people, Path filePath) throws IOException {
         filePath = FileUtil.resolvePath(filePath);
+        FileUtil.writeAtomically(filePath, temporary -> writeCsv(people, temporary));
+    }
+
+    /** Writes the entire CSV to a temporary file, closing the encoder before the destination is replaced. */
+    private static void writeCsv(List<Person> people, Path filePath) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8);
                 CSVPrinter csvPrinter = new CSVPrinter(writer, CsvAddressBookCsv.FORMAT)) {
             csvPrinter.printRecord(CsvAddressBookCsv.HEADERS);
