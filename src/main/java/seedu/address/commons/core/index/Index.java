@@ -18,23 +18,29 @@ public class Index {
      * {@link Index#fromOneBased(int)}.
      */
     private Index(int zeroBasedIndex) {
-        if (zeroBasedIndex < 0) {
+        if (zeroBasedIndex < 0 || zeroBasedIndex == Integer.MAX_VALUE) {
             throw new IndexOutOfBoundsException();
         }
 
         this.zeroBasedIndex = zeroBasedIndex;
     }
 
+    /** Returns the non-negative zero-based index. */
     public int getZeroBased() {
         return zeroBasedIndex;
     }
 
+    /** Returns the positive one-based index without overflowing an integer. */
     public int getOneBased() {
         return zeroBasedIndex + 1;
     }
 
     /**
      * Creates a new {@code Index} using a zero-based index.
+     *
+     * @param zeroBasedIndex Index from zero through {@code Integer.MAX_VALUE - 1}.
+     * @return The index, representable in both bases.
+     * @throws IndexOutOfBoundsException If either representation would be invalid.
      */
     public static Index fromZeroBased(int zeroBasedIndex) {
         return new Index(zeroBasedIndex);
@@ -42,8 +48,15 @@ public class Index {
 
     /**
      * Creates a new {@code Index} using a one-based index.
+     *
+     * @param oneBasedIndex Positive index through {@code Integer.MAX_VALUE}.
+     * @return The index, representable in both bases.
+     * @throws IndexOutOfBoundsException If the index is not positive.
      */
     public static Index fromOneBased(int oneBasedIndex) {
+        if (oneBasedIndex <= 0) {
+            throw new IndexOutOfBoundsException();
+        }
         return new Index(oneBasedIndex - 1);
     }
 

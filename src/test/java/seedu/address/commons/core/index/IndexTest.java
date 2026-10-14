@@ -7,7 +7,26 @@ import static seedu.address.testutil.Assert.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
+/** Tests index conversion boundaries and equality without accepting invalid input through overflow. */
 public class IndexTest {
+
+    @Test
+    public void fromOneBased_minimumInteger_throwsIndexOutOfBoundsException() {
+        assertThrows(IndexOutOfBoundsException.class, () -> Index.fromOneBased(Integer.MIN_VALUE));
+    }
+
+    @Test
+    public void fromZeroBased_maximumInteger_throwsIndexOutOfBoundsException() {
+        assertThrows(IndexOutOfBoundsException.class, () -> Index.fromZeroBased(Integer.MAX_VALUE));
+    }
+
+    @Test
+    public void conversion_largestRepresentableIndex_preservesBothBases() {
+        Index largest = Index.fromOneBased(Integer.MAX_VALUE);
+        assertEquals(Integer.MAX_VALUE - 1, largest.getZeroBased());
+        assertEquals(Integer.MAX_VALUE, largest.getOneBased());
+        assertEquals(largest, Index.fromZeroBased(Integer.MAX_VALUE - 1));
+    }
 
     @Test
     public void createOneBasedIndex() {

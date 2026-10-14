@@ -86,6 +86,19 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_nonAsciiIndices_rejectsWithoutChangingRosterOrView() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        model.updateFilteredPersonList(AMY::equals);
+        for (String command : List.of("delete \u0661", "delete \uFF11", "edit \u0661 n/Changed")) {
+            assertThrows(ParseException.class, () -> logic.execute(command));
+            assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
+            assertEquals(List.of(AMY), model.getFilteredPersonList());
+            assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        }
+    }
+
+    @Test
     public void execute_validCommand_success() throws Exception {
         String listCommand = ListCommand.COMMAND_WORD;
         assertCommandSuccess(listCommand, ListCommand.MESSAGE_EMPTY, model);
