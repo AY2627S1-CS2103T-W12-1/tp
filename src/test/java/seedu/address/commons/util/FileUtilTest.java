@@ -48,6 +48,20 @@ public class FileUtilTest {
         assertOnlyEntry(target, sentinel);
     }
 
+    @Test
+    public void writeAtomically_writerFailsAfterPartialOutput_preservesPreviousFile() throws IOException {
+        Path target = testFolder.resolve("members.csv");
+        Files.writeString(target, "Previous complete export");
+
+        assertThrows(IOException.class, () -> FileUtil.writeAtomically(target, temporary -> {
+            Files.writeString(temporary, "Partial replacement");
+            throw new IOException("Simulated disk full");
+        }));
+
+        assertEquals("Previous complete export", Files.readString(target));
+        assertOnlyEntry(testFolder, target);
+    }
+
     /** Checks that saving did not leave a temporary file beside the target. */
     private void assertOnlyEntry(Path directory, Path expected) throws IOException {
         try (Stream<Path> entries = Files.list(directory)) {

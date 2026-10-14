@@ -183,6 +183,11 @@ complete address book person list and the destination path; the exporter writes 
 one row per person. Apache Commons CSV handles RFC 4180 quoting and escaping. This export is a user-requested copy and
 does not replace or modify the JSON file used for automatic persistence.
 
+`LogicManager` supplies the active roster and preferences paths to `ExportCommand`, which rejects destinations
+matching those files or the running JAR, including existing file aliases. `CsvAddressBookExporter` writes and closes
+a sibling temporary file before `FileUtil#writeAtomically` replaces the destination. A failed export preserves the
+previous destination and removes its temporary file; the destination's parent directory must already exist.
+
 ### Common classes
 
 Classes used by multiple components are in the `seedu.address.commons` package.

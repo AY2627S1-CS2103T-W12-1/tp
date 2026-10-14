@@ -173,6 +173,28 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_exportToApplicationStorage_rejectsWithoutChangingFilesOrView() throws Exception {
+        model.addPerson(AMY);
+        model.updateFilteredPersonList(unused -> false);
+        for (String filename : List.of("addressBook.json", "userPrefs.json")) {
+            Path target = temporaryFolder.resolve(filename);
+            Files.writeString(target, "Keep the existing application file");
+            assertThrows(CommandException.class, () -> logic.execute("export " + target));
+            assertEquals("Keep the existing application file", Files.readString(target));
+            assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
+            assertTrue(model.getFilteredPersonList().isEmpty());
+        }
+    }
+
+    @Test
+    public void execute_exportToNormalisedStoragePath_rejectsBeforeCreatingFile() throws Exception {
+        Path target = temporaryFolder.resolve("nested/../addressBook.json");
+        assertThrows(CommandException.class, () -> logic.execute("export " + target));
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertFalse(Files.exists(temporaryFolder.resolve("nested")));
+    }
+
+    @Test
     public void execute_import_savesUpdatedRoster() throws Exception {
         Path csvFile = temporaryFolder.resolve("members.csv");
         Files.writeString(csvFile, "name,phone,email,address,tags\n"
