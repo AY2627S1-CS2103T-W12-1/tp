@@ -19,7 +19,7 @@ The secretary can:
 * Save valid changes automatically to a local file.
 * Complete the core workflow without an internet connection or a separate save command.
 
-The **v1.2 development build** supports individual member management, name search, tag filtering, bulk tag
+The **v1.3 release** supports individual member management, name search, tag filtering, bulk tag
 editing, offline command help, local saving, CSV import/export, and name sorting.
 See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining work.
 
@@ -30,6 +30,13 @@ See [implementation status](#differences-still-to-implement-for-the-mvp) for the
   and original diagrams.
 * The application uses [JavaFX](https://openjfx.io/) for its interface and
   [Jackson](https://github.com/FasterXML/jackson) for JSON storage.
+* [Apache Commons CSV](https://commons.apache.org/proper/commons-csv/) handles CSV import/export parsing and quoting.
+  Its use was [approved by the teaching team](https://github.com/NUS-CS2103-AY2627-S1/forum/issues/627).
+* The documentation website layout adapts the
+  [W13-1 team's layout](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/docs/stylesheets/main.css),
+  including its sidebar widths, reading width, and responsive breakpoints, under its
+  [MIT licence](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/LICENSE).
+  TrackCall supplies its own palette, Jekyll templates, and navigation/search behaviour.
 * [JUnit](https://junit.org/junit5/), [Gradle](https://gradle.org/),
   [Checkstyle](https://checkstyle.org/), and [JaCoCo](https://www.jacoco.org/jacoco/) support testing and builds.
 
@@ -183,6 +190,11 @@ complete address book person list and the destination path; the exporter writes 
 one row per person. Apache Commons CSV handles RFC 4180 quoting and escaping. This export is a user-requested copy and
 does not replace or modify the JSON file used for automatic persistence.
 
+`LogicManager` supplies the active roster and preferences paths to `ExportCommand`, which rejects destinations
+matching those files or the running JAR, including existing file aliases. `CsvAddressBookExporter` writes and closes
+a sibling temporary file before `FileUtil#writeAtomically` replaces the destination. A failed export preserves the
+previous destination and removes its temporary file; the destination's parent directory must already exist.
+
 ### Common classes
 
 Classes used by multiple components are in the `seedu.address.commons` package.
@@ -190,7 +202,7 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 ## Implementation
 
-This section describes the v1.2 working branch. The v1.1 iteration was limited to documentation;
+This section describes the v1.3 release. The v1.1 iteration was limited to documentation;
 these functional changes are not a published v1.1 release. The requirements appendix records the
 full intended product, including behaviour still to be implemented.
 
@@ -279,9 +291,6 @@ Command tests cover:
 * Hidden members, no-match views, order, repetition, and rejected arguments.
 * Read-only listing, persisted empty data, settings, and predicate reset.
 * Failed-save rollback, retry, and temporary-file cleanup.
-
-`filter` narrows the current model predicate with an exact tag match. `find` and `list` replace that
-predicate, while `edit` currently restores the full list.
 
 ### Readable member details and feedback
 
@@ -389,8 +398,9 @@ The source CSV is read-only throughout the workflow.
 
 ### Differences still to implement for the MVP
 
-* CSV import is available as `import p/FILE_PATH`, CSV export as `export [FILEPATH]`, and name sorting as `sort`.
-* `edit` currently restores the full list. Retaining the active search and tag filters is planned.
+CSV import (`import p/FILE_PATH`), CSV export (`export [FILEPATH]`), and name sorting (`sort`) are implemented.
+The remaining differences from the requirements are:
+
 * Unknown-prefix rejection still needs a precise grammar that preserves valid free-form addresses.
   Currently, an unrecognised prefix-like token such as `x/extra` or uppercase `T/committee` inside
   an address can become literal address text. The parser must not reject ordinary `c/o` or URLs
@@ -407,34 +417,41 @@ status is described above; this figure is not a screenshot or evidence of v1.1 i
 
 ### Filter members by tag
 
-#### Implemented v1.2 behavior
+`filter t/TAG` narrows the displayed list to members with one exact, case-sensitive tag without changing member data.
+Usage examples are in the [User Guide](UserGuide.md#filter-displayed-members-by-tag-filter).
 
-The `filter` command displays members with a specified tag without changing member data. Its format is:
+#### Parsing
 
-`filter t/TAG`
+`FilterCommandParser` accepts one `t/TAG` argument, trims surrounding whitespace, and requires 1 to 30
+ASCII letters or digits. Missing, repeated, or invalid arguments are rejected before the view changes.
+These restrictions are enforced in the parser, leaving the shared `Tag` model unchanged.
 
-Exactly one `t/TAG` parameter is accepted. The tag must contain 1 to 30 ASCII letters or digits with no internal
-spaces. Surrounding spaces are ignored, while matching is exact and case-sensitive.
+#### Execution
 
-`filter` narrows the currently displayed list, so it can be applied after `find` or another `filter`. It never
-restores hidden members. Running `list` clears the active search and filters. Results keep their current
-display order, including an active name sort. Visible members are renumbered from 1, and the result uses
-`N member(s) listed with tag "TAG".` A zero-match result is still successful, and later index-based commands
-use the displayed indices. No save is attempted.
+`FilterCommand` supplies a tag-membership predicate to `ModelManager#filterFilteredPersonList`. The model
+combines it with the current predicate using logical AND, or applies it directly if no predicate is set.
+The observable filtered list updates automatically, and the command reports the resulting member count.
+A zero-match result is successful.
 
-An `edit` or `delete` after `filter` uses the current displayed index. A successful edit restores the
-complete roster, while `find` searches the complete roster and replaces the active filter.
+Filtering preserves the current display order, including name sorting. Visible members are renumbered,
+and subsequent `edit` and `delete` commands use those displayed indices. The command is read-only, so
+`LogicManager` returns its result without saving the roster.
 
-For example, `filter t/committee` followed by `filter t/year1` shows only members with both tags.
-These are two separate commands; `filter t/committee t/year1` is invalid.
+#### Design considerations
 
-An invalid command leaves the current list, active filter, and member data unchanged.
-Reject missing or empty tags, invalid characters, internal spaces, tags over 30 characters, multiple tags, and unknown prefixes.
+* **Preserve earlier conditions:** combining predicates lets users narrow an existing name search or tag
+  filter without restoring hidden members. For example, filtering by `committee` and then `year1` keeps
+  members with both tags. `find` replaces the existing conditions with a new name search; `list` clears them.
+* **Keep filters active after edits:** the model retains the predicate rather than a fixed set of matching
+  members. Replacing an edited member in the observable list re-evaluates that predicate. A member who no
+  longer matches disappears from view but remains in the roster, so later commands operate on the updated group.
 
-![Proposed beige TrackCall interface after filtering by committee tag](images/FilterTag.png)
+#### Test coverage
 
-AI-assisted intended-interface mockup using the same palette as the README. It illustrates
-`filter t/committee` but is not a screenshot of the v1.2 development build.
+* `FilterCommandParserTest` and `FilterCommandTest` cover argument validation and narrowing an existing view.
+* `LogicManagerTest` covers cumulative filters, case-sensitive matching, empty results, interactions with
+  `find`, `list`, and sorting, and execution without saving.
+* `EditCommandTest` checks that edits retain search and tag conditions and hide members who no longer match.
 
 ### Bulk tag editing
 
@@ -476,8 +493,8 @@ memory and the previous saved file is unchanged.
 #### Design considerations
 
 * **One shared argument parser:** keeps `tagall` and `untagall` input rules and messages identical.
-  The 1 to 30 character limit is enforced in this parser, as in `FilterCommandParser`, so the shared `Tag`
-  model and the rules for `add`, `edit`, and loading saved data are unchanged.
+  The 1 to 30 character limit is enforced in this parser, in `FilterCommandParser`, and in the shared `Tag`
+  model. The same limit applies to `add`, `edit`, and loading saved data.
 * **Skip instead of reject:** a member who already has (or lacks) the tag is skipped and counted, so one
   overlapping group does not block the rest of the batch (UC03 extension 6b).
 
@@ -501,7 +518,7 @@ memory and the previous saved file is unchanged.
 
 ## Appendix: Requirements
 
-These requirements describe the intended product, including features beyond the v1.2 development build.
+These requirements describe the intended product, including features beyond the v1.3 release.
 See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining differences.
 The v1.1 iteration documented requirements; functional changes belong to v1.2 or later.
 
@@ -541,12 +558,10 @@ The MVP includes these commands:
 * **Individual records:** `add`, `edit`, `delete`.
 * **Roster and search:** `list`, `find`, `clear`, `filter`.
 * **Group tags:** `tagall`, `untagall`.
+* **CSV files:** `export`, `import`.
+* **Display order:** `sort`.
 
-The MVP also includes exporting members to a CSV file, importing members from a CSV file, and
-sorting the displayed list by name. CSV export is available as `export [FILEPATH]`, CSV import as
-`import p/FILE_PATH`, and name sorting as `sort`.
-
-It also includes automatic saving and manual editing of the local data file.
+The MVP also includes automatic saving and manual editing of the local data file.
 Each member has a name, phone number, email address, address, and zero or more tags.
 
 #### Scope boundaries
@@ -1110,7 +1125,7 @@ such as incremental delivery, are also not product NFRs.
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
 | Data-changing command | `add`, `edit`, `delete`, `clear`, `import`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
-| JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.2 development build uses `tags`. |
+| JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.3 release uses `tags`. |
 | CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; `import p/FILE_PATH` validates and imports it. |
 | vCard | A contact-card file format considered for exporting member contact details to phone or contact applications. It is outside the selected MVP. |
 | Archive | Retain an inactive record or tag and its history separately from active work. This considered feature is different from MVP deletion. |
@@ -1119,7 +1134,7 @@ such as incremental delivery, are also not product NFRs.
 
 ## Appendix: Instructions for manual testing
 
-These checks cover the v1.2 working build. They are test instructions, not a claim that every
+These checks cover the v1.3 release. They are test instructions, not a claim that every
 platform or release package has been verified. Use a disposable folder and synthetic contacts.
 
 ### Launch and shutdown
@@ -1162,7 +1177,10 @@ platform or release package has been verified. Use a disposable folder and synth
 3. Try `delete 0`, `delete -1`, `delete 999999999999999999999`, and `delete 2` with only one
    displayed member. Expect errors with the roster unchanged.
 4. Run `edit 1 t/committee t/year1`, then `edit 1 t/`. Expect the tag set to be replaced, then
-   cleared. A lone `edit 1` must fail. A valid edit currently restores the complete list.
+   cleared. A lone `edit 1` must fail. A valid edit retains the active search and filters.
+   Run `filter t/committee` with matching members, then `edit 1 p/98765432`. Only committee members
+   should remain visible. Run `edit 1 t/` to remove the first displayed member's tags; that member
+   should disappear from view. Run `list` to verify the edited member remains in the roster.
 5. Try an add with a missing required field, a repeated `n/`, an invalid phone, and an invalid email.
    Expect errors and no new member.
    Add a second record with Bob's exact name but different contact details. It must succeed.
@@ -1188,6 +1206,40 @@ platform or release package has been verified. Use a disposable folder and synth
 9. With two stored records and a search showing only one, run `clear`. After saving, expect
    `Cleared 2 members. The address book is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
    `The address book is already empty. No changes were made.`
+
+### Sorting and CSV workflows
+
+Use a disposable roster. Run `clear`, then enter the following setup commands separately:
+
+```text
+add n/Zara Tan p/90000001 e/zara@example.com a/Test Road t/committee
+add n/bob Lee p/90000002 e/bob@example.com a/Test Road t/year1
+add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
+```
+
+1. Run `sort`. Expect `Sorted displayed members by name (A to Z).` and Alice, bob, Zara in that order.
+   Repeat `sort`: the order stays the same. Run `list`: expect `Showing 3 members.` and Zara, bob, Alice.
+   Run `filter t/committee`, then `sort`: only Alice and Zara appear. Try `sort date`; expect
+   `Invalid command format. Usage: sort` with the view unchanged. The saved roster bytes and modification
+   time must remain unchanged throughout these read-only checks.
+2. With the committee filter still active, run `export members.csv`. Expect three exported records,
+   including the hidden bob record, in stored order. Check the UTF-8 header and sorted semicolon-separated
+   tags, and confirm that automatic JSON storage and the displayed view are unchanged.
+3. Run `import p/members.csv` without clearing. Expect zero imported members and three skipped duplicates.
+   The full roster is restored in stored order. Then run `clear`, followed by `import p/members.csv`.
+   Expect three imports and zero skipped duplicates. Restart and check every field and tag is retained.
+4. Copy `members.csv` to `member list.csv`, then run `import p/"member list.csv"`.
+   The quoted path must work and all three duplicates must be skipped. Try `import p/missing.csv`:
+   expect a read error with the roster and view unchanged.
+5. Make a separate `invalid.csv` with the valid header, one valid member, and then a row with an invalid
+   phone. Import it: expect a row-specific error, no partial import, and no saved-file or view change.
+   Repeat with a malformed header, broken CSV quoting, and a quoted field containing a line break.
+6. Test a destination in a missing directory with `export missing/members.csv`: expect a write error
+   without creating that directory. In a disposable release folder, verify that CSV paths outside the JAR
+   folder and symbolic-link paths are rejected. Test a header-only CSV and a zero-member export.
+   For an import-save failure, temporarily replace the automatic JSON file with a directory: expect the
+   imported batch to remain in memory, a save error, and no modification to the source CSV. Restore storage
+   access and retry saving with an existing field value before exiting.
 
 ### Persistence and invalid files
 

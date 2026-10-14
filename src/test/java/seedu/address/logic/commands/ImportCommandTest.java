@@ -83,17 +83,22 @@ public class ImportCommandTest {
         model.addPerson(another);
         model.setNameSorting(true);
         model.updateFilteredPersonList(unused -> false);
-        Path file = write("name,phone,email,address,tags\nValid,123,valid@example.com,Home,\n"
-                + "Invalid,123,invalid@example.com,\"Unclosed address\n");
+        for (String invalidRow : List.of("Invalid,123,invalid@example.com,\"Unclosed address\n",
+                "Invalid,123,invalid@example.com,Unescaped\" address,\n")) {
+            model.updateFilteredPersonList(unused -> false);
+            String contents = "name,phone,email,address,tags\nValid,123,valid@example.com,Home,\n" + invalidRow;
+            Path file = write(contents);
 
-        CommandException error = assertThrows(CommandException.class, () -> new ImportCommand(file).execute(model));
+            CommandException error = assertThrows(CommandException.class, () -> new ImportCommand(file).execute(model));
 
-        assertEquals("Could not import CSV: row 3: invalid CSV syntax. No members were imported.",
-                error.getMessage());
-        assertEquals(List.of(existing, another), model.getAddressBook().getPersonList());
-        assertEquals(List.of(), model.getFilteredPersonList());
-        model.updateFilteredPersonList(unused -> true);
-        assertEquals(List.of(another, existing), model.getFilteredPersonList());
+            assertEquals("Could not import CSV: row 3: invalid CSV syntax. No members were imported.",
+                    error.getMessage());
+            assertEquals(List.of(existing, another), model.getAddressBook().getPersonList());
+            assertEquals(List.of(), model.getFilteredPersonList());
+            assertEquals(contents, Files.readString(file));
+            model.updateFilteredPersonList(unused -> true);
+            assertEquals(List.of(another, existing), model.getFilteredPersonList());
+        }
     }
 
     @Test

@@ -4,12 +4,10 @@
 [![codecov](https://codecov.io/gh/AY2627S1-CS2103T-W12-1/tp/branch/master/graph/badge.svg)](https://app.codecov.io/gh/AY2627S1-CS2103T-W12-1/tp)
 
 TrackCall helps membership secretaries keep their organisation's member records up to date.
-It is a desktop app to help to keep track for around 500 members, not a hard limit.
-We can type commands in the command line to find members and update their contact details quickly.
+It is a desktop app designed for around 500 members, although this is not a hard limit.
+Type commands to find members and update their contact details quickly.
 
-## Current development build
-
-The working branch begins v1.2; v1.1 was the documentation practice iteration.
+## Features in v1.3
 
 * Add, edit, list, find, delete, and clear member records.
 * Open offline instructions for all available commands with `help`, or one command with `help COMMAND`.
@@ -20,12 +18,9 @@ The working branch begins v1.2; v1.1 was the documentation practice iteration.
 * Add or remove a tag for every displayed member with `tagall t/TAG` or `untagall t/TAG`.
 * Import and export CSV member records, and sort the displayed list by name.
 
-## Planned interface
+## Interface
 
-![TrackCall mockup showing committee members after filtering by tag](docs/images/Ui.png)
-
-This AI-assisted mockup shows the intended product, including tag filtering. It is not a
-screenshot of the current development build.
+![TrackCall showing two committee members after filter t/committee](docs/images/Ui.png)
 
 ## Documentation
 
@@ -34,7 +29,7 @@ screenshot of the current development build.
 * [Developer Guide](https://ay2627s1-cs2103t-w12-1.github.io/tp/DeveloperGuide.html)
 * [About Us](https://ay2627s1-cs2103t-w12-1.github.io/tp/AboutUs.html)
 
-The User Guide describes the working build. The Developer Guide separates the current implementation
+The User Guide describes the v1.3 release. The Developer Guide separates the current implementation
 from planned MVP requirements. Published documentation follows the team's merged default branch.
 
 ## Local development

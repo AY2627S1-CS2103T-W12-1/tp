@@ -62,6 +62,15 @@ public class FindCommandTest {
     }
 
     @Test
+    public void execute_nonMatchingKeyword_noPersonFound() {
+        NameContainsKeywordsPredicate predicate = preparePredicate("Nobody");
+        FindCommand command = new FindCommand(predicate);
+        expectedModel.updateFilteredPersonList(predicate);
+        assertCommandSuccess(command, model, "0 members listed.", expectedModel);
+        assertEquals(List.of(), model.getFilteredPersonList());
+    }
+
+    @Test
     public void execute_oneKeyword_onePersonFound() {
         NameContainsKeywordsPredicate predicate = preparePredicate("Carl");
         FindCommand command = new FindCommand(predicate);

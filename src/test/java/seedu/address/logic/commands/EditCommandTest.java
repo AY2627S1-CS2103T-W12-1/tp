@@ -13,7 +13,12 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
+import static seedu.address.testutil.TypicalPersons.ALICE;
+import static seedu.address.testutil.TypicalPersons.BENSON;
+import static seedu.address.testutil.TypicalPersons.DANIEL;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
+
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +29,9 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
 
@@ -83,7 +90,7 @@ public class EditCommandTest {
     }
 
     @Test
-    public void execute_filteredList_success() {
+    public void execute_nameNoLongerMatchesSearch_hidesEditedPerson() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
 
         Person personInFilteredList = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -94,9 +101,52 @@ public class EditCommandTest {
         String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(editedPerson));
 
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        showPersonAtIndex(expectedModel, INDEX_FIRST_PERSON);
         expectedModel.setPerson(model.getFilteredPersonList().get(0), editedPerson);
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+        assertTrue(model.getFilteredPersonList().isEmpty());
+    }
+
+    @Test
+    public void execute_tagFilteredList_retainsFilter() throws Exception {
+        new FilterCommand(new Tag("friends")).execute(model);
+        Person editedPerson = new PersonBuilder(ALICE).withPhone(VALID_PHONE_BOB).build();
+
+        new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withPhone(VALID_PHONE_BOB).build()).execute(model);
+
+        assertEquals(List.of(editedPerson, BENSON, DANIEL), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_removeFilteredTag_hidesEditedPerson() throws Exception {
+        new FilterCommand(new Tag("friends")).execute(model);
+        Person editedPerson = new PersonBuilder(ALICE).withTags().build();
+
+        new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withTags().build()).execute(model);
+
+        assertEquals(List.of(BENSON, DANIEL), model.getFilteredPersonList());
+        assertTrue(model.getAddressBook().getPersonList().contains(editedPerson));
+    }
+
+    @Test
+    public void execute_searchAndMultipleTagFilters_retainsAllConditions() throws Exception {
+        new FindCommand(new NameContainsKeywordsPredicate(List.of("Meier"))).execute(model);
+        new FilterCommand(new Tag("friends")).execute(model);
+        new FilterCommand(new Tag("owesMoney")).execute(model);
+        Person editedPerson = new PersonBuilder(BENSON).withPhone("91234567").build();
+
+        new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withPhone("91234567").build()).execute(model);
+
+        assertEquals(List.of(editedPerson), model.getFilteredPersonList());
+
+        new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withName("Benson").build()).execute(model);
+
+        assertTrue(model.getFilteredPersonList().isEmpty());
     }
 
     @Test

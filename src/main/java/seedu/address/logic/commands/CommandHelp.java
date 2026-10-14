@@ -14,7 +14,8 @@ public enum CommandHelp {
     SORT("Browse members", "sort", "Sort members by name", "sort", "sort",
             "Orders the displayed members by full name from A to Z, ignoring letter case.",
             "Shows the current search results alphabetically without changing the saved roster.",
-            "Sorting stays active until list or a restart. Check list numbers again before editing or deleting.",
+            "Sorting stays active until list, a successful import, or a restart. "
+                    + "Check list numbers again before editing or deleting.",
             "Use sort with no extra arguments. Use list to restore the complete roster in stored order."),
     FIND("Browse members", "find", "Find a member by name", "find KEYWORD [MORE_KEYWORDS]", "find Alice Tan",
             "Searches all members for any complete name word, ignoring letter case.",
@@ -26,7 +27,7 @@ public enum CommandHelp {
             "Shows only members tagged committee, in their current order with new displayed numbers.",
             "Matching is exact and case-sensitive. Repeated filters narrow the list further. Use list to show "
                     + "everyone or find to search all members by name. Edit and delete use displayed numbers; "
-                    + "a successful edit shows everyone again.",
+                    + "editing keeps the active search and filters. Members that no longer match disappear from view.",
             "Supply exactly one tag of 1 to 30 ASCII letters or digits. Empty tags, internal spaces, "
                     + "multiple tags, and extra arguments are rejected."),
     ADD("Manage members", "add", "Add a member",
@@ -43,7 +44,8 @@ public enum CommandHelp {
             "edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...",
             "edit 1 p/98765432 t/committee t/year1",
             "Updates the member at a displayed list number. Fields you leave out stay unchanged.",
-            "Changes member 1's phone and replaces their tags with committee and year1, then shows all members.",
+            "Changes member 1's phone and replaces their tags with committee and year1, "
+                    + "keeping the active name search and tag filters.",
             "Give the full tag set you want to keep. Use edit 1 t/ to remove all tags from member 1.",
             "Use a current positive list number and supply at least one field. Invalid values or duplicate contact "
                     + "details are rejected. If saving fails, the edit remains in this session and the command box "
@@ -76,7 +78,8 @@ public enum CommandHelp {
                     + "overwritten. Tags are sorted and joined with semicolons. The roster and current search "
                     + "stay unchanged.",
             "Use a valid output path whose parent directory exists and is writable. "
-                    + "An invalid path or a failed write reports an error."),
+                    + "The active roster, preferences, and running JAR cannot be export destinations. "
+                    + "An invalid path or a failed write reports an error and preserves any previous export."),
     IMPORT("Manage members", "import", "Import members from CSV", "import p/FILE_PATH",
             "import p/\"data/member list.csv\"",
             "Validates a UTF-8 CSV file and appends member records without overwriting existing members.",
