@@ -26,7 +26,7 @@ public enum CommandHelp {
             "Shows only members tagged committee, in their current order with new displayed numbers.",
             "Matching is exact and case-sensitive. Repeated filters narrow the list further. Use list to show "
                     + "everyone or find to search all members by name. Edit and delete use displayed numbers; "
-                    + "a successful edit shows everyone again.",
+                    + "editing keeps the active search and filters. Members that no longer match disappear from view.",
             "Supply exactly one tag of 1 to 30 ASCII letters or digits. Empty tags, internal spaces, "
                     + "multiple tags, and extra arguments are rejected."),
     ADD("Manage members", "add", "Add a member",
@@ -43,7 +43,8 @@ public enum CommandHelp {
             "edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...",
             "edit 1 p/98765432 t/committee t/year1",
             "Updates the member at a displayed list number. Fields you leave out stay unchanged.",
-            "Changes member 1's phone and replaces their tags with committee and year1, then shows all members.",
+            "Changes member 1's phone and replaces their tags with committee and year1, "
+                    + "keeping the active name search and tag filters.",
             "Give the full tag set you want to keep. Use edit 1 t/ to remove all tags from member 1.",
             "Use a current positive list number and supply at least one field. Invalid values or duplicate contact "
                     + "details are rejected. If saving fails, the edit remains in this session and the command box "

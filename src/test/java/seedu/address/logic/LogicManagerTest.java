@@ -418,7 +418,7 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_failedFilteredEdit_marksCommandAppliedAfterListChanges() throws Exception {
+    public void execute_failedFilteredEdit_marksCommandAppliedAndRetainsFilter() throws Exception {
         model.addPerson(AMY);
         model.addPerson(BOB);
         useFailingStorage(DUMMY_IO_EXCEPTION);
@@ -429,7 +429,8 @@ public class LogicManagerTest {
 
         assertTrue(failure.isChangeApplied());
         Person editedBob = new PersonBuilder(BOB).withPhone("99988877").build();
-        assertEquals(List.of(AMY, editedBob), model.getFilteredPersonList());
+        assertEquals(List.of(editedBob), model.getFilteredPersonList());
+        assertEquals(List.of(AMY, editedBob), model.getAddressBook().getPersonList());
     }
 
     @Test
