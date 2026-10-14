@@ -16,7 +16,6 @@ public class Messages {
     public static final String MESSAGE_INVALID_COMMAND_FORMAT = "Invalid command format.\n\n%1$s";
     public static final String MESSAGE_INVALID_PERSON_DISPLAYED_INDEX =
             "No member has that displayed index. Use list, then choose a number shown beside a member.";
-    public static final String MESSAGE_PERSONS_LISTED_OVERVIEW = "Members found: %1$d";
     public static final String MESSAGE_DUPLICATE_FIELDS =
                 "Multiple values specified for the following single-valued field(s): ";
 
