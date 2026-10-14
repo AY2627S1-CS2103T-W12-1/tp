@@ -195,6 +195,35 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_exportToStorageHardLink_rejectsWithoutChangingOriginal() throws Exception {
+        Path dataFile = temporaryFolder.resolve("addressBook.json");
+        Files.writeString(dataFile, "Keep the original roster");
+        Path alias = temporaryFolder.resolve("alias.csv");
+        try {
+            Files.createLink(alias, dataFile);
+        } catch (IOException | UnsupportedOperationException error) {
+            org.junit.jupiter.api.Assumptions.assumeTrue(false, "Hard links are unavailable: " + error.getMessage());
+        }
+
+        assertThrows(CommandException.class, () -> logic.execute("export " + alias));
+
+        assertEquals("Keep the original roster", Files.readString(dataFile));
+        assertEquals("Keep the original roster", Files.readString(alias));
+    }
+
+    @Test
+    public void execute_exportToExistingCsvBeforeFirstSave_preservesMissingStorageFiles() throws Exception {
+        Path destination = temporaryFolder.resolve("members.csv");
+        Files.writeString(destination, "Old CSV contents");
+
+        logic.execute("export " + destination);
+
+        assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertFalse(Files.exists(temporaryFolder.resolve("userPrefs.json")));
+    }
+
+    @Test
     public void execute_import_savesUpdatedRoster() throws Exception {
         Path csvFile = temporaryFolder.resolve("members.csv");
         Files.writeString(csvFile, "name,phone,email,address,tags\n"
