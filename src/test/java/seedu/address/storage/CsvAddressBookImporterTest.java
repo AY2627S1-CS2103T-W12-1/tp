@@ -23,6 +23,7 @@ import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
@@ -30,6 +31,23 @@ public class CsvAddressBookImporterTest {
 
     @TempDir
     public Path tempDir;
+
+    @Test
+    public void read_unescapedQuoteInUnquotedField_rejectsCsvSyntaxAtTheCorrectRow() throws Exception {
+        Path file = write("name,phone,email,address,tags\n"
+                + "Alice,123,a@example.com,Main\" Street,\n");
+        CsvImportException error = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
+        assertEquals("row 2: " + MESSAGE_INVALID_CSV, error.getMessage());
+    }
+
+    @Test
+    public void read_invalidFieldBeforeLaterUnescapedQuote_reportsEarlierRow() throws Exception {
+        Path file = write("name,phone,email,address,tags\n"
+                + "Alice,12,a@example.com,Main Street,\n"
+                + "Bob,123,b@example.com,Other\" Street,\n");
+        CsvImportException error = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
+        assertEquals("row 2: " + Phone.MESSAGE_CONSTRAINTS, error.getMessage());
+    }
 
     @Test
     public void read_headerOnly_returnsEmptyList() throws Exception {
@@ -120,7 +138,7 @@ public class CsvAddressBookImporterTest {
                 "expected 5 fields but found 4.",
                 MESSAGE_INVALID_CSV,
                 MESSAGE_INVALID_CSV,
-                Name.MESSAGE_CONSTRAINTS,
+                MESSAGE_INVALID_CSV,
                 Tag.MESSAGE_CONSTRAINTS,
                 Tag.MESSAGE_CONSTRAINTS);
 

@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -72,9 +73,21 @@ public final class CsvAddressBookImporter {
     }
 
     static List<Person> parseRecords(Reader reader) throws CsvImportException {
-        try (CSVParser parser = CSVParser.parse(reader, CsvAddressBookCsv.FORMAT)) {
+        try (reader) {
+            StringWriter contents = new StringWriter();
+            reader.transferTo(contents);
+            return parseContents(contents.toString());
+        } catch (IOException e) {
+            throw new CsvImportException(MESSAGE_INVALID_CSV, e);
+        }
+    }
+
+    /** Keeps raw physical rows available so quote validation does not lose information during CSV decoding. */
+    private static List<Person> parseContents(String contents) throws CsvImportException {
+        String[] rawRows = contents.split("\\r?\\n", -1);
+        try (CSVParser parser = CSVParser.parse(new StringReader(contents), CsvAddressBookCsv.FORMAT)) {
             Iterator<CSVRecord> records = parser.iterator();
-            CSVRecord header = nextRecord(parser, records);
+            CSVRecord header = nextRecord(parser, records, rawRows);
             if (header == null) {
                 throw new CsvImportException(MESSAGE_INVALID_HEADER);
             }
@@ -82,7 +95,7 @@ public final class CsvAddressBookImporter {
             Map<String, Integer> headerIndexes = parseHeaders(header);
             List<Person> people = new ArrayList<>();
             CSVRecord record;
-            while ((record = nextRecord(parser, records)) != null) {
+            while ((record = nextRecord(parser, records, rawRows)) != null) {
                 if (record.size() == 1 && record.get(0).trim().isEmpty()) {
                     continue;
                 }
@@ -98,7 +111,8 @@ public final class CsvAddressBookImporter {
      * Reads one record, reporting syntax errors at its starting physical row.
      * Multiline fields are rejected before trimming so line breaks cannot disappear during normalisation.
      */
-    private static CSVRecord nextRecord(CSVParser parser, Iterator<CSVRecord> records) throws CsvImportException {
+    private static CSVRecord nextRecord(CSVParser parser, Iterator<CSVRecord> records, String[] rawRows)
+            throws CsvImportException {
         long row = parser.getCurrentLineNumber() + 1;
         CSVRecord record;
         try {
@@ -114,7 +128,39 @@ public final class CsvAddressBookImporter {
                 throw rowError(row, MESSAGE_MULTILINE_FIELD);
             }
         }
+        validateQuotes(rawRows[(int) row - 1], row);
         return record;
+    }
+
+    /**
+     * Rejects quotes embedded in unquoted fields, which the CSV library otherwise accepts as literal text.
+     * Quoted fields retain doubled-quote escaping and optional surrounding whitespace.
+     */
+    private static void validateQuotes(String record, long row) throws CsvImportException {
+        boolean isQuoted = false;
+        boolean isFieldStart = true;
+        for (int index = 0; index < record.length(); index++) {
+            char character = record.charAt(index);
+            if (isQuoted) {
+                if (character == '"') {
+                    if (index + 1 < record.length() && record.charAt(index + 1) == '"') {
+                        index++;
+                    } else {
+                        isQuoted = false;
+                    }
+                }
+            } else if (character == ',') {
+                isFieldStart = true;
+            } else if (character == '"') {
+                if (!isFieldStart) {
+                    throw rowError(row, MESSAGE_INVALID_CSV);
+                }
+                isQuoted = true;
+                isFieldStart = false;
+            } else if (!Character.isWhitespace(character)) {
+                isFieldStart = false;
+            }
+        }
     }
 
     private static String decodeUtf8(byte[] bytes) throws CsvImportException {
