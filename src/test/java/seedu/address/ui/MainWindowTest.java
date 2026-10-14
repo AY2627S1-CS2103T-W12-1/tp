@@ -17,6 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import javafx.event.ActionEvent;
 import javafx.event.Event;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -27,6 +28,7 @@ import seedu.address.logic.LogicManager;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.model.ModelManager;
+import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -118,6 +120,64 @@ public class MainWindowTest {
             assertEquals("clear", input.getText());
             assertEquals(1, model.getFilteredPersonList().size());
         });
+    }
+
+    @Test
+    public void enter_allCommands_roundTripsGroupChangesThroughRealUiAndStorage() throws Exception {
+        Path exported = temporaryFolder.resolve("member copy.csv");
+        onJavaFxThread(() -> {
+            enter("help");
+            Stage guide = guide();
+            assertTrue(guide.isShowing());
+            Event.fireEvent(guide.getScene(), key(KeyCode.ESCAPE));
+            enter("clear");
+            enter("add n/Zara Tan p/90000001 e/zara@example.com a/Test Road t/committee");
+            enter("add n/bob Lee p/90000002 e/bob@example.com a/Test Road t/year1");
+            enter("add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee");
+            enter("sort");
+            assertDisplayedNames("Alice Tan", "bob Lee", "Zara Tan");
+            enter("find Zara Alice");
+            enter("filter t/committee");
+            assertDisplayedNames("Alice Tan", "Zara Tan");
+            enter("tagall t/year2");
+            assertEquals("Added tag \"year2\" to 2 member(s).", feedback.getText());
+            enter("untagall t/committee");
+            assertEquals("Removed tag \"committee\" from 2 member(s).", feedback.getText());
+            assertDisplayedNames();
+            enter("list");
+            assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");
+            enter("edit 1 p/90000004");
+            enter("export " + exported);
+            assertTrue(feedback.getText().startsWith("Exported 3 people to "));
+            enter("delete 2");
+            assertDisplayedNames("Zara Tan", "Alice Tan");
+            enter("clear");
+            enter("import p/\"" + exported + "\"");
+            assertTrue(feedback.getText().startsWith("Imported 3 member(s)"));
+            assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");
+            assertEquals("90000004", model.getFilteredPersonList().getFirst().getPhone().value);
+            assertTrue(model.getFilteredPersonList().getFirst().getTags().stream()
+                    .anyMatch(tag -> tag.tagName.equals("year2")));
+            assertTrue(model.getFilteredPersonList().getFirst().getTags().stream()
+                    .noneMatch(tag -> tag.tagName.equals("committee")));
+            enter("find Alice");
+            enter("clear");
+            assertEquals("Cleared 3 members. The address book is now empty.", feedback.getText());
+            enter("list");
+            assertEquals("No members in the address book.", feedback.getText());
+            enter("exit");
+            assertFalse(window.getPrimaryStage().isShowing());
+        });
+        assertEquals(4, Files.readAllLines(exported).size());
+        assertTrue(new JsonAddressBookStorage(temporaryFolder.resolve("members.json"))
+                .readAddressBook().orElseThrow().getPersonList().isEmpty());
+    }
+
+    /** Checks the actual list bound to the displayed member cards. */
+    private void assertDisplayedNames(String... expectedNames) {
+        ListView<?> displayed = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+        assertEquals(List.of(expectedNames), displayed.getItems().stream()
+                .map(person -> ((Person) person).getName().fullName).toList());
     }
 
     private void enter(String command) {

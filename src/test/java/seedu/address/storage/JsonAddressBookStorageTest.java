@@ -1,5 +1,6 @@
 package seedu.address.storage;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -9,6 +10,7 @@ import static seedu.address.testutil.TypicalPersons.IDA;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -69,6 +71,37 @@ public class JsonAddressBookStorageTest {
                 + "\"email\":\"alice@example.com\",\"address\":\"Main Street\",\"tags\":[]},"
                 + "{\"name\":\"Alice \",\"phone\":\"123\",\"email\":\"alice@example.com\","
                 + "\"address\":\"Main Street \",\"tags\":[\"committee\"]}]}");
+    }
+
+    @Test
+    public void readAddressBook_trailingContent_throwsDataLoadingException() throws IOException {
+        for (String suffix : new String[] {"{}", "null", "trailing text", "[]", "42"}) {
+            assertInvalidDataRejected("{\"persons\":[]} " + suffix);
+        }
+    }
+
+    @Test
+    public void readAddressBook_invalidUtf8_throwsDataLoadingExceptionWithoutChangingBytes() throws IOException {
+        byte[] contents = ("{\"persons\":[{\"name\":\"Alice\",\"phone\":\"123\","
+                + "\"email\":\"alice@example.com\",\"address\":\"Main ? Street\",\"tags\":[]}]}")
+                .getBytes(StandardCharsets.UTF_8);
+        for (int index = 0; index < contents.length; index++) {
+            if (contents[index] == '?') {
+                contents[index] = (byte) 0x80;
+            }
+        }
+        Path file = testFolder.resolve("invalid-utf8.json");
+        Files.write(file, contents);
+
+        assertThrows(DataLoadingException.class, () -> new JsonAddressBookStorage(file).readAddressBook());
+        assertArrayEquals(contents, Files.readAllBytes(file));
+    }
+
+    @Test
+    public void readAddressBook_trailingWhitespace_loadsEmptyRoster() throws Exception {
+        Path file = testFolder.resolve("empty.json");
+        Files.writeString(file, "{\"persons\":[]} \n\t\r\n");
+        assertEquals(new AddressBook(), new JsonAddressBookStorage(file).readAddressBook().orElseThrow());
     }
 
     /** Verifies corrupt data is rejected without changing the file or escaping as an unchecked exception. */

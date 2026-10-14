@@ -91,16 +91,16 @@ Use a separate `t/` for each optional tag.
 
 | Field | Current rule |
 | --- | --- |
-| Name | Letters, digits, and spaces. Cannot be blank. |
-| Phone | At least three digits. No spaces or punctuation. |
+| Name | ASCII letters, digits, and spaces. Cannot be blank. |
+| Phone | At least three ASCII digits. No spaces or punctuation. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text. |
 | Tag | 1 to 30 ASCII letters or digits, without spaces. Tags are case-sensitive. |
 
 **Email rules:**
 
-* The local part contains letters or digits, optionally separated by single `+`, `_`, `.`, or `-` characters.
-* Domain labels contain letters or digits, with hyphens allowed internally.
+* The local part contains ASCII letters or digits, optionally separated by single `+`, `_`, `.`, or `-` characters.
+* Domain labels contain ASCII letters or digits, with hyphens allowed internally.
 * The final domain label needs at least two characters.
 
 For example:
@@ -143,7 +143,9 @@ Extra arguments such as `sort date` produce `Invalid command format. Usage: sort
    ```
 
 This changes the first displayed member's phone and email. Omitted fields stay unchanged.
-After saving, TrackCall shows the updated details and restores the complete list.
+After saving, TrackCall shows the updated details and keeps the active search, tag filters, and sorting.
+If the updated member no longer matches the search or filters, they disappear from view but remain
+in the roster. Use `list` to show everyone again.
 An edit that would make all four contact fields match another member is rejected.
 
 **Supplied tags replace all existing tags.**
@@ -169,25 +171,31 @@ Use `list` to show everyone again. Searching does not save the data file.
 
 ### Filter displayed members by tag: `filter`
 
-Use `filter t/TAG` to show only currently displayed members with that exact tag.
-For example, `filter t/committee` shows members tagged `committee`. Matching is case-sensitive,
-so `Committee` is a different tag. Filtering keeps the current display order, including an active
-name sort, and renumbers the visible members. It reports `N member(s) listed with tag "TAG".`
-Zero matches are successful and show an empty list.
+`filter t/TAG` shows members with that tag from the **currently displayed list**.
 
-Run `filter` again to narrow the results by another tag. Run `list` first to filter the whole roster.
-For example, run `filter t/committee` and then `filter t/year1` as two separate commands.
-Only members with **both** tags remain. A single `filter` command accepts only one `t/TAG`.
-`find` starts a new name search over the full roster and replaces previous filters.
-Subsequent index-based commands use the currently displayed numbers. A successful `edit` currently
-restores the full roster. Filtering does not change or save member data.
+1. Use `list` to start with everyone, or `find` to start with name-search results.
+2. Supply one tag:
 
-For example, run `filter t/family`, check the displayed members, then use `edit 1 p/98765432`
-to update the first displayed family member. A successful edit shows everyone again. To search
-all members named Tan after filtering, run `find Tan`.
+   ```text
+   filter t/committee
+   ```
 
-Supply exactly one tag of 1 to 30 ASCII letters or digits with no internal spaces. Spaces around the tag
+This keeps only committee members in the current view. Their order, including active name sorting,
+stays the same, and their displayed numbers update.
+
+* Matching is exact and case-sensitive: `committee` and `Committee` are different tags.
+* Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
+* Use `list` to show everyone again. A new `find` searches the whole roster and replaces previous filters.
+
+The result reports `N member(s) listed with tag "TAG".`
+No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
+
+Check the displayed numbers before using `edit` or `delete`. Editing keeps the active search and filters.
+If an edited member no longer matches, they disappear from view but remain in the roster.
+
+Supply exactly one tag of 1 to 30 ASCII letters or digits, with no internal spaces. Surrounding spaces
 are ignored. Missing or extra parameters and invalid tags are rejected without changing the view.
+For example, `filter t/committee t/year1` is invalid; apply each tag in a separate command.
 
 ### Tag or untag a group: `tagall`, `untagall`
 
@@ -261,6 +269,8 @@ Tags for each member are sorted alphabetically and joined with semicolons.
 * Packaged builds resolve relative paths from the JAR folder and accept absolute paths only inside
   that folder. The parent directory must already exist and be writable.
 * An existing destination file is overwritten.
+  The active roster file, preferences file, and running JAR cannot be used as export destinations.
+  If exporting fails, an existing destination file is left unchanged.
 * Export leaves the roster, current search, and automatic JSON data file unchanged.
 * An empty roster produces a file containing only the column headers.
 
@@ -383,7 +393,6 @@ A successful data change replaces the file.
 
 ## Current limitations
 
-* An edit restores the full list instead of retaining an active name search or tag filter.
 * An unrecognised prefix-like token inside an address can be stored as literal address text.
   For example, `a/Main Road T/committee` does not assign a tag.
   Use lowercase `t/` and check the displayed details after adding or editing.

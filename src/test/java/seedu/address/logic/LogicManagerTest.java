@@ -110,6 +110,19 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_nonAsciiIndices_rejectsWithoutChangingRosterOrView() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        model.updateFilteredPersonList(AMY::equals);
+        for (String command : List.of("delete \u0661", "delete \uFF11", "edit \u0661 n/Changed")) {
+            assertThrows(ParseException.class, () -> logic.execute(command));
+            assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
+            assertEquals(List.of(AMY), model.getFilteredPersonList());
+            assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        }
+    }
+
+    @Test
     public void execute_validCommand_success() throws Exception {
         String listCommand = ListCommand.COMMAND_WORD;
         assertCommandSuccess(listCommand, ListCommand.MESSAGE_EMPTY, model);
@@ -194,6 +207,57 @@ public class LogicManagerTest {
         assertTrue(result.getFeedbackToUser().startsWith("Exported 1 people to "));
         assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
         assertTrue(model.getFilteredPersonList().isEmpty());
+    }
+
+    @Test
+    public void execute_exportToApplicationStorage_rejectsWithoutChangingFilesOrView() throws Exception {
+        model.addPerson(AMY);
+        model.updateFilteredPersonList(unused -> false);
+        for (String filename : List.of("addressBook.json", "userPrefs.json")) {
+            Path target = temporaryFolder.resolve(filename);
+            Files.writeString(target, "Keep the existing application file");
+            assertThrows(CommandException.class, () -> logic.execute("export " + target));
+            assertEquals("Keep the existing application file", Files.readString(target));
+            assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
+            assertTrue(model.getFilteredPersonList().isEmpty());
+        }
+    }
+
+    @Test
+    public void execute_exportToNormalisedStoragePath_rejectsBeforeCreatingFile() throws Exception {
+        Path target = temporaryFolder.resolve("nested/../addressBook.json");
+        assertThrows(CommandException.class, () -> logic.execute("export " + target));
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertFalse(Files.exists(temporaryFolder.resolve("nested")));
+    }
+
+    @Test
+    public void execute_exportToStorageHardLink_rejectsWithoutChangingOriginal() throws Exception {
+        Path dataFile = temporaryFolder.resolve("addressBook.json");
+        Files.writeString(dataFile, "Keep the original roster");
+        Path alias = temporaryFolder.resolve("alias.csv");
+        try {
+            Files.createLink(alias, dataFile);
+        } catch (IOException | UnsupportedOperationException error) {
+            org.junit.jupiter.api.Assumptions.assumeTrue(false, "Hard links are unavailable: " + error.getMessage());
+        }
+
+        assertThrows(CommandException.class, () -> logic.execute("export " + alias));
+
+        assertEquals("Keep the original roster", Files.readString(dataFile));
+        assertEquals("Keep the original roster", Files.readString(alias));
+    }
+
+    @Test
+    public void execute_exportToExistingCsvBeforeFirstSave_preservesMissingStorageFiles() throws Exception {
+        Path destination = temporaryFolder.resolve("members.csv");
+        Files.writeString(destination, "Old CSV contents");
+
+        logic.execute("export " + destination);
+
+        assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertFalse(Files.exists(temporaryFolder.resolve("userPrefs.json")));
     }
 
     @Test
@@ -442,7 +506,7 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_failedFilteredEdit_marksCommandAppliedAfterListChanges() throws Exception {
+    public void execute_failedFilteredEdit_marksCommandAppliedAndRetainsFilter() throws Exception {
         model.addPerson(AMY);
         model.addPerson(BOB);
         useFailingStorage(DUMMY_IO_EXCEPTION);
@@ -453,7 +517,8 @@ public class LogicManagerTest {
 
         assertTrue(failure.isChangeApplied());
         Person editedBob = new PersonBuilder(BOB).withPhone("99988877").build();
-        assertEquals(List.of(AMY, editedBob), model.getFilteredPersonList());
+        assertEquals(List.of(editedBob), model.getFilteredPersonList());
+        assertEquals(List.of(AMY, editedBob), model.getAddressBook().getPersonList());
     }
 
     @Test
