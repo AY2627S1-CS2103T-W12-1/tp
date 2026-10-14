@@ -19,6 +19,19 @@ import seedu.address.testutil.PersonBuilder;
 public class PersonTest {
 
     @Test
+    public void isSamePerson_trailingContactWhitespace_ignoresPaddingWithoutChangingValues() {
+        Person padded = new PersonBuilder(BOB).withName(BOB.getName().fullName + " ")
+                .withAddress(BOB.getAddress().value + " \t").build();
+        assertTrue(BOB.isSamePerson(padded));
+        assertTrue(padded.isSamePerson(BOB));
+        assertEquals(BOB.getName().fullName + " ", padded.getName().fullName);
+        assertEquals(BOB.getAddress().value + " \t", padded.getAddress().value);
+        Person internalSpacing = new PersonBuilder(BOB)
+                .withName(BOB.getName().fullName.replace(" ", "  ")).build();
+        assertFalse(BOB.isSamePerson(internalSpacing));
+    }
+
+    @Test
     public void asObservableList_modifyList_throwsUnsupportedOperationException() {
         Person person = new PersonBuilder().build();
         assertThrows(UnsupportedOperationException.class, () -> person.getTags().remove(0));
@@ -54,10 +67,10 @@ public class PersonTest {
         Person editedBob = new PersonBuilder(BOB).withName(VALID_NAME_BOB.toLowerCase()).build();
         assertFalse(BOB.isSamePerson(editedBob));
 
-        // name has trailing spaces, all other attributes same -> returns false
+        // name has trailing spaces, all other attributes same -> returns true after trimming
         String nameWithTrailingSpaces = VALID_NAME_BOB + " ";
         editedBob = new PersonBuilder(BOB).withName(nameWithTrailingSpaces).build();
-        assertFalse(BOB.isSamePerson(editedBob));
+        assertTrue(BOB.isSamePerson(editedBob));
     }
 
     @Test

@@ -63,6 +63,14 @@ public class JsonAddressBookStorageTest {
                 + "\"email\":\"alice@example.com\",\"address\":\"Main Street\",\"tags\":[null]}]}");
     }
 
+    @Test
+    public void readAddressBook_contactsDifferingOnlyInPadding_rejectsDuplicateRecords() throws IOException {
+        assertInvalidDataRejected("{\"persons\":[{\"name\":\"Alice\",\"phone\":\"123\","
+                + "\"email\":\"alice@example.com\",\"address\":\"Main Street\",\"tags\":[]},"
+                + "{\"name\":\"Alice \",\"phone\":\"123\",\"email\":\"alice@example.com\","
+                + "\"address\":\"Main Street \",\"tags\":[\"committee\"]}]}");
+    }
+
     /** Verifies corrupt data is rejected without changing the file or escaping as an unchecked exception. */
     private void assertInvalidDataRejected(String contents) throws IOException {
         Path file = testFolder.resolve("invalid.json");

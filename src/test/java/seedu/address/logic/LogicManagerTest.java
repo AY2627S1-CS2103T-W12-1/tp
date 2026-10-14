@@ -45,10 +45,12 @@ import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
+import seedu.address.storage.CsvAddressBookExporter;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.PersonBuilder;
+import seedu.address.testutil.PersonUtil;
 
 /** Tests command execution, persistence failures, and preservation of model state. */
 public class LogicManagerTest {
@@ -83,6 +85,28 @@ public class LogicManagerTest {
     public void execute_commandExecutionError_throwsCommandException() {
         String deleteCommand = "delete 9";
         assertCommandException(deleteCommand, MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+    }
+
+    @Test
+    public void execute_addAfterLoadingPaddedContact_rejectsDuplicateWithoutSaving() throws Exception {
+        Person padded = new PersonBuilder(BOB).withName(BOB.getName().fullName + " ")
+                .withAddress(BOB.getAddress().value + " ").build();
+        model.addPerson(padded);
+        assertThrows(CommandException.class, () -> logic.execute(PersonUtil.getAddCommand(BOB)));
+        assertEquals(List.of(padded), model.getAddressBook().getPersonList());
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    @Test
+    public void execute_importAfterLoadingPaddedContact_skipsDuplicate() throws Exception {
+        Person padded = new PersonBuilder(BOB).withName(BOB.getName().fullName + " ").build();
+        model.addPerson(padded);
+        Path source = temporaryFolder.resolve("member.csv");
+        CsvAddressBookExporter.export(List.of(BOB), source);
+        CommandResult result = logic.execute("import p/\"" + source + "\"");
+        assertTrue(result.getFeedbackToUser().startsWith("Imported 0 member(s)"));
+        assertTrue(result.getFeedbackToUser().endsWith("Skipped 1 duplicate record(s)."));
+        assertEquals(List.of(padded), model.getAddressBook().getPersonList());
     }
 
     @Test
