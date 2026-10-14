@@ -88,6 +88,10 @@ Provide a name, phone, email, and address.
 Required prefixes may appear in any order, but each must appear exactly once.
 Separate each prefix from the preceding value with whitespace; pasted tabs also work.
 Use a separate `t/` for each optional tag.
+Add reserves whitespace-delimited single ASCII letters followed by `/` for field prefixes.
+Only lowercase `n/`, `p/`, `e/`, `a/`, and `t/` are accepted; `x/extra` and `T/committee`
+report an invalid command format. The standalone abbreviation `c/o` (in any letter case),
+URLs, numeric slashes such as `12/3`, and slashes embedded in words remain address text.
 
 | Field | Current rule |
 | --- | --- |
@@ -384,9 +388,9 @@ A successful data change replaces the file.
 ## Current limitations
 
 * An edit restores the full list instead of retaining an active name search or tag filter.
-* An unrecognised prefix-like token inside an address can be stored as literal address text.
+* For `edit`, an unrecognised prefix-like token inside an address can be stored as literal address text.
   For example, `a/Main Road T/committee` does not assign a tag.
-  Use lowercase `t/` and check the displayed details after adding or editing.
+  Use lowercase `t/` and check the displayed details after editing. `add` rejects this input.
 
 The [Developer Guide](DeveloperGuide.md#appendix-requirements) records the intended MVP and later ideas.
 

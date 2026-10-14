@@ -366,6 +366,12 @@ including a tab. It trims surrounding value whitespace without removing internal
 slashes. `list`, `clear`, and `exit` reject extra arguments before execution. Invalid commands leave
 records, the current list, and the saved file unchanged; the input remains available for correction.
 
+`AddCommandParser` first checks whitespace-delimited single ASCII letters followed by `/`.
+Only `n/`, `p/`, `e/`, `a/`, and `t/` are supported. Unknown letters and uppercase prefixes
+report the add usage message before field validation. The standalone `c/o` abbreviation
+(case-insensitive) is exempt; URLs, numeric slashes, and slashes embedded in words are literal text.
+This validation applies only to `add`; the shared tokenizer and other commands are unchanged.
+
 ### CSV import
 
 `ImportCommandParser` accepts exactly one `p/FILE_PATH` parameter. It removes matching outer quotes,
@@ -393,10 +399,9 @@ The remaining differences from the requirements are:
 
 * `edit` currently restores the full list. Retaining the active search and tag filters is planned.
 * `find` currently reports `Members found: N`. The use cases describe the intended member-list count wording.
-* Unknown-prefix rejection still needs a precise grammar that preserves valid free-form addresses.
-  Currently, an unrecognised prefix-like token such as `x/extra` or uppercase `T/committee` inside
-  an address can become literal address text. The parser must not reject ordinary `c/o` or URLs
-  merely because they contain slashes. This does not yet satisfy the intended unknown-prefix rule.
+* `edit` still accepts unknown prefix-like tokens such as `x/extra` or uppercase `T/committee`
+  inside an address as literal text. `add` rejects these using the grammar described above,
+  while preserving standalone `c/o`, URLs, numeric slashes, and slashes embedded in words.
 * Storage uses `tags` rather than the intended `tagged` schema in the requirements appendix.
 * Startup loading errors are recorded in the log; the requirements' user-visible load messages remain planned.
   Undo/redo and deletion confirmation are not selected for the MVP.
@@ -1176,7 +1181,8 @@ platform or release package has been verified. Use a disposable folder and synth
    repeated tag, or invalid tag must leave the view unchanged. Filtering must not save the file.
 7. Paste a valid add command with actual tab separators before `n/`, `p/`, `e/`, and `a/`.
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
-   or an internal tab keeps that text. Do not treat the planned unknown-prefix rejection as implemented.
+   or an internal tab keeps that text. For `add`, append `x/extra` or `T/committee` and expect
+   an invalid command format with no member added. Unknown-prefix rejection remains planned for `edit`.
 8. Add two members tagged `committee` and one member without tags. Run `list`, then `filter t/committee`.
    Run `tagall t/year1` and
    expect only the displayed members to gain `year1`, keeping their other tags. Run it again and expect

@@ -50,6 +50,35 @@ public class AddCommandParserTest {
     private AddCommandParser parser = new AddCommandParser();
 
     @Test
+    public void parse_unknownOrUppercasePrefix_failure() {
+        String validArguments = NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB + ADDRESS_DESC_BOB;
+        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
+        for (String prefix : new String[] {"x/extra", "T/committee", "N/Bob", "P/12345678", "E/a@b.com",
+            "A/Main", "z/", "c/other", "c/office"}) {
+            assertParseFailure(parser, validArguments + " " + prefix, expectedMessage);
+            assertParseFailure(parser, validArguments + "\t" + prefix + TAG_DESC_FRIEND, expectedMessage);
+            assertParseFailure(parser, " " + prefix + validArguments, expectedMessage);
+        }
+        // Structural errors take precedence over field validation.
+        assertParseFailure(parser, INVALID_NAME_DESC + PHONE_DESC_BOB + EMAIL_DESC_BOB + ADDRESS_DESC_BOB
+                + " x/extra", expectedMessage);
+        assertParseFailure(parser, validArguments + " t/friend x/extra", expectedMessage);
+    }
+
+    @Test
+    public void parse_addressWithSlashes_success() {
+        for (String address : new String[] {"c/o Alice", "Main Road c/o Alice", "Main Road C/O Alice",
+            "https://example.com/x/extra", "Main Road https://example.com/T/committee",
+            "Block 12/3 #01/02", "Main\tRoad c/o Alice", "Main Road foo/bar", "Main Road annex/x/extra"}) {
+            Person expected = new PersonBuilder(BOB).withAddress(address).withTags(VALID_TAG_FRIEND).build();
+            assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB
+                    + " a/" + address + TAG_DESC_FRIEND, new AddCommand(expected));
+            assertParseSuccess(parser, " a/" + address + NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB
+                    + TAG_DESC_FRIEND, new AddCommand(expected));
+        }
+    }
+
+    @Test
     public void parse_allFieldsPresent_success() {
         Person expectedPerson = new PersonBuilder(BOB).withTags(VALID_TAG_FRIEND).build();
 
