@@ -5,7 +5,7 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers the **v1.2 development build** and its fourteen available commands.
+This guide covers **TrackCall v1.3** and its fourteen available commands.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
@@ -19,9 +19,12 @@ Start with [Quick start](#quick-start), or use the [command summary](#command-su
 
 1. Install Java **25**. On macOS, use the compatible JDK+FX distribution in the
    [course installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html).
-2. Follow the [setup guide](SettingUp.md) to prepare your project checkout.
-3. Run `./gradlew run` from the checkout. On Windows, use `gradlew.bat run`.
-   Published packages will appear on the [team releases page](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases).
+2. Download the latest `.jar` file from the [team releases page](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases).
+3. Put the JAR file in an empty folder. TrackCall keeps `data/addressbook.json` and exported CSV files in this folder.
+4. Open a terminal in that folder and run `java -jar` followed by the JAR file name.
+
+To run from a project checkout instead, follow the [setup guide](SettingUp.md) and run `./gradlew run`
+(Windows: `gradlew.bat run`).
 
 ### Try your first commands
 

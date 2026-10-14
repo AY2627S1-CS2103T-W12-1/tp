@@ -32,7 +32,7 @@ We are a team based in the [School of Computing, National University of Singapor
 [[GitHub](https://github.com/glory-lion)]
 
 * Role: Documentation Lead
-* Responsibilities: Manual data-file editing and planned bulk tag editing.
+* Responsibilities: Manual data-file editing and bulk tag editing (`tagall`, `untagall`).
 
 ### Ian Abiel Wangsa
 
