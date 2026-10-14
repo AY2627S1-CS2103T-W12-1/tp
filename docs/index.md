@@ -4,37 +4,31 @@ title: TrackCall
 ---
 
 TrackCall helps membership secretaries keep their organisation's member records up to date.
-Use typed commands to manage contact details and find members.
-Filter displayed members by tag. Bulk group updates remain planned.
+Use typed commands to manage contact details, find members, and update a group's tags at once.
 
-The planned performance target is 500 members. This is not a hard record limit.
+The performance target is 500 members. This is not a hard record limit.
 
-## Planned interface
+## Interface
 
-![TrackCall mockup showing committee members after filtering by tag](images/Ui.png)
+![TrackCall showing two committee members after filter t/committee](images/Ui.png)
 
-This AI-assisted mockup shows the intended product, including tag filtering.
-It is a design illustration, not a screenshot of the current build.
+The command box is at the top, followed by the result display, the member list, and the data-file status bar.
 
-TrackCall will retain AB3's command box, result display, member list, and data-file status bar.
-Planned features include adding or removing a tag for everyone in the displayed list.
-Changes will be saved locally.
+## Features in v1.3
 
-## Current development version
+* Add, edit, list, find, delete, and clear member records.
+* Filter the displayed members by tag, and sort them by name.
+* Add or remove a tag for every displayed member with `tagall` and `untagall`.
+* Import and export member records as CSV files.
+* Offline help for all fourteen commands.
+* Local saving after successful data changes, with recovery guidance for save errors.
+  A failed clear restores the roster.
 
-The **v1.2 development build** provides:
-
-* Member record management in a light beige interface.
-* Readable contact details and command results.
-* Offline help for all twelve supported commands.
-* Local saving after successful data changes.
-* Recovery guidance for save errors. A failed clear restores the roster.
-
-Read-only commands leave the roster file unchanged. Bulk tag changes remain planned.
+Read-only commands leave the roster file unchanged.
 
 ## Find the right guide
 
-* [User Guide](UserGuide.html): use the development build and look up commands.
+* [User Guide](UserGuide.html): install TrackCall and look up commands.
 * [Developer Guide](DeveloperGuide.html): understand the implementation and planned requirements.
 * [Setup instructions](SettingUp.html): run and develop the application.
 * [About Us](AboutUs.html): meet the project team.

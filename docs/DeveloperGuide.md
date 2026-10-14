@@ -19,7 +19,7 @@ The secretary can:
 * Save valid changes automatically to a local file.
 * Complete the core workflow without an internet connection or a separate save command.
 
-The **v1.2 development build** supports individual member management, name search, tag filtering, bulk tag
+The **v1.3 release** supports individual member management, name search, tag filtering, bulk tag
 editing, offline command help, local saving, CSV import/export, and name sorting.
 See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining work.
 
@@ -190,7 +190,7 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 ## Implementation
 
-This section describes the v1.2 working branch. The v1.1 iteration was limited to documentation;
+This section describes the v1.3 release. The v1.1 iteration was limited to documentation;
 these functional changes are not a published v1.1 release. The requirements appendix records the
 full intended product, including behaviour still to be implemented.
 
@@ -388,7 +388,9 @@ The source CSV is read-only throughout the workflow.
 
 ### Differences still to implement for the MVP
 
-* CSV import is available as `import p/FILE_PATH`, CSV export as `export [FILEPATH]`, and name sorting as `sort`.
+CSV import (`import p/FILE_PATH`), CSV export (`export [FILEPATH]`), and name sorting (`sort`) are implemented.
+The remaining differences from the requirements are:
+
 * `edit` currently restores the full list. Retaining the active search and tag filters is planned.
 * `find` currently reports `Members found: N`. The use cases describe the intended member-list count wording.
 * Unknown-prefix rejection still needs a precise grammar that preserves valid free-form addresses.
@@ -407,7 +409,7 @@ status is described above; this figure is not a screenshot or evidence of v1.1 i
 
 ### Filter members by tag
 
-#### Implemented v1.2 behavior
+#### Implemented behavior
 
 The `filter` command displays members with a specified tag without changing member data. Its format is:
 
@@ -433,8 +435,8 @@ Reject missing or empty tags, invalid characters, internal spaces, tags over 30 
 
 ![Proposed beige TrackCall interface after filtering by committee tag](images/FilterTag.png)
 
-AI-assisted intended-interface mockup using the same palette as the README. It illustrates
-`filter t/committee` but is not a screenshot of the v1.2 development build.
+AI-assisted intended-interface mockup using the same palette as the app. It illustrates
+`filter t/committee` but is not a screenshot of the v1.3 release.
 
 ### Bulk tag editing
 
@@ -501,7 +503,7 @@ memory and the previous saved file is unchanged.
 
 ## Appendix: Requirements
 
-These requirements describe the intended product, including features beyond the v1.2 development build.
+These requirements describe the intended product, including features beyond the v1.3 release.
 See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining differences.
 The v1.1 iteration documented requirements; functional changes belong to v1.2 or later.
 
@@ -541,12 +543,10 @@ The MVP includes these commands:
 * **Individual records:** `add`, `edit`, `delete`.
 * **Roster and search:** `list`, `find`, `clear`, `filter`.
 * **Group tags:** `tagall`, `untagall`.
+* **CSV files:** `export`, `import`.
+* **Display order:** `sort`.
 
-The MVP also includes exporting members to a CSV file, importing members from a CSV file, and
-sorting the displayed list by name. CSV export is available as `export [FILEPATH]`, CSV import as
-`import p/FILE_PATH`, and name sorting as `sort`.
-
-It also includes automatic saving and manual editing of the local data file.
+The MVP also includes automatic saving and manual editing of the local data file.
 Each member has a name, phone number, email address, address, and zero or more tags.
 
 #### Scope boundaries
@@ -1110,7 +1110,7 @@ such as incremental delivery, are also not product NFRs.
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
 | Data-changing command | `add`, `edit`, `delete`, `clear`, `import`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
-| JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.2 development build uses `tags`. |
+| JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.3 release uses `tags`. |
 | CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; `import p/FILE_PATH` validates and imports it. |
 | vCard | A contact-card file format considered for exporting member contact details to phone or contact applications. It is outside the selected MVP. |
 | Archive | Retain an inactive record or tag and its history separately from active work. This considered feature is different from MVP deletion. |
@@ -1119,7 +1119,7 @@ such as incremental delivery, are also not product NFRs.
 
 ## Appendix: Instructions for manual testing
 
-These checks cover the v1.2 working build. They are test instructions, not a claim that every
+These checks cover the v1.3 release. They are test instructions, not a claim that every
 platform or release package has been verified. Use a disposable folder and synthetic contacts.
 
 ### Launch and shutdown
