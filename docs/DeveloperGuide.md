@@ -30,6 +30,13 @@ See [implementation status](#differences-still-to-implement-for-the-mvp) for the
   and original diagrams.
 * The application uses [JavaFX](https://openjfx.io/) for its interface and
   [Jackson](https://github.com/FasterXML/jackson) for JSON storage.
+* [Apache Commons CSV](https://commons.apache.org/proper/commons-csv/) handles CSV import/export parsing and quoting.
+  Its use was [approved by the teaching team](https://github.com/NUS-CS2103-AY2627-S1/forum/issues/627).
+* The documentation website layout adapts the
+  [W13-1 team's layout](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/docs/stylesheets/main.css),
+  including its sidebar widths, reading width, and responsive breakpoints, under its
+  [MIT licence](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/LICENSE).
+  TrackCall supplies its own palette, Jekyll templates, and navigation/search behaviour.
 * [JUnit](https://junit.org/junit5/), [Gradle](https://gradle.org/),
   [Checkstyle](https://checkstyle.org/), and [JaCoCo](https://www.jacoco.org/jacoco/) support testing and builds.
 
@@ -478,8 +485,8 @@ memory and the previous saved file is unchanged.
 #### Design considerations
 
 * **One shared argument parser:** keeps `tagall` and `untagall` input rules and messages identical.
-  The 1 to 30 character limit is enforced in this parser, as in `FilterCommandParser`, so the shared `Tag`
-  model and the rules for `add`, `edit`, and loading saved data are unchanged.
+  The 1 to 30 character limit is enforced in this parser, in `FilterCommandParser`, and in the shared `Tag`
+  model. The same limit applies to `add`, `edit`, and loading saved data.
 * **Skip instead of reject:** a member who already has (or lacks) the tag is skipped and counted, so one
   overlapping group does not block the rest of the batch (UC03 extension 6b).
 
@@ -1188,6 +1195,40 @@ platform or release package has been verified. Use a disposable folder and synth
 9. With two stored records and a search showing only one, run `clear`. After saving, expect
    `Cleared 2 members. The address book is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
    `The address book is already empty. No changes were made.`
+
+### Sorting and CSV workflows
+
+Use a disposable roster. Run `clear`, then enter the following setup commands separately:
+
+```text
+add n/Zara Tan p/90000001 e/zara@example.com a/Test Road t/committee
+add n/bob Lee p/90000002 e/bob@example.com a/Test Road t/year1
+add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
+```
+
+1. Run `sort`. Expect `Sorted displayed members by name (A to Z).` and Alice, bob, Zara in that order.
+   Repeat `sort`: the order stays the same. Run `list`: expect `Showing 3 members.` and Zara, bob, Alice.
+   Run `filter t/committee`, then `sort`: only Alice and Zara appear. Try `sort date`; expect
+   `Invalid command format. Usage: sort` with the view unchanged. The saved roster bytes and modification
+   time must remain unchanged throughout these read-only checks.
+2. With the committee filter still active, run `export members.csv`. Expect three exported records,
+   including the hidden bob record, in stored order. Check the UTF-8 header and sorted semicolon-separated
+   tags, and confirm that automatic JSON storage and the displayed view are unchanged.
+3. Run `import p/members.csv` without clearing. Expect zero imported members and three skipped duplicates.
+   The full roster is restored in stored order. Then run `clear`, followed by `import p/members.csv`.
+   Expect three imports and zero skipped duplicates. Restart and check every field and tag is retained.
+4. Copy `members.csv` to `member list.csv`, then run `import p/"member list.csv"`.
+   The quoted path must work and all three duplicates must be skipped. Try `import p/missing.csv`:
+   expect a read error with the roster and view unchanged.
+5. Make a separate `invalid.csv` with the valid header, one valid member, and then a row with an invalid
+   phone. Import it: expect a row-specific error, no partial import, and no saved-file or view change.
+   Repeat with a malformed header, broken CSV quoting, and a quoted field containing a line break.
+6. Test a destination in a missing directory with `export missing/members.csv`: expect a write error
+   without creating that directory. In a disposable release folder, verify that CSV paths outside the JAR
+   folder and symbolic-link paths are rejected. Test a header-only CSV and a zero-member export.
+   For an import-save failure, temporarily replace the automatic JSON file with a directory: expect the
+   imported batch to remain in memory, a save error, and no modification to the source CSV. Restore storage
+   access and retry saving with an existing field value before exiting.
 
 ### Persistence and invalid files
 
