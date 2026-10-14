@@ -407,9 +407,10 @@ CSV import (`import p/FILE_PATH`), CSV export (`export [FILEPATH]`), and name so
 The remaining differences from the requirements are:
 
 * `find` currently reports `Members found: N`. The use cases describe the intended member-list count wording.
-* `edit` still accepts unknown prefix-like tokens such as `x/extra` or uppercase `T/committee`
-  inside an address as literal text. `add` rejects these using the grammar described above,
-  while preserving standalone `c/o`, URLs, numeric slashes, and slashes embedded in words.
+* Unknown-prefix rejection still needs a precise grammar that preserves valid free-form addresses.
+  Currently, an unrecognised prefix-like token such as `x/extra` or uppercase `T/committee` inside
+  an address supplied to `edit` can become literal address text. The parser must not reject ordinary `c/o` or URLs
+  merely because they contain slashes. `add` rejects these using the documented grammar; `edit` still needs this rule.
 * Storage uses `tags` rather than the intended `tagged` schema in the requirements appendix.
 * Startup loading errors are recorded in the log; the requirements' user-visible load messages remain planned.
   Undo/redo and deletion confirmation are not selected for the MVP.
