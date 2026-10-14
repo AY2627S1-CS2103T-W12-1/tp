@@ -160,8 +160,8 @@ Check the member number again after any command that changes the list.
 * Phone numbers and tags are not searched.
 * Supply at least one keyword.
 
-The result reports `Members found: N`.
-No matches produce `Members found: 0` and an empty list. No records are deleted.
+The result reports `1 member listed.` or `N members listed.`
+No matches produce `0 members listed.` and an empty list. No records are deleted.
 Use `list` to show everyone again. Searching does not save the data file.
 
 ### Filter displayed members by tag: `filter`
