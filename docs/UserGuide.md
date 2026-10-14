@@ -269,6 +269,8 @@ Tags for each member are sorted alphabetically and joined with semicolons.
 * Packaged builds resolve relative paths from the JAR folder and accept absolute paths only inside
   that folder. The parent directory must already exist and be writable.
 * An existing destination file is overwritten.
+  The active roster file, preferences file, and running JAR cannot be used as export destinations.
+  If exporting fails, an existing destination file is left unchanged.
 * Export leaves the roster, current search, and automatic JSON data file unchanged.
 * An empty roster produces a file containing only the column headers.
 

@@ -186,6 +186,57 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_exportToApplicationStorage_rejectsWithoutChangingFilesOrView() throws Exception {
+        model.addPerson(AMY);
+        model.updateFilteredPersonList(unused -> false);
+        for (String filename : List.of("addressBook.json", "userPrefs.json")) {
+            Path target = temporaryFolder.resolve(filename);
+            Files.writeString(target, "Keep the existing application file");
+            assertThrows(CommandException.class, () -> logic.execute("export " + target));
+            assertEquals("Keep the existing application file", Files.readString(target));
+            assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
+            assertTrue(model.getFilteredPersonList().isEmpty());
+        }
+    }
+
+    @Test
+    public void execute_exportToNormalisedStoragePath_rejectsBeforeCreatingFile() throws Exception {
+        Path target = temporaryFolder.resolve("nested/../addressBook.json");
+        assertThrows(CommandException.class, () -> logic.execute("export " + target));
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertFalse(Files.exists(temporaryFolder.resolve("nested")));
+    }
+
+    @Test
+    public void execute_exportToStorageHardLink_rejectsWithoutChangingOriginal() throws Exception {
+        Path dataFile = temporaryFolder.resolve("addressBook.json");
+        Files.writeString(dataFile, "Keep the original roster");
+        Path alias = temporaryFolder.resolve("alias.csv");
+        try {
+            Files.createLink(alias, dataFile);
+        } catch (IOException | UnsupportedOperationException error) {
+            org.junit.jupiter.api.Assumptions.assumeTrue(false, "Hard links are unavailable: " + error.getMessage());
+        }
+
+        assertThrows(CommandException.class, () -> logic.execute("export " + alias));
+
+        assertEquals("Keep the original roster", Files.readString(dataFile));
+        assertEquals("Keep the original roster", Files.readString(alias));
+    }
+
+    @Test
+    public void execute_exportToExistingCsvBeforeFirstSave_preservesMissingStorageFiles() throws Exception {
+        Path destination = temporaryFolder.resolve("members.csv");
+        Files.writeString(destination, "Old CSV contents");
+
+        logic.execute("export " + destination);
+
+        assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertFalse(Files.exists(temporaryFolder.resolve("userPrefs.json")));
+    }
+
+    @Test
     public void execute_import_savesUpdatedRoster() throws Exception {
         Path csvFile = temporaryFolder.resolve("members.csv");
         Files.writeString(csvFile, "name,phone,email,address,tags\n"

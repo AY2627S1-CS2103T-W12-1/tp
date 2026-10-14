@@ -105,4 +105,19 @@ public class CsvAddressBookExporterTest {
         assertThrows(IOException.class, () -> CsvAddressBookExporter.export(List.of(), destination));
         assertFalse(Files.exists(destination.getParent()));
     }
+
+    @Test
+    public void export_encodingFailure_preservesPreviousFileAndCleansTemporaryFiles() throws IOException {
+        Path destination = tempDir.resolve("contacts.csv");
+        String previous = "Previous complete export";
+        Files.writeString(destination, previous);
+        Person invalidUnicode = new PersonBuilder().withAddress("Road \uD800").build();
+
+        assertThrows(IOException.class, () -> CsvAddressBookExporter.export(List.of(invalidUnicode), destination));
+
+        assertEquals(previous, Files.readString(destination));
+        try (var entries = Files.list(tempDir)) {
+            assertEquals(List.of(destination), entries.toList());
+        }
+    }
 }

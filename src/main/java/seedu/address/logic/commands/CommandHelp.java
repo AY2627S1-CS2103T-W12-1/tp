@@ -78,7 +78,8 @@ public enum CommandHelp {
                     + "overwritten. Tags are sorted and joined with semicolons. The roster and current search "
                     + "stay unchanged.",
             "Use a valid output path whose parent directory exists and is writable. "
-                    + "An invalid path or a failed write reports an error."),
+                    + "The active roster, preferences, and running JAR cannot be export destinations. "
+                    + "An invalid path or a failed write reports an error and preserves any previous export."),
     IMPORT("Manage members", "import", "Import members from CSV", "import p/FILE_PATH",
             "import p/\"data/member list.csv\"",
             "Validates a UTF-8 CSV file and appends member records without overwriting existing members.",

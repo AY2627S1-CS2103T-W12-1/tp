@@ -10,6 +10,7 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.commands.exceptions.SaveFailureException;
@@ -56,7 +57,9 @@ public class LogicManager implements Logic {
         CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
         AddressBook beforeClear = command instanceof ClearCommand ? new AddressBook(model.getAddressBook()) : null;
-        commandResult = command.execute(model);
+        commandResult = command instanceof ExportCommand exportCommand
+                ? exportCommand.execute(model, storage.getAddressBookFilePath(), storage.getUserPrefsFilePath())
+                : command.execute(model);
 
         if (command.isReadOnly()) {
             return commandResult;
