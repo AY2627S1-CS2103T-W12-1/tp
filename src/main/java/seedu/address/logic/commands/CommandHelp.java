@@ -14,7 +14,8 @@ public enum CommandHelp {
     SORT("Browse members", "sort", "Sort members by name", "sort", "sort",
             "Orders the displayed members by full name from A to Z, ignoring letter case.",
             "Shows the current search results alphabetically without changing the saved roster.",
-            "Sorting stays active until list or a restart. Check list numbers again before editing or deleting.",
+            "Sorting stays active until list, a successful import, or a restart. "
+                    + "Check list numbers again before editing or deleting.",
             "Use sort with no extra arguments. Use list to restore the complete roster in stored order."),
     FIND("Browse members", "find", "Find a member by name", "find KEYWORD [MORE_KEYWORDS]", "find Alice Tan",
             "Searches all members for any complete name word, ignoring letter case.",

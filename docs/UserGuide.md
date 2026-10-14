@@ -91,16 +91,16 @@ Use a separate `t/` for each optional tag.
 
 | Field | Current rule |
 | --- | --- |
-| Name | Letters, digits, and spaces. Cannot be blank. |
-| Phone | At least three digits. No spaces or punctuation. |
+| Name | ASCII letters, digits, and spaces. Cannot be blank. |
+| Phone | At least three ASCII digits. No spaces or punctuation. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text. |
 | Tag | 1 to 30 ASCII letters or digits, without spaces. Tags are case-sensitive. |
 
 **Email rules:**
 
-* The local part contains letters or digits, optionally separated by single `+`, `_`, `.`, or `-` characters.
-* Domain labels contain letters or digits, with hyphens allowed internally.
+* The local part contains ASCII letters or digits, optionally separated by single `+`, `_`, `.`, or `-` characters.
+* Domain labels contain ASCII letters or digits, with hyphens allowed internally.
 * The final domain label needs at least two characters.
 
 For example:
