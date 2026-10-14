@@ -12,7 +12,6 @@ import java.nio.file.StandardCopyOption;
  */
 public class FileUtil {
 
-    private static final String CHARSET = "UTF-8";
     private static final Path CODE_LOCATION = getCodeLocation();
     private static final boolean IS_PACKAGED = !Files.isDirectory(CODE_LOCATION);
     private static final Path HOME_FOLDER = IS_PACKAGED
@@ -87,10 +86,14 @@ public class FileUtil {
 
     /**
      * Assumes file exists
+     *
+     * @param file File whose UTF-8 contents should be read.
+     * @return The complete decoded contents.
+     * @throws IOException If reading fails or the file contains malformed UTF-8.
      */
     public static String readFromFile(Path file) throws IOException {
         file = resolvePath(file);
-        return new String(Files.readAllBytes(file), CHARSET);
+        return Files.readString(file);
     }
 
     /**
