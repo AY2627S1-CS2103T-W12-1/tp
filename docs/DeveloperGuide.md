@@ -1146,8 +1146,8 @@ platform or release package has been verified. Use a disposable folder and synth
 ### Launch and shutdown
 
 1. Select Java 25 and run `./gradlew run` (Windows: `gradlew.bat run`) from the checkout.
-   For a packaged build, use `./gradlew shadowJar`, copy `build/libs/addressbook.jar` into the
-   test folder, and run `java -jar addressbook.jar` there. On macOS, use the JDK+FX distribution in
+   For a packaged build, use `./gradlew shadowJar`, copy `build/libs/trackcall.jar` into the
+   test folder, and run `java -jar trackcall.jar` there. On macOS, use the JDK+FX distribution in
    the [course installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html).
    See [DevOps](DevOps.md#build-automation) for the distinction between local ARM runs and release testing.
 2. With no member file, check that samples appear, `list` displays them, and `exit` closes the app.

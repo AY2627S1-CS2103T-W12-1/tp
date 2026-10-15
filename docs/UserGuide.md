@@ -19,37 +19,45 @@ Start with [Quick start](#quick-start), or use the [command summary](#command-su
 
 1. Install Java **25**. On macOS, use the compatible JDK+FX distribution in the
    [course installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html).
-2. Download the latest `.jar` file from the [team releases page](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases).
-3. Put the JAR file in an empty folder. TrackCall keeps `data/addressbook.json` and exported CSV files in this folder.
-4. Open a terminal in that folder and run `java -jar` followed by the JAR file name.
-
-To run from a project checkout instead, follow the [setup guide](SettingUp.md) and run `./gradlew run`
-(Windows: `gradlew.bat run`).
-
-### Try your first commands
-
-1. On first launch, check that sample members and a welcome hint appear.
-2. Type `help` and press **Enter** to open the offline command guide.
-3. Close help with **Escape**. Type `list` to see the roster.
-4. Add a member:
+2. Download `trackcall.jar` from the [team releases page](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases).
+3. Place it in an empty folder of your choice.
+4. Open a terminal in that folder and run:
 
    ```text
-   add n/Alice Tan p/91234567 e/alice@example.com a/12 Orchard Road t/committee
+   java -jar trackcall.jar
    ```
 
-After saving, TrackCall reports `Added member`. Name, Phone, Email, Address, and Tags appear on separate lines.
-Alice also appears in the member list. `Tags: (none)` means the member has no tags.
-
-Type `export` to create a CSV copy of the full roster, or use `import p/FILE_PATH` to append members
-from an existing CSV roster.
+TrackCall opens with sample members and a welcome message on your first launch.
 
 ### Read the interface
 
-* **Command box:** enter a command above the result area.
-* **Result area:** read feedback and errors. Scroll through long feedback or drag the divider to give it more space.
-* **Member list:** check each member's current list number, name, contact details, and tags. Long details wrap.
-* **Window position:** TrackCall restores its saved position within the available screens at startup.
-  It also handles a previously connected monitor being unavailable.
+![TrackCall showing the command box, welcome message, member list, and data-file status bar](images/user-guide/interface.png)
+
+*TrackCall on startup. Your data-file path will depend on where you placed the JAR.*
+
+From top to bottom:
+
+* **Command box:** type commands here.
+* **Result area:** read success messages and errors.
+* **Member list:** view member numbers, contact details, and tags.
+* **Status bar:** see where your member data is saved.
+
+### Try your first commands
+
+Type each command in the command box and press **Enter**.
+
+1. **Open help:** enter `help`. Press **Escape** to close it.
+2. **Show all members:** enter `list`.
+3. **Add a member:** copy and run this command:
+
+   ```text
+   add n/Alice Tan p/91234567 e/alice@example.com a/12 Orchard Road
+   ```
+
+Alice appears in the list and TrackCall reports `Added member`. Your changes are saved automatically.
+
+Use the [command summary](#command-summary) to choose your next task, or see [Your data](#your-data)
+for storage and backup instructions.
 
 ## Commands
 
@@ -211,8 +219,22 @@ Members hidden by a search or filter are not changed, and each member's other ta
 1. Use `find` or `filter` to show the group, then check the displayed members.
 2. Run `tagall` or `untagall` with one tag.
 
-For example, run `filter t/year1` and then `tagall t/committee` as two separate commands.
-Every displayed `year1` member now also has the `committee` tag.
+For example, to tag committee members for an event, run each command separately:
+
+```text
+list
+filter t/committee
+tagall t/event2026
+```
+
+Every displayed committee member now also has the `event2026` tag.
+
+![TrackCall reporting that event2026 was added to two members, with Bob Lee and Daniel Wong showing both committee and event2026 tags](images/user-guide/tag-group.png)
+
+*After tagging the displayed committee members, their existing tags are kept.*
+
+To export the roster afterwards, run `export members.csv`. This exports **every member in the roster**,
+including those hidden by the committee filter.
 
 Members who already have the tag (for `tagall`) or do not have it (for `untagall`) are skipped.
 The result reports both counts:
@@ -342,6 +364,10 @@ Rejected input leaves the roster and current list unchanged.
 
 * `add n/Alice` is incomplete. Use `help add`, then enter all four required fields.
 * `delete 0` is invalid. Use `list`, check the member, and enter its displayed number.
+
+![The command edit 1 p/abc is highlighted as invalid, with feedback that phone numbers must contain only digits and be at least three digits long](images/user-guide/validation.png)
+
+*An invalid phone number leaves the member unchanged. Correct the command and press Enter to try again.*
 
 ### A save fails after add, edit, delete, tagall, untagall, or import
 
