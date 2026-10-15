@@ -24,12 +24,16 @@ import seedu.address.model.tag.Tag;
  */
 public class AddCommandParser implements Parser<AddCommand> {
 
+    private static final Set<String> SUPPORTED_PREFIXES = Set.of(PREFIX_NAME.getPrefix(), PREFIX_PHONE.getPrefix(),
+            PREFIX_EMAIL.getPrefix(), PREFIX_ADDRESS.getPrefix(), PREFIX_TAG.getPrefix());
+
     /**
      * Parses the given {@code String} of arguments in the context of the AddCommand
      * and returns an AddCommand object for execution.
      * @throws ParseException if the user input does not conform to the expected format
      */
     public AddCommand parse(String args) throws ParseException {
+        verifySupportedPrefixes(args);
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_PHONE, PREFIX_EMAIL, PREFIX_ADDRESS, PREFIX_TAG);
 
@@ -48,6 +52,27 @@ public class AddCommandParser implements Parser<AddCommand> {
         Person person = new Person(name, phone, email, address, tagList);
 
         return new AddCommand(person);
+    }
+
+    /**
+     * Reserves whitespace-delimited ASCII single-letter slash prefixes for add fields.
+     * The standalone care-of abbreviation (c/o, case-insensitive) remains literal text;
+     * URLs, numeric slashes and slashes embedded in words are not field prefixes.
+     */
+    private static void verifySupportedPrefixes(String args) throws ParseException {
+        for (int i = 0; i + 1 < args.length(); i++) {
+            char letter = args.charAt(i);
+            boolean isAsciiLetter = (letter >= 'a' && letter <= 'z') || (letter >= 'A' && letter <= 'Z');
+            if (!isAsciiLetter || args.charAt(i + 1) != '/'
+                    || (i > 0 && !Character.isWhitespace(args.charAt(i - 1)))) {
+                continue;
+            }
+            boolean isCareOf = args.regionMatches(true, i, "c/o", 0, 3)
+                    && (i + 3 == args.length() || Character.isWhitespace(args.charAt(i + 3)));
+            if (!isCareOf && !SUPPORTED_PREFIXES.contains(args.substring(i, i + 2))) {
+                throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
+            }
+        }
     }
 
     /**
