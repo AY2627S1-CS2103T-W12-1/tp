@@ -64,6 +64,7 @@ public class Person {
     /**
      * Returns true if both persons have the same contact fields.
      * Tags do not form part of a person's identity.
+     * Surrounding whitespace is ignored; case and internal spacing remain significant.
      */
     public boolean isSamePerson(Person otherPerson) {
         if (otherPerson == this) {
@@ -71,10 +72,10 @@ public class Person {
         }
 
         return otherPerson != null
-                && otherPerson.getName().equals(getName())
-                && otherPerson.getPhone().equals(getPhone())
-                && otherPerson.getEmail().equals(getEmail())
-                && otherPerson.getAddress().equals(getAddress());
+                && otherPerson.getName().fullName.trim().equals(getName().fullName.trim())
+                && otherPerson.getPhone().value.trim().equals(getPhone().value.trim())
+                && otherPerson.getEmail().value.trim().equals(getEmail().value.trim())
+                && otherPerson.getAddress().value.trim().equals(getAddress().value.trim());
     }
 
     /**

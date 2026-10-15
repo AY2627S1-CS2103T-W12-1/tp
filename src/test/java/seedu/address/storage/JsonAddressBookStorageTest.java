@@ -66,6 +66,14 @@ public class JsonAddressBookStorageTest {
     }
 
     @Test
+    public void readAddressBook_contactsDifferingOnlyInPadding_rejectsDuplicateRecords() throws IOException {
+        assertInvalidDataRejected("{\"persons\":[{\"name\":\"Alice\",\"phone\":\"123\","
+                + "\"email\":\"alice@example.com\",\"address\":\"Main Street\",\"tags\":[]},"
+                + "{\"name\":\"Alice \",\"phone\":\"123\",\"email\":\"alice@example.com\","
+                + "\"address\":\"Main Street \",\"tags\":[\"committee\"]}]}");
+    }
+
+    @Test
     public void readAddressBook_trailingContent_throwsDataLoadingException() throws IOException {
         for (String suffix : new String[] {"{}", "null", "trailing text", "[]", "42"}) {
             assertInvalidDataRejected("{\"persons\":[]} " + suffix);
