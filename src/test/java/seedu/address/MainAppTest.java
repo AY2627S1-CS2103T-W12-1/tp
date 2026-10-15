@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
@@ -19,8 +20,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import javafx.application.Platform;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.DialogPane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import seedu.address.commons.core.GuiSettings;
@@ -32,6 +35,7 @@ import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.JavaFxTestUtil;
+import seedu.address.ui.UiManager;
 
 /** Exercises startup and recovery against disposable files without exiting the shared JavaFX toolkit. */
 public class MainAppTest {
@@ -61,6 +65,40 @@ public class MainAppTest {
     @AfterEach
     public void closeWindows() throws Exception {
         onJavaFxThread(() -> List.copyOf(Window.getWindows()).forEach(Window::hide));
+    }
+
+    @Test
+    public void init_wiresComponentsToSuppliedFiles_andRetainsSavedPreferences() throws Exception {
+        UserPrefs saved = new UserPrefs();
+        saved.setGuiSettings(new GuiSettings(900, 650, 20, 30));
+        prefs.saveUserPrefs(saved);
+
+        app.init(prefs.getUserPrefsFilePath(), roster.getAddressBookFilePath());
+
+        assertEquals(saved, app.model.getUserPrefs());
+        assertEquals(roster.getAddressBookFilePath(), app.storage.getAddressBookFilePath());
+        assertEquals(prefs.getUserPrefsFilePath(), app.storage.getUserPrefsFilePath());
+        assertInstanceOf(UiManager.class, app.ui);
+        app.logic.execute("add n/Alice p/12345678 e/alice@example.com a/Main Street");
+        assertEquals(app.model.getAddressBook(), roster.readAddressBook().orElseThrow());
+    }
+
+    @Test
+    public void recovery_originalChangesDuringDialog_rejectsReplacementAndReportsOwnedError() throws Exception {
+        Files.writeString(roster.getAddressBookFilePath(), "damaged roster");
+        onJavaFxThread(() -> {
+            Stage owner = new Stage();
+            owner.setScene(new Scene(new StackPane()));
+            Platform.runLater(() -> {
+                assertDoesNotThrow(() -> Files.writeString(roster.getAddressBookFilePath(), "changed original"));
+                answerDialog("OK");
+            });
+            answerDialog("Start empty");
+            assertFalse(app.recoverRoster(owner));
+        });
+
+        assertEquals("changed original", Files.readString(roster.getAddressBookFilePath()));
+        assertPreservedCopy();
     }
 
     @Test

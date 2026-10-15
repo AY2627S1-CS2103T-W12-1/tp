@@ -1,5 +1,6 @@
 package seedu.address.model.tag;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -7,6 +8,17 @@ import static seedu.address.testutil.Assert.assertThrows;
 import org.junit.jupiter.api.Test;
 
 public class TagTest {
+
+    @Test
+    public void equalityAndHashCode_preserveCaseSensitiveTagIdentity() {
+        Tag tag = new Tag("committee");
+        assertTrue(tag.equals(tag));
+        assertEquals(tag, new Tag("committee"));
+        assertEquals(tag.hashCode(), new Tag("committee").hashCode());
+        assertFalse(tag.equals(new Tag("Committee")));
+        assertFalse(tag.equals(null));
+        assertFalse(tag.equals("committee"));
+    }
 
     @Test
     public void constructor_null_throwsNullPointerException() {

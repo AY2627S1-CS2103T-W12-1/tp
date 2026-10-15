@@ -2,6 +2,7 @@ package seedu.address.commons.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,6 +18,32 @@ public class FileUtilTest {
 
     @TempDir
     public Path testFolder;
+
+    @Test
+    public void createIfMissing_existingFile_preservesContents() throws IOException {
+        Path target = testFolder.resolve("roster.json");
+        Files.writeString(target, "Existing roster");
+        FileUtil.createIfMissing(target);
+        assertEquals("Existing roster", Files.readString(target));
+        assertOnlyEntry(testFolder, target);
+    }
+
+    @Test
+    public void writeAtomically_cleanupFails_keepsOriginalFailureAndPreviousFile() throws IOException {
+        Path target = testFolder.resolve("roster.json");
+        Files.writeString(target, "Existing roster");
+        IOException failure = assertThrows(IOException.class, () -> FileUtil.writeAtomically(target, temporary -> {
+            Files.delete(temporary);
+            Files.createDirectory(temporary);
+            Files.writeString(temporary.resolve("keep.txt"), "Blocks removal");
+            throw new IOException("Write failed");
+        }));
+
+        assertEquals("Write failed", failure.getMessage());
+        assertEquals(1, failure.getSuppressed().length);
+        assertTrue(failure.getSuppressed()[0] instanceof IOException);
+        assertEquals("Existing roster", Files.readString(target));
+    }
 
     @Test
     public void writeToFile_missingParent_createsFileWithCompleteContent() throws IOException {

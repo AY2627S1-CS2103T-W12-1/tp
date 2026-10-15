@@ -47,12 +47,17 @@ public class MainApp extends Application {
 
     @Override
     public void init() throws Exception {
+        init(USER_PREFS_FILE_PATH, ADDRESS_BOOK_FILE_PATH);
+    }
+
+    /** Initializes components using explicit files, allowing isolated startup checks. */
+    void init(Path prefsFile, Path rosterFile) throws Exception {
         logger.info("=============================[ Initializing TrackCall ]===========================");
         super.init();
 
-        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(USER_PREFS_FILE_PATH);
+        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(prefsFile);
         UserPrefs userPrefs = initPrefs(userPrefsStorage);
-        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(ADDRESS_BOOK_FILE_PATH);
+        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(rosterFile);
         storage = new StorageManager(addressBookStorage, userPrefsStorage);
 
         model = new ModelManager(new AddressBook(), userPrefs);
