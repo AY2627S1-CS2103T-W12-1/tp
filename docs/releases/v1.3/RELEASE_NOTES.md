@@ -1,18 +1,19 @@
 # TrackCall v1.3: first MVP release
 
-**Updated on 15 October 2026 to include Eron’s filter-feedback change ([#137](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/137)). If you downloaded v1.3 earlier today, download `trackcall.jar` again to get this update.**
+**Updated on 15 October 2026 to include filter-feedback change ([#137](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/137)). If you downloaded v1.3 earlier today, download `trackcall.jar` again to get this update.**
 
 TrackCall helps club membership secretaries maintain contact details and organise overlapping groups using typed commands. This first product release builds on AddressBook Level 3 (AB3) with group operations, CSV exchange, name sorting, offline help, and safer local storage.
 
 ## What's new compared with AB3
 
-- **A club-focused interface.** TrackCall has a redesigned light interface, labelled contact fields, visible group tags, a first-launch welcome message, and clearer success/error feedback.
+- **A club-focused interface.** TrackCall has a redesigned light interface, labelled contact fields, visible group tags, a welcome message at startup, and clearer success/error feedback.
 - **Filter groups with `filter t/TAG`.** Narrow the displayed members by an exact, case-sensitive tag. Apply successive filters to find members belonging to several groups, or filter name-search results. Feedback now lists every distinct active tag in the order applied, so successive filters clearly show the complete intersection. Repeating a tag does not duplicate it in the message. `list` shows everyone again and resets the active filters.
 - **Update a group's tags with `tagall` and `untagall`.** Add or remove one tag across every currently displayed member while preserving other tags and leaving hidden members unchanged. Feedback reports changed and skipped members. Tags support 1–30 ASCII letters or digits.
 - **Sort names with `sort`.** Display the current results in case-insensitive A–Z order. Sorting remains active through searches and member changes; `list`, a successful import, or restarting returns to stored order. Sorting does not rewrite the saved roster order.
 - **Exchange rosters through CSV.** `export [FILEPATH]` exports the complete roster, including hidden members. `import p/FILE_PATH` validates the entire UTF-8 CSV before appending unique members, reports skipped duplicates, and then shows the full roster. Exported files use the same five-column format accepted by import: `name,phone,email,address,tags`.
 - **Read help offline.** `help`, `help COMMAND`, and F1 open the built-in command guide with examples, syntax, expected results, and common errors for all fourteen commands. Escape closes help.
 - **Keep the current view after editing.** Editing preserves active name searches, tag filters, and sorting. A member who no longer matches disappears from the view but remains in the roster.
+- **Know when the view resets.** `add` shows the full roster and clears active name searches and tag filters while preserving name sorting. A new `find` searches the full roster and replaces previous searches and tag filters.
 - **Use more precise duplicate checks and feedback.** Duplicate detection compares the trimmed name, phone, email, and address; different people may share a name. Tags do not determine identity. Member indices and list/find/clear feedback have stronger validation and clearer counts.
 - **Protect local files.** Packaged builds keep application files and CSV operations within the JAR folder. Export protects the active roster, preferences, running JAR, backup, and recovery filenames. Failed exports preserve an existing destination file. CSV import rejects malformed quoting and invalid UTF-8 without partially adding records.
 - **Recover from an unreadable roster.** Before replacing a valid roster, TrackCall keeps its previous saved contents in `data/addressbook.json.bak`. Startup preserves an unreadable roster in a uniquely named recovery copy, then offers a valid backup, an explicit empty roster, or closing without replacement. A failed `clear` save restores the previous roster and view.
@@ -21,7 +22,7 @@ The familiar `add`, `edit`, `delete`, `find`, `list`, `clear`, and `exit` comman
 
 ## Product screenshots
 
-The filter screenshots below are Eron’s original captures supplied for this release. The interface, bulk-tagging, and validation screenshots were captured directly from the rebuilt release JAR on macOS. All five images are uploaded unchanged and use sample data. The data-file path depends on the launch location. `VALIDATION.txt` records their provenance and the commands checked against the updated JAR.
+The filter screenshots below are original captures supplied for this release. The interface, bulk-tagging, and validation screenshots were captured directly from the rebuilt release JAR on macOS. All five images are uploaded unchanged. The interface, bulk-tagging, and validation screenshots use the built-in sample roster; the filter screenshots use illustrative member records. The data-file path depends on the launch location. `VALIDATION.txt` records their provenance and the commands checked against the updated JAR.
 
 ### Redesigned interface and first-launch guidance
 
@@ -33,7 +34,7 @@ The filter screenshots below are Eron’s original captures supplied for this re
 
 ![Eron’s screenshot of two committee members and single-tag filter feedback](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/filter-single.jpg)
 
-### Show every active filter — new in PR #137
+### Show every active filter
 
 Applying `filter t/year2` after `filter t/committee` leaves Bob and reports both active tags: `1 member(s) listed with tags "committee", "year2".`
 
@@ -74,7 +75,7 @@ The executable is 13,893,874 bytes (about 13.9 MB). `SHA256SUMS.txt` is attached
 - Deletion and clearing are immediate, with no confirmation or undo. Keep backups of important data.
 - `find` matches complete name words; tags are case-sensitive. Names currently accept ASCII letters, digits, and spaces.
 - For `edit`, an unsupported prefix-like token inside an address can become literal address text; use lowercase `t/` for tags. `add` rejects unsupported single-letter prefixes.
-- Manual JSON editing must use the current `persons` / `tags` structure. The Developer Guide's proposed stricter `tagged` schema is not implemented. Unknown member fields and repeated fields are not yet rejected strictly.
+- Manual JSON editing must use the current `persons` / `tags` structure. Unknown member fields and repeated fields are not yet rejected strictly.
 - CSV commands in the packaged app accept files only within the JAR folder or its subfolders. Copy an incoming CSV there before importing it.
 - If a save fails after add/edit/delete/tagall/untagall/import, the change remains in memory and must be saved successfully before exiting. Consult the User Guide's recovery instructions. A failed `clear` rolls back.
 - This MVP has no cloud synchronisation, accounts, payment processing, event attendance, or messaging features.

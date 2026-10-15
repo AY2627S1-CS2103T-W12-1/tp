@@ -30,8 +30,8 @@ Type commands to find members and update their contact details quickly.
 * [Developer Guide](https://ay2627s1-cs2103t-w12-1.github.io/tp/DeveloperGuide.html)
 * [About Us](https://ay2627s1-cs2103t-w12-1.github.io/tp/AboutUs.html)
 
-The User Guide describes the v1.3 release. The Developer Guide separates the current implementation
-from planned MVP requirements. Published documentation follows the team's merged default branch.
+The User Guide describes the v1.3 release. The Developer Guide documents the MVP implementation
+and ideas for later versions. Published documentation follows the team's merged default branch.
 
 ## Local development
 

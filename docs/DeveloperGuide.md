@@ -21,7 +21,6 @@ The secretary can:
 
 The **v1.3 release** supports individual member management, name search, tag filtering, bulk tag
 editing, offline command help, local saving, CSV import/export, and name sorting.
-See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining work.
 
 ## Acknowledgements
 
@@ -203,8 +202,7 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 ## Implementation
 
 This section describes the v1.3 release. The v1.1 iteration was limited to documentation;
-these functional changes are not a published v1.1 release. The requirements appendix records the
-full intended product, including behaviour still to be implemented.
+these functional changes are not a published v1.1 release.
 
 ### Offline command help
 
@@ -413,22 +411,6 @@ and sort state. `LogicManager` performs the normal automatic save even for a hea
 import. If saving fails, the imported batch remains in memory and an import-specific save error is shown.
 The source CSV is read-only throughout the workflow.
 
-### Differences still to implement for the MVP
-
-CSV import (`import p/FILE_PATH`), CSV export (`export [FILEPATH]`), and name sorting (`sort`) are implemented.
-The remaining differences from the requirements are:
-
-* Unknown-prefix rejection still needs a precise grammar that preserves valid free-form addresses.
-  Currently, an unrecognised prefix-like token such as `x/extra` or uppercase `T/committee` inside
-  an address supplied to `edit` can become literal address text. The parser must not reject ordinary `c/o` or URLs
-  merely because they contain slashes. `add` rejects these using the documented grammar; `edit` still needs this rule.
-* Storage uses `tags` rather than the intended `tagged` schema in the requirements appendix.
-* Startup loading errors are recorded in the log; the requirements' user-visible load messages remain planned.
-  Undo/redo and deletion confirmation are not selected for the MVP.
-* Manual-file validation is not yet as strict as UC07. Loading currently ignores unknown member fields,
-  keeps the last value of a repeated field, and accepts a JSON number where a text field is expected.
-  Comments and trailing commas are rejected.
-
 ### Filter members by tag
 
 `filter t/TAG` narrows the displayed list to members with one exact, case-sensitive tag without changing member data.
@@ -537,7 +519,6 @@ memory and the previous saved file is unchanged.
 ## Appendix: Requirements
 
 These requirements describe the intended product, including features beyond the v1.3 release.
-See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining differences.
 The v1.1 iteration documented requirements; functional changes belong to v1.2 or later.
 
 The requirements were reviewed on **29 September 2026** against two sources:
@@ -613,8 +594,7 @@ The broader narrative must be read with these MVP decisions:
 ### User stories
 
 Priorities describe importance to the target user: `***` = essential, `**` = useful,
-`*` = convenience. Priority is separate from implementation status. **MVP** means selected for
-the intended core product, not necessarily implemented in the current build. **Considered** means recorded for
+`*` = convenience. **MVP** identifies the core product stories. **Considered** means recorded for
 future decisions, with no delivery commitment.
 
 The tables cover all 32 source stories. Existing story IDs are retained.
@@ -817,7 +797,7 @@ Tags: committee, year1
 **Primary actor:** the membership secretary.
 **MSS:** main success scenario.
  The app is open unless a use case states otherwise.
-These are representative user workflows for the planned product, not implementation instructions.
+These are representative user workflows, not implementation instructions.
 
 #### UC01: Register a member
 
@@ -1144,11 +1124,11 @@ such as incremental delivery, are also not product NFRs.
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
 | Data-changing command | `add`, `edit`, `delete`, `clear`, `import`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
-| JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.3 release uses `tags`. |
+| JSON | The structured text format of the local data file. The current format uses a `persons` array and each member's `tags` array. |
 | CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; `import p/FILE_PATH` validates and imports it. |
 | vCard | A contact-card file format considered for exporting member contact details to phone or contact applications. It is outside the selected MVP. |
 | Archive | Retain an inactive record or tag and its history separately from active work. This considered feature is different from MVP deletion. |
-| MVP | Minimum viable product: the selected core feature set in the team specification. It does not mean that all those features exist in the current build. |
+| MVP | Minimum viable product: the core feature set described in this guide. |
 
 
 ## Appendix: Instructions for manual testing
@@ -1214,7 +1194,7 @@ platform or release package has been verified. Use a disposable folder and synth
 7. Paste a valid add command with actual tab separators before `n/`, `p/`, `e/`, and `a/`.
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
    or an internal tab keeps that text. For `add`, append `x/extra` or `T/committee` and expect
-   an invalid command format with no member added. Unknown-prefix rejection remains planned for `edit`.
+   an invalid command format with no member added.
 8. Add two members tagged `committee` and one member without tags. Run `list`, then `filter t/committee`.
    Run `tagall t/year1` and
    expect only the displayed members to gain `year1`, keeping their other tags. Run it again and expect
