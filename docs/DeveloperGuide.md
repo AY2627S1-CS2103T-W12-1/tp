@@ -305,7 +305,8 @@ and tag labels.
 `LightTheme.css` supplies the beige palette and dark text for the main window, help, and alerts.
 `HelpWindow.css` adds the help-card layout. A welcome message points to `help` and `help add`.
 
-Find feedback reports `Members found: N`. List and clear use the exact count messages above.
+Find feedback reports `1 member listed.` or `N members listed.`, including `0 members listed.`
+List and clear use the exact count messages above.
 Data-changing feedback is shown only after saving. Duplicate-name errors explain the existing name rule and suggest `edit`.
 
 #### Window placement
@@ -400,7 +401,6 @@ The source CSV is read-only throughout the workflow.
 CSV import (`import p/FILE_PATH`), CSV export (`export [FILEPATH]`), and name sorting (`sort`) are implemented.
 The remaining differences from the requirements are:
 
-* `find` currently reports `Members found: N`. The use cases describe the intended member-list count wording.
 * Unknown-prefix rejection still needs a precise grammar that preserves valid free-form addresses.
   Currently, an unrecognised prefix-like token such as `x/extra` or uppercase `T/committee` inside
   an address can become literal address text. The parser must not reject ordinary `c/o` or URLs
@@ -1186,7 +1186,7 @@ platform or release package has been verified. Use a disposable folder and synth
    Add a second record with Bob's exact name but different contact details. It must succeed.
    Add another record matching the original Bob's name, phone, email, and address exactly.
    It must be rejected with the duplicate contact details message and suggest `edit`.
-6. Run `find Nobody`, then `list`. Expect `Members found: 0`, then `Showing N members.` for the
+6. Run `find Nobody`, then `list`. Expect `0 members listed.`, then `Showing N members.` for the
    total roster size. Test multiple name keywords, case-insensitive complete-word matching, and
    rejection of `find` with no keyword.
    Run `filter t/committee`, then another filter. Check that the second filter narrows the current
