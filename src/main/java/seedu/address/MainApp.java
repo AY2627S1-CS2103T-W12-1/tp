@@ -19,7 +19,6 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
-import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonAddressBookStorage;
@@ -46,8 +45,6 @@ public class MainApp extends Application {
     protected Storage storage;
     protected Model model;
 
-    private boolean rosterRecoveryRequired;
-
     @Override
     public void init() throws Exception {
         logger.info("=============================[ Initializing TrackCall ]===========================");
@@ -58,38 +55,11 @@ public class MainApp extends Application {
         JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(ADDRESS_BOOK_FILE_PATH);
         storage = new StorageManager(addressBookStorage, userPrefsStorage);
 
-        model = initModelManager(storage, userPrefs);
+        model = new ModelManager(new AddressBook(), userPrefs);
 
         logic = new LogicManager(model, storage);
 
         ui = new UiManager(logic, storage.getAddressBookFilePath());
-    }
-
-    /**
-     * Returns a {@code ModelManager} with the data from {@code storage}'s address book and {@code userPrefs}. <br>
-     * The data from the sample address book will be used instead if {@code storage}'s address book is not found.
-     * If loading fails, an empty placeholder is used until the user chooses how to recover at startup.
-     */
-    private Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
-        logger.info("Using data file : " + storage.getAddressBookFilePath());
-
-        Optional<ReadOnlyAddressBook> addressBookOptional;
-        ReadOnlyAddressBook initialData;
-        try {
-            addressBookOptional = storage.readAddressBook();
-            if (addressBookOptional.isEmpty()) {
-                logger.info("Data file not found: " + storage.getAddressBookFilePath()
-                        + ". Loading sample members into TrackCall.");
-            }
-            initialData = addressBookOptional.orElseGet(SampleDataUtil::getSampleAddressBook);
-        } catch (DataLoadingException e) {
-            logger.warning("Data file at " + storage.getAddressBookFilePath() + " could not be loaded."
-                    + " Recovery is required before opening the roster.");
-            rosterRecoveryRequired = true;
-            initialData = new AddressBook();
-        }
-
-        return new ModelManager(initialData, userPrefs);
     }
 
     /**
@@ -127,9 +97,19 @@ public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         logger.info("Starting TrackCall " + MainApp.VERSION);
-        if (rosterRecoveryRequired && !recoverRoster(primaryStage)) {
-            Platform.exit();
-            return;
+        logger.info("Using data file : " + storage.getAddressBookFilePath());
+        try {
+            Optional<ReadOnlyAddressBook> saved = storage.readAddressBook();
+            if (saved.isEmpty()) {
+                logger.info("Data file not found. Loading sample members into TrackCall.");
+            }
+            model.setAddressBook(saved.orElseGet(SampleDataUtil::getSampleAddressBook));
+        } catch (DataLoadingException e) {
+            logger.warning("The saved roster could not be loaded. Recovery is required: " + e.getMessage());
+            if (!recoverRoster(primaryStage)) {
+                Platform.exit();
+                return;
+            }
         }
         ui.start(primaryStage);
     }
@@ -146,8 +126,9 @@ public class MainApp extends Application {
                 logger.warning("The backup could not be loaded: " + e.getMessage());
                 backup = Optional.empty();
             }
-            RosterRecoveryDialog.Choice choice = RosterRecoveryDialog.show(owner, preservedFile,
-                    JsonAddressBookStorage.getBackupFilePath(storage.getAddressBookFilePath()), backup.isPresent());
+            RosterRecoveryDialog.Choice choice = new RosterRecoveryDialog(owner, preservedFile,
+                    JsonAddressBookStorage.getBackupFilePath(storage.getAddressBookFilePath()),
+                    backup.isPresent()).showChoice();
             if (choice == RosterRecoveryDialog.Choice.CLOSE) {
                 return false;
             }

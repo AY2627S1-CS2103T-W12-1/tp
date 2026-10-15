@@ -12,10 +12,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import javafx.application.Platform;
-import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar.ButtonData;
-import javafx.scene.control.DialogPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import seedu.address.testutil.JavaFxTestUtil;
@@ -30,7 +28,7 @@ public class RosterRecoveryDialogTest {
     @Test
     public void recovery_noValidBackup_offersStartEmptyAndDefaultsToClose() throws Exception {
         onJavaFxThread(() -> {
-            Alert alert = RosterRecoveryDialog.createAlert(new Stage(), Path.of("preserved.json"),
+            RosterRecoveryDialog alert = new RosterRecoveryDialog(new Stage(), Path.of("preserved.json"),
                     Path.of("members.json.bak"), false);
             assertTrue(alert.getContentText().contains("No valid backup"));
             assertTrue(alert.getContentText().contains("preserved.json"));
@@ -47,21 +45,16 @@ public class RosterRecoveryDialogTest {
     public void recovery_validBackup_returnsEachExplicitChoice() throws Exception {
         onJavaFxThread(() -> {
             for (ButtonData button : List.of(ButtonData.YES, ButtonData.OTHER, ButtonData.CANCEL_CLOSE)) {
-                Platform.runLater(() -> {
-                    Window dialogWindow = Window.getWindows().stream()
-                            .filter(window -> window.getScene().getRoot() instanceof DialogPane)
-                            .findFirst().orElseThrow();
-                    DialogPane pane = (DialogPane) dialogWindow.getScene().getRoot();
-                    pane.getButtonTypes().stream().filter(type -> type.getButtonData() == button)
-                            .findFirst().ifPresent(type -> ((Button) pane.lookupButton(type)).fire());
-                });
-                RosterRecoveryDialog.Choice result = RosterRecoveryDialog.show(new Stage(),
+                RosterRecoveryDialog alert = new RosterRecoveryDialog(new Stage(),
                         Path.of("preserved.json"), Path.of("members.json.bak"), true);
+                Platform.runLater(() -> alert.getButtonTypes().stream()
+                        .filter(type -> type.getButtonData() == button).findFirst()
+                        .ifPresent(type -> ((Button) alert.getDialogPane().lookupButton(type)).fire()));
                 assertEquals(switch (button) {
                     case YES -> RosterRecoveryDialog.Choice.RESTORE_BACKUP;
                     case OTHER -> RosterRecoveryDialog.Choice.START_EMPTY;
                     default -> RosterRecoveryDialog.Choice.CLOSE;
-                }, result);
+                }, alert.showChoice());
             }
             assertFalse(Window.getWindows().stream().anyMatch(Window::isShowing));
         });
