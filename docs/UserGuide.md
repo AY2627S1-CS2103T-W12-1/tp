@@ -134,6 +134,7 @@ Extra arguments produce `Invalid command format. Usage: list` without changing t
 It preserves the current search restriction and does not change or save the stored roster order.
 Sorting stays active as members are added, edited, deleted, or searched. Use `list` to restore
 the complete roster in stored order, or restart the app to return to stored order.
+A successful `import` also restores the complete roster in stored order.
 Check the displayed member numbers again before using `edit` or `delete`.
 Extra arguments such as `sort date` produce `Invalid command format. Usage: sort`.
 
@@ -282,10 +283,12 @@ Examples:
 
 * `export` writes `addressbook.csv` beside the JAR, or in the working directory during development.
 * `export backups/members.csv` writes `members.csv` in the existing `backups` directory.
+* `export member list.csv` writes `member list.csv`. Unlike `import`, do not put quotes around an export path;
+  everything after `export` is used as the path.
 
 ### Import members from CSV: `import`
 
-`import p/FILE_PATH` validates a local UTF-8 CSV file, appends unique members in file order, saves the
+`import p/FILE_PATH` validates a local UTF-8 CSV file ending in `.csv`, appends unique members in file order, saves the
 complete roster, and restores the full list in stored order. The import always checks the full roster,
 including members hidden by `find` or `filter`.
 Packaged builds read CSV files only from the JAR folder or its subfolders. Relative paths start there;
@@ -306,7 +309,8 @@ name,phone,email,address,tags
 ```
 
 Every later non-blank row must have exactly five fields. CSV quoting supports commas and doubled double
-quotes. Surrounding spaces and tabs are trimmed from field values and individual tags before validation;
+quotes. A double quote inside an unquoted field, such as `Main" Street`, is invalid CSV syntax.
+Surrounding spaces and tabs are trimmed from field values and individual tags before validation;
 internal spaces, tabs, and case are preserved. Line breaks inside fields are not supported. Separate tags
 with semicolons; leave the tags field empty for no tags. An optional UTF-8 byte-order mark is accepted.
 
