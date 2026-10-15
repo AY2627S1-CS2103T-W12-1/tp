@@ -213,7 +213,8 @@ public class LogicManagerTest {
     public void execute_exportToApplicationStorage_rejectsWithoutChangingFilesOrView() throws Exception {
         model.addPerson(AMY);
         model.updateFilteredPersonList(unused -> false);
-        for (String filename : List.of("addressBook.json", "userPrefs.json")) {
+        for (String filename : List.of("addressBook.json", "userPrefs.json", "addressBook.json.bak",
+                "addressBook.json.corrupt-123.json", "ADDRESSBOOK.JSON.CORRUPT-456.JSON")) {
             Path target = temporaryFolder.resolve(filename);
             Files.writeString(target, "Keep the existing application file");
             assertThrows(CommandException.class, () -> logic.execute("export " + target));

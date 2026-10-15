@@ -24,6 +24,20 @@ public class AddressBookTest {
     private final AddressBook addressBook = new AddressBook();
 
     @Test
+    public void copyAndEquality_preserveRosterValuesWithoutSharingListChanges() {
+        AddressBook original = getTypicalAddressBook();
+        AddressBook copy = new AddressBook(original);
+        assertTrue(original.equals(original));
+        assertFalse(original.equals(null));
+        assertFalse(original.equals("roster"));
+        assertEquals(original, copy);
+        assertEquals(original.hashCode(), copy.hashCode());
+        copy.removePerson(ALICE);
+        assertTrue(original.hasPerson(ALICE));
+        assertFalse(original.equals(copy));
+    }
+
+    @Test
     public void constructor() {
         assertEquals(List.of(), addressBook.getPersonList());
     }

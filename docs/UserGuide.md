@@ -419,11 +419,32 @@ Close TrackCall and make a backup first. Keep the existing JSON structure:
 | File state | Startup behaviour |
 | --- | --- |
 | Missing | Sample members are loaded. |
-| Unreadable or invalid | An empty roster is loaded. The loading error is recorded in the log. |
+| Unreadable or invalid | A recovery dialog appears before the roster can be edited. |
 
-Startup and read-only commands leave the member file unchanged.
+Normal startup and read-only commands leave the member file unchanged.
 If an expected roster is missing, close the app and repair or restore the file first.
-A successful data change replaces the file.
+
+### Automatic backup and recovery
+
+Before replacing an existing valid roster, TrackCall saves its previous contents to
+`data/addressbook.json.bak`. This is one previous saved version; each successful backup replaces it.
+If the backup cannot be written, the roster save fails and the existing roster stays unchanged.
+
+If the roster cannot be loaded, TrackCall first preserves its exact contents in a uniquely named
+`data/addressbook.json.corrupt-....json` file. It then offers:
+
+* **Restore backup**, when the backup is valid: restore the previous saved roster.
+* **Start empty**: explicitly replace the unreadable roster with an empty roster.
+* **Close**, the default: leave the roster unchanged so you can repair or restore it manually.
+
+Restoration and starting empty keep both the preserved damaged file and the existing backup unchanged.
+Subsequent normal saves resume rotating the backup. Recovery copies use unique filenames, so restarting
+does not overwrite earlier copies. If the original cannot be preserved, TrackCall closes without opening
+an editable roster. Fix the file or folder permissions, or restore a backup manually before restarting.
+
+To restore a backup manually, close TrackCall, keep a copy of the current roster, and copy
+`addressbook.json.bak` to `addressbook.json`. These files are stored beside each other in `data`.
+Export cannot overwrite the automatic backup or a preserved recovery file.
 
 ## Current limitations
 

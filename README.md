@@ -13,6 +13,7 @@ Type commands to find members and update their contact details quickly.
 * Open offline instructions for all available commands with `help`, or one command with `help COMMAND`.
 * Read labeled member cards and multiline feedback in a light beige interface, with wrapping and scrolling.
 * Save data changes locally, with clear recovery guidance if saving fails and rollback for a failed clear.
+* Keep the previous valid saved roster as an automatic backup, and recover damaged files at startup.
 * Leave the roster file unchanged when running read-only commands.
 * Narrow the displayed members by an exact tag using `filter t/TAG`, then use their displayed numbers to edit or delete.
 * Add or remove a tag for every displayed member with `tagall t/TAG` or `untagall t/TAG`.

@@ -27,6 +27,16 @@ checkstyle {
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
+    doFirst {
+        systemProperty 'test.runtimeClasspath', classpath.asPath
+        def lifecycleCoverage = layout.buildDirectory.file('jacoco/lifecycle.exec').get().asFile
+        delete lifecycleCoverage
+        systemProperty 'test.lifecycleCoverageFile', lifecycleCoverage.absolutePath
+    }
+}
+
+jacocoTestReport {
+    executionData.from layout.buildDirectory.file('jacoco/lifecycle.exec')
 }
 
 task coverage(type: JacocoReport) {

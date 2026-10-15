@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
@@ -17,13 +19,13 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
-import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.Storage;
 import seedu.address.storage.StorageManager;
+import seedu.address.ui.RosterRecoveryDialog;
 import seedu.address.ui.Ui;
 import seedu.address.ui.UiManager;
 
@@ -45,45 +47,24 @@ public class MainApp extends Application {
 
     @Override
     public void init() throws Exception {
+        init(USER_PREFS_FILE_PATH, ADDRESS_BOOK_FILE_PATH);
+    }
+
+    /** Initializes components using explicit files, allowing isolated startup checks. */
+    void init(Path prefsFile, Path rosterFile) throws Exception {
         logger.info("=============================[ Initializing TrackCall ]===========================");
         super.init();
 
-        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(USER_PREFS_FILE_PATH);
+        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(prefsFile);
         UserPrefs userPrefs = initPrefs(userPrefsStorage);
-        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(ADDRESS_BOOK_FILE_PATH);
+        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(rosterFile);
         storage = new StorageManager(addressBookStorage, userPrefsStorage);
 
-        model = initModelManager(storage, userPrefs);
+        model = new ModelManager(new AddressBook(), userPrefs);
 
         logic = new LogicManager(model, storage);
 
         ui = new UiManager(logic, storage.getAddressBookFilePath());
-    }
-
-    /**
-     * Returns a {@code ModelManager} with the data from {@code storage}'s address book and {@code userPrefs}. <br>
-     * The data from the sample address book will be used instead if {@code storage}'s address book is not found,
-     * or an empty address book will be used instead if errors occur when reading {@code storage}'s address book.
-     */
-    private Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
-        logger.info("Using data file : " + storage.getAddressBookFilePath());
-
-        Optional<ReadOnlyAddressBook> addressBookOptional;
-        ReadOnlyAddressBook initialData;
-        try {
-            addressBookOptional = storage.readAddressBook();
-            if (addressBookOptional.isEmpty()) {
-                logger.info("Data file not found: " + storage.getAddressBookFilePath()
-                        + ". Loading sample members into TrackCall.");
-            }
-            initialData = addressBookOptional.orElseGet(SampleDataUtil::getSampleAddressBook);
-        } catch (DataLoadingException e) {
-            logger.warning("Data file at " + storage.getAddressBookFilePath() + " could not be loaded."
-                    + " TrackCall will start with an empty roster.");
-            initialData = new AddressBook();
-        }
-
-        return new ModelManager(initialData, userPrefs);
     }
 
     /**
@@ -121,7 +102,59 @@ public class MainApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         logger.info("Starting TrackCall " + MainApp.VERSION);
+        logger.info("Using data file : " + storage.getAddressBookFilePath());
+        try {
+            Optional<ReadOnlyAddressBook> saved = storage.readAddressBook();
+            if (saved.isEmpty()) {
+                logger.info("Data file not found. Loading sample members into TrackCall.");
+            }
+            model.setAddressBook(saved.orElseGet(SampleDataUtil::getSampleAddressBook));
+        } catch (DataLoadingException e) {
+            logger.warning("The saved roster could not be loaded. Recovery is required: " + e.getMessage());
+            if (!recoverRoster(primaryStage)) {
+                Platform.exit();
+                return;
+            }
+        }
         ui.start(primaryStage);
+    }
+
+    /** Preserves the damaged file and requires an explicit choice before exposing the editable roster. */
+    boolean recoverRoster(Stage owner) {
+        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(storage.getAddressBookFilePath());
+        try {
+            Path preservedFile = addressBookStorage.preserveDamagedFile();
+            Optional<ReadOnlyAddressBook> backup;
+            try {
+                backup = addressBookStorage.readBackup();
+            } catch (DataLoadingException e) {
+                logger.warning("The backup could not be loaded: " + e.getMessage());
+                backup = Optional.empty();
+            }
+            RosterRecoveryDialog.Choice choice = new RosterRecoveryDialog(owner, preservedFile,
+                    JsonAddressBookStorage.getBackupFilePath(storage.getAddressBookFilePath()),
+                    backup.isPresent()).showChoice();
+            if (choice == RosterRecoveryDialog.Choice.CLOSE) {
+                return false;
+            }
+            ReadOnlyAddressBook recovered = choice == RosterRecoveryDialog.Choice.RESTORE_BACKUP
+                    ? backup.orElseThrow() : new AddressBook();
+            addressBookStorage.recoverAddressBook(recovered, preservedFile);
+            model.setAddressBook(recovered);
+            return true;
+        } catch (IOException e) {
+            logger.severe("Could not recover the roster: " + StringUtil.getDetails(e));
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            if (owner.getScene() != null) {
+                alert.initOwner(owner);
+            }
+            alert.setTitle("Roster recovery failed");
+            alert.setHeaderText("TrackCall could not safely recover your roster.");
+            alert.setContentText("The saved roster has not been replaced. Close TrackCall and check the file "
+                    + "and folder permissions, or restore a backup manually.\n\n" + e.getMessage());
+            alert.showAndWait();
+            return false;
+        }
     }
 
     @Override

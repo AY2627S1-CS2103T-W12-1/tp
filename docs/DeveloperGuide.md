@@ -363,9 +363,16 @@ Exiting never retries a save. Application preferences are stored separately at s
 #### Startup and validation
 
 Startup loads a valid roster in file order.
-A missing file produces sample members; a loading error produces an empty roster. A JSON `null` root, null person, and null tag are rejected through the normal
-loading-error path. Errors are logged; an invalid member file is preserved until a successful
-data-changing command replaces it. Null or invalid preferences fall back to defaults, which are saved
+A missing file produces sample members; a loading error requires recovery before the editable roster opens.
+A JSON `null` root, null person, and null tag are rejected through the normal loading-error path.
+`JsonAddressBookStorage` preserves the exact damaged bytes in a unique sibling `.corrupt-....json` file.
+The startup dialog offers a validated backup, an explicit empty roster, or closing without replacement.
+Preservation failure prevents startup. Recovery verifies that the original still matches its preserved copy
+and replaces the roster atomically without rotating the existing backup.
+
+Normal saves validate the current roster before atomically copying it to the sibling `.bak` file;
+backup failure prevents replacement, and an invalid existing roster blocks normal saves until recovery.
+Export protects both backup and recovery filenames. Null or invalid preferences fall back to defaults, which are saved
 through the usual preferences setup.
 
 The current JSON format uses a `persons` array and a `tags` array per member. Duplicate identity compares
@@ -1257,12 +1264,14 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
 2. Back up the member file. Run `help`, `list`, `find Alice`, `filter t/committee`, and `exit`; verify the member file's
    contents and modification time do not change. Preferences may be saved separately.
 3. With the app closed, test each member-file variant: malformed JSON, a `null` root, a null entry
-   in `persons`, and `[null]` in a member's `tags`. Expect an empty roster without a crash and a
-   loading error in the log. Startup and read-only commands must preserve the invalid member file.
-   Restore the backup with the app closed after each check.
+   in `persons`, and `[null]` in a member's `tags`. Expect a recovery dialog before the roster opens,
+   an exact-byte recovery copy, and a loading error in the log. Close must preserve the invalid member file.
+   Test Restore backup with a valid `.bak`, and Start empty with an invalid or absent backup. Both must
+   preserve the damaged copy and the existing backup. Repeated restarts must create distinct recovery copies.
 4. Test `preferences.json` containing `null` and then a null `guiSettings`. Expect startup with
    default preferences. The normal preferences setup may replace that file with valid defaults.
-5. In a disposable folder, make the data directory unwritable or replace the data file with a directory.
+5. In a disposable folder, start with a valid roster, then make the data directory unwritable or replace
+   the data file with a directory while the app is open.
    Test `add`, `edit`, `delete`, and `tagall` separately:
    * Expect a save error and recovery guidance instead of success.
    * Check that the change remains visible and the command box clears the already-applied input.
