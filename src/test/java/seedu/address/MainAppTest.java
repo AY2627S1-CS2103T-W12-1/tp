@@ -1,0 +1,200 @@
+package seedu.address;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
+import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import javafx.application.Platform;
+import javafx.scene.control.Button;
+import javafx.scene.control.DialogPane;
+import javafx.stage.Stage;
+import javafx.stage.Window;
+import seedu.address.commons.core.GuiSettings;
+import seedu.address.model.AddressBook;
+import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
+import seedu.address.model.util.SampleDataUtil;
+import seedu.address.storage.JsonAddressBookStorage;
+import seedu.address.storage.JsonUserPrefsStorage;
+import seedu.address.storage.StorageManager;
+import seedu.address.testutil.JavaFxTestUtil;
+
+/** Exercises startup and recovery against disposable files without exiting the shared JavaFX toolkit. */
+public class MainAppTest {
+    @TempDir
+    public Path directory;
+
+    private MainApp app;
+    private JsonAddressBookStorage roster;
+    private JsonUserPrefsStorage prefs;
+    private boolean opened;
+
+    @BeforeAll
+    public static void startJavaFx() throws InterruptedException {
+        JavaFxTestUtil.start();
+    }
+
+    @BeforeEach
+    public void setUp() {
+        roster = new JsonAddressBookStorage(directory.resolve("members.json"));
+        prefs = new JsonUserPrefsStorage(directory.resolve("preferences.json"));
+        app = new MainApp();
+        app.storage = new StorageManager(roster, prefs);
+        app.model = new ModelManager();
+        app.ui = unused -> opened = true;
+    }
+
+    @AfterEach
+    public void closeWindows() throws Exception {
+        onJavaFxThread(() -> List.copyOf(Window.getWindows()).forEach(Window::hide));
+    }
+
+    @Test
+    public void start_validAndEmptyRosters_loadsExactlySavedMembersWithoutWriting() throws Exception {
+        for (AddressBook saved : List.of(getTypicalAddressBook(), new AddressBook())) {
+            roster.saveAddressBook(saved);
+            byte[] before = Files.readAllBytes(roster.getAddressBookFilePath());
+            opened = false;
+
+            onJavaFxThread(() -> app.start(new Stage()));
+
+            assertTrue(opened);
+            assertEquals(saved, app.model.getAddressBook());
+            assertArrayEquals(before, Files.readAllBytes(roster.getAddressBookFilePath()));
+        }
+    }
+
+    @Test
+    public void start_missingRoster_loadsSamplesWithoutCreatingFile() throws Exception {
+        onJavaFxThread(() -> app.start(new Stage()));
+
+        assertTrue(opened);
+        assertEquals(SampleDataUtil.getSampleAddressBook(), app.model.getAddressBook());
+        assertFalse(Files.exists(roster.getAddressBookFilePath()));
+    }
+
+    @Test
+    public void start_damagedRoster_restoresBackupBeforeOpeningUi() throws Exception {
+        roster.saveAddressBook(getTypicalAddressBook());
+        roster.saveAddressBook(new AddressBook());
+        Files.writeString(roster.getAddressBookFilePath(), "damaged roster");
+
+        onJavaFxThread(() -> {
+            answerDialog("Restore backup");
+            app.start(new Stage());
+        });
+
+        assertTrue(opened);
+        assertEquals(getTypicalAddressBook(), app.model.getAddressBook());
+        assertEquals(getTypicalAddressBook(), roster.readAddressBook().orElseThrow());
+        assertEquals(getTypicalAddressBook(), roster.readBackup().orElseThrow());
+        assertPreservedCopy();
+    }
+
+    @Test
+    public void start_invalidBackup_explicitlyStartsEmptyWithoutReplacingBackup() throws Exception {
+        Files.writeString(roster.getAddressBookFilePath(), "damaged roster");
+        Path backup = JsonAddressBookStorage.getBackupFilePath(roster.getAddressBookFilePath());
+        Files.writeString(backup, "damaged backup");
+
+        onJavaFxThread(() -> {
+            answerDialog("Start empty");
+            app.start(new Stage());
+        });
+
+        assertTrue(opened);
+        assertEquals(new AddressBook(), roster.readAddressBook().orElseThrow());
+        assertEquals("damaged backup", Files.readString(backup));
+        assertPreservedCopy();
+    }
+
+    @Test
+    public void recovery_closeWithoutBackup_preservesOriginalAndDoesNotOpenUi() throws Exception {
+        Files.writeString(roster.getAddressBookFilePath(), "damaged roster");
+        onJavaFxThread(() -> {
+            answerDialog("Close");
+            assertFalse(app.recoverRoster(new Stage()));
+        });
+
+        assertFalse(opened);
+        assertEquals("damaged roster", Files.readString(roster.getAddressBookFilePath()));
+        assertPreservedCopy();
+    }
+
+    @Test
+    public void recovery_preservationFailure_reportsFailureAndLeavesOriginalAlone() throws Exception {
+        Files.createDirectory(roster.getAddressBookFilePath());
+        onJavaFxThread(() -> {
+            answerDialog("OK");
+            assertFalse(app.recoverRoster(new Stage()));
+        });
+
+        assertFalse(opened);
+        assertTrue(Files.isDirectory(roster.getAddressBookFilePath()));
+    }
+
+    @Test
+    public void initPrefs_missingInvalidAndValidFiles_returnsAndSavesExpectedSettings() throws Exception {
+        assertEquals(new UserPrefs(), app.initPrefs(prefs));
+        Files.writeString(prefs.getUserPrefsFilePath(), "invalid preferences");
+        assertEquals(new UserPrefs(), app.initPrefs(prefs));
+        UserPrefs saved = new UserPrefs();
+        saved.setGuiSettings(new GuiSettings(900, 650, 20, 30));
+        prefs.saveUserPrefs(saved);
+
+        assertEquals(saved, app.initPrefs(prefs));
+        assertEquals(saved, prefs.readUserPrefs().orElseThrow());
+    }
+
+    @Test
+    public void preferences_unwritableDestination_doesNotAbortStartupOrShutdown() throws Exception {
+        Files.createDirectory(prefs.getUserPrefsFilePath());
+
+        assertEquals(new UserPrefs(), app.initPrefs(prefs));
+        assertDoesNotThrow(app::stop);
+        assertTrue(Files.isDirectory(prefs.getUserPrefsFilePath()));
+    }
+
+    @Test
+    public void stop_savesPreferencesWithoutCreatingRoster() throws Exception {
+        app.model.setGuiSettings(new GuiSettings(900, 650, 20, 30));
+        app.stop();
+
+        assertEquals(app.model.getUserPrefs(), prefs.readUserPrefs().orElseThrow());
+        assertFalse(Files.exists(roster.getAddressBookFilePath()));
+    }
+
+    private void assertPreservedCopy() throws Exception {
+        try (var files = Files.list(directory)) {
+            List<Path> copies = files.filter(path -> path.getFileName().toString().contains(".corrupt-")).toList();
+            assertEquals(1, copies.size());
+            assertEquals("damaged roster", Files.readString(copies.getFirst()));
+        }
+    }
+
+    private void answerDialog(String label) {
+        Platform.runLater(() -> {
+            DialogPane pane = (DialogPane) Window.getWindows().stream()
+                    .filter(window -> window.getScene().getRoot() instanceof DialogPane)
+                    .findFirst().orElseThrow().getScene().getRoot();
+            var button = pane.getButtonTypes().stream().filter(type -> type.getText().equals(label))
+                    .findFirst().orElseThrow();
+            Button control = (Button) pane.lookupButton(button);
+            control.fire();
+        });
+    }
+}

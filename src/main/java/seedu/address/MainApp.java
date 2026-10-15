@@ -115,7 +115,7 @@ public class MainApp extends Application {
     }
 
     /** Preserves the damaged file and requires an explicit choice before exposing the editable roster. */
-    private boolean recoverRoster(Stage owner) {
+    boolean recoverRoster(Stage owner) {
         JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(storage.getAddressBookFilePath());
         try {
             Path preservedFile = addressBookStorage.preserveDamagedFile();
