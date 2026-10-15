@@ -105,6 +105,17 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void filterFilteredPersonList_manyFilters_doesNotOverflowStack() {
+        for (int i = 0; i < 12_000; i++) {
+            modelManager.filterFilteredPersonList(person -> true);
+        }
+
+        modelManager.setAddressBook(new AddressBookBuilder().withPerson(ALICE).build());
+
+        assertEquals(List.of(ALICE), modelManager.getFilteredPersonList());
+    }
+
+    @Test
     public void filterFilteredPersonList_nullPredicate_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> modelManager.filterFilteredPersonList(null));
     }
