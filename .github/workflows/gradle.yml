@@ -40,7 +40,8 @@ jobs:
         run: ./gradlew check coverage
 
       - name: Upload coverage reports to Codecov
-        if: runner.os == 'Linux'
+        # Upstream PRs upload in the team repository; unregistered forks only run checks.
+        if: runner.os == 'Linux' && !github.event.repository.fork
         uses: codecov/codecov-action@v7
         with:
           use_oidc: true
