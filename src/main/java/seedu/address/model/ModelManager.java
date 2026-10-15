@@ -4,7 +4,9 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -14,6 +16,7 @@ import javafx.collections.transformation.SortedList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 
 /**
  * Represents the in-memory model of the address book data.
@@ -25,6 +28,7 @@ public class ModelManager implements Model {
     private final UserPrefs userPrefs;
     private final FilteredList<Person> filteredPersons;
     private final List<Predicate<Person>> activeFilters = new ArrayList<>();
+    private final Set<Tag> activeTagFilters = new LinkedHashSet<>();
     /** Live display ordering; the underlying roster retains its stored order. */
     private final SortedList<Person> sortedPersons;
 
@@ -126,6 +130,7 @@ public class ModelManager implements Model {
     public void updateFilteredPersonList(Predicate<Person> predicate) {
         requireNonNull(predicate);
         activeFilters.clear();
+        activeTagFilters.clear();
         activeFilters.add(predicate);
         refreshFilteredPersons();
     }
@@ -135,6 +140,20 @@ public class ModelManager implements Model {
         requireNonNull(predicate);
         activeFilters.add(predicate);
         refreshFilteredPersons();
+    }
+
+    @Override
+    public void filterFilteredPersonListByTag(Tag tag) {
+        requireNonNull(tag);
+        if (activeTagFilters.add(tag)) {
+            activeFilters.add(person -> person.getTags().contains(tag));
+            refreshFilteredPersons();
+        }
+    }
+
+    @Override
+    public List<Tag> getActiveTagFilters() {
+        return List.copyOf(activeTagFilters);
     }
 
     private void refreshFilteredPersons() {

@@ -25,7 +25,8 @@ public enum CommandHelp {
     FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
             "Shows currently displayed members with the specified tag without changing saved data.",
             "Shows only members tagged committee, in their current order with new displayed numbers.",
-            "Matching is exact and case-sensitive. Repeated filters narrow the list further. Use list to show "
+            "Matching is exact and case-sensitive. Repeated filters narrow the list further, and the result "
+                    + "names all active tags. Use list to show "
                     + "everyone or find to search all members by name. Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
             "Supply exactly one tag of 1 to 30 ASCII letters or digits. Empty tags, internal spaces, "

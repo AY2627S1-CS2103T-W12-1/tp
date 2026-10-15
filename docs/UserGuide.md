@@ -198,9 +198,12 @@ stays the same, and their displayed numbers update.
 
 * Matching is exact and case-sensitive: `committee` and `Committee` are different tags.
 * Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
+  Applying the same tag again does not add a duplicate condition.
 * Use `list` to show everyone again. A new `find` searches the whole roster and replaces previous filters.
 
-The result reports `N member(s) listed with tag "TAG".`
+The result reports `N member(s) listed with tag "TAG".` for one active tag filter. With multiple
+active tags, it names every distinct tag in the order applied, for example:
+`1 member(s) listed with tags "committee", "year1".` A new `find` or `list` clears these tag filters.
 No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
 
 Check the displayed numbers before using `edit` or `delete`. Editing keeps the active search and filters.
