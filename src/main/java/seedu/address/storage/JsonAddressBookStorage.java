@@ -3,13 +3,17 @@ package seedu.address.storage;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.exceptions.IllegalValueException;
+import seedu.address.commons.util.FileUtil;
 import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.ReadOnlyAddressBook;
 
@@ -28,6 +32,50 @@ public class JsonAddressBookStorage {
 
     public Path getAddressBookFilePath() {
         return filePath;
+    }
+
+    /** Returns the sibling file containing the previous valid saved roster. */
+    public static Path getBackupFilePath(Path rosterPath) {
+        return rosterPath.resolveSibling(rosterPath.getFileName() + ".bak");
+    }
+
+    /** Reads the backup using the same validation as the active roster. */
+    public Optional<ReadOnlyAddressBook> readBackup() throws DataLoadingException {
+        return readAddressBook(getBackupFilePath(filePath));
+    }
+
+    /**
+     * Preserves the exact bytes of an unreadable roster in a unique sibling file.
+     * Neither the active roster nor the last valid backup is changed.
+     *
+     * @throws IOException If the original cannot be read or its recovery copy cannot be written.
+     */
+    public Path preserveDamagedFile() throws IOException {
+        Path source = FileUtil.resolvePath(filePath).toAbsolutePath();
+        if (!Files.isRegularFile(source)) {
+            throw new IOException("The roster is not a readable regular file: " + source);
+        }
+        Path preserved = source.resolveSibling(source.getFileName() + ".corrupt-" + UUID.randomUUID() + ".json");
+        FileUtil.writeAtomically(preserved,
+                temporary -> Files.copy(source, temporary, StandardCopyOption.REPLACE_EXISTING));
+        return preserved;
+    }
+
+    /**
+     * Saves the user's chosen recovery roster without rotating the last valid backup.
+     * Refuses replacement if the original changed after its recovery copy was made.
+     *
+     * @throws IOException If preservation cannot be verified or the replacement cannot be saved.
+     */
+    public void recoverAddressBook(ReadOnlyAddressBook addressBook, Path preservedFile) throws IOException {
+        requireNonNull(addressBook);
+        requireNonNull(preservedFile);
+        Path source = FileUtil.resolvePath(filePath);
+        Path preserved = FileUtil.resolvePath(preservedFile);
+        if (Files.isSameFile(source, preserved) || Files.mismatch(source, preserved) != -1) {
+            throw new IOException("The roster changed during recovery. Restart TrackCall to try again.");
+        }
+        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(addressBook), source);
     }
 
     /**
@@ -81,7 +129,19 @@ public class JsonAddressBookStorage {
         requireNonNull(addressBook);
         requireNonNull(filePath);
 
-        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(addressBook), filePath);
+        Path target = FileUtil.resolvePath(filePath);
+        // Validate before rotating the backup: a damaged roster must never replace the last good copy.
+        try {
+            if (readAddressBook(target).isPresent()) {
+                Path backup = FileUtil.resolvePath(getBackupFilePath(target));
+                FileUtil.writeAtomically(backup,
+                        temporary -> Files.copy(target, temporary, StandardCopyOption.REPLACE_EXISTING));
+            }
+        } catch (DataLoadingException e) {
+            throw new IOException("The existing roster could not be loaded. Restart TrackCall to recover it. "
+                    + "The original file and backup have been left unchanged.", e);
+        }
+        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(addressBook), target);
     }
 
 }

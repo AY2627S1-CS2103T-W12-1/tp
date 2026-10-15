@@ -6,12 +6,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
 import seedu.address.storage.CsvAddressBookExporter;
+import seedu.address.storage.JsonAddressBookStorage;
 
 /**
  * Exports the address book to a CSV file.
@@ -64,6 +67,13 @@ public class ExportCommand extends Command {
             checkDestination(targetPath, FileUtil.getApplicationLocation());
             for (Path protectedFile : protectedFiles) {
                 checkDestination(targetPath, protectedFile);
+                checkDestination(targetPath, JsonAddressBookStorage.getBackupFilePath(protectedFile));
+                Path protectedPath = FileUtil.resolvePath(protectedFile).toAbsolutePath().normalize();
+                if (Objects.equals(targetPath.getParent(), protectedPath.getParent())
+                        && targetPath.getFileName().toString().toLowerCase(Locale.ROOT)
+                                .startsWith((protectedPath.getFileName() + ".corrupt-").toLowerCase(Locale.ROOT))) {
+                    throw new IOException(MESSAGE_PROTECTED_DESTINATION);
+                }
             }
             CsvAddressBookExporter.export(people, targetPath);
         } catch (IOException e) {
