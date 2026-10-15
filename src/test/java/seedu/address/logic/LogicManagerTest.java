@@ -365,20 +365,24 @@ public class LogicManagerTest {
         assertEquals("3 member(s) listed with tag \"year1\".",
                 logic.execute("filter t/year1").getFeedbackToUser());
         assertEquals(List.of(alice, committeeMember, daniel), logic.getFilteredPersonList());
-        assertEquals("1 member(s) listed with tag \"committee\".",
+        assertEquals("1 member(s) listed with tags \"year1\", \"committee\".",
                 logic.execute("filter t/committee").getFeedbackToUser());
         assertEquals(List.of(committeeMember), logic.getFilteredPersonList());
-        assertEquals("0 member(s) listed with tag \"missing\".",
+        assertEquals("0 member(s) listed with tags \"year1\", \"committee\", \"missing\".",
                 logic.execute("filter t/missing").getFeedbackToUser());
         assertEquals(List.of(), logic.getFilteredPersonList());
 
         logic.execute("find Alice");
         assertEquals(List.of(alice), logic.getFilteredPersonList());
-        logic.execute("filter t/year1");
+        assertEquals("1 member(s) listed with tag \"year1\".",
+                logic.execute("filter t/year1").getFeedbackToUser());
         assertEquals(List.of(alice), logic.getFilteredPersonList());
+        assertEquals("1 member(s) listed with tag \"year1\".",
+                logic.execute("filter t/year1").getFeedbackToUser());
         logic.execute("list");
         assertEquals(clubRoster.getPersonList(), logic.getFilteredPersonList());
-        logic.execute("filter t/Year1");
+        assertEquals("0 member(s) listed with tag \"Year1\".",
+                logic.execute("filter t/Year1").getFeedbackToUser());
         assertEquals(List.of(), logic.getFilteredPersonList());
     }
 

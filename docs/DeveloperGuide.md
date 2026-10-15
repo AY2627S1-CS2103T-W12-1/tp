@@ -442,9 +442,13 @@ The parser checks the tag before constructing it; the shared `Tag` model enforce
 
 #### Execution
 
-`FilterCommand` supplies a tag-membership predicate to `ModelManager#filterFilteredPersonList`. The model
+`FilterCommand` passes the tag to `ModelManager#filterFilteredPersonListByTag`. The model
 combines it with the current predicate using logical AND, or applies it directly if no predicate is set.
-The observable filtered list updates automatically, and the command reports the resulting member count.
+The model records each distinct active tag in application order and clears those names when
+`updateFilteredPersonList` replaces the conditions, as `find` and `list` do. The observable filtered list
+updates automatically, and the command reports the resulting member count and all active tag names.
+A single tag uses `N member(s) listed with tag "TAG".`; multiple tags use
+`N member(s) listed with tags "TAG1", "TAG2".` in application order.
 A zero-match result is successful.
 
 Filtering preserves the current display order, including name sorting. Visible members are renumbered,

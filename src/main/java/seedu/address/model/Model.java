@@ -1,10 +1,12 @@
 package seedu.address.model;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 
 /**
  * The API of the Model component.
@@ -83,4 +85,12 @@ public interface Model {
      * @throws NullPointerException if {@code predicate} is null.
      */
     void filterFilteredPersonList(Predicate<Person> predicate);
+
+    /**
+     * Narrows the displayed list to persons with {@code tag} and records the active tag filter.
+     */
+    void filterFilteredPersonListByTag(Tag tag);
+
+    /** Returns the distinct active tag filters in the order they were applied. */
+    List<Tag> getActiveTagFilters();
 }
