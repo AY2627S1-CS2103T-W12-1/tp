@@ -307,7 +307,8 @@ and tag labels.
 
 Find feedback reports `1 member listed.` or `N members listed.`, including `0 members listed.`
 List and clear use the exact count messages above.
-Data-changing feedback is shown only after saving. Duplicate-name errors explain the existing name rule and suggest `edit`.
+Data-changing feedback is shown only after saving. Duplicate errors state that a member with these contact details
+already exists and suggest `edit`.
 
 #### Window placement
 
@@ -328,6 +329,8 @@ to `Storage#saveAddressBook`.
 Parsing and execution failures do not save. Data-changing commands return normal success only after
 the save succeeds.
 
+![Automatic-saving workflow after each command](images/AutomaticSavingData.png)
+
 #### File writes
 
 `StorageManager` delegates JSON storage to `JsonAddressBookStorage`. The default file is
@@ -342,7 +345,7 @@ partial overwrite. An existing saved file remains intact on failure; temporary-f
 If saving fails, `LogicManager` reports a `SaveFailureException`, a `CommandException` subtype that
 also records whether the change remains applied.
 
-For `add`, `edit`, and `delete`, the model change
+For `add`, `edit`, `delete`, `tagall`, and `untagall`, the model change
 remains in memory. `CommandBox` clears the already-applied input so pressing Enter cannot accidentally
 repeat an indexed edit or deletion. The result explains that the previous saved roster is unchanged.
 
@@ -366,14 +369,15 @@ data-changing command replaces it. Null or invalid preferences fall back to defa
 through the usual preferences setup.
 
 The current JSON format uses a `persons` array and a `tags` array per member. Duplicate identity compares
-all four contact fields exactly and ignores tags. The email validator avoids excessive backtracking on long
+all four trimmed contact fields exactly, including case and internal spacing, and ignores tags.
+The email validator avoids excessive backtracking on long
 input, and a log-file initialisation failure uses the console logger instead of aborting startup.
 
 ### Command parsing
 
 `ArgumentTokenizer` recognises the supported lowercase field prefixes when preceded by whitespace,
 including a tab. It trims surrounding value whitespace without removing internal address tabs or
-slashes. `list`, `clear`, and `exit` reject extra arguments before execution. Invalid commands leave
+slashes. `list`, `sort`, `clear`, and `exit` reject extra arguments before execution. Invalid commands leave
 records, the current list, and the saved file unchanged; the input remains available for correction.
 
 `AddCommandParser` first checks whitespace-delimited single ASCII letters followed by `/`.
@@ -414,12 +418,9 @@ The remaining differences from the requirements are:
 * Storage uses `tags` rather than the intended `tagged` schema in the requirements appendix.
 * Startup loading errors are recorded in the log; the requirements' user-visible load messages remain planned.
   Undo/redo and deletion confirmation are not selected for the MVP.
-
-![Intended automatic-saving workflow for the core commands](images/AutomaticSavingData.png)
-
-AI-assisted design illustration of the intended saving policy for the core commands. Implementation
-status is described above; this figure is not a screenshot or evidence of v1.1 implementation.
-`tagall` and `untagall` use the same save-after-change workflow.
+* Manual-file validation is not yet as strict as UC07. Loading currently ignores unknown member fields,
+  keeps the last value of a repeated field, and accepts a JSON number where a text field is expected.
+  Comments and trailing commas are rejected.
 
 ### Filter members by tag
 
@@ -430,7 +431,7 @@ Usage examples are in the [User Guide](UserGuide.md#filter-displayed-members-by-
 
 `FilterCommandParser` accepts one `t/TAG` argument, trims surrounding whitespace, and requires 1 to 30
 ASCII letters or digits. Missing, repeated, or invalid arguments are rejected before the view changes.
-These restrictions are enforced in the parser, leaving the shared `Tag` model unchanged.
+The parser checks the tag before constructing it; the shared `Tag` model enforces the same 1 to 30 character rule.
 
 #### Execution
 
@@ -703,9 +704,9 @@ These rules describe the selected MVP and apply to the use cases below.
    displayed when the command is submitted. Hidden members and unrelated tags are unchanged.
    Adding an existing tag or removing an absent tag skips that member. Reapply searches and
    filters after the whole batch. Changed and skipped counts refer to the original target set.
-9. Valid `add`, `edit`, `delete`, `clear`, `tagall`, and `untagall` commands save the complete
+9. Valid `add`, `edit`, `delete`, `clear`, `tagall`, `untagall`, and `import` commands save the complete
    roster, including valid operations that make no change. An empty bulk target is an error
-   and does not save. `help`, `list`, `find`, `filter`, and `exit` do not save.
+   and does not save. `help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` do not save.
 10. Report data-changing command success only after saving succeeds. A failed save preserves
     the previous saved file and reports a storage error. Except for `clear`, changes remain in
     memory and can be lost on exit. Failed `clear` restores the previous records, displayed
@@ -714,7 +715,7 @@ These rules describe the selected MVP and apply to the use cases below.
 11. `add` restores the full list and appends the record. `delete` removes one indexed record and
     retains the active search and filters. `clear` removes all records, including hidden ones,
     resets the view, and preserves application settings. Deletion and clearing have no
-    confirmation or undo. `list`, `clear`, and `exit` reject extra arguments. `exit` closes the
+    confirmation or undo. `list`, `sort`, `clear`, and `exit` reject extra arguments. `exit` closes the
     app without a final save or another warning about unsaved changes.
 12. Startup reads the local `data/addressbook.json` relative to the JAR folder in packaged builds
     or the working directory in development. A missing file loads sample members and reports that
@@ -764,7 +765,8 @@ or window; it must remain keyboard accessible.
 
 * With networking disabled, `help` shows a concise summary of every executable command in the
   running version. The completed MVP includes `help`, `add`, `list`, `edit`, `find`, `delete`,
-  `clear`, `exit`, `filter`, `tagall`, and `untagall`. An earlier iteration must not present an
+  `clear`, `exit`, `filter`, `tagall`, `untagall`, `sort`, `export`, and `import`.
+  An earlier iteration must not present an
   unimplemented command as available.
 * `help COMMAND` shows the command purpose, syntax, parameter rules, at least one valid example
   with its expected result, and relevant errors or limitations. Examples involving an index
@@ -858,11 +860,11 @@ but remains in the roster. The secretary can use `list` to see it again.
 
 The search command is `find KEYWORD [MORE_KEYWORDS]`. It accepts one or more whitespace-separated
 keywords, ignores case, matches complete name words, and returns records matching any keyword in
-address-book order.
+address-book order, or in name order while `sort` is active.
 
 A successful search reports `1 member listed.`, `N members listed.`, or
 `0 members listed.` and does not save the data file. `find` with no keyword reports
-`Invalid command format. Usage: find KEYWORD [MORE_KEYWORDS]`; a wrong-case command such as
+`Invalid command format.` followed by the `find` usage; a wrong-case command such as
 `FIND John` reports `Unknown command. Type help for available commands.` A new `find` searches the
 complete roster and replaces the previous search and filters.
 
@@ -937,8 +939,8 @@ extra arguments, and out-of-range indices are rejected.
 
 After the updated roster is saved,
 successful deletion reports `Deleted member` followed by the readable member fields specified
-above. A save failure reports `Could not save data to file: [DETAILS]`; the
-deletion remains in memory, but the previous saved file is preserved.
+above. A save failure reports `Could not save data due to the following error: [DETAILS]` with retry
+guidance; the deletion remains in memory, but the previous saved file is preserved.
 
 #### UC05: Reset the whole roster
 
@@ -1048,7 +1050,7 @@ working without changing the persisted roster.
   proceeds with `exit`, TrackCall still closes, but changes that exist only in memory are not
   guaranteed to be present after restart.
 * **3a.** The command contains an argument or uses the wrong command spelling or case. TrackCall
-  reports `Invalid command format. Usage: exit` for extra arguments, or the unknown-command error
+  reports `Invalid command format.` followed by the `exit` usage for extra arguments, or the unknown-command error
   `Unknown command. Type help for available commands.` for a wrong-case command such as `EXIT`.
   TrackCall keeps the window open, and the secretary can retry step 2.
 
