@@ -21,7 +21,7 @@ The secretary can:
 
 The **v1.3 release** supports individual member management, name search, tag filtering, bulk tag
 editing, offline command help, local saving, CSV import/export, and name sorting.
-See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining work.
+See [Limitations](#limitations) for constraints in the current release.
 
 ## Acknowledgements
 
@@ -203,8 +203,7 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 ## Implementation
 
 This section describes the v1.3 release. The v1.1 iteration was limited to documentation;
-these functional changes are not a published v1.1 release. The requirements appendix records the
-full intended product, including behaviour still to be implemented.
+these functional changes are not a published v1.1 release.
 
 ### Offline command help
 
@@ -413,22 +412,6 @@ and sort state. `LogicManager` performs the normal automatic save even for a hea
 import. If saving fails, the imported batch remains in memory and an import-specific save error is shown.
 The source CSV is read-only throughout the workflow.
 
-### Differences still to implement for the MVP
-
-CSV import (`import p/FILE_PATH`), CSV export (`export [FILEPATH]`), and name sorting (`sort`) are implemented.
-The remaining differences from the requirements are:
-
-* Unknown-prefix rejection still needs a precise grammar that preserves valid free-form addresses.
-  Currently, an unrecognised prefix-like token such as `x/extra` or uppercase `T/committee` inside
-  an address supplied to `edit` can become literal address text. The parser must not reject ordinary `c/o` or URLs
-  merely because they contain slashes. `add` rejects these using the documented grammar; `edit` still needs this rule.
-* Storage uses `tags` rather than the intended `tagged` schema in the requirements appendix.
-* Startup loading errors are recorded in the log; the requirements' user-visible load messages remain planned.
-  Undo/redo and deletion confirmation are not selected for the MVP.
-* Manual-file validation is not yet as strict as UC07. Loading currently ignores unknown member fields,
-  keeps the last value of a repeated field, and accepts a JSON number where a text field is expected.
-  Comments and trailing commas are rejected.
-
 ### Filter members by tag
 
 `filter t/TAG` narrows the displayed list to members with one exact, case-sensitive tag without changing member data.
@@ -525,6 +508,19 @@ memory and the previous saved file is unchanged.
 * `LogicManagerTest` checks that only displayed members change, that no-op batches save, and that an empty
   list does not save.
 
+### Limitations
+
+These are constraints of the current implementation:
+
+* In `edit`, an unrecognised prefix-like token inside an address can be stored as literal address
+  text. For example, `a/Main Road T/committee` does not assign a tag. Use lowercase `t/` for tags
+  and check the edited details. `add` rejects unsupported single-letter prefixes.
+* The saved JSON format uses a `persons` array with a `tags` array for each member. Loading
+  ignores unknown member fields, keeps the last value of repeated fields, and accepts JSON
+  numbers in text fields as text. Comments and trailing commas are rejected.
+* Deletion and clearing take effect without a confirmation step or undo. To recover a prior roster,
+  restore a valid `data/addressbook.json.bak` if one exists.
+
 
 ## Documentation, logging, testing, dev-ops
 
@@ -537,7 +533,7 @@ memory and the previous saved file is unchanged.
 ## Appendix: Requirements
 
 These requirements describe the intended product, including features beyond the v1.3 release.
-See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining differences.
+See [Limitations](#limitations) for constraints of the current release.
 The v1.1 iteration documented requirements; functional changes belong to v1.2 or later.
 
 The requirements were reviewed on **29 September 2026** against two sources:
@@ -613,9 +609,8 @@ The broader narrative must be read with these MVP decisions:
 ### User stories
 
 Priorities describe importance to the target user: `***` = essential, `**` = useful,
-`*` = convenience. Priority is separate from implementation status. **MVP** means selected for
-the intended core product, not necessarily implemented in the current build. **Considered** means recorded for
-future decisions, with no delivery commitment.
+`*` = convenience. **MVP** identifies the delivered core stories. **Considered** means recorded
+for future decisions, with no delivery commitment.
 
 The tables cover all 32 source stories. Existing story IDs are retained.
 Overlapping stories are consolidated as follows:
@@ -729,11 +724,11 @@ These rules describe the selected MVP and apply to the use cases below.
     confirmation or undo. `list`, `sort`, `clear`, and `exit` reject extra arguments. `exit` closes the
     app without a final save or another warning about unsaved changes.
 12. Startup reads the local `data/addressbook.json` relative to the JAR folder in packaged builds
-    or the working directory in development. A missing file loads sample members and reports that
-    fact. An invalid or unreadable file loads zero members and reports the error. Startup and
-    read-only commands leave the file untouched.
-    A valid empty roster stays empty. A later successful data-changing command can replace an
-    invalid file, so restore or repair it before making changes if its contents are needed.
+    or the working directory in development. A missing file loads sample members and logs that
+    fact. An invalid or unreadable file opens a recovery dialog before the roster can be edited.
+    The app preserves the damaged file, then offers a valid backup, an explicit empty roster, or
+    closing without replacement. A valid empty roster stays empty. Normal startup and read-only
+    commands leave the roster file untouched.
 13. An unknown command, including a wrong-case keyword, reports
     `Unknown command. Type help for available commands.` An invalid known command identifies
     the format or field problem and provides its usage or a route to `help COMMAND`. A duplicate
@@ -745,9 +740,10 @@ These rules describe the selected MVP and apply to the use cases below.
 
 `add` requires `n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS` and accepts optional repeated `t/TAG`
 parameters. Prefixes begin separate tokens and fields may appear in any order. `edit` uses the
-same field rules for supplied values. Reject unknown prefixes and repeated `n/`, `p/`, `e/`,
-or `a/` prefixes. Check command structure, then values in name/phone/email/address/tag order,
-then duplicate identity.
+same field rules for supplied values. `add` rejects unsupported single-letter prefixes; `edit`
+can include an unrecognised prefix-like token in an address as literal text. Repeated `n/`, `p/`,
+`e/`, or `a/` prefixes are rejected. Check command structure, then values in
+name/phone/email/address/tag order, then duplicate identity.
 
 | Field | Requirement |
 | --- | --- |
@@ -1021,22 +1017,24 @@ leave member data and the displayed member list unchanged and do not save the da
 
 **Extensions**
 
-* **3a.** The file is missing. TrackCall loads sample members and reports the missing file. It creates
-  the file only after a valid data-changing command saves successfully. The use case ends.
-* **3b.** The file has invalid JSON, structure, fields, or duplicate records. TrackCall loads zero
-  members, reports the problem, and preserves the file. No partial import occurs. The secretary
-  closes the app and repairs or restores the file, then retries step 2.
-* **3c.** The file cannot be read. TrackCall loads zero members, reports the operating-system error,
-  and leaves the file untouched. The secretary closes the app, fixes access, and retries step 2.
+* **3a.** The file is missing. TrackCall loads sample members and logs that the file was missing.
+  It creates the file only after a valid data-changing command saves successfully. The use case ends.
+* **3b.** The file is invalid or unreadable. TrackCall preserves its bytes in a uniquely named
+  recovery copy and opens a dialog before the roster can be edited. The secretary can restore a
+  valid backup, start with an empty roster, or close without replacing the file. No partial roster
+  is loaded. The use case ends after the chosen recovery action.
+* **3c.** TrackCall cannot preserve the damaged file. It reports the failure and closes without
+  opening an editable roster. The secretary fixes access or restores a backup, then retries step 2.
 
-The file uses UTF-8 JSON with a `persons` array. Each member has exactly `name`, `phone`, `email`,
-and `address` string fields and a `tagged` array of strings. Missing, null, wrongly typed, unknown,
-or repeated fields, comments, and trailing commas invalidate the file. Member values follow the
-shared field rules, including rule 3 for tags. Repeated identical tags collapse into one assignment;
-duplicate members invalidate the whole file. `{"persons": []}` is a valid empty roster.
+The file uses UTF-8 JSON with a `persons` array. TrackCall writes `name`, `phone`, `email`, and
+`address` fields and a `tags` array of strings for each member. Loading treats a missing or null
+`tags` field as an empty array. Member values follow the shared field rules, including rule 3
+for tags. Missing or null required contact fields, invalid values, null entries, duplicate members,
+comments, and trailing commas invalidate the file. Repeated identical tags collapse into one
+assignment. Unknown member fields are ignored, repeated fields keep their last value, and JSON
+numbers in text fields are accepted as text. `{"persons": []}` is a valid empty roster.
 
-Do not edit the data file while TrackCall is running. A later successful data-changing command can
-overwrite an invalid file; restore or repair it first if the original contents are needed.
+Do not edit the data file while TrackCall is running. Keep a backup before manual changes.
 
 #### UC08: Finish a TrackCall session
 
@@ -1144,11 +1142,11 @@ such as incremental delivery, are also not product NFRs.
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
 | Data-changing command | `add`, `edit`, `delete`, `clear`, `import`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
-| JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.3 release uses `tags`. |
+| JSON | The structured text format of the local data file. It uses a `persons` array and each member's `tags` array. |
 | CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; `import p/FILE_PATH` validates and imports it. |
 | vCard | A contact-card file format considered for exporting member contact details to phone or contact applications. It is outside the selected MVP. |
 | Archive | Retain an inactive record or tag and its history separately from active work. This considered feature is different from MVP deletion. |
-| MVP | Minimum viable product: the selected core feature set in the team specification. It does not mean that all those features exist in the current build. |
+| MVP | Minimum viable product: the core feature set delivered by TrackCall. |
 
 
 ## Appendix: Instructions for manual testing
@@ -1214,7 +1212,8 @@ platform or release package has been verified. Use a disposable folder and synth
 7. Paste a valid add command with actual tab separators before `n/`, `p/`, `e/`, and `a/`.
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
    or an internal tab keeps that text. For `add`, append `x/extra` or `T/committee` and expect
-   an invalid command format with no member added. Unknown-prefix rejection remains planned for `edit`.
+   an invalid command format with no member added. In `edit`, an unsupported prefix-like token
+   inside an address can be stored as literal address text.
 8. Add two members tagged `committee` and one member without tags. Run `list`, then `filter t/committee`.
    Run `tagall t/year1` and
    expect only the displayed members to gain `year1`, keeping their other tags. Run it again and expect
