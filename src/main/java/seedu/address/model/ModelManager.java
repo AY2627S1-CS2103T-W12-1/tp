@@ -3,6 +3,8 @@ package seedu.address.model;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -22,6 +24,7 @@ public class ModelManager implements Model {
     private final AddressBook addressBook;
     private final UserPrefs userPrefs;
     private final FilteredList<Person> filteredPersons;
+    private final List<Predicate<Person>> activeFilters = new ArrayList<>();
     /** Live display ordering; the underlying roster retains its stored order. */
     private final SortedList<Person> sortedPersons;
 
@@ -122,15 +125,27 @@ public class ModelManager implements Model {
     @Override
     public void updateFilteredPersonList(Predicate<Person> predicate) {
         requireNonNull(predicate);
-        filteredPersons.setPredicate(predicate);
+        activeFilters.clear();
+        activeFilters.add(predicate);
+        refreshFilteredPersons();
     }
 
     @Override
     public void filterFilteredPersonList(Predicate<Person> predicate) {
         requireNonNull(predicate);
-        Predicate<? super Person> currentPredicate = filteredPersons.getPredicate();
-        filteredPersons.setPredicate(currentPredicate == null ? predicate
-                : person -> currentPredicate.test(person) && predicate.test(person));
+        activeFilters.add(predicate);
+        refreshFilteredPersons();
+    }
+
+    private void refreshFilteredPersons() {
+        filteredPersons.setPredicate(person -> {
+            for (Predicate<Person> filter : activeFilters) {
+                if (!filter.test(person)) {
+                    return false;
+                }
+            }
+            return true;
+        });
     }
 
     @Override
