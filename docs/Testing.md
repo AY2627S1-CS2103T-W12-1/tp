@@ -12,8 +12,9 @@ title: Testing guide
 
 You can run tests in two ways.
 
-Use Java 25. Gradle tests enable Java assertions by default; `./gradlew run` also enables them
-through `applicationDefaultJvmArgs`. For a direct packaged run, use `java -ea -jar trackcall.jar`.
+Use Java 25. `build.gradle` explicitly enables Java assertions for tests and Java execution tasks,
+including `run` and `runShadow`. Generated launch scripts also use `-ea` through
+`applicationDefaultJvmArgs`. For a direct packaged run, use `java -ea -jar trackcall.jar`.
 In an IntelliJ Application run configuration, add `-ea` to the VM options.
 
 * **Method 1: Using IntelliJ JUnit test runner**

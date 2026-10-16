@@ -11,6 +11,10 @@ application {
     applicationDefaultJvmArgs = ['-ea']
 }
 
+tasks.withType(JavaExec).configureEach {
+    enableAssertions = true
+}
+
 java {
     sourceCompatibility = JavaVersion.VERSION_25
     targetCompatibility = JavaVersion.VERSION_25
@@ -26,6 +30,7 @@ checkstyle {
 }
 
 test {
+    enableAssertions = true
     useJUnitPlatform()
     finalizedBy jacocoTestReport
     doFirst {
