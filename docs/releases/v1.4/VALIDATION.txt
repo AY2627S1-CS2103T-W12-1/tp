@@ -1,0 +1,48 @@
+TrackCall v1.4 alpha local preparation
+Prepared: 16 October 2026, Asia/Singapore
+Status: not published; final merged commit must be rebuilt and verified before release.
+
+Source
+- Repository: AY2627S1-CS2103T-W12-1/tp
+- Base commit: 43a93218 (team master fetched on 16 October)
+- Local branch: week10-alpha-model-uml
+- Build prepared from the Week 10 working tree, including the new PrefixValidator.
+
+Environment
+- macOS 26.6.2, ARM64
+- Microsoft OpenJDK 25.0.4+7-LTS
+- Gradle 9.6.1
+
+Checks completed
+- ./gradlew clean check coverage shadowJar: PASS
+- 72 test suites; 510 tests; 0 failures; 0 errors; 0 skipped.
+- checkstyleMain and checkstyleTest: PASS
+- ./.github/run-checks.sh and git diff --check: PASS
+- PlantUML 1.2026.8, Java 25, Smetana layout: source check and PNG generation PASS.
+- ModelClassDiagram.png visually inspected, 717 x 448 pixels.
+- Independent review: no actionable findings in the prepared source/documentation diff.
+
+Packaged logic smoke check
+- Java 25 with -ea, production classes loaded from copied trackcall.jar.
+- Reflectively confirmed MainApp.VERSION is v1.4.
+- JAR folder contains spaces; working directory differs from JAR folder.
+- All 14 command types, CSV export/import round trip and duplicate skipping.
+- Hidden-member export, sort/filter/bulk tags, saved roster reload.
+- Backup recovery, preserved damaged bytes, and protected export destinations.
+- Unknown/uppercase edit prefixes reject without changing roster, view, saved bytes or modification time.
+- Standalone c/o and URL addresses accepted.
+- JAR byte-identical before and after smoke check.
+
+Artifact
+- Filename: trackcall.jar
+- Size: 13894708 bytes
+- SHA-256: 2b0433a7194d26133eefc57743dd6b8c84182d07b3da73fe2b7b0ce5da9aefb4
+
+Not established by this local preparation
+- Team postmortem discussion or agreement on all final alpha features.
+- Merged v1.4 PR, closed implementation issue, or refreshed course dashboard.
+- Week 10 UML timing: preparation is before the 19 October start of Week 10.
+- Fresh manual UI acceptance of this exact JAR on macOS, Windows, or Linux.
+- A final merged-commit tag, published release, or verified public download.
+
+Do not copy these results to a different release artifact without rebuilding and rechecking it.

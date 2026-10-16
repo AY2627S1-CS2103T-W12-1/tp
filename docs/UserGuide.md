@@ -5,7 +5,7 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers **TrackCall v1.3** and its fourteen available commands.
+This guide covers **TrackCall v1.4 alpha** and its fourteen available commands.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
@@ -449,11 +449,12 @@ To restore a backup manually, close TrackCall, keep a copy of the current roster
 `addressbook.json.bak` to `addressbook.json`. These files are stored beside each other in `data`.
 Export cannot overwrite the automatic backup or a preserved recovery file.
 
-## Current limitations
+## Field prefix syntax
 
-* For `edit`, an unrecognised prefix-like token inside an address can be stored as literal address text.
-  For example, `a/Main Road T/committee` does not assign a tag.
-  Use lowercase `t/` and check the displayed details after editing. `add` rejects this input.
+Both `add` and `edit` reject unknown or uppercase single-letter field prefixes, including inside
+an address. For example, `edit 1 a/Main Road T/committee` reports invalid input; use lowercase `t/`
+to assign a tag. Standalone `c/o`, URLs, numeric slashes such as `12/3`, and slashes inside words
+remain valid address text.
 
 The [Developer Guide](DeveloperGuide.md#appendix-requirements) records the intended MVP and later ideas.
 

@@ -56,6 +56,49 @@ public class EditCommandParserTest {
     private EditCommandParser parser = new EditCommandParser();
 
     @Test
+    public void parse_unknownOrUppercasePrefix_failure() {
+        for (String prefix : new String[] {"x/extra", "T/committee", "N/Amy", "P/12345678", "E/a@b.com",
+            "A/Main", "z/", "c/other", "c/office"}) {
+            assertParseFailure(parser, "1 a/Main Road " + prefix, MESSAGE_INVALID_FORMAT);
+            assertParseFailure(parser, "1 a/Main Road\t" + prefix + TAG_DESC_FRIEND, MESSAGE_INVALID_FORMAT);
+            assertParseFailure(parser, "1 " + prefix + ADDRESS_DESC_AMY, MESSAGE_INVALID_FORMAT);
+        }
+        // Structural errors take precedence over field validation.
+        assertParseFailure(parser, "1" + INVALID_NAME_DESC + " x/extra", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1" + TAG_DESC_FRIEND + " x/extra", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void parse_addressWithSlashes_success() {
+        for (String address : new String[] {"c/o Alice", "Main Road c/o Alice", "Main Road C/O Alice",
+            "https://example.com/x/extra", "Main Road https://example.com/T/committee",
+            "Block 12/3 #01/02", "Main\tRoad c/o Alice", "Main Road foo/bar", "Main Road annex/x/extra",
+            "Main Road [Unit 12/3]", "Café Road é/annex"}) {
+            EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withAddress(address)
+                    .withTags(VALID_TAG_FRIEND).build();
+            assertParseSuccess(parser, "1 a/" + address + TAG_DESC_FRIEND,
+                    new EditCommand(INDEX_FIRST_PERSON, descriptor));
+            assertParseSuccess(parser, "1" + TAG_DESC_FRIEND + " a/" + address,
+                    new EditCommand(INDEX_FIRST_PERSON, descriptor));
+        }
+    }
+
+    @Test
+    public void parse_careOfAtEndOfAddress_success() {
+        for (String address : new String[] {"c/o", "C/O", "c/O", "C/o", "Main Road c/o", "Main Road\tC/O"}) {
+            EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withAddress(address).build();
+            assertParseSuccess(parser, "1 a/" + address, new EditCommand(INDEX_FIRST_PERSON, descriptor));
+        }
+    }
+
+    @Test
+    public void parse_careOfWithNonWhitespaceSuffix_failure() {
+        for (String suffix : new String[] {"c/", "c/oAlice", "C/OAlice", "c/o,", "C/O/"}) {
+            assertParseFailure(parser, "1 a/Main Road " + suffix, MESSAGE_INVALID_FORMAT);
+        }
+    }
+
+    @Test
     public void parse_missingParts_failure() {
         // no index specified
         assertParseFailure(parser, VALID_NAME_AMY, MESSAGE_INVALID_FORMAT);

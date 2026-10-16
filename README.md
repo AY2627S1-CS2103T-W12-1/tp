@@ -7,7 +7,7 @@ TrackCall helps membership secretaries keep their organisation's member records 
 It is a desktop app designed for around 500 members, although this is not a hard limit.
 Type commands to find members and update their contact details quickly.
 
-## Features in v1.3
+## Features in v1.4 alpha
 
 * Add, edit, list, find, delete, and clear member records.
 * Open offline instructions for all available commands with `help`, or one command with `help COMMAND`.
@@ -30,7 +30,7 @@ Type commands to find members and update their contact details quickly.
 * [Developer Guide](https://ay2627s1-cs2103t-w12-1.github.io/tp/DeveloperGuide.html)
 * [About Us](https://ay2627s1-cs2103t-w12-1.github.io/tp/AboutUs.html)
 
-The User Guide describes the v1.3 release. The Developer Guide separates the current implementation
+The User Guide describes the v1.4 alpha. The Developer Guide separates the current implementation
 from planned MVP requirements. Published documentation follows the team's merged default branch.
 
 ## Local development

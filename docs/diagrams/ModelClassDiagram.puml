@@ -22,6 +22,9 @@ Class Tag
 
 }
 
+Class "FilteredList<Person>" as FilteredPersonList <<JavaFX>>
+Class "SortedList<Person>" as SortedPersonList <<JavaFX>>
+
 
 AddressBook .up.|> ReadOnlyAddressBook
 
@@ -45,5 +48,9 @@ Name -[hidden]right-> Phone
 Phone -[hidden]right-> Address
 Address -[hidden]right-> Email
 
-ModelManager --> Person : filtered [*]
+ModelManager --> "1" FilteredPersonList : filteredPersons
+ModelManager --> "1" SortedPersonList : sortedPersons
+SortedPersonList --> "1" FilteredPersonList : source
+FilteredPersonList --> Person : filtered [*]
+SortedPersonList --> Person : displayed [*]
 @enduml
