@@ -19,7 +19,7 @@ The secretary can:
 * Save valid changes automatically to a local file.
 * Complete the core workflow without an internet connection or a separate save command.
 
-The **v1.3 release** supports individual member management, name search, tag filtering, bulk tag
+The **v1.4 alpha** supports individual member management, name search, tag filtering, bulk tag
 editing, offline command help, local saving, CSV import/export, and name sorting.
 See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining work.
 
@@ -152,7 +152,7 @@ This allows common handling where appropriate, including in tests.
 
 **API:** [`Model.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
 
-<img src="images/ModelClassDiagram.png" width="450" alt="Member records, preferences, and filtered data in the Model component">
+<img src="images/ModelClassDiagram.png" width="717" alt="Member records, preferences, and JavaFX filtering and sorting views">
 
 The Model component stores:
 
@@ -165,6 +165,9 @@ The Model component stores:
 
 Model does not depend on UI, Logic, or Storage.
 Its data entities can be used independently of those components.
+
+`ModelManager#getFilteredPersonList()` exposes the `SortedList` backed by the `FilteredList`.
+`list` clears the search and tag predicates and disables sorting, restoring every member in stored order.
 
 <div markdown="block" class="alert alert-info">
 
@@ -202,7 +205,7 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 ## Implementation
 
-This section describes the v1.3 release. The v1.1 iteration was limited to documentation;
+This section describes the v1.4 alpha. The v1.1 iteration was limited to documentation;
 these functional changes are not a published v1.1 release. The requirements appendix records the
 full intended product, including behaviour still to be implemented.
 
@@ -387,11 +390,12 @@ including a tab. It trims surrounding value whitespace without removing internal
 slashes. `list`, `sort`, `clear`, and `exit` reject extra arguments before execution. Invalid commands leave
 records, the current list, and the saved file unchanged; the input remains available for correction.
 
-`AddCommandParser` first checks whitespace-delimited single ASCII letters followed by `/`.
+`AddCommandParser` and `EditCommandParser` use `PrefixValidator` to check whitespace-delimited
+single ASCII letters followed by `/` before tokenising.
 Only `n/`, `p/`, `e/`, `a/`, and `t/` are supported. Unknown letters and uppercase prefixes
-report the add usage message before field validation. The standalone `c/o` abbreviation
+report the corresponding command's usage message before field validation. The standalone `c/o` abbreviation
 (case-insensitive) is exempt; URLs, numeric slashes, and slashes embedded in words are literal text.
-This validation applies only to `add`; the shared tokenizer and other commands are unchanged.
+Other commands retain their own parsing rules.
 
 ### CSV import
 
@@ -418,10 +422,6 @@ The source CSV is read-only throughout the workflow.
 CSV import (`import p/FILE_PATH`), CSV export (`export [FILEPATH]`), and name sorting (`sort`) are implemented.
 The remaining differences from the requirements are:
 
-* Unknown-prefix rejection still needs a precise grammar that preserves valid free-form addresses.
-  Currently, an unrecognised prefix-like token such as `x/extra` or uppercase `T/committee` inside
-  an address supplied to `edit` can become literal address text. The parser must not reject ordinary `c/o` or URLs
-  merely because they contain slashes. `add` rejects these using the documented grammar; `edit` still needs this rule.
 * Storage uses `tags` rather than the intended `tagged` schema in the requirements appendix.
 * Startup loading errors are recorded in the log; the requirements' user-visible load messages remain planned.
   Undo/redo and deletion confirmation are not selected for the MVP.
@@ -536,7 +536,7 @@ memory and the previous saved file is unchanged.
 
 ## Appendix: Requirements
 
-These requirements describe the intended product, including features beyond the v1.3 release.
+These requirements describe the intended product, including features beyond the v1.4 alpha.
 See [implementation status](#differences-still-to-implement-for-the-mvp) for the remaining differences.
 The v1.1 iteration documented requirements; functional changes belong to v1.2 or later.
 
@@ -1144,7 +1144,7 @@ such as incremental delivery, are also not product NFRs.
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
 | Data-changing command | `add`, `edit`, `delete`, `clear`, `import`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
-| JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.3 release uses `tags`. |
+| JSON | The structured text format of the local data file. The planned schema uses a `persons` array and each member's `tagged` array; the v1.4 alpha uses `tags`. |
 | CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; `import p/FILE_PATH` validates and imports it. |
 | vCard | A contact-card file format considered for exporting member contact details to phone or contact applications. It is outside the selected MVP. |
 | Archive | Retain an inactive record or tag and its history separately from active work. This considered feature is different from MVP deletion. |
@@ -1153,7 +1153,7 @@ such as incremental delivery, are also not product NFRs.
 
 ## Appendix: Instructions for manual testing
 
-These checks cover the v1.3 release. They are test instructions, not a claim that every
+These checks cover the v1.4 alpha. They are test instructions, not a claim that every
 platform or release package has been verified. Use a disposable folder and synthetic contacts.
 
 ### Launch and shutdown
@@ -1213,8 +1213,8 @@ platform or release package has been verified. Use a disposable folder and synth
    repeated tag, or invalid tag must leave the view unchanged. Filtering must not save the file.
 7. Paste a valid add command with actual tab separators before `n/`, `p/`, `e/`, and `a/`.
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
-   or an internal tab keeps that text. For `add`, append `x/extra` or `T/committee` and expect
-   an invalid command format with no member added. Unknown-prefix rejection remains planned for `edit`.
+   or an internal tab keeps that text. For both `add` and `edit`, append `x/extra` or `T/committee`
+   and expect an invalid command format without changing the roster, displayed view, or saved file.
 8. Add two members tagged `committee` and one member without tags. Run `list`, then `filter t/committee`.
    Run `tagall t/year1` and
    expect only the displayed members to gain `year1`, keeping their other tags. Run it again and expect

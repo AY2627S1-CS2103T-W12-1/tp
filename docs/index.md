@@ -14,7 +14,7 @@ The performance target is 500 members. This is not a hard record limit.
 
 The command box is at the top, followed by the result display, the member list, and the data-file status bar.
 
-## Features in v1.3
+## Features in v1.4 alpha
 
 * Add, edit, list, find, delete, and clear member records.
 * Filter the displayed members by tag, and sort them by name.

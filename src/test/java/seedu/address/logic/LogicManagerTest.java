@@ -30,6 +30,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.SortCommand;
@@ -119,6 +120,26 @@ public class LogicManagerTest {
             assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
             assertEquals(List.of(AMY), model.getFilteredPersonList());
             assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        }
+    }
+
+    @Test
+    public void execute_editWithUnsupportedPrefix_preservesRosterViewAndSavedFile() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        Path dataFile = temporaryFolder.resolve("addressBook.json");
+        new JsonAddressBookStorage(dataFile).saveAddressBook(model.getAddressBook());
+        String original = Files.readString(dataFile);
+        FileTime originalModifiedTime = Files.getLastModifiedTime(dataFile);
+        logic.execute("find Amy");
+
+        String expectedMessage = String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE);
+        for (String arguments : List.of("a/Main Road T/committee", "a/Main Road\tx/extra", "n/Changed c/office")) {
+            assertThrows(ParseException.class, expectedMessage, () -> logic.execute("edit 1 " + arguments));
+            assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
+            assertEquals(List.of(AMY), model.getFilteredPersonList());
+            assertEquals(original, Files.readString(dataFile));
+            assertEquals(originalModifiedTime, Files.getLastModifiedTime(dataFile));
         }
     }
 
