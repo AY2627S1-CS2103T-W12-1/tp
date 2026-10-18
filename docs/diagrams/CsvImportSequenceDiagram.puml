@@ -1,0 +1,65 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as Logic LOGIC_COLOR
+participant ":ImportCommand" as Command LOGIC_COLOR
+end box
+box Storage STORAGE_COLOR_T1
+participant "CsvAddressBookImporter" as Importer STORAGE_COLOR
+end box
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+end box
+box Storage STORAGE_COLOR_T1
+participant ":Storage" as Storage STORAGE_COLOR
+end box
+
+note over Logic, Command: Parsing has produced an ImportCommand.
+[-> Logic : execute("import p/members.csv")
+activate Logic
+Logic -> Command : execute(m)
+activate Command
+Command -> Command : resolve source path
+Command -> Importer : read(resolvedPath)
+note right of Importer
+Read UTF-8 CSV and validate the header,
+CSV syntax, and every member's fields.
+The source file is never modified.
+end note
+alt read or validation fails
+    Importer --> Command : IOException / CsvImportException
+    Command --> Logic : CommandException
+    [<-- Logic : error
+    note over Command, Storage: No roster or view changes; no save is attempted.
+else complete file is valid
+    Importer --> Command : candidates
+    Command -> Model : getAddressBook().getPersonList()
+    Model --> Command : complete stored roster
+    Command -> Command : select unique candidates using isSamePerson()
+    note right of Command: Compare with stored members and earlier accepted rows.
+    loop each unique candidate
+        Command -> Model : addPerson(candidate)
+    end
+    Command -> Model : updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS)
+    Command -> Model : setNameSorting(false)
+    Command --> Logic : CommandResult(imported and skipped counts)
+    Logic -> Model : getAddressBook()
+    Model --> Logic : complete updated roster
+    Logic -> Storage : saveAddressBook(roster)
+    alt save succeeds
+        Storage --> Logic : saved
+        [<-- Logic : CommandResult
+    else save fails
+        Storage --> Logic : IOException
+        [<-- Logic : SaveFailureException
+        note over Model, Storage
+        Imported members remain in memory.
+        The previous saved roster is unchanged.
+        end note
+    end
+end
+deactivate Command
+deactivate Logic
+@enduml

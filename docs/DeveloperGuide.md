@@ -417,6 +417,31 @@ and sort state. `LogicManager` performs the normal automatic save even for a hea
 import. If saving fails, the imported batch remains in memory and an import-specific save error is shown.
 The source CSV is read-only throughout the workflow.
 
+#### Import sequence
+
+![CSV import validation, duplicate checking, and automatic saving](images/CsvImportSequenceDiagram.png)
+
+The sequence starts after command parsing. The importer validates the complete file before the command
+changes the model, so a read or validation failure cannot import a partial batch. Duplicate selection
+uses the complete roster, including hidden members, and earlier accepted CSV rows. The logic layer
+returns success only after saving, including when every row is skipped or the file contains only a header.
+An import-save failure leaves the imported batch in memory and preserves the previous saved roster.
+
+### CSV export
+
+![CSV export of the complete roster through an atomic file write](images/CsvExportSequenceDiagram.png)
+
+The sequence starts after command parsing. `LogicManager` supplies the active roster and preferences
+paths to `ExportCommand`, which checks the destination against protected application files before
+calling `CsvAddressBookExporter`. Path resolution also applies the shared file-location restrictions.
+The exporter writes every stored member, including those hidden by filters, in stored order.
+
+`FileUtil#writeAtomically` invokes the exporter's `FileWriter#write` callback with a sibling temporary file.
+Apache Commons CSV handles quoting and escaping; the writer closes before atomic replacement.
+A write or replacement failure preserves the previous destination and attempts temporary-file cleanup.
+On success, `isReadOnly()` prevents the logic layer from saving the automatic JSON roster.
+Neither successful nor failed export changes the displayed filters or sorting.
+
 ### Differences still to implement for the MVP
 
 CSV import (`import p/FILE_PATH`), CSV export (`export [FILEPATH]`), and name sorting (`sort`) are implemented.
