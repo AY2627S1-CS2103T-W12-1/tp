@@ -19,7 +19,7 @@ The secretary can:
 * Save valid changes automatically to a local file.
 * Complete the core workflow without an internet connection or a separate save command.
 
-The **v1.3 release** supports individual member management, name search, tag filtering, bulk tag
+The **v1.4 alpha** supports individual member management, name search, tag filtering, bulk tag
 editing, offline command help, local saving, CSV import/export, and name sorting.
 See [Limitations](#limitations) for constraints in the current release.
 
@@ -152,7 +152,7 @@ This allows common handling where appropriate, including in tests.
 
 **API:** [`Model.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
 
-<img src="images/ModelClassDiagram.png" width="450" alt="Member records, preferences, and filtered data in the Model component">
+<img src="images/ModelClassDiagram.png" width="717" alt="Member records, preferences, and JavaFX filtering and sorting views">
 
 The Model component stores:
 
@@ -165,6 +165,9 @@ The Model component stores:
 
 Model does not depend on UI, Logic, or Storage.
 Its data entities can be used independently of those components.
+
+`ModelManager#getFilteredPersonList()` exposes the `SortedList` backed by the `FilteredList`.
+`list` clears the search and tag predicates and disables sorting, restoring every member in stored order.
 
 <div markdown="block" class="alert alert-info">
 
@@ -202,8 +205,9 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 ## Implementation
 
-This section describes the v1.3 release. The v1.1 iteration was limited to documentation;
-these functional changes are not a published v1.1 release.
+This section describes the v1.4 alpha. The v1.1 iteration was limited to documentation;
+these functional changes are not a published v1.1 release. The requirements appendix records the
+full intended product, including behaviour still to be implemented.
 
 ### Offline command help
 
@@ -386,11 +390,12 @@ including a tab. It trims surrounding value whitespace without removing internal
 slashes. `list`, `sort`, `clear`, and `exit` reject extra arguments before execution. Invalid commands leave
 records, the current list, and the saved file unchanged; the input remains available for correction.
 
-`AddCommandParser` first checks whitespace-delimited single ASCII letters followed by `/`.
+`AddCommandParser` and `EditCommandParser` use `PrefixValidator` to check whitespace-delimited
+single ASCII letters followed by `/` before tokenising.
 Only `n/`, `p/`, `e/`, `a/`, and `t/` are supported. Unknown letters and uppercase prefixes
-report the add usage message before field validation. The standalone `c/o` abbreviation
+report the corresponding command's usage message before field validation. The standalone `c/o` abbreviation
 (case-insensitive) is exempt; URLs, numeric slashes, and slashes embedded in words are literal text.
-This validation applies only to `add`; the shared tokenizer and other commands are unchanged.
+Other commands retain their own parsing rules.
 
 ### CSV import
 
@@ -411,6 +416,31 @@ using `Person#isSamePerson`. It appends only unique members in source order, the
 and sort state. `LogicManager` performs the normal automatic save even for a header-only or duplicate-only
 import. If saving fails, the imported batch remains in memory and an import-specific save error is shown.
 The source CSV is read-only throughout the workflow.
+
+#### Import sequence
+
+![CSV import validation, duplicate checking, and automatic saving](images/CsvImportSequenceDiagram.png)
+
+The sequence starts after command parsing. The importer validates the complete file before the command
+changes the model, so a read or validation failure cannot import a partial batch. Duplicate selection
+uses the complete roster, including hidden members, and earlier accepted CSV rows. The logic layer
+returns success only after saving, including when every row is skipped or the file contains only a header.
+An import-save failure leaves the imported batch in memory and preserves the previous saved roster.
+
+### CSV export
+
+![CSV export of the complete roster through an atomic file write](images/CsvExportSequenceDiagram.png)
+
+The sequence starts after command parsing. `LogicManager` supplies the active roster and preferences
+paths to `ExportCommand`, which checks the destination against protected application files before
+calling `CsvAddressBookExporter`. Path resolution also applies the shared file-location restrictions.
+The exporter writes every stored member, including those hidden by filters, in stored order.
+
+`FileUtil#writeAtomically` invokes the exporter's `FileWriter#write` callback with a sibling temporary file.
+Apache Commons CSV handles quoting and escaping; the writer closes before atomic replacement.
+A write or replacement failure preserves the previous destination and attempts temporary-file cleanup.
+On success, `isReadOnly()` prevents the logic layer from saving the automatic JSON roster.
+Neither successful nor failed export changes the displayed filters or sorting.
 
 ### Filter members by tag
 
@@ -512,14 +542,13 @@ memory and the previous saved file is unchanged.
 
 These are constraints of the current implementation:
 
-* In `edit`, an unrecognised prefix-like token inside an address can be stored as literal address
-  text. For example, `a/Main Road T/committee` does not assign a tag. Use lowercase `t/` for tags
-  and check the edited details. `add` rejects unsupported single-letter prefixes.
 * The saved JSON format uses a `persons` array with a `tags` array for each member. Loading
   ignores unknown member fields, keeps the last value of repeated fields, and accepts JSON
   numbers in text fields as text. Comments and trailing commas are rejected.
-* Deletion and clearing take effect without a confirmation step or undo. To recover a prior roster,
-  restore a valid `data/addressbook.json.bak` if one exists.
+* Deletion and clearing take effect without a confirmation step or undo. After an accidental clear,
+  stop making changes and close TrackCall before restoring. Each successful save replaces the one
+  previous saved roster in `data/addressbook.json.bak`; another `clear` can replace the useful backup
+  with an empty roster. Follow the [User Guide's manual recovery steps](UserGuide.md#automatic-backup-and-recovery).
 
 
 ## Documentation, logging, testing, dev-ops
@@ -532,7 +561,7 @@ These are constraints of the current implementation:
 
 ## Appendix: Requirements
 
-These requirements describe the intended product, including features beyond the v1.3 release.
+These requirements describe the intended product, including features beyond the v1.4 alpha.
 See [Limitations](#limitations) for constraints of the current release.
 The v1.1 iteration documented requirements; functional changes belong to v1.2 or later.
 
@@ -740,9 +769,8 @@ These rules describe the selected MVP and apply to the use cases below.
 
 `add` requires `n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS` and accepts optional repeated `t/TAG`
 parameters. Prefixes begin separate tokens and fields may appear in any order. `edit` uses the
-same field rules for supplied values. `add` rejects unsupported single-letter prefixes; `edit`
-can include an unrecognised prefix-like token in an address as literal text. Repeated `n/`, `p/`,
-`e/`, or `a/` prefixes are rejected. Check command structure, then values in
+same field rules for supplied values. Both commands reject unsupported single-letter prefixes.
+Repeated `n/`, `p/`, `e/`, or `a/` prefixes are rejected. Check command structure, then values in
 name/phone/email/address/tag order, then duplicate identity.
 
 | Field | Requirement |
@@ -756,7 +784,7 @@ name/phone/email/address/tag order, then duplicate identity.
 Allowed email local-part punctuation:
 
 ```text
-! # $ % & ' * + / = ? ^ _ ` { | } ~ . -
++ _ . -
 ```
 
 ### Offline help and readable feedback
@@ -1151,7 +1179,7 @@ such as incremental delivery, are also not product NFRs.
 
 ## Appendix: Instructions for manual testing
 
-These checks cover the v1.3 release. They are test instructions, not a claim that every
+These checks cover the v1.4 alpha. They are test instructions, not a claim that every
 platform or release package has been verified. Use a disposable folder and synthetic contacts.
 
 ### Launch and shutdown
@@ -1211,9 +1239,8 @@ platform or release package has been verified. Use a disposable folder and synth
    repeated tag, or invalid tag must leave the view unchanged. Filtering must not save the file.
 7. Paste a valid add command with actual tab separators before `n/`, `p/`, `e/`, and `a/`.
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
-   or an internal tab keeps that text. For `add`, append `x/extra` or `T/committee` and expect
-   an invalid command format with no member added. In `edit`, an unsupported prefix-like token
-   inside an address can be stored as literal address text.
+   or an internal tab keeps that text. For both `add` and `edit`, append `x/extra` or `T/committee`
+   and expect an invalid command format without changing the roster, displayed view, or saved file.
 8. Add two members tagged `committee` and one member without tags. Run `list`, then `filter t/committee`.
    Run `tagall t/year1` and
    expect only the displayed members to gain `year1`, keeping their other tags. Run it again and expect

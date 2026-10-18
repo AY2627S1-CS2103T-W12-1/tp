@@ -1,0 +1,66 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+
+box Logic LOGIC_COLOR_T1
+participant ":LogicManager" as Logic LOGIC_COLOR
+participant ":ExportCommand" as Command LOGIC_COLOR
+end box
+box Model MODEL_COLOR_T1
+participant "m:Model" as Model MODEL_COLOR
+end box
+box Storage STORAGE_COLOR_T1
+participant "CsvAddressBookExporter" as Exporter STORAGE_COLOR
+end box
+box Commons #FFFDF8
+participant "FileUtil" as FileUtil
+end box
+
+note over Logic, Command: Parsing has produced an ExportCommand.
+[-> Logic : execute("export members.csv")
+activate Logic
+Logic -> Command : execute(m, rosterPath, preferencesPath)
+activate Command
+Command -> Model : getAddressBook().getPersonList()
+Model --> Command : complete stored roster (including hidden members)
+Command -> Command : resolve target path and check protected destinations
+alt destination is protected or path resolution fails
+    Command --> Logic : CommandException
+    [<-- Logic : error
+else destination is allowed
+    Command -> Exporter : export(people, targetPath)
+    activate Exporter
+    Exporter -> FileUtil : writeAtomically(filePath, writer)
+    activate FileUtil
+    FileUtil -> FileUtil : create sibling temporary file
+    FileUtil -> Exporter : writer.write(temporary)
+    Exporter -> Exporter : writeCsv(people, temporary)
+    note right of Exporter
+    Write UTF-8 header and all members
+    in stored order, using Commons CSV.
+    Close the writer before replacement.
+    end note
+    Exporter --> FileUtil : written / IOException
+    alt write and atomic replacement succeed
+        FileUtil -> FileUtil : replace destination atomically
+        FileUtil --> Exporter : completed
+        Exporter --> Command : completed
+        Command --> Logic : CommandResult(exported count and path)
+        Logic -> Command : isReadOnly()
+        Command --> Logic : true
+        [<-- Logic : CommandResult (no automatic JSON save)
+    else write or replacement fails
+        FileUtil -> FileUtil : attempt temporary-file cleanup
+        FileUtil --> Exporter : IOException
+        Exporter --> Command : IOException
+        Command --> Logic : CommandException
+        [<-- Logic : error
+        note over Exporter, FileUtil: The previous destination is preserved.
+    end
+    deactivate FileUtil
+    deactivate Exporter
+end
+note over Logic, Model: Export leaves the roster, filters, and sorting unchanged.
+deactivate Command
+deactivate Logic
+@enduml
