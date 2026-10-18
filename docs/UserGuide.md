@@ -415,7 +415,7 @@ Close TrackCall and make a backup first. Keep the existing JSON structure:
 
 * A `persons` array contains the members.
 * Each member has `name`, `phone`, `email`, `address`, and `tags` fields.
-* This build uses `tags`. The Developer Guide's planned `tagged` field is not the current file format.
+* Use `tags` for each member's group assignments.
 
 ### Missing or invalid files
 
@@ -456,7 +456,8 @@ an address. For example, `edit 1 a/Main Road T/committee` reports invalid input;
 to assign a tag. Standalone `c/o`, URLs, numeric slashes such as `12/3`, and slashes inside words
 remain valid address text.
 
-The [Developer Guide](DeveloperGuide.md#appendix-requirements) records the intended MVP and later ideas.
+The [Developer Guide](DeveloperGuide.md#limitations) explains current limitations and records
+ideas for later versions in its requirements appendix.
 
 ## FAQ
 
