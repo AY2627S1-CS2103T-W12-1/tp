@@ -456,10 +456,12 @@ The parser checks the tag before constructing it; the shared `Tag` model enforce
 #### Execution
 
 `FilterCommand` passes the tag to `ModelManager#filterFilteredPersonListByTag`. The model
-combines it with the current predicate using logical AND, or applies it directly if no predicate is set.
-The model records each distinct active tag in application order and clears those names when
-`updateFilteredPersonList` replaces the conditions, as `find` and `list` do. The observable filtered list
-updates automatically, and the command reports the resulting member count and all active tag names.
+combines it with the active name and tag conditions using logical AND.
+The model keeps removable conditions in application order, which the UI shows left to right.
+`find` adds a name condition, while `list` clears all conditions. Applying the same conditions in a
+different order gives the same matching members when the roster is unchanged.
+The observable filtered list updates automatically, and the command reports the resulting member
+count and all active tag names.
 A single tag uses `N member(s) listed with tag "TAG".`; multiple tags use
 `N member(s) listed with tags "TAG1", "TAG2".` in application order.
 A zero-match result is successful.
@@ -472,7 +474,7 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
 
 * **Preserve earlier conditions:** combining predicates lets users narrow an existing name search or tag
   filter without restoring hidden members. For example, filtering by `committee` and then `year1` keeps
-  members with both tags. `find` replaces the existing conditions with a new name search; `list` clears them.
+  members with both tags. Another `find` also narrows the view; `list` clears all conditions.
 * **Keep filters active after edits:** the model retains the predicate rather than a fixed set of matching
   members. Replacing an edited member in the observable list re-evaluates that predicate. A member who no
   longer matches disappears from view but remains in the roster, so later commands operate on the updated group.
@@ -722,11 +724,12 @@ These rules describe the selected MVP and apply to the use cases below.
 3. A tag contains 1 to 30 ASCII letters or digits and is case-sensitive. It contains no internal
    whitespace. Store each tag once per member and display tags in ASCII order: digits,
    uppercase letters, then lowercase letters.
-4. `list` resets all searches and tag filters. `find KEYWORD [MORE_KEYWORDS]` searches the full
-   roster and replaces the previous search and filters. It matches complete name words,
-   ignores letter case, and accepts a match on any keyword. Repeated keywords do not repeat records.
+4. `list` resets all searches and tag filters. `find KEYWORD [MORE_KEYWORDS]` narrows the
+   displayed list. It matches complete name words, ignores letter case, and accepts a match on
+   any keyword within one command. Consecutive `find` commands retain the intersection of their
+   matches and any active tag filters. Repeated keywords do not repeat records.
 5. `filter t/TAG` narrows the currently displayed list using exact, case-sensitive tag matching.
-   Repeated filters retain the intersection of the tags and the active name search. A valid
+   Repeated filters retain the intersection of the tags and active name searches. A valid
    zero-match result is successful. Use `list` first to filter the whole roster.
 6. An index is an ASCII-digit integer from 1 through the current displayed count. Leading zeroes
    are accepted; signs, decimals, and internal whitespace are not. It refers to the list when
@@ -900,8 +903,8 @@ address-book order, or in name order while `sort` is active.
 A successful search reports `1 member listed.`, `N members listed.`, or
 `0 members listed.` and does not save the data file. `find` with no keyword reports
 `Invalid command format.` followed by the `find` usage; a wrong-case command such as
-`FIND John` reports `Unknown command. Type help for available commands.` A new `find` searches the
-complete roster and replaces the previous search and filters.
+`FIND John` reports `Unknown command. Type help for available commands.` A new `find` narrows the
+displayed list and retains previous name searches and tag filters.
 
 #### UC03: Update a group's tags
 
@@ -1158,7 +1161,7 @@ such as incremental delivery, are also not product NFRs.
 | Group | A set of members sharing a tag, such as a committee or cohort. Groups are not separate stored objects in the MVP. |
 | Tag | A case-sensitive label containing 1 to 30 ASCII letters or digits, assigned at most once to each member. |
 | Displayed list | The records currently visible after the active search and tag filters. It is the target set for a bulk tag command. |
-| Active search and filters | The current name-search condition and cumulative tag conditions used to determine which records are displayed. A new `find` replaces them; `list` clears them. |
+| Active search and filters | The name-search and tag conditions used to determine which records are displayed. A new `find` adds a condition; `list` clears them all. |
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
 | Complete-word matching | Matching a whole word in a name. For example, `John` matches `John Tan`, but `Jo` does not. |
 | Bulk tag update | Adding or removing one tag for the fixed set of members displayed when the command is submitted. |
@@ -1234,9 +1237,11 @@ platform or release package has been verified. Use a disposable folder and synth
 6. Run `find Nobody`, then `list`. Expect `0 members listed.`, then `Showing N members.` for the
    total roster size. Test multiple name keywords, case-insensitive complete-word matching, and
    rejection of `find` with no keyword.
-   Run `filter t/committee`, then another filter. Check that the second filter narrows the current
-   view, `find` starts again from the full roster, and `list` restores everyone. A missing tag,
-   repeated tag, or invalid tag must leave the view unchanged. Filtering must not save the file.
+   Run `filter t/committee`, then another tag filter shared by at least one member. Check that it narrows the current
+   view. Run `find` with a name word from a displayed member and check that it retains both tag
+   filters. Remove its name box with X and check that the tag filters remain. Run `list` to restore
+   everyone. A missing tag, repeated tag, or invalid tag must leave the view unchanged. Filtering
+   must not save the file.
 7. Paste a valid add command with actual tab separators before `n/`, `p/`, `e/`, and `a/`.
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
    or an internal tab keeps that text. For both `add` and `edit`, append `x/extra` or `T/committee`

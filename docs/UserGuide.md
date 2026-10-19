@@ -182,7 +182,10 @@ Check the member number again after any command that changes the list.
 The result reports `1 member listed.` or `N members listed.`
 No matches produce `0 members listed.` and an empty list. No records are deleted.
 Active name and tag filters appear as boxes under the command field. Name boxes are blue and tag boxes
-are green. Select a box's **X** to remove only that condition, or use `list` to show everyone again.
+are green. The boxes appear left to right in the order applied. With an unchanged roster, their order
+does not change who matches:
+`filter t/committee` then `find Alice` gives the same final members as `find Alice` then
+`filter t/committee`. Select a box's **X** to remove only that condition, or use `list` to show everyone again.
 Searching does not save the data file.
 
 ### Filter displayed members by tag: `filter`

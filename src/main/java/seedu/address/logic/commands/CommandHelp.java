@@ -20,15 +20,17 @@ public enum CommandHelp {
     FIND("Browse members", "find", "Find a member by name", "find KEYWORD [MORE_KEYWORDS]", "find Alice Tan",
             "Narrows the displayed members by any complete name word, ignoring letter case.",
             "Shows members whose names contain Alice or Tan. No match produces an empty list.",
-            "Each find adds a name filter alongside existing name and tag filters. Use its X to remove it, "
-                    + "or list to show everyone again. Jo does not match John.",
+            "Each find adds a name filter. Boxes appear left to right in command order, but find and filter "
+                    + "order does not change the final matches. Use X to remove one box or list to show everyone. "
+                    + "Jo does not match John.",
             "Supply at least one name word. Searches use names, not phone numbers or tags."),
     FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
             "Shows currently displayed members with the specified tag without changing saved data.",
             "Shows only members tagged committee, in their current order with new displayed numbers.",
             "Matching is exact and case-sensitive. Repeated filters narrow the list further, and the result "
-                    + "names all active tags. Use a filter's X to remove it, or list to show everyone. "
-                    + "Find also narrows the current results. Edit and delete use displayed numbers; "
+                    + "names all active tags. Boxes appear left to right in command order, not matching priority. "
+                    + "Use a filter's X to remove it, or list to show everyone. Find also narrows the current results. "
+                    + "Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
             "Supply exactly one tag of 1 to 30 ASCII letters or digits. Empty tags, internal spaces, "
                     + "multiple tags, and extra arguments are rejected."),
