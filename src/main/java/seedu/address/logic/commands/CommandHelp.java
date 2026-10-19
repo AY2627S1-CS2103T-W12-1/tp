@@ -71,6 +71,18 @@ public enum CommandHelp {
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
                     + "recovery guidance before exiting."),
+    RENAMETAG("Manage members", "renametag", "Rename a tag for everyone", "renametag t/CURRENT_TAG t/NEW_TAG",
+            "renametag t/batch2026 t/alumni",
+            "Replaces one tag with another for every member, including members hidden by a search or filter.",
+            "Changes batch2026 to alumni for each member who has it, and reports how many members changed "
+                    + "after saving.",
+            "Tags are case-sensitive, so renametag t/committee t/Committee is a valid rename. A member who already "
+                    + "has the new tag keeps one copy. Renaming the tag used by an active filter hides the updated "
+                    + "members; use list to show everyone again.",
+            "Supply exactly two tags of 1 to 30 ASCII letters or digits, each after t/. The two tags must differ. "
+                    + "A current tag that no member has is rejected without changes. If saving fails, the changes "
+                    + "remain in this session and the command box clears; follow the recovery guidance before "
+                    + "exiting."),
     EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
             "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
             "Creates members.csv with name, phone, email, address and tags columns.",

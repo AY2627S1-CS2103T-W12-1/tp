@@ -17,6 +17,7 @@ Type commands to find members and update their contact details quickly.
 * Leave the roster file unchanged when running read-only commands.
 * Narrow the displayed members by an exact tag using `filter t/TAG`, then use their displayed numbers to edit or delete.
 * Add or remove a tag for every displayed member with `tagall t/TAG` or `untagall t/TAG`.
+* Rename a tag for every member with `renametag t/CURRENT_TAG t/NEW_TAG`.
 * Import and export CSV member records, and sort the displayed list by name.
 
 ## Interface

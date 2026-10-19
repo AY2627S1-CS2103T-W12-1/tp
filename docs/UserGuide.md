@@ -5,7 +5,7 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers **TrackCall v1.4 alpha** and its fourteen available commands.
+This guide covers **TrackCall v1.4 alpha** and its fifteen available commands.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
@@ -76,7 +76,7 @@ Use the [command summary](#command-summary) for a compact reference.
 Open help by typing `help`, pressing **F1**, or choosing **Help → Help**.
 The guide works without internet access and does not change or save the roster.
 
-The overview groups all fourteen commands into four categories:
+The overview groups all fifteen commands into four categories:
 Browse members, Manage members, Remove records, and Help & session.
 Each command has a short description and a runnable example.
 The overview uses two columns in a wide window and one in a narrow window.
@@ -256,6 +256,34 @@ are rejected without changing any member. If no members are displayed, TrackCall
 
 There is no confirmation or undo. A valid command saves the roster, even when every member is skipped.
 
+### Rename a tag: `renametag`
+
+`renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for **every member in the roster**,
+including members hidden by `find` or `filter`. Each member's other tags are kept.
+
+```text
+renametag t/batch2026 t/alumni
+```
+
+Every member tagged `batch2026` is now tagged `alumni` instead. The result reports how many members changed:
+
+* `Renamed tag "batch2026" to "alumni" for 15 member(s).`
+* `Renamed tag "year1" to "year2" for 10 member(s). 2 already had "year2".`
+
+A member who already has the new tag keeps a single copy of it.
+Tags are case-sensitive, so `renametag t/committee t/Committee` is a valid rename.
+
+The current search, filters, and sorting stay applied after the update.
+If you rename the tag used by the active filter, the renamed members disappear from view
+because they no longer match. They are not deleted; run `list` to show everyone.
+
+Supply exactly two tags, each after `t/`, with 1 to 30 ASCII letters or digits and no internal spaces.
+The two tags must be different. If no member has the current tag, TrackCall reports
+`No member has the tag "CURRENT_TAG".` and changes nothing. Other invalid input is rejected without
+changing any member.
+
+There is no confirmation or undo. A valid command saves the roster.
+
 ### Delete a member: `delete`
 
 `delete INDEX` removes one member using a positive number from the **currently displayed list**.
@@ -372,7 +400,7 @@ Rejected input leaves the roster and current list unchanged.
 
 *An invalid phone number leaves the member unchanged. Correct the command and press Enter to try again.*
 
-### A save fails after add, edit, delete, tagall, untagall, or import
+### A save fails after add, edit, delete, tagall, untagall, renametag, or import
 
 The change remains visible in this session, but the previous saved file stays unchanged.
 The command box clears the input to avoid repeating an already-applied change.
@@ -394,8 +422,8 @@ Fix the storage problem. Retry only if you still want to remove the entire roste
 
 ## Your data
 
-TrackCall automatically saves after successful `add`, `edit`, `delete`, `tagall`, `untagall`, `clear`,
-and `import` commands.
+TrackCall automatically saves after successful `add`, `edit`, `delete`, `tagall`, `untagall`, `renametag`,
+`clear`, and `import` commands.
 `help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` do not save the roster.
 
 ### Locate or back up your roster
@@ -475,12 +503,14 @@ Check the current displayed number before editing or deleting a member.
 
 Yes. Use `find` or `filter t/TAG` to display the group, then use `tagall t/TAG` or `untagall t/TAG`.
 Only the displayed members change. See [Tag or untag a group](#tag-or-untag-a-group-tagall-untagall).
+To rename a group's tag for everyone, use `renametag`. See [Rename a tag](#rename-a-tag-renametag).
 
 ### What should I do after a save error?
 
 Follow [Correcting errors](#correcting-errors) before exiting.
 A failed `clear` save restores the roster.
-Unsaved changes from `add`, `edit`, `delete`, `tagall`, `untagall`, and `import` remain visible in memory.
+Unsaved changes from `add`, `edit`, `delete`, `tagall`, `untagall`, `renametag`, and `import` remain visible
+in memory.
 
 ## Command summary
 
@@ -495,6 +525,7 @@ Unsaved changes from `add`, `edit`, `delete`, `tagall`, `untagall`, and `import`
 | Filter by tag | `filter t/TAG` | `filter t/committee` narrows the displayed members. |
 | Tag a group | `tagall t/TAG` | `tagall t/committee` adds the tag to every displayed member. |
 | Untag a group | `untagall t/TAG` | `untagall t/committee` removes the tag from every displayed member. |
+| Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every member. |
 | Delete one member | `delete INDEX` | `delete 1` removes the first currently displayed member. |
 | Clear the roster | `clear` | `clear` removes all members, including those hidden by a search. |
 | Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |
