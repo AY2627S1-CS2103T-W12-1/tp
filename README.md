@@ -9,7 +9,7 @@ Type commands to find members and update their contact details quickly.
 
 ## Features in v1.4 alpha
 
-* Add, edit, list, find, delete, and clear member records.
+* Add, edit, list, show selected members by index, find, delete, and clear member records.
 * Open offline instructions for all available commands with `help`, or one command with `help COMMAND`.
 * Read labeled member cards and multiline feedback in a light beige interface, with wrapping and scrolling.
 * Save data changes locally, with clear recovery guidance if saving fails and rollback for a failed clear.

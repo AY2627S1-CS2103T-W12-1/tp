@@ -27,6 +27,7 @@ import javafx.stage.Window;
 import seedu.address.logic.LogicManager;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.ClearCommand;
+import seedu.address.logic.commands.CommandHelp;
 import seedu.address.model.ModelManager;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
@@ -94,7 +95,8 @@ public class MainWindowTest {
             guide = guide();
             assertEquals("TrackCall · Command guide", guide.getTitle());
             guide.getScene().getRoot().applyCss();
-            assertEquals(14, guide.getScene().getRoot().lookupAll(".overview-keyword").size());
+            assertEquals(CommandHelp.values().length,
+                    guide.getScene().getRoot().lookupAll(".overview-keyword").size());
             enter("exit");
             assertFalse(guide.isShowing());
             assertFalse(window.getPrimaryStage().isShowing());

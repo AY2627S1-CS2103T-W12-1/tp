@@ -136,6 +136,16 @@ It does not change or save records.
 The result is `Showing 1 member.`, `Showing N members.`, or `No members in the address book.`
 Extra arguments produce `Invalid command format. Usage: list` without changing the current view.
 
+### Show selected members: `show`
+
+`show 1 3 4 5` keeps members at those numbers in the **currently displayed list**.
+The selected members stay in their current order and receive new displayed numbers starting at 1.
+You can use `show` again with those new numbers, or use `list` to restore the full roster.
+
+Supply one or more positive numbers separated by spaces. Repeating a number selects that member once.
+If any number is invalid or outside the current list, the view stays unchanged. `show` does not change
+or save member data.
+
 ### Sort members by name: `sort`
 
 `sort` orders the currently displayed members by full name from A to Z, ignoring letter case.
@@ -396,7 +406,7 @@ Fix the storage problem. Retry only if you still want to remove the entire roste
 
 TrackCall automatically saves after successful `add`, `edit`, `delete`, `tagall`, `untagall`, `clear`,
 and `import` commands.
-`help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` do not save the roster.
+`help`, `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` do not save the roster.
 
 ### Locate or back up your roster
 
@@ -489,6 +499,7 @@ Unsaved changes from `add`, `edit`, `delete`, `tagall`, `untagall`, and `import`
 | Open help | `help [COMMAND]` | `help add` opens the add instructions. |
 | Add a member | `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...` | The quick-start example adds Alice. |
 | Show everyone | `list` | `list` restores the complete roster. |
+| Show selected members | `show INDEX [MORE_INDEXES]...` | `show 1 3 4 5` keeps those members from the current list. |
 | Sort by name | `sort` | Sorts the current view from A to Z, ignoring letter case. |
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
 | Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |

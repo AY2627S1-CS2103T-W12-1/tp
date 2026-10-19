@@ -11,6 +11,12 @@ public enum CommandHelp {
             "The complete roster is shown, including members hidden by a previous find or filter.",
             "Use list before choosing a member by number. List numbers can change after an edit or deletion.",
             "Use the lowercase command list with no extra arguments."),
+    SHOW("Browse members", "show", "Show selected members", "show INDEX [MORE_INDEXES]...", "show 1 3 4 5",
+            "Keeps only the specified members from the current displayed list.",
+            "Shows members at the selected numbers in their current order, then renumbers the displayed list.",
+            "Use list to restore everyone. Repeated numbers select a member once. A later show uses the new numbers.",
+            "Supply space-separated positive displayed numbers. An invalid or missing number leaves the view "
+                    + "unchanged."),
     SORT("Browse members", "sort", "Sort members by name", "sort", "sort",
             "Orders the displayed members by full name from A to Z, ignoring letter case.",
             "Shows the current search results alphabetically without changing the saved roster.",

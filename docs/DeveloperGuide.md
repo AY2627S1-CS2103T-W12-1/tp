@@ -157,7 +157,7 @@ This allows common handling where appropriate, including in tests.
 The Model component stores:
 
 * **Member data:** `Person` objects held in a `UniquePersonList`.
-* **Displayed data:** a filtered list, such as name-search results.
+* **Displayed data:** a filtered list, such as name-search results or an index selection.
   A `SortedList` wraps it for optional name sorting while the stored roster keeps its original order.
   An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
 * **Preferences:** a `UserPrefs` object, currently containing GUI settings.
@@ -167,7 +167,8 @@ Model does not depend on UI, Logic, or Storage.
 Its data entities can be used independently of those components.
 
 `ModelManager#getFilteredPersonList()` exposes the `SortedList` backed by the `FilteredList`.
-`list` clears the search and tag predicates and disables sorting, restoring every member in stored order.
+`show` resolves indexes against the current sorted view and adds a selection predicate to narrow it.
+`list` clears the search, tag, and selection predicates and disables sorting, restoring every member in stored order.
 
 <div markdown="block" class="alert alert-info">
 
@@ -325,7 +326,7 @@ also recover to usable bounds. This handles monitor changes between sessions.
 #### Save policy
 
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
-`help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` return without saving member data.
+`help`, `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` return without saving member data.
 Successful `add`, `edit`, `delete`, `tagall`, `untagall`, `clear`, and `import` commands pass the complete
 roster, including hidden members,
 to `Storage#saveAddressBook`.
@@ -741,7 +742,7 @@ These rules describe the selected MVP and apply to the use cases below.
    filters after the whole batch. Changed and skipped counts refer to the original target set.
 9. Valid `add`, `edit`, `delete`, `clear`, `tagall`, `untagall`, and `import` commands save the complete
    roster, including valid operations that make no change. An empty bulk target is an error
-   and does not save. `help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` do not save.
+   and does not save. `help`, `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` do not save.
 10. Report data-changing command success only after saving succeeds. A failed save preserves
     the previous saved file and reports a storage error. Except for `clear`, changes remain in
     memory and can be lost on exit. Failed `clear` restores the previous records, displayed
@@ -801,6 +802,7 @@ or window; it must remain keyboard accessible.
 * With networking disabled, `help` shows a concise summary of every executable command in the
   running version. The completed MVP includes `help`, `add`, `list`, `edit`, `find`, `delete`,
   `clear`, `exit`, `filter`, `tagall`, `untagall`, `sort`, `export`, and `import`.
+  The running version also includes `show`.
   An earlier iteration must not present an
   unimplemented command as available.
 * `help COMMAND` shows the command purpose, syntax, parameter rules, at least one valid example
@@ -1157,8 +1159,8 @@ such as incremental delivery, are also not product NFRs.
 | Member record | One member's name, phone number, email address, address, and tag assignments. |
 | Group | A set of members sharing a tag, such as a committee or cohort. Groups are not separate stored objects in the MVP. |
 | Tag | A case-sensitive label containing 1 to 30 ASCII letters or digits, assigned at most once to each member. |
-| Displayed list | The records currently visible after the active search and tag filters. It is the target set for a bulk tag command. |
-| Active search and filters | The current name-search condition and cumulative tag conditions used to determine which records are displayed. A new `find` replaces them; `list` clears them. |
+| Displayed list | The records currently visible after the active search, tag filters, and index selections. It is the target set for a bulk tag command. |
+| Active search and filters | The current name-search, tag, and index-selection conditions used to determine which records are displayed. A new `find` replaces them; `list` clears them. |
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
 | Complete-word matching | Matching a whole word in a name. For example, `John` matches `John Tan`, but `Jo` does not. |
 | Bulk tag update | Adding or removing one tag for the fixed set of members displayed when the command is submitted. |
@@ -1237,6 +1239,9 @@ platform or release package has been verified. Use a disposable folder and synth
    Run `filter t/committee`, then another filter. Check that the second filter narrows the current
    view, `find` starts again from the full roster, and `list` restores everyone. A missing tag,
    repeated tag, or invalid tag must leave the view unchanged. Filtering must not save the file.
+   Run `list`, then `show 1 3` with at least three members visible. Expect only those two members
+   in their original order, renumbered 1 and 2. Run `show 2` to narrow the view again. An
+   out-of-range number must leave the view unchanged; `list` restores everyone.
 7. Paste a valid add command with actual tab separators before `n/`, `p/`, `e/`, and `a/`.
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
    or an internal tab keeps that text. For both `add` and `edit`, append `x/extra` or `T/committee`
