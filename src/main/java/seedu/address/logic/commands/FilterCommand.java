@@ -47,8 +47,7 @@ public class FilterCommand extends Command {
         int displayedCount = model.getFilteredPersonList().size();
         logger.info(String.format("filter t/%s: %d member(s) displayed with %d active tag filter(s)",
                 tag.tagName, displayedCount, activeTags.size()));
-        return new CommandResult(String.format(MESSAGE_SUCCESS,
-                displayedCount, tagLabel, tagNames));
+        return new CommandResult(String.format(MESSAGE_SUCCESS, displayedCount, tagLabel, tagNames));
     }
 
     @Override
