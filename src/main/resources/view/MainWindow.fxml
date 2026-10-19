@@ -7,13 +7,14 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <fx:root type="javafx.stage.Stage" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
-         title="TrackCall" minWidth="450" minHeight="600" onCloseRequest="#handleExit">
+         title="TrackCall" minWidth="450" minHeight="450" onCloseRequest="#handleExit">
   <icons>
     <Image url="@/images/address_book_32.png" />
   </icons>
@@ -42,18 +43,21 @@
           <FlowPane fx:id="activeFiltersPane" hgap="8" vgap="6" visible="false" managed="false" />
         </VBox>
 
-        <SplitPane orientation="VERTICAL" dividerPositions="0.34" VBox.vgrow="ALWAYS">
+        <SplitPane fx:id="mainSplit" orientation="VERTICAL" dividerPositions="0.22" VBox.vgrow="ALWAYS">
           <StackPane fx:id="resultDisplayPlaceholder" styleClass="pane-with-border" minHeight="100">
             <padding>
               <Insets top="8" right="12" bottom="8" left="12" />
             </padding>
           </StackPane>
-          <VBox fx:id="personList" styleClass="pane-with-border" minWidth="0" minHeight="180">
-            <padding>
-              <Insets top="10" right="10" bottom="10" left="10" />
-            </padding>
-            <StackPane fx:id="personListPanelPlaceholder" VBox.vgrow="ALWAYS"/>
-          </VBox>
+          <SplitPane orientation="HORIZONTAL" dividerPositions="0.43" minHeight="180">
+            <VBox fx:id="personList" styleClass="pane-with-border" minWidth="145" minHeight="0">
+              <padding><Insets top="10" right="8" bottom="10" left="10" /></padding>
+              <Label text="ROSTER" styleClass="panel-heading" />
+              <StackPane fx:id="personListPanelPlaceholder" minHeight="0" VBox.vgrow="ALWAYS"/>
+            </VBox>
+            <StackPane fx:id="memberDetailsPlaceholder" styleClass="pane-with-border"
+                       minWidth="190" minHeight="0" />
+          </SplitPane>
         </SplitPane>
 
         <StackPane fx:id="statusbarPlaceholder" VBox.vgrow="NEVER" />

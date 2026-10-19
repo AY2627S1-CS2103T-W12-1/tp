@@ -20,8 +20,10 @@ import javafx.event.Event;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.input.Clipboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
@@ -145,7 +147,13 @@ public class MainWindowTest {
             assertTrue(((HBox) chips.getChildren().get(1)).getStyleClass().contains("filter-chip-tag"));
             assertDisplayedNames("Alice Tan");
 
+            ListView<?> roster = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+            ScrollPane details = (ScrollPane) window.getPrimaryStage().getScene().lookup("#detailsScroll");
+            roster.getSelectionModel().select(0);
+            assertTrue(details.isVisible());
             removeChip(chips, 3);
+            assertFalse(details.isVisible());
+            assertEquals(-1, roster.getSelectionModel().getSelectedIndex());
             assertEquals(List.of("Name: Alice Bob", "Tag: classA", "Name: Tan"), chipLabels(chips));
             assertDisplayedNames("Alice Tan");
             removeChip(chips, 2);
@@ -215,6 +223,85 @@ public class MainWindowTest {
         assertEquals(4, Files.readAllLines(exported).size());
         assertTrue(new JsonAddressBookStorage(temporaryFolder.resolve("members.json"))
                 .readAddressBook().orElseThrow().getPersonList().isEmpty());
+    }
+
+    @Test
+    public void privacyPanel_revealsOnlySelectedMemberAndClearsAfterCommand() throws Exception {
+        onJavaFxThread(() -> {
+            ListView<?> list = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+            ScrollPane details = (ScrollPane) window.getPrimaryStage().getScene().lookup("#detailsScroll");
+            Label phone = (Label) window.getPrimaryStage().getScene().lookup("#phone");
+            Label email = (Label) window.getPrimaryStage().getScene().lookup("#email");
+            Label address = (Label) window.getPrimaryStage().getScene().lookup("#address");
+
+            assertFalse(details.isVisible());
+            assertEquals("", phone.getText());
+            list.getSelectionModel().select(0);
+            assertTrue(details.isVisible());
+            assertEquals(model.getFilteredPersonList().getFirst().getPhone().value, phone.getText());
+            assertEquals(model.getFilteredPersonList().getFirst().getEmail().value, email.getText());
+            assertEquals(model.getFilteredPersonList().getFirst().getAddress().value, address.getText());
+
+            Button copyPhone = (Button) window.getPrimaryStage().getScene().lookup("#copyPhoneButton");
+            copyPhone.fire();
+            assertEquals(phone.getText(), Clipboard.getSystemClipboard().getString());
+
+            enter("edit 1 p/90000001");
+            assertFalse(details.isVisible());
+            assertEquals("", phone.getText());
+            assertEquals(-1, list.getSelectionModel().getSelectedIndex());
+            assertTrue(feedback.getText().contains("Updated member"));
+            assertFalse(feedback.getText().contains("90000001"));
+            assertFalse(feedback.getText().contains("Email:"));
+            assertFalse(feedback.getText().contains("Address:"));
+
+            enter("add n/Carol Wong p/90000002 e/carol@example.com a/Test Street");
+            assertTrue(feedback.getText().contains("Added member"));
+            assertFalse(feedback.getText().contains("90000002"));
+            assertFalse(feedback.getText().contains("carol@example.com"));
+
+            enter("delete 3");
+            assertTrue(feedback.getText().contains("Deleted member"));
+            assertFalse(feedback.getText().contains("90000002"));
+        });
+    }
+
+    @Test
+    public void privacyPanel_escapeFromCopyControl_hidesDetails() throws Exception {
+        onJavaFxThread(() -> {
+            ListView<?> list = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+            list.getSelectionModel().select(1);
+            ScrollPane details = (ScrollPane) window.getPrimaryStage().getScene().lookup("#detailsScroll");
+            assertTrue(details.isVisible());
+            Button copyButton = (Button) window.getPrimaryStage().getScene().lookup("#copyEmailButton");
+            Event.fireEvent(copyButton, key(KeyCode.ESCAPE));
+            assertEquals(-1, list.getSelectionModel().getSelectedIndex());
+        });
+    }
+
+    @Test
+    public void privacyPanel_smallWindow_keepsDetailsScrollable() throws Exception {
+        onJavaFxThread(() -> {
+            Stage stage = window.getPrimaryStage();
+            stage.setWidth(450);
+            stage.setHeight(450);
+        });
+        onJavaFxThread(() -> {
+            Stage stage = window.getPrimaryStage();
+            stage.getScene().getRoot().applyCss();
+            stage.getScene().getRoot().layout();
+            ListView<?> list = (ListView<?>) stage.getScene().lookup("#personListView");
+            list.getSelectionModel().select(0);
+            stage.getScene().getRoot().layout();
+            ScrollPane details = (ScrollPane) stage.getScene().lookup("#detailsScroll");
+            assertTrue(details.isVisible());
+            assertTrue(details.getWidth() > 0);
+            assertTrue(details.getHeight() > 0);
+            details.setVvalue(1);
+            Label address = (Label) stage.getScene().lookup("#address");
+            assertEquals(model.getFilteredPersonList().getFirst().getAddress().value,
+                    address.getText());
+        });
     }
 
     /** Checks the actual list bound to the displayed member cards. */

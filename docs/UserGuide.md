@@ -5,7 +5,8 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers **TrackCall v1.4 alpha** and its fourteen available commands.
+This guide covers the **current source build**, based on TrackCall v1.4 alpha, and its fourteen available commands.
+The selected-member privacy panel is newer than the v1.4 alpha release JAR.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
@@ -28,19 +29,27 @@ Start with [Quick start](#quick-start), or use the [command summary](#command-su
    ```
 
 TrackCall opens with sample members and a welcome message on your first launch.
+The released v1.4 JAR uses the earlier full-card layout. To use the selected-member panel shown below,
+run this current source checkout with `./gradlew run`.
 
 ### Read the interface
 
-![TrackCall showing the command box, welcome message, member list, and data-file status bar](images/user-guide/interface.png)
+![TrackCall showing the command box, compact roster, and selected member details](images/user-guide/interface.png)
 
-*TrackCall on startup. Your data-file path will depend on where you placed the JAR.*
+*TrackCall with one sample member selected. Your data-file path will depend on where you placed the JAR.*
 
 From top to bottom:
 
 * **Command box:** type commands here.
 * **Result area:** read success messages and errors.
-* **Member list:** view member numbers, contact details, and tags.
+* **Roster:** view member numbers, names, and tags. Contact details are hidden here.
+* **Member details:** select a roster row to reveal that member's phone, email, and address.
+  Use the adjacent copy icons to copy a field. Press **F2** to focus the roster, use the arrow keys
+  to choose a member, and press **Escape** to hide the details and return to the command box.
 * **Status bar:** see where your member data is saved.
+
+Running a command hides the selected details. Successful `add`, `edit`, and `delete` feedback omits
+phone, email, and address on screen. Select a member again to inspect those fields.
 
 ### Try your first commands
 
@@ -148,7 +157,7 @@ Extra arguments such as `sort date` produce `Invalid command format. Usage: sort
 
 ### Update a member: `edit`
 
-1. Check the member's current displayed number and contact details.
+1. Select the member and check their displayed number and contact details in the details panel.
 2. Supply that number and at least one field:
 
    ```text

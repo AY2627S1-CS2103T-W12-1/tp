@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -11,8 +12,10 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
@@ -44,6 +47,8 @@ public class MainWindow extends UiPart<Stage> {
 
     // Independent Ui parts residing in this Ui container
     private PersonListPanel personListPanel;
+    private MemberDetailsPanel memberDetailsPanel;
+    private CommandBox commandBox;
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
 
@@ -60,10 +65,16 @@ public class MainWindow extends UiPart<Stage> {
     private StackPane personListPanelPlaceholder;
 
     @FXML
+    private StackPane memberDetailsPlaceholder;
+
+    @FXML
     private StackPane resultDisplayPlaceholder;
 
     @FXML
     private StackPane statusbarPlaceholder;
+
+    @FXML
+    private SplitPane mainSplit;
 
     /**
      * Creates a {@code MainWindow} with the given {@code Stage}, {@code Logic},
@@ -121,7 +132,7 @@ public class MainWindow extends UiPart<Stage> {
          * the help window purposely so as to support accelerators even when focus is
          * in CommandBox or ResultDisplay.
          */
-        getRoot().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+        primaryStage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getTarget() instanceof TextInputControl && keyCombination.match(event)) {
                 menuItem.getOnAction().handle(new ActionEvent());
                 event.consume();
@@ -133,8 +144,12 @@ public class MainWindow extends UiPart<Stage> {
      * Fills up all the placeholders of this window.
      */
     void fillInnerParts() {
+        memberDetailsPanel = new MemberDetailsPanel();
+        memberDetailsPlaceholder.getChildren().add(memberDetailsPanel.getRoot());
+
         personListPanel = new PersonListPanel(logic.getFilteredPersonList());
         personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
+        personListPanel.setOnSelectionChanged(this::showSelectedMember);
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
@@ -142,9 +157,31 @@ public class MainWindow extends UiPart<Stage> {
         StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
         statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());
 
-        CommandBox commandBox = new CommandBox(this::executeCommand);
+        commandBox = new CommandBox(this::executeCommand);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
+        mainSplit.setDividerPositions(0.22);
         refreshActiveFilters();
+
+        primaryStage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.F2) {
+                personListPanel.focusList();
+                event.consume();
+            } else if (event.getCode() == KeyCode.ESCAPE
+                    && (personListPanel.isListFocused() || personListPanel.getSelectedPerson() != null)) {
+                personListPanel.clearSelection();
+                commandBox.focusInput();
+                event.consume();
+            }
+        });
+    }
+
+    /** Keeps the detail view tied to a deliberate, currently displayed selection. */
+    private void showSelectedMember() {
+        if (personListPanel.getSelectedPerson() == null || personListPanel.getSelectedIndex() < 0) {
+            memberDetailsPanel.clear();
+        } else {
+            memberDetailsPanel.showPerson(personListPanel.getSelectedPerson(), personListPanel.getSelectedIndex() + 1);
+        }
     }
 
     /** Rebuilds the removable boxes from the filters currently applied to the displayed list. */
@@ -167,6 +204,7 @@ public class MainWindow extends UiPart<Stage> {
         removeButton.setAccessibleText(removeDescription);
         removeButton.setTooltip(new Tooltip(removeDescription));
         removeButton.setOnAction(event -> {
+            personListPanel.clearSelection();
             logic.removeActiveFilter(filter);
             showFilterRemoval("Removed " + filter.getLabel() + ".");
         });
@@ -237,10 +275,11 @@ public class MainWindow extends UiPart<Stage> {
      * @see seedu.address.logic.Logic#execute(String)
      */
     private CommandResult executeCommand(String commandText) throws CommandException, ParseException {
+        personListPanel.clearSelection();
         try {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
-            resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+            resultDisplay.setFeedbackToUser(hideContactDetails(commandResult.getFeedbackToUser()));
             refreshActiveFilters();
 
             if (commandResult.isShowHelp()) {
@@ -257,5 +296,18 @@ public class MainWindow extends UiPart<Stage> {
             resultDisplay.setFeedbackToUser(e.getMessage());
             throw e;
         }
+    }
+
+    /** Keeps command confirmations from revealing contact fields outside the selected-member panel. */
+    private String hideContactDetails(String feedback) {
+        if (!feedback.startsWith("Added member\n")
+                && !feedback.startsWith("Updated member\n")
+                && !feedback.startsWith("Deleted member\n")) {
+            return feedback;
+        }
+        return feedback.lines()
+                .filter(line -> !line.startsWith("Phone:") && !line.startsWith("Email:")
+                        && !line.startsWith("Address:"))
+                .collect(Collectors.joining("\n"));
     }
 }

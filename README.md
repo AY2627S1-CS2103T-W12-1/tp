@@ -11,7 +11,7 @@ Type commands to find members and update their contact details quickly.
 
 * Add, edit, list, find, delete, and clear member records.
 * Open offline instructions for all available commands with `help`, or one command with `help COMMAND`.
-* Read labeled member cards and multiline feedback in a light beige interface, with wrapping and scrolling.
+* Read member cards and multiline feedback in a light beige interface, with wrapping and scrolling.
 * Save data changes locally, with clear recovery guidance if saving fails and rollback for a failed clear.
 * Keep the previous valid saved roster as an automatic backup, and recover damaged files at startup.
 * Leave the roster file unchanged when running read-only commands.
@@ -21,7 +21,11 @@ Type commands to find members and update their contact details quickly.
 
 ## Interface
 
-![TrackCall showing two committee members after filter t/committee](docs/images/Ui.png)
+The current source build shows names and tags in the roster. Select a member to reveal their contact details
+in a separate panel, where each field can be copied. Press **F2** to focus the roster and **Escape** to hide
+the selected details and return to the command box. This UI update is newer than the v1.4 alpha release.
+
+![TrackCall showing a compact roster and one selected member's details](docs/images/Ui.png)
 
 ## Documentation
 
@@ -30,7 +34,7 @@ Type commands to find members and update their contact details quickly.
 * [Developer Guide](https://ay2627s1-cs2103t-w12-1.github.io/tp/DeveloperGuide.html)
 * [About Us](https://ay2627s1-cs2103t-w12-1.github.io/tp/AboutUs.html)
 
-The User Guide describes the v1.4 alpha. The Developer Guide documents the current implementation,
+The User Guide covers the current source build. The Developer Guide documents the current implementation,
 its limitations, and requirements for later versions. Published documentation follows the team's
 merged default branch.
 

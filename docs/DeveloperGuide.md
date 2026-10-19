@@ -21,6 +21,7 @@ The secretary can:
 
 The **v1.4 alpha** supports individual member management, name search, tag filtering, bulk tag
 editing, offline command help, local saving, CSV import/export, and name sorting.
+The current source build adds a selected-member privacy panel after that release.
 See [Limitations](#limitations) for constraints in the current release.
 
 ## Acknowledgements
@@ -98,7 +99,11 @@ This reduces their dependence on each other's implementation details, as shown b
 
 ![Structure of the UI component](images/UiClassDiagram.png)
 
-`MainWindow` contains `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`.
+The diagram shows the v1.4 alpha structure; the current source build also includes
+`MemberDetailsPanel` beside `PersonListPanel`.
+
+`MainWindow` contains `CommandBox`, `ResultDisplay`, `PersonListPanel`, `MemberDetailsPanel`,
+and `StatusBarFooter`.
 These classes inherit from `UiPart`, which provides behaviour shared by visible interface parts.
 
 The interface uses JavaFX. Matching `.fxml` files in `src/main/resources/view` define the layouts.
@@ -248,7 +253,8 @@ and reports the complete count using singular, plural, or empty-roster wording. 
 returns its result without invoking storage. Extra arguments are rejected by `AddressBookParser`
 before either the view or data changes.
 
-Member cards use labelled, wrapping rows and tags.
+Compact roster cards show member numbers, names, and tags. The details panel reveals contact fields
+for only the selected member.
 `LightTheme.css` provides the beige main-list palette. See [Offline command help](#offline-command-help) for the bundled guide.
 
 #### Clear and save recovery
@@ -284,7 +290,7 @@ These messages follow the list and clear feature specifications:
 #### Test coverage
 
 Regression coverage is in `ListClearIntegrationTest`, the two command tests, parser tests, and
-`FileUtilTest`. `PersonCardTest` lays out member cards off-screen and verifies complete field values,
+`FileUtilTest`. `PersonCardTest` lays out compact roster cards off-screen and verifies names,
 alphabetical tag order, hidden empty tag rows, and wrapping at narrow widths. Linux CI supplies a
 virtual display with `xvfb-run` for JavaFX. UI integration tests use synthetic members and temporary
 storage; they never open the user's roster.
@@ -300,10 +306,12 @@ Command tests cover:
 #### Member rows and results
 
 `Messages#format(Person)` formats names, phone numbers, email addresses, addresses, and sorted tags
-as labelled lines. Add, edit, and delete results reuse this format instead of one long semicolon-separated
-message. `ResultDisplay` wraps and scrolls text; a split pane lets the user resize its area.
-`PersonCard` separates the displayed index and name from labelled contact rows and wraps long values
-and tag labels.
+as labelled lines for command results. In the current source build, `MainWindow` removes contact-field
+lines from successful add, edit, and delete feedback before showing it. The roster's `PersonCard` displays
+only the member number, name, and tags. `MemberDetailsPanel` reveals one selected member's contact fields
+and provides copy buttons. Running any command clears the selection before the roster can change;
+F2 focuses the list and Escape hides the details. `ResultDisplay` wraps and scrolls text, and the split
+panes let the user resize the feedback and roster areas.
 
 `LightTheme.css` supplies the beige palette and dark text for the main window, help, and alerts.
 `HelpWindow.css` adds the help-card layout. A welcome message points to `help` and `help add`.
@@ -697,7 +705,7 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 
 | ID | Priority | As a... | I want to... | So that I can... | Scope decision |
 | --- | --- | --- | --- | --- | --- |
-| US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Retained from the earlier DG; no privacy-display mode in the MVP. |
+| US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Implemented in the current source build after v1.4 alpha; the roster hides details until selection. |
 | US19 | `**` | first-time user | follow a short in-app getting-started guide | learn the basic workflow step by step | Considered; the MVP provides command help, not an onboarding wizard. |
 | US22 | `**` | club secretary | review imported member records | confirm that an import completed correctly | Considered with US21; no separate review step for imported records in the MVP. |
 | US26 | `**` | club secretary | search using part of a name word | find someone when I cannot remember the complete word | Considered; the MVP uses complete-word matching. |
@@ -817,11 +825,11 @@ or window; it must remain keyboard accessible.
 
 #### Member details and command feedback
 
-* Each member card separates its displayed index and name from clearly labelled Phone, Email,
-  and Address fields, followed by its tag labels. Long names and contact details wrap; tags wrap
-  onto another line when needed. All field content remains accessible without overlap or permanent truncation.
+* Each roster card shows the displayed index, name, and tags without contact details. Selecting
+  a member reveals Phone, Email, and Address in a separate panel with copy controls. F2 focuses
+  the roster, and Escape clears the selection. Long values remain accessible by wrapping and scrolling.
 * Successful `add`, `edit`, and `delete` feedback starts with the completed action and shows
-  the affected member using labelled fields on separate lines. Empty tags are shown as `(none)`.
+  the affected member's name and tags. The UI omits contact fields from this feedback.
   Feedback reports success only after saving; a save failure follows shared rule 10.
 * Validation errors name the problem and a correction or help route. The result area keeps
   long feedback accessible by wrapping and scrolling. Readability checks use NFR05.
@@ -831,9 +839,6 @@ For example, after a successful add and save:
 ```text
 Added member
 Name: Alice Tan
-Phone: 91234567
-Email: alice@example.com
-Address: 10 College Road
 Tags: committee, year1
 ```
 
@@ -1201,6 +1206,12 @@ platform or release package has been verified. Use a disposable folder and synth
    oversized or invalid saved bounds. Recovery is performed at startup.
 
 ### Offline help and readable feedback
+
+In the current source build, verify that the roster initially shows only names and tags.
+Press F2, select a member with the arrow keys, and check that only that member's contact details
+appear in the panel. Copy a field, then press Escape and check that the details disappear and
+focus returns to the command box. Select a member again, then run `edit` and check that the
+panel clears and the result area omits phone, email, and address. Repeat for `add` and `delete`.
 
 1. Disable networking. Run `help`: verify four category cards containing all fourteen command names,
    descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
