@@ -33,6 +33,7 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.RenameTagCommand;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.TagAllCommand;
 import seedu.address.logic.commands.UntagAllCommand;
@@ -506,6 +507,34 @@ public class LogicManagerTest {
 
         assertThrows(CommandException.class, UntagAllCommand.MESSAGE_EMPTY_LIST, () ->
                 logic.execute("untagall t/friends"));
+        assertEquals(getTypicalAddressBook(), model.getAddressBook());
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    @Test
+    public void execute_renameTagWithActiveSearch_renamesWholeRosterAndSaves() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("find Alice");
+
+        assertEquals("Renamed tag \"friends\" to \"buddies\" for 3 member(s).",
+                logic.execute("renametag t/friends t/buddies").getFeedbackToUser());
+
+        // The search stays applied, while hidden members are renamed too.
+        assertEquals(1, logic.getFilteredPersonList().size());
+        Tag friends = new Tag("friends");
+        assertTrue(model.getAddressBook().getPersonList().stream().noneMatch(person ->
+                person.getTags().contains(friends)));
+        ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
+                temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+    }
+
+    @Test
+    public void execute_renameUnusedTag_doesNotSave() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+
+        assertThrows(CommandException.class, String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "committee"), () ->
+                logic.execute("renametag t/committee t/buddies"));
         assertEquals(getTypicalAddressBook(), model.getAddressBook());
         assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
     }
