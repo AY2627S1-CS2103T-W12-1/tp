@@ -3,8 +3,10 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.Model;
 import seedu.address.model.tag.Tag;
 
@@ -16,6 +18,8 @@ public class FilterCommand extends Command {
     public static final String MESSAGE_USAGE = "filter: Shows currently displayed members with one tag.\n"
             + "Parameters: t/TAG\nExample: filter t/committee";
     public static final String MESSAGE_SUCCESS = "%d member(s) listed with %s %s.";
+
+    private static final Logger logger = LogsCenter.getLogger(FilterCommand.class);
 
     private final Tag tag;
 
@@ -40,8 +44,11 @@ public class FilterCommand extends Command {
                 .map(activeTag -> "\"" + activeTag.tagName + "\"")
                 .collect(Collectors.joining(", "));
         String tagLabel = activeTags.size() == 1 ? "tag" : "tags";
+        int displayedCount = model.getFilteredPersonList().size();
+        logger.info(String.format("filter t/%s: %d member(s) displayed with %d active tag filter(s)",
+                tag.tagName, displayedCount, activeTags.size()));
         return new CommandResult(String.format(MESSAGE_SUCCESS,
-                model.getFilteredPersonList().size(), tagLabel, tagNames));
+                displayedCount, tagLabel, tagNames));
     }
 
     @Override
