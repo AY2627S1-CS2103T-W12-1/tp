@@ -41,7 +41,7 @@ if () then ([clear])
     :Show clear save error;
 else ([other data-changing command])
     :Keep the change in memory only;
-    :Show save error with retry guidance;
+    :Show save error;
 endif
 stop
 @enduml

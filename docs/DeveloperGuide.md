@@ -1223,6 +1223,7 @@ platform or release package has been verified. Use a disposable folder and synth
    displayed member. Expect errors with the roster unchanged.
 4. Run `edit 1 t/committee t/year1`, then `edit 1 t/`. Expect the tag set to be replaced, then
    cleared. A lone `edit 1` must fail. A valid edit retains the active search and filters.
+   Run `edit 1 t/committee` to restore a matching member before filtering.
    Run `filter t/committee` with matching members, then `edit 1 p/98765432`. Only committee members
    should remain visible. Run `edit 1 t/` to remove the first displayed member's tags; that member
    should disappear from view. Run `list` to verify the edited member remains in the roster.

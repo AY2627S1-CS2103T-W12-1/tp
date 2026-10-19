@@ -8,6 +8,8 @@ TrackCall helps a club's membership secretary maintain member contact details us
 This guide covers **TrackCall v1.4 alpha** and its fourteen available commands.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
+The latest downloadable release is v1.3; this guide describes v1.4 alpha, which is not yet published.
+
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
 
 * Table of Contents
