@@ -8,10 +8,15 @@ import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextInputControl;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -21,6 +26,7 @@ import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.ActiveFilter;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -43,6 +49,9 @@ public class MainWindow extends UiPart<Stage> {
 
     @FXML
     private StackPane commandBoxPlaceholder;
+
+    @FXML
+    private FlowPane activeFiltersPane;
 
     @FXML
     private MenuItem helpMenuItem;
@@ -135,6 +144,41 @@ public class MainWindow extends UiPart<Stage> {
 
         CommandBox commandBox = new CommandBox(this::executeCommand);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
+        refreshActiveFilters();
+    }
+
+    /** Rebuilds the removable boxes from the filters currently applied to the displayed list. */
+    private void refreshActiveFilters() {
+        activeFiltersPane.getChildren().clear();
+        for (ActiveFilter filter : logic.getActiveFilters()) {
+            activeFiltersPane.getChildren().add(createFilterChip(filter));
+        }
+        boolean hasFilters = !activeFiltersPane.getChildren().isEmpty();
+        activeFiltersPane.setVisible(hasFilters);
+        activeFiltersPane.setManaged(hasFilters);
+    }
+
+    /** Creates a box whose X removes exactly the condition represented by {@code filter}. */
+    private HBox createFilterChip(ActiveFilter filter) {
+        String removeDescription = "Remove " + filter.getLabel();
+        Label label = new Label(filter.getLabel());
+        Button removeButton = new Button("×");
+        removeButton.getStyleClass().add("filter-chip-remove");
+        removeButton.setAccessibleText(removeDescription);
+        removeButton.setTooltip(new Tooltip(removeDescription));
+        removeButton.setOnAction(event -> {
+            logic.removeActiveFilter(filter);
+            showFilterRemoval("Removed " + filter.getLabel() + ".");
+        });
+        HBox chip = new HBox(6, label, removeButton);
+        chip.getStyleClass().add("filter-chip");
+        chip.getStyleClass().add(filter.getKind() == ActiveFilter.Kind.NAME ? "filter-chip-name" : "filter-chip-tag");
+        return chip;
+    }
+
+    private void showFilterRemoval(String message) {
+        refreshActiveFilters();
+        resultDisplay.setFeedbackToUser(message + " " + logic.getFilteredPersonList().size() + " member(s) listed.");
     }
 
     /**
@@ -197,6 +241,7 @@ public class MainWindow extends UiPart<Stage> {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+            refreshActiveFilters();
 
             if (commandResult.isShowHelp()) {
                 helpWindow.show(commandResult.getHelpTopic());

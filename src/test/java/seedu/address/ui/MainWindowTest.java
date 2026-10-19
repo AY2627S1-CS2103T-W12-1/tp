@@ -17,11 +17,15 @@ import org.junit.jupiter.api.io.TempDir;
 
 import javafx.event.ActionEvent;
 import javafx.event.Event;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import seedu.address.logic.LogicManager;
@@ -123,6 +127,46 @@ public class MainWindowTest {
     }
 
     @Test
+    public void activeFilterChips_removeIndividualFiltersAndUpdateDisplayedMembers() throws Exception {
+        onJavaFxThread(() -> {
+            Person alice = model.getAddressBook().getPersonList().get(0);
+            Person bob = model.getAddressBook().getPersonList().get(1);
+            model.setPerson(alice, new PersonBuilder(alice).withTags("classA", "team").build());
+            model.setPerson(bob, new PersonBuilder(bob).withTags("classA").build());
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+            assertFalse(chips.isVisible());
+
+            enter("find Alice Bob");
+            enter("filter t/classA");
+            enter("find Tan");
+            enter("filter t/team");
+            assertEquals(List.of("Name: Alice Bob", "Tag: classA", "Name: Tan", "Tag: team"), chipLabels(chips));
+            assertTrue(((HBox) chips.getChildren().get(0)).getStyleClass().contains("filter-chip-name"));
+            assertTrue(((HBox) chips.getChildren().get(1)).getStyleClass().contains("filter-chip-tag"));
+            assertDisplayedNames("Alice Tan");
+
+            removeChip(chips, 3);
+            assertEquals(List.of("Name: Alice Bob", "Tag: classA", "Name: Tan"), chipLabels(chips));
+            assertDisplayedNames("Alice Tan");
+            removeChip(chips, 2);
+            assertEquals(List.of("Name: Alice Bob", "Tag: classA"), chipLabels(chips));
+            assertDisplayedNames("Alice Tan", "Bob Lee");
+            removeChip(chips, 0);
+            assertEquals(List.of("Tag: classA"), chipLabels(chips));
+            assertDisplayedNames("Alice Tan", "Bob Lee");
+            removeChip(chips, 0);
+            assertFalse(chips.isVisible());
+            assertFalse(chips.isManaged());
+            assertDisplayedNames("Alice Tan", "Bob Lee");
+
+            enter("find Bob");
+            assertEquals(List.of("Name: Bob"), chipLabels(chips));
+            enter("list");
+            assertFalse(chips.isVisible());
+        });
+    }
+
+    @Test
     public void enter_allCommands_roundTripsGroupChangesThroughRealUiAndStorage() throws Exception {
         Path exported = temporaryFolder.resolve("member copy.csv");
         onJavaFxThread(() -> {
@@ -178,6 +222,17 @@ public class MainWindowTest {
         ListView<?> displayed = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
         assertEquals(List.of(expectedNames), displayed.getItems().stream()
                 .map(person -> ((Person) person).getName().fullName).toList());
+    }
+
+    private List<String> chipLabels(FlowPane chips) {
+        return chips.getChildren().stream()
+                .map(chip -> ((Label) ((HBox) chip).getChildren().get(0)).getText()).toList();
+    }
+
+    private void removeChip(FlowPane chips, int index) {
+        HBox chip = (HBox) chips.getChildren().get(index);
+        Button removeButton = (Button) chip.getChildren().get(1);
+        removeButton.fire();
     }
 
     private void enter(String command) {

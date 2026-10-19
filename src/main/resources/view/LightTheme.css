@@ -227,6 +227,46 @@
     -fx-opacity: 0.55;
 }
 
+.filter-chip {
+    -fx-alignment: center-left;
+    -fx-background-color: -tc-sage-soft;
+    -fx-background-radius: 6;
+    -fx-border-color: #bdcaae;
+    -fx-border-radius: 6;
+    -fx-padding: 4 6 4 10;
+}
+
+.filter-chip .label {
+    -fx-text-fill: -tc-sage;
+    -fx-font-size: 13px;
+}
+
+.filter-chip-remove {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0 4;
+    -fx-font-size: 17px;
+    -fx-text-fill: -tc-sage;
+}
+
+.filter-chip-remove:hover, .filter-chip-remove:focused {
+    -fx-background-color: #cbd9c0;
+    -fx-border-color: transparent;
+}
+
+.filter-chip-name {
+    -fx-background-color: #e2ebfa;
+    -fx-border-color: #a9bede;
+}
+
+.filter-chip-name .label, .filter-chip-name .filter-chip-remove {
+    -fx-text-fill: #284a75;
+}
+
+.filter-chip-name .filter-chip-remove:hover, .filter-chip-name .filter-chip-remove:focused {
+    -fx-background-color: #cadbf2;
+}
+
 .scroll-pane, .scroll-pane > .viewport {
     -fx-background-color: -tc-canvas;
 }

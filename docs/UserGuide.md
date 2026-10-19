@@ -170,17 +170,20 @@ Check the member number again after any command that changes the list.
 
 ### Find members: `find`
 
-`find Alice Tan` searches the complete roster for names containing **Alice or Tan**.
+`find Alice Tan` shows currently displayed members whose names contain **Alice or Tan**.
 
 * Matching ignores letter case and uses complete words.
   `Alice` matches `Alice Tan`, but `Ali` does not.
-* Each new search replaces the previous search.
+* Each new `find` adds another name filter. For example, `find Alice Tan` followed by `find Tan`
+  keeps members matching both searches.
 * Phone numbers and tags are not searched.
 * Supply at least one keyword.
 
 The result reports `1 member listed.` or `N members listed.`
 No matches produce `0 members listed.` and an empty list. No records are deleted.
-Use `list` to show everyone again. Searching does not save the data file.
+Active name and tag filters appear as boxes under the command field. Name boxes are blue and tag boxes
+are green. Select a box's **X** to remove only that condition, or use `list` to show everyone again.
+Searching does not save the data file.
 
 ### Filter displayed members by tag: `filter`
 
@@ -199,11 +202,11 @@ stays the same, and their displayed numbers update.
 * Matching is exact and case-sensitive: `committee` and `Committee` are different tags.
 * Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
   Applying the same tag again does not add a duplicate condition.
-* Use `list` to show everyone again. A new `find` searches the whole roster and replaces previous filters.
+* A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
 
 The result reports `N member(s) listed with tag "TAG".` for one active tag filter. With multiple
 active tags, it names every distinct tag in the order applied, for example:
-`1 member(s) listed with tags "committee", "year1".` A new `find` or `list` clears these tag filters.
+`1 member(s) listed with tags "committee", "year1".` Use `list` to clear all active filters.
 No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
 
 Check the displayed numbers before using `edit` or `delete`. Editing keeps the active search and filters.
