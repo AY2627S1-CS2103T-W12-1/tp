@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -27,6 +29,8 @@ public class TagAllCommand extends Command {
     public static final String MESSAGE_ALREADY_TAGGED = " %1$d already had this tag.";
     public static final String MESSAGE_EMPTY_LIST = "There are no members in the current list to update.";
 
+    private static final Logger logger = LogsCenter.getLogger(TagAllCommand.class);
+
     private final Tag tag;
 
     /**
@@ -42,6 +46,7 @@ public class TagAllCommand extends Command {
         // Copies the displayed members first, as updating a member refreshes the displayed list.
         List<Person> targets = new ArrayList<>(model.getFilteredPersonList());
         if (targets.isEmpty()) {
+            logger.info("tagall rejected: no members in the current list");
             throw new CommandException(MESSAGE_EMPTY_LIST);
         }
 
@@ -54,6 +59,8 @@ public class TagAllCommand extends Command {
         }
 
         int skippedCount = targets.size() - taggedCount;
+        logger.info(String.format("tagall t/%s: updated %d of %d displayed member(s), skipped %d",
+                tag.tagName, taggedCount, targets.size(), skippedCount));
         String message = String.format(MESSAGE_SUCCESS, tag.tagName, taggedCount);
         if (skippedCount > 0) {
             message += String.format(MESSAGE_ALREADY_TAGGED, skippedCount);

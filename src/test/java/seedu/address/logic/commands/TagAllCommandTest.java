@@ -23,6 +23,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
+import seedu.address.testutil.LogCapture;
 import seedu.address.testutil.PersonBuilder;
 
 public class TagAllCommandTest {
@@ -68,7 +69,11 @@ public class TagAllCommandTest {
         addTagToAll(expectedModel, "friends");
         String expectedMessage = "Added tag \"friends\" to 4 member(s). 3 already had this tag.";
 
-        assertCommandSuccess(new TagAllCommand(friends), model, expectedMessage, expectedModel);
+        try (LogCapture logs = new LogCapture(TagAllCommand.class)) {
+            assertCommandSuccess(new TagAllCommand(friends), model, expectedMessage, expectedModel);
+            assertEquals(List.of("tagall t/friends: updated 4 of 7 displayed member(s), skipped 3"),
+                    logs.getInfoMessages());
+        }
         assertTrue(model.getFilteredPersonList().contains(ALICE));
     }
 
@@ -80,7 +85,11 @@ public class TagAllCommandTest {
         expectedModel.filterFilteredPersonList(HAS_FRIENDS_TAG);
         String expectedMessage = "Added tag \"friends\" to 0 member(s). 3 already had this tag.";
 
-        assertCommandSuccess(new TagAllCommand(friends), model, expectedMessage, expectedModel);
+        try (LogCapture logs = new LogCapture(TagAllCommand.class)) {
+            assertCommandSuccess(new TagAllCommand(friends), model, expectedMessage, expectedModel);
+            assertEquals(List.of("tagall t/friends: updated 0 of 3 displayed member(s), skipped 3"),
+                    logs.getInfoMessages());
+        }
     }
 
     @Test
@@ -103,7 +112,10 @@ public class TagAllCommandTest {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         model.updateFilteredPersonList(person -> false);
 
-        assertCommandFailure(new TagAllCommand(committee), model, TagAllCommand.MESSAGE_EMPTY_LIST);
+        try (LogCapture logs = new LogCapture(TagAllCommand.class)) {
+            assertCommandFailure(new TagAllCommand(committee), model, TagAllCommand.MESSAGE_EMPTY_LIST);
+            assertEquals(List.of("tagall rejected: no members in the current list"), logs.getInfoMessages());
+        }
     }
 
     @Test

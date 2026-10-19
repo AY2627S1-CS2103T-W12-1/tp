@@ -202,7 +202,7 @@ public class PackagedFileAccessTest {
         Path home = Files.createDirectory(temporaryFolder.resolve("home"));
         Path outside = temporaryFolder.resolve("outside.txt");
         Files.writeString(outside, "keep");
-        createLink(home.resolve("addressbook.log.0"), outside);
+        createLink(home.resolve("trackcall.log.0"), outside);
         try (URLClassLoader loader = packagedLoader(home, true)) {
             initialize(loader, LogsCenter.class.getName());
             assertFalse(Arrays.stream(logger.getHandlers()).anyMatch(handler -> handler instanceof FileHandler));

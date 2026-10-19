@@ -22,6 +22,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
+import seedu.address.testutil.LogCapture;
 import seedu.address.testutil.PersonBuilder;
 
 public class UntagAllCommandTest {
@@ -54,7 +55,11 @@ public class UntagAllCommandTest {
         removeTagFromAll(expectedModel, "friends");
         String expectedMessage = "Removed tag \"friends\" from 3 member(s). 4 did not have this tag.";
 
-        assertCommandSuccess(new UntagAllCommand(friends), model, expectedMessage, expectedModel);
+        try (LogCapture logs = new LogCapture(UntagAllCommand.class)) {
+            assertCommandSuccess(new UntagAllCommand(friends), model, expectedMessage, expectedModel);
+            assertEquals(List.of("untagall t/friends: updated 3 of 7 displayed member(s), skipped 4"),
+                    logs.getInfoMessages());
+        }
         Person updatedBenson = new PersonBuilder(BENSON).withTags("owesMoney").build();
         assertTrue(model.getFilteredPersonList().contains(updatedBenson));
     }
@@ -65,7 +70,11 @@ public class UntagAllCommandTest {
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         String expectedMessage = "Removed tag \"committee\" from 0 member(s). 7 did not have this tag.";
 
-        assertCommandSuccess(new UntagAllCommand(committee), model, expectedMessage, expectedModel);
+        try (LogCapture logs = new LogCapture(UntagAllCommand.class)) {
+            assertCommandSuccess(new UntagAllCommand(committee), model, expectedMessage, expectedModel);
+            assertEquals(List.of("untagall t/committee: updated 0 of 7 displayed member(s), skipped 7"),
+                    logs.getInfoMessages());
+        }
     }
 
     @Test
@@ -77,7 +86,12 @@ public class UntagAllCommandTest {
         removeTagFromAll(expectedModel, "friends");
         String expectedMessage = "Removed tag \"friends\" from 3 member(s).";
 
-        assertCommandSuccess(new UntagAllCommand(friends), model, expectedMessage, expectedModel);
+        try (LogCapture logs = new LogCapture(UntagAllCommand.class)) {
+            assertCommandSuccess(new UntagAllCommand(friends), model, expectedMessage, expectedModel);
+            // Counts the members displayed before the update, although the filter now hides them all.
+            assertEquals(List.of("untagall t/friends: updated 3 of 3 displayed member(s), skipped 0"),
+                    logs.getInfoMessages());
+        }
         // The filter stays applied, so the updated members are hidden but still stored.
         assertTrue(model.getFilteredPersonList().isEmpty());
         assertEquals(7, model.getAddressBook().getPersonList().size());
@@ -102,7 +116,10 @@ public class UntagAllCommandTest {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         model.updateFilteredPersonList(person -> false);
 
-        assertCommandFailure(new UntagAllCommand(friends), model, UntagAllCommand.MESSAGE_EMPTY_LIST);
+        try (LogCapture logs = new LogCapture(UntagAllCommand.class)) {
+            assertCommandFailure(new UntagAllCommand(friends), model, UntagAllCommand.MESSAGE_EMPTY_LIST);
+            assertEquals(List.of("untagall rejected: no members in the current list"), logs.getInfoMessages());
+        }
     }
 
     @Test

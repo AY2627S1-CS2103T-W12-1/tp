@@ -19,7 +19,7 @@ public class LogsCenterTest {
     @Test
     public void initialize_unwritableLogFile_consoleLoggingStillWorks() throws Exception {
         // A directory at the log-file path gives a deterministic I/O failure on every OS.
-        Files.createDirectory(testFolder.resolve("addressbook.log.0"));
+        Files.createDirectory(testFolder.resolve("trackcall.log.0"));
         Path packageDirectory = Files.createDirectories(testFolder.resolve("seedu/address/commons/core"));
         Path probe = packageDirectory.resolve("LogProbe.java");
         Files.writeString(probe, """
