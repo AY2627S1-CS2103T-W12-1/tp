@@ -28,7 +28,7 @@ public class LogsCenter {
 
     private static final int MAX_FILE_COUNT = 5;
     private static final int MAX_FILE_SIZE_IN_BYTES = (int) (Math.pow(2, 20) * 5); // 5MB
-    private static final String LOG_FILE = "addressbook.log";
+    private static final String LOG_FILE = "trackcall.log";
     private static Logger baseLogger; // to be used as the parent of all other loggers created by this class.
 
     // This static block ensures essential loggers are created early
