@@ -1,0 +1,96 @@
+name: Documentation
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: documentation-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Build MarkBind site
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Set up Java for diagrams
+        uses: actions/setup-java@v5
+        with:
+          distribution: zulu
+          java-version: '25'
+
+      - name: Install locked documentation dependencies
+        run: npm ci
+
+      - name: Build documentation
+        # The build script uses /tp for production; site.json keeps the local baseUrl empty.
+        run: npm run build
+
+      - name: Save verified site for deployment
+        if: >-
+          github.event_name != 'pull_request'
+          && github.ref == 'refs/heads/master'
+          && github.repository == 'AY2627S1-CS2103T-W12-1/tp'
+        uses: actions/upload-artifact@v7
+        with:
+          name: documentation-site
+          path: docs/_site
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    name: Publish documentation
+    needs: build
+    if: >-
+      github.event_name != 'pull_request'
+      && github.ref == 'refs/heads/master'
+      && github.repository == 'AY2627S1-CS2103T-W12-1/tp'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Download verified site
+        uses: actions/download-artifact@v8
+        with:
+          name: documentation-site
+          path: docs/_site
+
+      - name: Publish to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: docs/_site
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com

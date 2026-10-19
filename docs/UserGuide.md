@@ -1,7 +1,10 @@
 ---
-layout: page
+layout: default.md
 title: User Guide
+pageNav: 3
 ---
+
+# User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
@@ -9,9 +12,6 @@ This guide covers **TrackCall v1.4 alpha** and its fourteen available commands.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
-
-* Table of Contents
-{:toc}
 
 ## Quick start
 
@@ -456,7 +456,7 @@ an address. For example, `edit 1 a/Main Road T/committee` reports invalid input;
 to assign a tag. Standalone `c/o`, URLs, numeric slashes such as `12/3`, and slashes inside words
 remain valid address text.
 
-The [Developer Guide](DeveloperGuide.md#limitations) explains current limitations and records
+The [Developer Guide](DeveloperGuide.html#limitations) explains current limitations and records
 ideas for later versions in its requirements appendix.
 
 ## FAQ
@@ -471,7 +471,7 @@ See [Your data](#your-data) for working-folder and backup instructions.
 A search changes the displayed list, not the saved roster. Run `list` to show everyone.
 Check the current displayed number before editing or deleting a member.
 
-### Can I update a whole group's tags?
+### Can I update a whole group's tags? {id="can-i-update-a-whole-groups-tags"}
 
 Yes. Use `find` or `filter t/TAG` to display the group, then use `tagall t/TAG` or `untagall t/TAG`.
 Only the displayed members change. See [Tag or untag a group](#tag-or-untag-a-group-tagall-untagall).

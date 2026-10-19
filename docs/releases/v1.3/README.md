@@ -1,3 +1,9 @@
+---
+layout: default.md
+title: "v1.3 release records"
+pageNav: 3
+---
+
 # v1.3 release records
 
 This directory records the published TrackCall v1.3 MVP deliverables, including
