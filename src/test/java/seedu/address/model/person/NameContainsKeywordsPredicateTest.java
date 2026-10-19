@@ -57,6 +57,28 @@ public class NameContainsKeywordsPredicateTest {
     }
 
     @Test
+    public void test_partialNameWord_returnsTrue() {
+        assertTrue(new NameContainsKeywordsPredicate(List.of("ali"))
+                .test(new PersonBuilder().withName("Alice Tan").build()));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("LIC"))
+                .test(new PersonBuilder().withName("Alice Tan").build()));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("ice"))
+                .test(new PersonBuilder().withName("Alice Tan").build()));
+        assertTrue(new NameContainsKeywordsPredicate(List.of("missing", "aN"))
+                .test(new PersonBuilder().withName("Alice Tan").build()));
+    }
+
+    @Test
+    public void test_nonContiguousOrLongerKeyword_returnsFalse() {
+        assertFalse(new NameContainsKeywordsPredicate(List.of("alce"))
+                .test(new PersonBuilder().withName("Alice Tan").build()));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("Alicee"))
+                .test(new PersonBuilder().withName("Alice Tan").build()));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("ceTa"))
+                .test(new PersonBuilder().withName("Alice Tan").build()));
+    }
+
+    @Test
     public void test_nameDoesNotContainKeywords_returnsFalse() {
         // Zero keywords
         NameContainsKeywordsPredicate predicate = new NameContainsKeywordsPredicate(List.of());

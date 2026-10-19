@@ -647,7 +647,7 @@ Overlapping stories are consolidated as follows:
 * Rows 9 and 14 share US09.
 * Rows 22 and 23 share US17. Class-based sorting is recorded in US33.
 * Row 28 is covered by the group-removal workflow in US10.
-* Row 24 is split between complete-word lookup (US05) and substring lookup (US26).
+* Row 24 is covered by name lookup (US05), including substring lookup (US26).
 
 #### Stories selected for the MVP
 
@@ -675,6 +675,7 @@ Overlapping stories are consolidated as follows:
 | US23 | `***` | club secretary | assign a valid group tag to a member | represent groups such as Committee or Batch2026 |
 | US24 | `***` | club secretary | add a tag to one member while retaining their other tags | let that member belong to several groups |
 | US25 | `***` | club secretary | view a member's complete contact details and tags | check the correct record before using its details |
+| US26 | `**` | club secretary | search using part of a name word | find someone when I cannot remember the complete word |
 | US28 | `***` | club secretary | remove one member's tag while retaining their other tags | update their group membership without losing unrelated information |
 | US35 | `***` | club secretary | have exact duplicate records rejected during data entry | avoid recording the same contact details twice |
 
@@ -698,7 +699,6 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 | US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Retained from the earlier DG; no privacy-display mode in the MVP. |
 | US19 | `**` | first-time user | follow a short in-app getting-started guide | learn the basic workflow step by step | Considered; the MVP provides command help, not an onboarding wizard. |
 | US22 | `**` | club secretary | review imported member records | confirm that an import completed correctly | Considered with US21; no separate review step for imported records in the MVP. |
-| US26 | `**` | club secretary | search using part of a name word | find someone when I cannot remember the complete word | Considered; the MVP uses complete-word matching. |
 | US27 | `**` | club secretary | search by phone number | identify a member when I only have their number | Considered; the MVP searches names only. |
 | US29 | `**` | club secretary | rename a group tag across its members | correct a group name without rebuilding its membership | Considered; no atomic global rename operation in the MVP. |
 | US30 | `**` | club secretary | update a non-tag field for a group in one operation | handle repeated renewal changes efficiently | Considered; bulk changes in the MVP affect tags only. |
@@ -723,7 +723,7 @@ These rules describe the selected MVP and apply to the use cases below.
    whitespace. Store each tag once per member and display tags in ASCII order: digits,
    uppercase letters, then lowercase letters.
 4. `list` resets all searches and tag filters. `find KEYWORD [MORE_KEYWORDS]` searches the full
-   roster and replaces the previous search and filters. It matches complete name words,
+   roster and replaces the previous search and filters. It matches complete or partial name words,
    ignores letter case, and accepts a match on any keyword. Repeated keywords do not repeat records.
 5. `filter t/TAG` narrows the currently displayed list using exact, case-sensitive tag matching.
    Repeated filters retain the intersection of the tags and the active name search. A valid
@@ -866,13 +866,13 @@ These are representative user workflows for the planned product, not implementat
 
 #### UC02: Find and update a member
 
-**Related stories:** US03, US04, US05, US24, US25, US28.
+**Related stories:** US03, US04, US05, US24, US25, US26, US28.
 
 **Goal:** correct one member's record.
 
 **MSS**
 
-1. The secretary searches for complete words from the member's name.
+1. The secretary searches for complete words or parts of words from the member's name.
 2. TrackCall lists matching records and their current indices.
 3. The secretary checks the contact details to identify the intended member, then submits its
    displayed index and the fields to change.
@@ -894,14 +894,18 @@ An edited member that no longer matches the search or filters disappears from th
 but remains in the roster. The secretary can use `list` to see it again.
 
 The search command is `find KEYWORD [MORE_KEYWORDS]`. It accepts one or more whitespace-separated
-keywords, ignores case, matches complete name words, and returns records matching any keyword in
-address-book order, or in name order while `sort` is active.
+keywords, ignores case, matches complete or partial name words, and returns records matching any keyword
+in address-book order, or in name order while `sort` is active.
 
 A successful search reports `1 member listed.`, `N members listed.`, or
 `0 members listed.` and does not save the data file. `find` with no keyword reports
 `Invalid command format.` followed by the `find` usage; a wrong-case command such as
 `FIND John` reports `Unknown command. Type help for available commands.` A new `find` searches the
 complete roster and replaces the previous search and filters.
+
+Partial matching uses contiguous text within a name word: `Jo`, `oh`, and `hn` each match `John Tan`.
+It does not correct spelling or match across spaces. `find oh Tan` matches either keyword, and
+repeated keywords do not duplicate members. Only names are searched; contact details and tags are excluded.
 
 #### UC03: Update a group's tags
 
@@ -1160,7 +1164,7 @@ such as incremental delivery, are also not product NFRs.
 | Displayed list | The records currently visible after the active search and tag filters. It is the target set for a bulk tag command. |
 | Active search and filters | The current name-search condition and cumulative tag conditions used to determine which records are displayed. A new `find` replaces them; `list` clears them. |
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
-| Complete-word matching | Matching a whole word in a name. For example, `John` matches `John Tan`, but `Jo` does not. |
+| Partial-word matching | Matching any contiguous part of a name word, ignoring case. For example, `John`, `Jo`, and `oh` all match `John Tan`. |
 | Bulk tag update | Adding or removing one tag for the fixed set of members displayed when the command is submitted. |
 | Duplicate record | A record whose trimmed name, phone, email, and address all exactly match another record, including case and internal spacing. Tags are ignored. |
 | No-op | A valid operation that leaves record values unchanged. A valid data-changing no-op can still retry saving; a bulk command with no targets is an error. |
@@ -1232,7 +1236,7 @@ platform or release package has been verified. Use a disposable folder and synth
    Add another record matching the original Bob's name, phone, email, and address exactly.
    It must be rejected with the duplicate contact details message and suggest `edit`.
 6. Run `find Nobody`, then `list`. Expect `0 members listed.`, then `Showing N members.` for the
-   total roster size. Test multiple name keywords, case-insensitive complete-word matching, and
+   total roster size. Test multiple name keywords, case-insensitive partial-word matching, and
    rejection of `find` with no keyword.
    Run `filter t/committee`, then another filter. Check that the second filter narrows the current
    view, `find` starts again from the full roster, and `list` restores everyone. A missing tag,

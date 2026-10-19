@@ -172,8 +172,9 @@ Check the member number again after any command that changes the list.
 
 `find Alice Tan` searches the complete roster for names containing **Alice or Tan**.
 
-* Matching ignores letter case and uses complete words.
-  `Alice` matches `Alice Tan`, but `Ali` does not.
+* Matching ignores letter case and accepts any contiguous part of a name word.
+  `Alice`, `Ali`, `lic`, and `ice` all match `Alice Tan`.
+  For example, `find ali tan` shows names containing either `ali` or `tan`.
 * Each new search replaces the previous search.
 * Phone numbers and tags are not searched.
 * Supply at least one keyword.
