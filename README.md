@@ -15,7 +15,8 @@ Type commands to find members and update their contact details quickly.
 * Save data changes locally, with clear recovery guidance if saving fails and rollback for a failed clear.
 * Keep the previous valid saved roster as an automatic backup, and recover damaged files at startup.
 * Leave the roster file unchanged when running read-only commands.
-* Narrow the displayed members by an exact tag using `filter t/TAG`, then use their displayed numbers to edit or delete.
+* Narrow the displayed members by an exact tag using `filter t/TAG`, then use their displayed numbers to edit, tag, untag, or delete.
+* Add or remove one member's tag with `tag INDEX t/TAG` or `untag INDEX t/TAG`, retaining their other tags.
 * Add or remove a tag for every displayed member with `tagall t/TAG` or `untagall t/TAG`.
 * Import and export CSV member records, and sort the displayed list by name.
 

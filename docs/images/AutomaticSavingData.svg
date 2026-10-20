@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="780" height="1160" viewBox="0 0 780 1160" role="img" aria-labelledby="title desc">
+  <title id="title">Automatic saving workflow</title>
+  <desc id="desc">Successful read-only commands show their result without saving. Data-changing commands save the roster. A failed clear restores the previous roster; other failed saves keep the in-memory change and show recovery guidance.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#806b53" />
+    </marker>
+    <style>
+      .bg { fill: #fffdf9; }
+      .box { fill: #f5efe5; stroke: #a48d71; stroke-width: 2; }
+      .diamond { fill: #f5efe5; stroke: #a48d71; stroke-width: 2; }
+      .line { fill: none; stroke: #806b53; stroke-width: 2; marker-end: url(#arrow); }
+      .text { fill: #382e25; font-family: Arial, sans-serif; font-size: 18px; text-anchor: middle; }
+      .small { fill: #382e25; font-family: Arial, sans-serif; font-size: 15px; text-anchor: middle; }
+      .label { fill: #382e25; font-family: Arial, sans-serif; font-size: 15px; font-weight: 700; }
+      .end { fill: #382e25; }
+    </style>
+  </defs>
+  <rect class="bg" width="780" height="1160" />
+
+  <circle class="end" cx="390" cy="32" r="12" />
+  <path class="line" d="M390 44 V72" />
+  <rect class="box" x="235" y="75" width="310" height="60" rx="16" />
+  <text class="text" x="390" y="112">User submits a command</text>
+
+  <path class="line" d="M390 135 V160" />
+  <polygon class="diamond" points="390,160 520,220 390,280 260,220" />
+  <text class="small" x="390" y="214"><tspan x="390">Input valid and</tspan><tspan x="390" dy="20">command succeeds?</tspan></text>
+  <path class="line" d="M260 220 H105 V305" />
+  <text class="label" x="188" y="208">No</text>
+  <rect class="box" x="20" y="305" width="250" height="85" rx="16" />
+  <text class="text" x="145" y="341"><tspan x="145">Show error;</tspan><tspan x="145" dy="23">roster unchanged</tspan></text>
+  <path class="line" d="M145 390 V422" />
+  <circle cx="145" cy="439" r="12" fill="#fffdf9" stroke="#382e25" stroke-width="3" />
+  <circle class="end" cx="145" cy="439" r="6" />
+
+  <path class="line" d="M390 280 V325" />
+  <text class="label" x="404" y="310">Yes</text>
+  <polygon class="diamond" points="390,325 520,385 390,445 260,385" />
+  <text class="small" x="390" y="380"><tspan x="390">Data-changing</tspan><tspan x="390" dy="20">command?</tspan></text>
+  <path class="line" d="M520 385 H650 V468" />
+  <text class="label" x="573" y="372">No</text>
+  <rect class="box" x="525" y="468" width="230" height="76" rx="16" />
+  <text class="text" x="640" y="500"><tspan x="640">Show result</tspan><tspan x="640" dy="22">without saving</tspan></text>
+  <path class="line" d="M640 544 V574" />
+  <circle cx="640" cy="591" r="12" fill="#fffdf9" stroke="#382e25" stroke-width="3" />
+  <circle class="end" cx="640" cy="591" r="6" />
+
+  <path class="line" d="M390 445 V485" />
+  <text class="label" x="404" y="470">Yes</text>
+  <rect class="box" x="190" y="485" width="400" height="100" rx="16" />
+  <text class="text" x="390" y="520"><tspan x="390">Save the roster atomically</tspan><tspan class="small" x="390" dy="24">add, edit, tag, untag, delete, tagall,</tspan><tspan class="small" x="390" dy="20">untagall, clear, import</tspan></text>
+
+  <path class="line" d="M390 585 V620" />
+  <polygon class="diamond" points="390,620 510,675 390,730 270,675" />
+  <text class="small" x="390" y="681">Save succeeds?</text>
+  <path class="line" d="M270 675 H130 V770" />
+  <text class="label" x="188" y="662">Yes</text>
+  <rect class="box" x="25" y="770" width="210" height="68" rx="16" />
+  <text class="text" x="130" y="812">Show result</text>
+  <path class="line" d="M130 838 V870" />
+  <circle cx="130" cy="887" r="12" fill="#fffdf9" stroke="#382e25" stroke-width="3" />
+  <circle class="end" cx="130" cy="887" r="6" />
+
+  <path class="line" d="M390 730 V765" />
+  <text class="label" x="404" y="755">No</text>
+  <polygon class="diamond" points="390,765 510,820 390,875 270,820" />
+  <text class="small" x="390" y="826">Was it clear?</text>
+
+  <path class="line" d="M270 820 H120 V925" />
+  <text class="label" x="188" y="807">Yes</text>
+  <rect class="box" x="15" y="925" width="225" height="92" rx="16" />
+  <text class="small" x="127" y="960"><tspan x="127">Restore previous roster</tspan><tspan x="127" dy="21">and show clear save error</tspan></text>
+  <path class="line" d="M127 1017 V1065 H390" />
+
+  <path class="line" d="M510 820 H660 V925" />
+  <text class="label" x="575" y="807">No</text>
+  <rect class="box" x="540" y="925" width="225" height="92" rx="16" />
+  <text class="small" x="652" y="960"><tspan x="652">Keep change in memory;</tspan><tspan x="652" dy="21">show retry guidance</tspan></text>
+  <path class="line" d="M652 1017 V1065 H390" />
+
+  <path class="line" d="M390 1065 V1090" />
+  <circle cx="390" cy="1107" r="12" fill="#fffdf9" stroke="#382e25" stroke-width="3" />
+  <circle class="end" cx="390" cy="1107" r="6" />
+</svg>
