@@ -3,14 +3,13 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonSelectionPredicate;
 
 /**
  * Shows only the members at the specified indexes in the current displayed list.
@@ -52,10 +51,10 @@ public class ShowCommand extends Command {
             }
         }
 
-        Set<Person> selected = targetIndexes.stream()
+        List<Person> selected = targetIndexes.stream()
                 .map(index -> displayed.get(index.getZeroBased()))
-                .collect(Collectors.toSet());
-        model.filterFilteredPersonList(selected::contains);
+                .toList();
+        model.filterFilteredPersonList(new PersonSelectionPredicate(selected));
         int count = model.getFilteredPersonList().size();
         return new CommandResult(count == 1 ? MESSAGE_SINGLE : String.format(MESSAGE_MULTIPLE, count));
     }

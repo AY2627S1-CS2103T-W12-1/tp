@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonSelectionPredicate;
+import seedu.address.model.person.exceptions.DuplicatePersonException;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.AddressBookBuilder;
 import seedu.address.testutil.PersonBuilder;
@@ -118,6 +120,21 @@ public class ModelManagerTest {
     @Test
     public void filterFilteredPersonList_nullPredicate_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> modelManager.filterFilteredPersonList(null));
+    }
+
+    @Test
+    public void setPerson_duplicateReplacement_keepsSelectedMemberAndRosterUnchanged() {
+        AddressBook original = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build();
+        modelManager = new ModelManager(original, new UserPrefs());
+        modelManager.filterFilteredPersonList(new PersonSelectionPredicate(List.of(ALICE)));
+
+        assertThrows(DuplicatePersonException.class, () -> modelManager.setPerson(ALICE, BENSON));
+
+        assertEquals(List.of(ALICE), modelManager.getFilteredPersonList());
+        assertEquals(original, modelManager.getAddressBook());
+        modelManager.setPerson(ALICE, new PersonBuilder(ALICE).withPhone("90000001").build());
+        assertEquals(List.of(new PersonBuilder(ALICE).withPhone("90000001").build()),
+                modelManager.getFilteredPersonList());
     }
 
     @Test

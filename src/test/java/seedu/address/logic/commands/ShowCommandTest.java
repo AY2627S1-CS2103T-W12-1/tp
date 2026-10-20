@@ -20,6 +20,10 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
+import seedu.address.testutil.EditPersonDescriptorBuilder;
+import seedu.address.testutil.PersonBuilder;
 
 public class ShowCommandTest {
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
@@ -58,6 +62,54 @@ public class ShowCommandTest {
         new ShowCommand(List.of(index(1), index(3))).execute(sortedModel);
 
         assertEquals(List.of(ALICE, CARL), sortedModel.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_bulkTagChanges_keepsOnlySelectedMembersVisible() throws CommandException {
+        new ShowCommand(List.of(index(1), index(3))).execute(model);
+        Tag tag = new Tag("selected");
+
+        new TagAllCommand(tag).execute(model);
+
+        Person taggedAlice = new PersonBuilder(ALICE).withTags("friends", "selected").build();
+        Person taggedCarl = new PersonBuilder(CARL).withTags("selected").build();
+        assertEquals(List.of(taggedAlice, taggedCarl), model.getFilteredPersonList());
+        assertEquals(BENSON, model.getAddressBook().getPersonList().get(1));
+
+        new UntagAllCommand(tag).execute(model);
+
+        assertEquals(List.of(ALICE, CARL), model.getFilteredPersonList());
+        assertEquals(getTypicalAddressBook(), model.getAddressBook());
+    }
+
+    @Test
+    public void execute_contactEditAfterRepeatedShow_keepsSelectionAcrossEveryPredicate() throws CommandException {
+        new ShowCommand(List.of(index(1), index(3))).execute(model);
+        new ShowCommand(List.of(index(2))).execute(model);
+
+        new EditCommand(index(1), new EditPersonDescriptorBuilder().withPhone("91234567").build()).execute(model);
+
+        Person editedCarl = new PersonBuilder(CARL).withPhone("91234567").build();
+        assertEquals(List.of(editedCarl), model.getFilteredPersonList());
+        assertEquals(editedCarl, model.getAddressBook().getPersonList().get(2));
+        assertEquals(ALICE, model.getAddressBook().getPersonList().getFirst());
+    }
+
+    @Test
+    public void execute_contactEdit_doesNotSelectAnotherMemberWithTheSameName() throws CommandException {
+        Person sameNameMember = new PersonBuilder(ALICE).withPhone("90000001").build();
+        AddressBook book = new AddressBook();
+        book.addPerson(ALICE);
+        book.addPerson(sameNameMember);
+        Model sameNameModel = new ModelManager(book, new UserPrefs());
+        new ShowCommand(List.of(index(1))).execute(sameNameModel);
+
+        new EditCommand(index(1), new EditPersonDescriptorBuilder().withPhone("90000002").build())
+                .execute(sameNameModel);
+
+        assertEquals(List.of(new PersonBuilder(ALICE).withPhone("90000002").build()),
+                sameNameModel.getFilteredPersonList());
+        assertEquals(sameNameMember, sameNameModel.getAddressBook().getPersonList().get(1));
     }
 
     @Test
