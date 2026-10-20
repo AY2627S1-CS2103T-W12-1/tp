@@ -105,6 +105,9 @@ The diagram shows the v1.4 alpha structure; the current source build also includ
 `MainWindow` contains `CommandBox`, `ResultDisplay`, `PersonListPanel`, `MemberDetailsPanel`,
 and `StatusBarFooter`.
 These classes inherit from `UiPart`, which provides behaviour shared by visible interface parts.
+`HelpWindow` builds its command cards from `CommandHelp` in the Logic component.
+`MainWindow` uses `WindowPlacement` to restore the saved window size and position.
+`RosterRecoveryDialog` is a JavaFX `Alert` that `MainApp` shows when the saved roster cannot be loaded.
 
 The interface uses JavaFX. Matching `.fxml` files in `src/main/resources/view` define the layouts.
 For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/resources/view/MainWindow.fxml)
@@ -149,6 +152,9 @@ An implementation may need several calls to complete that step.
 `AddressBookParser` creates a command-specific parser, represented here as `XYZCommandParser`.
 For example, `AddCommandParser` uses the helper classes to create an `AddCommand`.
 `AddressBookParser` returns the result as a `Command`.
+`AddCommandParser` and `EditCommandParser` use `PrefixValidator` to reject unsupported field prefixes.
+`TagAllCommandParser`, `UntagAllCommandParser`, and `RenameTagCommandParser` use `BulkTagArgumentParser`
+to check tag values.
 
 Command-specific parsers implement the shared `Parser` interface.
 This allows common handling where appropriate, including in tests.
@@ -165,6 +171,8 @@ The Model component stores:
 * **Displayed data:** a filtered list, such as name-search results or an index selection.
   A `SortedList` wraps it for optional name sorting while the stored roster keeps its original order.
   An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
+* **Active tag filters:** the tags applied by `filter`, in the order they were added.
+  `list`, `find`, and a successful `import` or `clear` remove them.
 * **Preferences:** a `UserPrefs` object, currently containing GUI settings.
   Other components access it through `ReadOnlyUserPrefs`.
 
@@ -188,11 +196,13 @@ Each `Person` would reference those shared objects instead of holding its own co
 
 **API:** [`Storage.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/storage/Storage.java)
 
-<img src="images/StorageClassDiagram.png" width="550" alt="StorageManager and the JSON storage classes">
+<img src="images/StorageClassDiagram.png" width="550" alt="StorageManager, the JSON storage classes, and the CSV import and export classes">
 
 Storage reads and writes member data and preferences as JSON.
 `StorageManager` delegates file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage`, one class per file.
 It depends on model classes because it saves and restores model objects.
+`ImportCommand` and `ExportCommand` use the CSV classes directly, not through `StorageManager`.
+`CsvAddressBookCsv` holds the CSV header and format shared by the importer and exporter.
 
 CSV export is implemented as a separate `CsvAddressBookExporter` in the `storage` package. `ExportCommand` supplies the
 complete address book person list and the destination path; the exporter writes a UTF-8 CSV file with a header row and
