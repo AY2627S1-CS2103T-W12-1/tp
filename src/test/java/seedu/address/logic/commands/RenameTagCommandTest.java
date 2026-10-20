@@ -85,6 +85,30 @@ public class RenameTagCommandTest {
     }
 
     @Test
+    public void execute_sameTag_throwsCommandExceptionAndPreservesFilteredRoster() {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        model.filterFilteredPersonListByTag(friends);
+
+        assertCommandFailure(new RenameTagCommand(friends, new Tag("friends")), model,
+                RenameTagCommand.MESSAGE_SAME_TAG);
+        assertEquals(List.of(friends), model.getActiveTagFilters());
+    }
+
+    @Test
+    public void execute_renamingActiveFilterTag_keepsFilterAndHidesRenamedMembers() {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        model.filterFilteredPersonListByTag(friends);
+        Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        expectedModel.filterFilteredPersonListByTag(friends);
+        renameTagForAll(expectedModel, "friends", "buddies");
+
+        assertCommandSuccess(new RenameTagCommand(friends, buddies), model,
+                "Renamed tag \"friends\" to \"buddies\" for 3 member(s).", expectedModel);
+        assertTrue(model.getFilteredPersonList().isEmpty());
+        assertEquals(List.of(friends), model.getActiveTagFilters());
+    }
+
+    @Test
     public void execute_tagNotUsed_throwsCommandException() {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
