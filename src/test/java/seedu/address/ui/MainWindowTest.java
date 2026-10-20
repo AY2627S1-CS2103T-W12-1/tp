@@ -151,6 +151,39 @@ public class MainWindowTest {
     }
 
     @Test
+    public void emailFilterChip_replacesSelectionAndCanBeRemovedWithoutSaving() throws Exception {
+        onJavaFxThread(() -> {
+            enter("edit 1 e/alice@example.com t/committee");
+            enter("edit 2 e/bob@school.edu t/committee");
+        });
+        Path dataFile = temporaryFolder.resolve("members.json");
+        String savedRoster = Files.readString(dataFile);
+        onJavaFxThread(() -> {
+            enter("sort");
+            enter("find Bob");
+            enter("filter t/committee");
+            enter("show 1");
+            enter("findemail @example.com");
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+            assertEquals(List.of("Email: @example.com"), chipLabels(chips));
+            assertTrue(chips.isVisible());
+            assertTrue(((HBox) chips.getChildren().getFirst()).getStyleClass().contains("filter-chip-email"));
+            assertDisplayedNames("Alice Tan");
+
+            enter("filter t/committee");
+            enter("find Bob");
+            assertDisplayedNames();
+            removeChip(chips, 2);
+            assertDisplayedNames("Alice Tan");
+            assertEquals(List.of("Email: @example.com", "Tag: committee"), chipLabels(chips));
+            removeChip(chips, 0);
+            assertEquals(List.of("Tag: committee"), chipLabels(chips));
+            assertDisplayedNames("Alice Tan", "Bob Lee");
+        });
+        assertEquals(savedRoster, Files.readString(dataFile));
+    }
+
+    @Test
     public void activeFilterChips_removeIndividualFiltersAndUpdateDisplayedMembers() throws Exception {
         onJavaFxThread(() -> {
             Person alice = model.getAddressBook().getPersonList().get(0);
@@ -286,6 +319,31 @@ public class MainWindowTest {
             assertTrue(feedback.getText().contains("Deleted member"));
             assertFalse(feedback.getText().contains("90000002"));
         });
+    }
+
+    @Test
+    public void enter_tagWithDetailsHidden_reportsOnlyNameAndTagsAndSavesMember() throws Exception {
+        Person original = new PersonBuilder().withName("Alice Tan").withPhone("90000123")
+                .withEmail("alice@example.com").withAddress("12 Test Road").withTags("zebra", "friends").build();
+        Person expected = new PersonBuilder(original).withTags("zebra", "friends", "committee").build();
+        onJavaFxThread(() -> {
+            model.setPerson(model.getAddressBook().getPersonList().getFirst(), original);
+            ScrollPane details = (ScrollPane) window.getPrimaryStage().getScene().lookup("#detailsScroll");
+            assertFalse(details.isVisible());
+
+            enter("tag 1 t/committee");
+
+            assertFalse(details.isVisible());
+            assertTrue(feedback.getText().contains("Name: Alice Tan"));
+            assertTrue(feedback.getText().contains("Tags: committee, friends, zebra"));
+            for (String hidden : List.of("Phone:", "Email:", "Address:", original.getPhone().value,
+                    original.getEmail().value, original.getAddress().value)) {
+                assertFalse(feedback.getText().contains(hidden), hidden);
+            }
+            assertEquals(expected, model.getAddressBook().getPersonList().getFirst());
+        });
+        assertEquals(expected, new JsonAddressBookStorage(temporaryFolder.resolve("members.json"))
+                .readAddressBook().orElseThrow().getPersonList().getFirst());
     }
 
     @Test

@@ -27,7 +27,9 @@ public class CommandHelpTest {
                 ListCommand.COMMAND_WORD, ShowCommand.COMMAND_WORD,
                 HelpCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD,
                 ImportCommand.COMMAND_WORD, FilterCommand.COMMAND_WORD, SortCommand.COMMAND_WORD,
-                TagAllCommand.COMMAND_WORD, UntagAllCommand.COMMAND_WORD, RenameTagCommand.COMMAND_WORD), keywords);
+                TagCommand.COMMAND_WORD, UntagCommand.COMMAND_WORD, TagAllCommand.COMMAND_WORD,
+                UntagAllCommand.COMMAND_WORD,
+                RenameTagCommand.COMMAND_WORD), keywords);
         assertEquals(CommandHelp.values().length, keywords.size());
     }
 
@@ -48,9 +50,10 @@ public class CommandHelpTest {
     public void find_exactKeyword_onlyMatchesAvailableCommands() {
         assertTrue(CommandHelp.find("help").isPresent());
         assertTrue(CommandHelp.find("tagall").isPresent());
+        assertTrue(CommandHelp.find("tag").isPresent());
         assertTrue(CommandHelp.find("untagall").isPresent());
+        assertTrue(CommandHelp.find("untag").isPresent());
         assertTrue(CommandHelp.find("renametag").isPresent());
-        assertTrue(CommandHelp.find("tag").isEmpty());
         assertTrue(CommandHelp.find("filter").isPresent());
         assertTrue(CommandHelp.find("findemail").isPresent());
         assertTrue(CommandHelp.find("import").isPresent());

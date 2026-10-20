@@ -326,16 +326,18 @@
     -fx-border-color: transparent;
 }
 
-.filter-chip-name {
+.filter-chip-name, .filter-chip-email {
     -fx-background-color: #e2ebfa;
     -fx-border-color: #a9bede;
 }
 
-.filter-chip-name .label, .filter-chip-name .filter-chip-remove {
+.filter-chip-name .label, .filter-chip-name .filter-chip-remove,
+.filter-chip-email .label, .filter-chip-email .filter-chip-remove {
     -fx-text-fill: #284a75;
 }
 
-.filter-chip-name .filter-chip-remove:hover, .filter-chip-name .filter-chip-remove:focused {
+.filter-chip-name .filter-chip-remove:hover, .filter-chip-name .filter-chip-remove:focused,
+.filter-chip-email .filter-chip-remove:hover, .filter-chip-email .filter-chip-remove:focused {
     -fx-background-color: #cadbf2;
 }
 

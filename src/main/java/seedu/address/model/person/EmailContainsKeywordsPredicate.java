@@ -23,6 +23,11 @@ public class EmailContainsKeywordsPredicate implements Predicate<Person> {
         this.keywords = List.copyOf(keywords);
     }
 
+    /** Returns the immutable search terms for the active filter label. */
+    public List<String> getKeywords() {
+        return keywords;
+    }
+
     /**
      * Returns whether at least one keyword occurs in {@code person}'s email.
      * Case conversion uses a fixed locale so matching is independent of the computer's locale.

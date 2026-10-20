@@ -13,6 +13,7 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.model.person.EmailContainsKeywordsPredicate;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonSelectionPredicate;
@@ -29,7 +30,7 @@ public class ModelManager implements Model {
     private final FilteredList<Person> filteredPersons;
     /** Extra predicates used internally by commands and tests, without removable UI boxes. */
     private final List<Predicate<Person>> additionalFilters = new ArrayList<>();
-    /** Removable name and tag conditions, kept in the order they were applied. */
+    /** Removable name, email and tag conditions, kept in the order they were applied. */
     private final List<ActiveFilter> activeFilters = new ArrayList<>();
     /** Live display ordering; the underlying roster retains its stored order. */
     private final SortedList<Person> sortedPersons;
@@ -144,6 +145,8 @@ public class ModelManager implements Model {
         activeFilters.clear();
         if (predicate instanceof NameContainsKeywordsPredicate namePredicate) {
             activeFilters.add(ActiveFilter.createNameFilter(namePredicate));
+        } else if (predicate instanceof EmailContainsKeywordsPredicate emailPredicate) {
+            activeFilters.add(ActiveFilter.createEmailFilter(emailPredicate));
         } else {
             additionalFilters.add(predicate);
         }
