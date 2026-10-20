@@ -42,7 +42,8 @@ if () then ([clear])
     :Show clear save error;
 else ([other data-changing command])
     :Keep the change in memory only;
-    :Show save error with retry guidance;
+    :Show save error;
+    note right: Import reports its own error; other\ncommands also show recovery guidance
 endif
 stop
 @enduml

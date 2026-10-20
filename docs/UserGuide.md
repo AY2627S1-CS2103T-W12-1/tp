@@ -6,8 +6,10 @@ title: User Guide
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
 This guide covers the **current source build**, based on TrackCall v1.4 alpha, and its eighteen available commands.
-The selected-member privacy panel is newer than the v1.4 alpha release JAR.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
+
+The latest downloadable release is v1.3; the v1.4 alpha source build described here is not yet published.
+The commands and interface below describe that source build and may differ from the v1.3 download.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
 
@@ -29,8 +31,8 @@ Start with [Quick start](#quick-start), or use the [command summary](#command-su
    ```
 
 TrackCall opens with sample members and a welcome message on your first launch.
-The released v1.4 JAR uses the earlier full-card layout. To use the selected-member panel shown below,
-run this current source checkout with `./gradlew run`.
+To use the commands and selected-member panel described in this guide, run the current source checkout
+with `./gradlew run` after following the [Setting up guide](SettingUp.md).
 
 ### Read the interface
 
