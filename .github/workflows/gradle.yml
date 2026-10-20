@@ -10,7 +10,8 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.platform }}
+    # Avoid the ARM64 macOS capacity queue while preserving required check names.
+    runs-on: ${{ matrix.platform == 'macos-latest' && 'macos-15-intel' || matrix.platform }}
 
     steps:
       - name: Set up repository
