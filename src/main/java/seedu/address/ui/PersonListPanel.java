@@ -20,6 +20,8 @@ public class PersonListPanel extends UiPart<Region> {
     @FXML
     private ListView<Person> personListView;
 
+    private Runnable onSelectionChanged = () -> { };
+
     /**
      * Creates a {@code PersonListPanel} with the given {@code ObservableList}.
      */
@@ -27,6 +29,35 @@ public class PersonListPanel extends UiPart<Region> {
         super(FXML);
         personListView.setItems(personList);
         personListView.setCellFactory(listView -> new PersonListViewCell());
+        personListView.getSelectionModel().selectedItemProperty().addListener((unused, oldPerson, newPerson) ->
+                onSelectionChanged.run());
+    }
+
+    /** Notifies the details panel when an explicit roster selection changes. */
+    public void setOnSelectionChanged(Runnable listener) {
+        onSelectionChanged = listener;
+    }
+
+    public Person getSelectedPerson() {
+        return personListView.getSelectionModel().getSelectedItem();
+    }
+
+    public int getSelectedIndex() {
+        return personListView.getSelectionModel().getSelectedIndex();
+    }
+
+    /** Removes any revealed contact details before a command can change the roster. */
+    public void clearSelection() {
+        personListView.getSelectionModel().clearSelection();
+        onSelectionChanged.run();
+    }
+
+    public void focusList() {
+        personListView.requestFocus();
+    }
+
+    public boolean isListFocused() {
+        return personListView.isFocused();
     }
 
     /**

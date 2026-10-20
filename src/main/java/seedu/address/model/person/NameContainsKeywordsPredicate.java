@@ -13,7 +13,12 @@ public class NameContainsKeywordsPredicate implements Predicate<Person> {
     private final List<String> keywords;
 
     public NameContainsKeywordsPredicate(List<String> keywords) {
-        this.keywords = keywords;
+        this.keywords = List.copyOf(keywords);
+    }
+
+    /** Returns the words used by the current name search. */
+    public List<String> getKeywords() {
+        return keywords;
     }
 
     @Override
