@@ -30,6 +30,7 @@ import seedu.address.logic.commands.RenameTagCommand;
 import seedu.address.logic.commands.ShowCommand;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.TagAllCommand;
+import seedu.address.logic.commands.TagCommand;
 import seedu.address.logic.commands.UntagAllCommand;
 import seedu.address.logic.commands.UntagCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -104,6 +105,12 @@ public class AddressBookParserTest {
     public void parseCommand_tagAll_returnsTagAllCommand() throws Exception {
         assertEquals(new TagAllCommand(new Tag("committee")), parser.parseCommand("tagall t/committee"));
         assertEquals(new TagAllCommand(new Tag("committee")), parser.parseCommand("  tagall   t/committee  "));
+    }
+
+    @Test
+    public void parseCommand_tag_returnsTagCommand() throws Exception {
+        assertEquals(new TagCommand(Index.fromOneBased(2), new Tag("committee")),
+                parser.parseCommand("tag 2 t/committee"));
     }
 
     @Test

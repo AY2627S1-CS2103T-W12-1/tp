@@ -56,7 +56,7 @@ public class HelpWindowTest {
             help.show();
             Parent root = layout(980, 740);
             assertTrue(help.isShowing());
-            assertEquals(Set.of("list", "show", "sort", "find", "filter", "add", "edit", "untag", "tagall",
+            assertEquals(Set.of("list", "show", "sort", "find", "filter", "add", "edit", "tag", "untag", "tagall",
                     "untagall", "renametag", "export", "import", "delete", "clear", "help", "exit"),
                     root.lookupAll(".overview-keyword").stream()
                             .map(node -> ((Button) node).getText()).collect(Collectors.toSet()));

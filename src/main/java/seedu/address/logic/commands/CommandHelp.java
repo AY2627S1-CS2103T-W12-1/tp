@@ -60,6 +60,14 @@ public enum CommandHelp {
             "Use a current positive list number and supply at least one field. Invalid values or duplicate contact "
                     + "details are rejected. If saving fails, the edit remains in this session and the command box "
                     + "clears; follow the recovery guidance before exiting."),
+    TAG("Manage members", "tag", "Tag one member", "tag INDEX t/TAG", "tag 1 t/committee",
+            "Adds one tag to the member at a displayed list number while retaining their other tags.",
+            "Adds committee to member 1 and shows their name and updated tags after saving.",
+            "Check the current list number first. Existing tags, searches, filters and sorting remain in place. "
+                    + "A member who already has the tag is left unchanged.",
+            "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
+                    + "Invalid input or a missing member is rejected. If saving fails, the change remains in this "
+                    + "session; follow the recovery guidance before exiting."),
     TAGALL("Manage members", "tagall", "Tag every displayed member", "tagall t/TAG", "tagall t/committee",
             "Adds one tag to every member in the current list. Hidden members and other tags stay unchanged.",
             "Adds committee to each displayed member, skips members who already have it, and reports both counts "

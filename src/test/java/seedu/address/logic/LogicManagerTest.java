@@ -455,6 +455,29 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_tagOnFilteredList_updatesOneMemberAndSaves() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("filter t/friends");
+
+        logic.execute("tag 2 t/committee");
+
+        assertTrue(model.getFilteredPersonList().get(1).getTags().contains(new Tag("committee")));
+        assertFalse(model.getFilteredPersonList().get(0).getTags().contains(new Tag("committee")));
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook().getPersonList(), saved.getPersonList());
+    }
+
+    @Test
+    public void execute_tagWithExistingTag_stillSaves() throws Exception {
+        model.addPerson(ALICE);
+
+        logic.execute("tag 1 t/friends");
+
+        assertTrue(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    @Test
     public void execute_tagAllWithNoChanges_stillSaves() throws Exception {
         model.addPerson(BOB);
         Path dataFile = temporaryFolder.resolve("addressBook.json");
