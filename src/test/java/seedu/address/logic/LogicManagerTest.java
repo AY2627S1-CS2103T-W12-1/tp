@@ -394,6 +394,10 @@ public class LogicManagerTest {
         assertEquals(List.of(), logic.getFilteredPersonList());
 
         logic.execute("find Alice");
+        assertEquals(List.of(), logic.getFilteredPersonList());
+        logic.removeActiveFilter(logic.getActiveFilters().get(2));
+        assertEquals(List.of(), logic.getFilteredPersonList());
+        logic.removeActiveFilter(logic.getActiveFilters().get(1));
         assertEquals(List.of(alice), logic.getFilteredPersonList());
         assertEquals("1 member(s) listed with tag \"year1\".",
                 logic.execute("filter t/year1").getFeedbackToUser());

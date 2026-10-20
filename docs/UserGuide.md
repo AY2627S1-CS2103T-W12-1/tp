@@ -5,7 +5,8 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers **TrackCall v1.4 alpha** and its fifteen available commands.
+This guide covers the **current source build**, based on TrackCall v1.4 alpha, and its fifteen available commands.
+The selected-member privacy panel is newer than the v1.4 alpha release JAR.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
@@ -28,19 +29,27 @@ Start with [Quick start](#quick-start), or use the [command summary](#command-su
    ```
 
 TrackCall opens with sample members and a welcome message on your first launch.
+The released v1.4 JAR uses the earlier full-card layout. To use the selected-member panel shown below,
+run this current source checkout with `./gradlew run`.
 
 ### Read the interface
 
-![TrackCall showing the command box, welcome message, member list, and data-file status bar](images/user-guide/interface.png)
+![TrackCall showing the command box, compact roster, and selected member details](images/user-guide/interface.png)
 
-*TrackCall on startup. Your data-file path will depend on where you placed the JAR.*
+*TrackCall with one sample member selected. Your data-file path will depend on where you placed the JAR.*
 
 From top to bottom:
 
 * **Command box:** type commands here.
 * **Result area:** read success messages and errors.
-* **Member list:** view member numbers, contact details, and tags.
+* **Roster:** view member numbers, names, and tags. Contact details are hidden here.
+* **Member details:** select a roster row to reveal that member's phone, email, and address.
+  Use the adjacent copy icons to copy a field. Press **F2** to focus the roster, use the arrow keys
+  to choose a member, and press **Escape** to hide the details and return to the command box.
 * **Status bar:** see where your member data is saved.
+
+Running a command hides the selected details. Successful `add`, `edit`, and `delete` feedback omits
+phone, email, and address on screen. Select a member again to inspect those fields.
 
 ### Try your first commands
 
@@ -158,7 +167,7 @@ Extra arguments such as `sort date` produce `Invalid command format. Usage: sort
 
 ### Update a member: `edit`
 
-1. Check the member's current displayed number and contact details.
+1. Select the member and check their displayed number and contact details in the details panel.
 2. Supply that number and at least one field:
 
    ```text
@@ -180,17 +189,23 @@ Check the member number again after any command that changes the list.
 
 ### Find members: `find`
 
-`find Alice Tan` searches the complete roster for names containing **Alice or Tan**.
+`find Alice Tan` shows currently displayed members whose names contain **Alice or Tan**.
 
 * Matching ignores letter case and uses complete words.
   `Alice` matches `Alice Tan`, but `Ali` does not.
-* Each new search replaces the previous search.
+* Each new `find` adds another name filter. For example, `find Alice Tan` followed by `find Tan`
+  keeps members matching both searches.
 * Phone numbers and tags are not searched.
 * Supply at least one keyword.
 
 The result reports `1 member listed.` or `N members listed.`
 No matches produce `0 members listed.` and an empty list. No records are deleted.
-Use `list` to show everyone again. Searching does not save the data file.
+Active name and tag filters appear as boxes under the command field. Name boxes are blue and tag boxes
+are green. The boxes appear left to right in the order applied. With an unchanged roster, their order
+does not change who matches:
+`filter t/committee` then `find Alice` gives the same final members as `find Alice` then
+`filter t/committee`. Select a box's **X** to remove only that condition, or use `list` to show everyone again.
+Searching does not save the data file.
 
 ### Filter displayed members by tag: `filter`
 
@@ -209,11 +224,11 @@ stays the same, and their displayed numbers update.
 * Matching is exact and case-sensitive: `committee` and `Committee` are different tags.
 * Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
   Applying the same tag again does not add a duplicate condition.
-* Use `list` to show everyone again. A new `find` searches the whole roster and replaces previous filters.
+* A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
 
 The result reports `N member(s) listed with tag "TAG".` for one active tag filter. With multiple
 active tags, it names every distinct tag in the order applied, for example:
-`1 member(s) listed with tags "committee", "year1".` A new `find` or `list` clears these tag filters.
+`1 member(s) listed with tags "committee", "year1".` Use `list` to clear all active filters.
 No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
 
 Check the displayed numbers before using `edit` or `delete`. Editing keeps the active search and filters.

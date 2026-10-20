@@ -5,6 +5,7 @@ import java.util.function.Predicate;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
+import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 
@@ -86,6 +87,9 @@ public interface Model {
      */
     void filterFilteredPersonList(Predicate<Person> predicate);
 
+    /** Adds a separately removable name search to the current displayed list. */
+    void filterFilteredPersonListByName(NameContainsKeywordsPredicate predicate);
+
     /**
      * Narrows the displayed list to persons with {@code tag} and records the active tag filter.
      */
@@ -93,4 +97,10 @@ public interface Model {
 
     /** Returns the distinct active tag filters in the order they were applied. */
     List<Tag> getActiveTagFilters();
+
+    /** Returns removable name and tag filters in the order they were applied. */
+    List<ActiveFilter> getActiveFilters();
+
+    /** Removes exactly one active filter while retaining the others. */
+    void removeActiveFilter(ActiveFilter filter);
 }
