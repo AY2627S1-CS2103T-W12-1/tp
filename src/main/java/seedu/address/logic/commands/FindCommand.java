@@ -8,14 +8,15 @@ import seedu.address.model.person.NameContainsKeywordsPredicate;
 
 /**
  * Narrows the displayed list to persons whose names contain any of the argument keywords.
- * Keyword matching is case insensitive.
+ * Keyword matching is case insensitive and accepts partial name words.
  */
 public class FindCommand extends Command {
 
     public static final String COMMAND_WORD = "find";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds displayed persons whose names contain any of "
-            + "the specified keywords (case-insensitive) and displays them as a list with index numbers.\n"
+            + "the specified keywords (case-insensitive, partial words allowed) "
+            + "and displays them as a list with index numbers.\n"
             + "Parameters: KEYWORD [MORE_KEYWORDS]...\n"
             + "Example: " + COMMAND_WORD + " alice bob charlie";
     public static final String MESSAGE_SINGLE = "1 member listed.";

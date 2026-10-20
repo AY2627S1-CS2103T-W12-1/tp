@@ -214,8 +214,9 @@ file stays unchanged. Follow [Correcting errors](#correcting-errors) before exit
 
 `find Alice Tan` shows currently displayed members whose names contain **Alice or Tan**.
 
-* Matching ignores letter case and uses complete words.
-  `Alice` matches `Alice Tan`, but `Ali` does not.
+* Matching ignores letter case and accepts any contiguous part of a name word.
+  `Alice`, `Ali`, `lic`, and `ice` all match `Alice Tan`.
+  For example, `find ali tan` shows names containing either `ali` or `tan`.
 * Each new `find` adds another name filter. For example, `find Alice Tan` followed by `find Tan`
   keeps members matching both searches.
 * Phone numbers and tags are not searched.
