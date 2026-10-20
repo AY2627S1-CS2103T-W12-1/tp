@@ -5,7 +5,7 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers **TrackCall v1.4 alpha** and its fourteen available commands.
+This guide covers **TrackCall v1.4 alpha** and its fifteen available commands.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
@@ -76,7 +76,7 @@ Use the [command summary](#command-summary) for a compact reference.
 Open help by typing `help`, pressing **F1**, or choosing **Help → Help**.
 The guide works without internet access and does not change or save the roster.
 
-The overview groups all fourteen commands into four categories:
+The overview groups all fifteen commands into four categories:
 Browse members, Manage members, Remove records, and Help & session.
 Each command has a short description and a runnable example.
 The overview uses two columns in a wide window and one in a narrow window.
@@ -130,7 +130,7 @@ with different contact details is allowed.
 
 ### Show all members: `list`
 
-`list` removes name-search and tag-filter restrictions and shows the full roster in its existing order.
+`list` removes name-search, email-search, and tag-filter restrictions and shows the full roster in its existing order.
 It does not change or save records.
 
 The result is `Showing 1 member.`, `Showing N members.`, or `No members in the address book.`
@@ -175,18 +175,39 @@ Check the member number again after any command that changes the list.
 * Matching ignores letter case and uses complete words.
   `Alice` matches `Alice Tan`, but `Ali` does not.
 * Each new search replaces the previous search.
-* Phone numbers and tags are not searched.
+* Email addresses, phone numbers, and tags are not searched.
 * Supply at least one keyword.
 
 The result reports `1 member listed.` or `N members listed.`
 No matches produce `0 members listed.` and an empty list. No records are deleted.
 Use `list` to show everyone again. Searching does not save the data file.
 
+### Find members by email: `findemail`
+
+Format: `findemail KEYWORD [MORE_KEYWORDS]...`
+
+Search by a full email address or any part of an email address:
+
+* `findemail alice@example.com` finds emails containing that address.
+* `findemail @example.com` finds emails containing that domain fragment.
+* `findemail @example.com @school.edu` finds emails containing **either** fragment.
+
+Matching ignores letter case. Whitespace separates keywords, and any keyword can match.
+Keywords are literal text, not regular expressions; names and phone numbers are not searched.
+Supply at least one keyword. No matches produce `0 members listed.` and an empty list.
+
+Each new `findemail` searches the full roster and replaces earlier name searches, email searches,
+and tag filters. Active name sorting stays applied. Use `filter t/TAG` to narrow the email results,
+or `list` to show everyone again. Searching does not change records or save the data file.
+Check the current displayed numbers before using `edit` or `delete`. Editing keeps the email search;
+if an edited email no longer matches, the member disappears from view but remains in the roster.
+Use `help findemail` for the same instructions offline.
+
 ### Filter displayed members by tag: `filter`
 
 `filter t/TAG` shows members with that tag from the **currently displayed list**.
 
-1. Use `list` to start with everyone, or `find` to start with name-search results.
+1. Use `list` to start with everyone, `find` for name-search results, or `findemail` for email-search results.
 2. Supply one tag:
 
    ```text
@@ -199,11 +220,11 @@ stays the same, and their displayed numbers update.
 * Matching is exact and case-sensitive: `committee` and `Committee` are different tags.
 * Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
   Applying the same tag again does not add a duplicate condition.
-* Use `list` to show everyone again. A new `find` searches the whole roster and replaces previous filters.
+* Use `list` to show everyone again. A new `find` or `findemail` searches the whole roster and replaces previous filters.
 
 The result reports `N member(s) listed with tag "TAG".` for one active tag filter. With multiple
 active tags, it names every distinct tag in the order applied, for example:
-`1 member(s) listed with tags "committee", "year1".` A new `find` or `list` clears these tag filters.
+`1 member(s) listed with tags "committee", "year1".` A new `find`, `findemail`, or `list` clears these tag filters.
 No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
 
 Check the displayed numbers before using `edit` or `delete`. Editing keeps the active search and filters.
@@ -396,7 +417,7 @@ Fix the storage problem. Retry only if you still want to remove the entire roste
 
 TrackCall automatically saves after successful `add`, `edit`, `delete`, `tagall`, `untagall`, `clear`,
 and `import` commands.
-`help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` do not save the roster.
+`help`, `list`, `sort`, `find`, `findemail`, `filter`, `export`, and `exit` do not save the roster.
 
 ### Locate or back up your roster
 
@@ -492,6 +513,7 @@ Unsaved changes from `add`, `edit`, `delete`, `tagall`, `untagall`, and `import`
 | Sort by name | `sort` | Sorts the current view from A to Z, ignoring letter case. |
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
 | Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
+| Find by email | `findemail KEYWORD [MORE_KEYWORDS]...` | `findemail @example.com` shows emails containing that fragment. |
 | Filter by tag | `filter t/TAG` | `filter t/committee` narrows the displayed members. |
 | Tag a group | `tagall t/TAG` | `tagall t/committee` adds the tag to every displayed member. |
 | Untag a group | `untagall t/TAG` | `untagall t/committee` removes the tag from every displayed member. |

@@ -20,7 +20,7 @@ else ([command succeeds])
 endif
 
 if () then ([help, list, sort, find,
-filter, export or exit])
+findemail, filter, export or exit])
     :Show result without saving;
     stop
 else ([add, edit, delete, tagall,

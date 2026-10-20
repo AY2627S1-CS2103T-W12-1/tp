@@ -8,7 +8,7 @@ import java.util.Optional;
 public enum CommandHelp {
     LIST("Browse members", "list", "Show the full roster", "list", "list",
             "Displays every member and their current list number.",
-            "The complete roster is shown, including members hidden by a previous find or filter.",
+            "The complete roster is shown, including members hidden by a previous find, findemail or filter.",
             "Use list before choosing a member by number. List numbers can change after an edit or deletion.",
             "Use the lowercase command list with no extra arguments."),
     SORT("Browse members", "sort", "Sort members by name", "sort", "sort",
@@ -22,12 +22,23 @@ public enum CommandHelp {
             "Shows members whose names contain Alice or Tan. No match produces an empty list.",
             "A new search replaces the previous search. Jo does not match John; use list to show everyone again.",
             "Supply at least one name word. Searches use names, not phone numbers or tags."),
+    FINDEMAIL("Browse members", "findemail", "Find members by email",
+            "findemail KEYWORD [MORE_KEYWORDS]...", "findemail @example.com",
+            "Searches all members for any literal email fragment, ignoring letter case.",
+            "Shows members whose email contains @example.com. No match produces an empty list.",
+            "Use a full email address or domain fragment. Whitespace separates keywords; any keyword can match. "
+                    + "A new search replaces previous searches and tag filters, while keeping name sorting. "
+                    + "Filter narrows these results; list shows everyone again. Check displayed numbers before "
+                    + "editing or deleting. An edited member whose email no longer matches disappears from view.",
+            "Supply at least one keyword. Matching uses literal text, not regular expressions, and searches "
+                    + "email addresses only, not names or phone numbers. Searching does not save the roster."),
     FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
             "Shows currently displayed members with the specified tag without changing saved data.",
             "Shows only members tagged committee, in their current order with new displayed numbers.",
             "Matching is exact and case-sensitive. Repeated filters narrow the list further, and the result "
                     + "names all active tags. Use list to show "
-                    + "everyone or find to search all members by name. Edit and delete use displayed numbers; "
+                    + "everyone, find to search all members by name, or findemail to search email addresses. "
+                    + "Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
             "Supply exactly one tag of 1 to 30 ASCII letters or digits. Empty tags, internal spaces, "
                     + "multiple tags, and extra arguments are rejected."),
@@ -46,7 +57,7 @@ public enum CommandHelp {
             "edit 1 p/98765432 t/committee t/year1",
             "Updates the member at a displayed list number. Fields you leave out stay unchanged.",
             "Changes member 1's phone and replaces their tags with committee and year1, "
-                    + "keeping the active name search and tag filters.",
+                    + "keeping the active search and tag filters.",
             "Give the full tag set you want to keep. Use edit 1 t/ to remove all tags from member 1.",
             "Use a current positive list number and supply at least one field. Invalid values or duplicate contact "
                     + "details are rejected. If saving fails, the edit remains in this session and the command box "

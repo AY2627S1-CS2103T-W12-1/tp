@@ -10,6 +10,7 @@ Type commands to find members and update their contact details quickly.
 ## Features in v1.4 alpha
 
 * Add, edit, list, find, delete, and clear member records.
+* Find members by a full email address or domain fragment with `findemail KEYWORD [MORE_KEYWORDS]...`.
 * Open offline instructions for all available commands with `help`, or one command with `help COMMAND`.
 * Read labeled member cards and multiline feedback in a light beige interface, with wrapping and scrolling.
 * Save data changes locally, with clear recovery guidance if saving fails and rollback for a failed clear.

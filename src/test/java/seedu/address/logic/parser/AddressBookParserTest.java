@@ -22,6 +22,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FilterCommand;
 import seedu.address.logic.commands.FindCommand;
+import seedu.address.logic.commands.FindEmailCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
@@ -29,6 +30,7 @@ import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.TagAllCommand;
 import seedu.address.logic.commands.UntagAllCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.EmailContainsKeywordsPredicate;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
@@ -89,6 +91,14 @@ public class AddressBookParserTest {
         FindCommand command = (FindCommand) parser.parseCommand(
                 FindCommand.COMMAND_WORD + " " + keywords.stream().collect(Collectors.joining(" ")));
         assertEquals(new FindCommand(new NameContainsKeywordsPredicate(keywords)), command);
+    }
+
+    @Test
+    public void parseCommand_findEmail_routesEmailKeywords() throws Exception {
+        assertEquals(new FindEmailCommand(new EmailContainsKeywordsPredicate(List.of("@example.com", "alice+"))),
+                parser.parseCommand("  findemail   @example.com\talice+  "));
+        assertEquals(new HelpCommand("findemail"), parser.parseCommand("help findemail"));
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("FINDEMAIL alice"));
     }
 
     @Test
