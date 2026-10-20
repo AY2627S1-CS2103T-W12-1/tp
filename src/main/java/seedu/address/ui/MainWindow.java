@@ -280,7 +280,6 @@ public class MainWindow extends UiPart<Stage> {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(hideContactDetails(commandResult.getFeedbackToUser()));
-            refreshActiveFilters();
 
             if (commandResult.isShowHelp()) {
                 helpWindow.show(commandResult.getHelpTopic());
@@ -295,6 +294,9 @@ public class MainWindow extends UiPart<Stage> {
             logger.info("An error occurred while executing command: " + commandText);
             resultDisplay.setFeedbackToUser(e.getMessage());
             throw e;
+        } finally {
+            // A failed save can retain a model change that also reset its filters.
+            refreshActiveFilters();
         }
     }
 

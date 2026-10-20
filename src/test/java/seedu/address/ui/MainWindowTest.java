@@ -129,6 +129,26 @@ public class MainWindowTest {
     }
 
     @Test
+    public void enter_failedAddSave_refreshesFilterChipsToMatchRetainedRoster() throws Exception {
+        Files.createDirectory(temporaryFolder.resolve("members.json"));
+        onJavaFxThread(() -> {
+            enter("find Alice");
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+            assertEquals(List.of("Name: Alice"), chipLabels(chips));
+            assertDisplayedNames("Alice Tan");
+
+            enter("add n/Carol Wong p/90000002 e/carol@example.com a/Test Street");
+
+            assertTrue(feedback.getText().contains("not saved"));
+            assertEquals(List.of(), model.getActiveFilters());
+            assertEquals(List.of(), chipLabels(chips));
+            assertFalse(chips.isVisible());
+            assertFalse(chips.isManaged());
+            assertDisplayedNames("Alice Tan", "Bob Lee", "Carol Wong");
+        });
+    }
+
+    @Test
     public void activeFilterChips_removeIndividualFiltersAndUpdateDisplayedMembers() throws Exception {
         onJavaFxThread(() -> {
             Person alice = model.getAddressBook().getPersonList().get(0);
