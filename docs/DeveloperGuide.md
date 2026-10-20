@@ -616,7 +616,7 @@ The broader narrative must be read with these MVP decisions:
 * Bulk selection means everyone in the displayed list after searching or filtering. There is
   no arbitrary multi-selection or direct edit/delete-by-name command. Individual edits and
   deletions use the current displayed index, which the secretary must check first.
-* `find` matches complete name words. Substring and phone-number search are considered ideas,
+* `find` matches complete or partial name words. Phone-number search is a considered idea,
   not current MVP search behaviour.
 * Name sorting is available through `sort`; `list` restores stored order.
 * vCard import/export, sorting by criteria other than name, archiving, global tag renaming,
@@ -657,7 +657,7 @@ Overlapping stories are consolidated as follows:
 | US02 | `***` | club secretary | add a member with contact details and optional tags | record a new club member |
 | US03 | `***` | club secretary | see every member in a readable list with their current displayed index | review the roster and select the right record |
 | US04 | `***` | club secretary | edit a member's contact details | correct mistakes and keep the roster up to date |
-| US05 | `***` | club secretary | find members using complete words from their names | retrieve a member's contact details quickly |
+| US05 | `***` | club secretary | find members using complete or partial words from their names | retrieve a member's contact details quickly |
 | US06 | `***` | club secretary | delete one selected member record | remove a record that is no longer needed |
 | US07 | `***` | club secretary | clear the whole roster | reset the directory when all existing records are no longer needed |
 | US08 | `***` | club secretary | filter the displayed members by an exact tag | work with one group or an overlap of groups |
