@@ -17,6 +17,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.tag.Tag;
+import seedu.address.testutil.LogCapture;
 
 public class FilterCommandTest {
     private final Tag friends = new Tag("friends");
@@ -35,10 +36,51 @@ public class FilterCommandTest {
     public void execute_matchingTag_narrowsDisplayedList() {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
-        CommandResult result = new FilterCommand(friends).execute(model);
+        try (LogCapture logs = new LogCapture(FilterCommand.class)) {
+            CommandResult result = new FilterCommand(friends).execute(model);
 
-        assertEquals("3 member(s) listed with tag \"friends\".", result.getFeedbackToUser());
+            assertEquals("3 member(s) listed with tag \"friends\".", result.getFeedbackToUser());
+            assertEquals(List.of("filter t/friends: 3 member(s) displayed with 1 active tag filter(s)"),
+                    logs.getInfoMessages());
+        }
         assertEquals(List.of(ALICE, BENSON, DANIEL), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_absentTag_logsZeroDisplayedMembers() {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+
+        try (LogCapture logs = new LogCapture(FilterCommand.class)) {
+            CommandResult result = new FilterCommand(new Tag("missing")).execute(model);
+
+            assertEquals("0 member(s) listed with tag \"missing\".", result.getFeedbackToUser());
+            assertEquals(List.of("filter t/missing: 0 member(s) displayed with 1 active tag filter(s)"),
+                    logs.getInfoMessages());
+        }
+        assertEquals(List.of(), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_stackedAndRepeatedTags_logsDistinctActiveTagCount() {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        FilterCommand friendsCommand = new FilterCommand(friends);
+        FilterCommand owesMoneyCommand = new FilterCommand(new Tag("owesMoney"));
+
+        try (LogCapture logs = new LogCapture(FilterCommand.class)) {
+            friendsCommand.execute(model);
+            CommandResult stackedResult = owesMoneyCommand.execute(model);
+            CommandResult repeatedResult = owesMoneyCommand.execute(model);
+
+            assertEquals("1 member(s) listed with tags \"friends\", \"owesMoney\".",
+                    stackedResult.getFeedbackToUser());
+            assertEquals(stackedResult.getFeedbackToUser(), repeatedResult.getFeedbackToUser());
+            assertEquals(List.of(
+                    "filter t/friends: 3 member(s) displayed with 1 active tag filter(s)",
+                    "filter t/owesMoney: 1 member(s) displayed with 2 active tag filter(s)",
+                    "filter t/owesMoney: 1 member(s) displayed with 2 active tag filter(s)"),
+                    logs.getInfoMessages());
+        }
+        assertEquals(List.of(BENSON), model.getFilteredPersonList());
     }
 
     @Test
@@ -46,9 +88,13 @@ public class FilterCommandTest {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         model.updateFilteredPersonList(person -> !person.equals(DANIEL));
 
-        CommandResult result = new FilterCommand(friends).execute(model);
+        try (LogCapture logs = new LogCapture(FilterCommand.class)) {
+            CommandResult result = new FilterCommand(friends).execute(model);
 
-        assertEquals("2 member(s) listed with tag \"friends\".", result.getFeedbackToUser());
+            assertEquals("2 member(s) listed with tag \"friends\".", result.getFeedbackToUser());
+            assertEquals(List.of("filter t/friends: 2 member(s) displayed with 1 active tag filter(s)"),
+                    logs.getInfoMessages());
+        }
         assertEquals(List.of(ALICE, BENSON), model.getFilteredPersonList());
     }
 
