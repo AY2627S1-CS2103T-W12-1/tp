@@ -20,7 +20,7 @@ The command box is at the top, followed by the result display, the member list, 
 * Filter the displayed members by tag, and sort them by name.
 * Add or remove a tag for every displayed member with `tagall` and `untagall`.
 * Import and export member records as CSV files.
-* Offline help for all fourteen commands.
+* Offline help for all fifteen commands.
 * Local saving after successful data changes, with recovery guidance for save errors.
   A failed clear restores the roster.
 

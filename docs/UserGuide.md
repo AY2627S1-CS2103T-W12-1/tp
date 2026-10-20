@@ -5,7 +5,7 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers **TrackCall v1.4 alpha** and its fourteen available commands.
+This guide covers **TrackCall v1.4 alpha** and its fifteen available commands.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
@@ -76,7 +76,7 @@ Use the [command summary](#command-summary) for a compact reference.
 Open help by typing `help`, pressing **F1**, or choosing **Help → Help**.
 The guide works without internet access and does not change or save the roster.
 
-The overview groups all fourteen commands into four categories:
+The overview groups all fifteen commands into four categories:
 Browse members, Manage members, Remove records, and Help & session.
 Each command has a short description and a runnable example.
 The overview uses two columns in a wide window and one in a narrow window.
@@ -135,6 +135,16 @@ It does not change or save records.
 
 The result is `Showing 1 member.`, `Showing N members.`, or `No members in the address book.`
 Extra arguments produce `Invalid command format. Usage: list` without changing the current view.
+
+### Show selected members: `show`
+
+`show 1 3 4 5` keeps members at those numbers in the **currently displayed list**.
+The selected members stay in their current order and receive new displayed numbers starting at 1.
+You can use `show` again with those new numbers, or use `list` to restore the full roster.
+
+Supply one or more positive numbers separated by spaces. Repeating a number selects that member once.
+If any number is invalid or outside the current list, the view stays unchanged. `show` does not change
+or save member data.
 
 ### Sort members by name: `sort`
 
@@ -396,7 +406,7 @@ Fix the storage problem. Retry only if you still want to remove the entire roste
 
 TrackCall automatically saves after successful `add`, `edit`, `delete`, `tagall`, `untagall`, `clear`,
 and `import` commands.
-`help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` do not save the roster.
+`help`, `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` do not save the roster.
 
 ### Locate or back up your roster
 
@@ -489,6 +499,7 @@ Unsaved changes from `add`, `edit`, `delete`, `tagall`, `untagall`, and `import`
 | Open help | `help [COMMAND]` | `help add` opens the add instructions. |
 | Add a member | `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...` | The quick-start example adds Alice. |
 | Show everyone | `list` | `list` restores the complete roster. |
+| Show selected members | `show INDEX [MORE_INDEXES]...` | `show 1 3 4 5` keeps those members from the current list. |
 | Sort by name | `sort` | Sorts the current view from A to Z, ignoring letter case. |
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
 | Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
