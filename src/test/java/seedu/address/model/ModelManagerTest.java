@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonSelectionPredicate;
+import seedu.address.model.person.exceptions.DuplicatePersonException;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.AddressBookBuilder;
 import seedu.address.testutil.PersonBuilder;
@@ -118,6 +120,77 @@ public class ModelManagerTest {
     @Test
     public void filterFilteredPersonList_nullPredicate_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> modelManager.filterFilteredPersonList(null));
+    }
+
+    @Test
+    public void setPerson_duplicateReplacement_keepsSelectedMemberAndRosterUnchanged() {
+        AddressBook original = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build();
+        modelManager = new ModelManager(original, new UserPrefs());
+        modelManager.filterFilteredPersonList(new PersonSelectionPredicate(List.of(ALICE)));
+
+        assertThrows(DuplicatePersonException.class, () -> modelManager.setPerson(ALICE, BENSON));
+
+        assertEquals(List.of(ALICE), modelManager.getFilteredPersonList());
+        assertEquals(original, modelManager.getAddressBook());
+        modelManager.setPerson(ALICE, new PersonBuilder(ALICE).withPhone("90000001").build());
+        assertEquals(List.of(new PersonBuilder(ALICE).withPhone("90000001").build()),
+                modelManager.getFilteredPersonList());
+    }
+
+    @Test
+    public void removeActiveFilters_preservesOtherFiltersAndRestoresMatchingMembers() {
+        AddressBook addressBook = new AddressBookBuilder()
+                .withPerson(ALICE).withPerson(BENSON).withPerson(CARL).build();
+        modelManager = new ModelManager(addressBook, new UserPrefs());
+        NameContainsKeywordsPredicate nameFilter = new NameContainsKeywordsPredicate(List.of("Alice", "Benson"));
+        Tag friends = new Tag("friends");
+        Tag owesMoney = new Tag("owesMoney");
+
+        modelManager.updateFilteredPersonList(nameFilter);
+        modelManager.filterFilteredPersonListByTag(friends);
+        modelManager.filterFilteredPersonListByTag(owesMoney);
+        assertEquals(List.of("Name: Alice Benson", "Tag: friends", "Tag: owesMoney"),
+                modelManager.getActiveFilters().stream().map(ActiveFilter::getLabel).toList());
+        assertEquals(List.of(friends, owesMoney), modelManager.getActiveTagFilters());
+
+        modelManager.removeActiveFilter(modelManager.getActiveFilters().get(1));
+        assertEquals(List.of(owesMoney), modelManager.getActiveTagFilters());
+        assertEquals(List.of(BENSON), modelManager.getFilteredPersonList());
+
+        modelManager.removeActiveFilter(modelManager.getActiveFilters().getFirst());
+        assertEquals(List.of("Tag: owesMoney"),
+                modelManager.getActiveFilters().stream().map(ActiveFilter::getLabel).toList());
+        assertEquals(List.of(BENSON), modelManager.getFilteredPersonList());
+
+        modelManager.removeActiveFilter(modelManager.getActiveFilters().getFirst());
+        assertEquals(List.of(ALICE, BENSON, CARL), modelManager.getFilteredPersonList());
+    }
+
+    @Test
+    public void updateFilteredPersonList_clearsDisplayedFilters() {
+        modelManager.updateFilteredPersonList(new NameContainsKeywordsPredicate(List.of("Alice")));
+        modelManager.filterFilteredPersonListByTag(new Tag("friends"));
+
+        modelManager.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+
+        assertEquals(List.of(), modelManager.getActiveFilters());
+    }
+
+    @Test
+    public void multipleNameFilters_narrowResultsAndCanBeRemovedIndividually() {
+        AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build();
+        modelManager = new ModelManager(addressBook, new UserPrefs());
+
+        modelManager.filterFilteredPersonListByName(new NameContainsKeywordsPredicate(List.of("Alice", "Benson")));
+        modelManager.filterFilteredPersonListByTag(new Tag("friends"));
+        modelManager.filterFilteredPersonListByName(new NameContainsKeywordsPredicate(List.of("Meier")));
+
+        assertEquals(List.of("Name: Alice Benson", "Tag: friends", "Name: Meier"),
+                modelManager.getActiveFilters().stream().map(ActiveFilter::getLabel).toList());
+        assertEquals(List.of(BENSON), modelManager.getFilteredPersonList());
+
+        modelManager.removeActiveFilter(modelManager.getActiveFilters().getLast());
+        assertEquals(List.of(ALICE, BENSON), modelManager.getFilteredPersonList());
     }
 
     @Test

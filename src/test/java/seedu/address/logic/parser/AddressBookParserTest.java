@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
@@ -26,6 +27,8 @@ import seedu.address.logic.commands.FindEmailCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.RenameTagCommand;
+import seedu.address.logic.commands.ShowCommand;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.TagAllCommand;
 import seedu.address.logic.commands.UntagAllCommand;
@@ -119,6 +122,13 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_renameTag_returnsRenameTagCommand() throws Exception {
+        RenameTagCommand expected = new RenameTagCommand(new Tag("batch2026"), new Tag("alumni"));
+        assertEquals(expected, parser.parseCommand("renametag t/batch2026 t/alumni"));
+        assertEquals(expected, parser.parseCommand("  renametag   t/batch2026  t/alumni  "));
+    }
+
+    @Test
     public void parseCommand_help() throws Exception {
         assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD) instanceof HelpCommand);
         assertEquals(new HelpCommand("edit"), parser.parseCommand("help edit"));
@@ -136,6 +146,13 @@ public class AddressBookParserTest {
     public void parseCommand_list() throws Exception {
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
         assertTrue(parser.parseCommand(" \tlist \t") instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_show() throws Exception {
+        assertEquals(new ShowCommand(List.of(INDEX_FIRST_PERSON)), parser.parseCommand("show 1"));
+        assertEquals(new ShowCommand(List.of(INDEX_FIRST_PERSON, Index.fromOneBased(3))),
+                parser.parseCommand("show 1 3"));
     }
 
     @Test

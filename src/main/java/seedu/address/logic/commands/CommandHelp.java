@@ -11,6 +11,12 @@ public enum CommandHelp {
             "The complete roster is shown, including members hidden by a previous find, findemail or filter.",
             "Use list before choosing a member by number. List numbers can change after an edit or deletion.",
             "Use the lowercase command list with no extra arguments."),
+    SHOW("Browse members", "show", "Show selected members", "show INDEX [MORE_INDEXES]...", "show 1 3 4 5",
+            "Keeps only the specified members from the current displayed list.",
+            "Shows members at the selected numbers in their current order, then renumbers the displayed list.",
+            "Use list to restore everyone. Repeated numbers select a member once. A later show uses the new numbers.",
+            "Supply space-separated positive displayed numbers. An invalid or missing number leaves the view "
+                    + "unchanged."),
     SORT("Browse members", "sort", "Sort members by name", "sort", "sort",
             "Orders the displayed members by full name from A to Z, ignoring letter case.",
             "Shows the current search results alphabetically without changing the saved roster.",
@@ -18,9 +24,11 @@ public enum CommandHelp {
                     + "Check list numbers again before editing or deleting.",
             "Use sort with no extra arguments. Use list to restore the complete roster in stored order."),
     FIND("Browse members", "find", "Find a member by name", "find KEYWORD [MORE_KEYWORDS]", "find Alice Tan",
-            "Searches all members for any complete name word, ignoring letter case.",
+            "Narrows the displayed members by any complete name word, ignoring letter case.",
             "Shows members whose names contain Alice or Tan. No match produces an empty list.",
-            "A new search replaces the previous search. Jo does not match John; use list to show everyone again.",
+            "Each find adds a name filter. Boxes appear left to right in command order, but find and filter "
+                    + "order does not change the final matches. Use X to remove one box or list to show everyone. "
+                    + "Jo does not match John.",
             "Supply at least one name word. Searches use names, not phone numbers or tags."),
     FINDEMAIL("Browse members", "findemail", "Find members by email",
             "findemail KEYWORD [MORE_KEYWORDS]...", "findemail @example.com",
@@ -36,8 +44,9 @@ public enum CommandHelp {
             "Shows currently displayed members with the specified tag without changing saved data.",
             "Shows only members tagged committee, in their current order with new displayed numbers.",
             "Matching is exact and case-sensitive. Repeated filters narrow the list further, and the result "
-                    + "names all active tags. Use list to show "
-                    + "everyone, find to search all members by name, or findemail to search email addresses. "
+                    + "names all active tags. Boxes appear left to right in command order, not matching priority. "
+                    + "Use a filter's X to remove it, or list to show everyone. Find also narrows the current results. "
+                    + "Findemail searches email addresses across the whole roster and replaces previous filters. "
                     + "Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
             "Supply exactly one tag of 1 to 30 ASCII letters or digits. Empty tags, internal spaces, "
@@ -82,6 +91,18 @@ public enum CommandHelp {
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
                     + "recovery guidance before exiting."),
+    RENAMETAG("Manage members", "renametag", "Rename a tag for everyone", "renametag t/CURRENT_TAG t/NEW_TAG",
+            "renametag t/batch2026 t/alumni",
+            "Replaces one tag with another for every member, including members hidden by a search or filter.",
+            "Changes batch2026 to alumni for each member who has it, and reports how many members changed "
+                    + "after saving.",
+            "Tags are case-sensitive, so renametag t/committee t/Committee is a valid rename. A member who already "
+                    + "has the new tag keeps one copy. Renaming the tag used by an active filter hides the updated "
+                    + "members; use list to show everyone again.",
+            "Supply exactly two tags of 1 to 30 ASCII letters or digits, each after t/. The two tags must differ. "
+                    + "A current tag that no member has is rejected without changes. If saving fails, the changes "
+                    + "remain in this session and the command box clears; follow the recovery guidance before "
+                    + "exiting."),
     EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
             "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
             "Creates members.csv with name, phone, email, address and tags columns.",

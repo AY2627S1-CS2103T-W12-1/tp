@@ -19,12 +19,12 @@ command fails])
 else ([command succeeds])
 endif
 
-if () then ([help, list, sort, find,
+if () then ([help, list, show, sort, find,
 findemail, filter, export or exit])
     :Show result without saving;
     stop
 else ([add, edit, delete, tagall,
-untagall, clear or import])
+untagall, renametag, clear or import])
 endif
 
 :Write the roster to a temporary file,

@@ -48,7 +48,16 @@ public class BulkTagArgumentParser {
             throw new ParseException(MESSAGE_MULTIPLE_TAGS);
         }
 
-        String tagName = tagValues.get(0);
+        return parseTagName(tagValues.get(0));
+    }
+
+    /**
+     * Parses one trimmed {@code t/} value into a tag of 1 to 30 ASCII letters or digits.
+     *
+     * @throws ParseException If {@code tagName} is empty or invalid.
+     */
+    public static Tag parseTagName(String tagName) throws ParseException {
+        requireAllNonNull(tagName);
         if (tagName.isEmpty()) {
             throw new ParseException(MESSAGE_EMPTY_TAG);
         }
