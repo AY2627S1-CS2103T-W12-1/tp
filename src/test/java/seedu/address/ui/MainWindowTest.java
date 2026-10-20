@@ -133,6 +133,40 @@ public class MainWindowTest {
     }
 
     @Test
+    public void enter_blankReplyCancelsDeletionAndLaterConfirmationCannotDelete() throws Exception {
+        onJavaFxThread(() -> {
+            enter("edit 1 p/90000001");
+            enter("edit 2 p/90000002");
+        });
+        Path dataFile = temporaryFolder.resolve("members.json");
+        Path backupFile = temporaryFolder.resolve("members.json.bak");
+        String savedRoster = Files.readString(dataFile);
+        String savedBackup = Files.readString(backupFile);
+        var rosterModified = Files.getLastModifiedTime(dataFile);
+        var backupModified = Files.getLastModifiedTime(backupFile);
+
+        onJavaFxThread(() -> {
+            enter("delete 1");
+            assertEquals("", input.getText());
+            input.fireEvent(new ActionEvent());
+            assertEquals(ConfirmDeleteCommand.MESSAGE_CANCELLED, feedback.getText());
+            assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertEquals(CommandBox.DEFAULT_PROMPT, input.getPromptText());
+            assertDisplayedNames("Alice Tan", "Bob Lee");
+            enter("y");
+            assertEquals(Messages.MESSAGE_UNKNOWN_COMMAND, feedback.getText());
+            assertEquals(2, model.getAddressBook().getPersonList().size());
+            input.clear();
+            input.fireEvent(new ActionEvent());
+            assertEquals(Messages.MESSAGE_UNKNOWN_COMMAND, feedback.getText());
+        });
+        assertEquals(savedRoster, Files.readString(dataFile));
+        assertEquals(savedBackup, Files.readString(backupFile));
+        assertEquals(rosterModified, Files.getLastModifiedTime(dataFile));
+        assertEquals(backupModified, Files.getLastModifiedTime(backupFile));
+    }
+
+    @Test
     public void enter_deleteAwaitingConfirmation_highlightsCommandBoxUntilAnswered() throws Exception {
         onJavaFxThread(() -> {
             enter("delete 1");

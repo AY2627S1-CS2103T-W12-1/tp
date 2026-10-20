@@ -21,6 +21,7 @@ public class CommandBox extends UiPart<Region> {
     private static final String FXML = "CommandBox.fxml";
 
     private final CommandExecutor commandExecutor;
+    private boolean isAwaitingConfirmation;
 
     @FXML
     private TextField commandTextField;
@@ -44,6 +45,7 @@ public class CommandBox extends UiPart<Region> {
      * Highlights the command box and changes its hint while the next input confirms or cancels a deletion.
      */
     public void setAwaitingConfirmation(boolean isAwaitingConfirmation) {
+        this.isAwaitingConfirmation = isAwaitingConfirmation;
         ObservableList<String> styleClass = commandTextField.getStyleClass();
         styleClass.remove(CONFIRMATION_STYLE_CLASS);
         if (isAwaitingConfirmation) {
@@ -58,7 +60,7 @@ public class CommandBox extends UiPart<Region> {
     @FXML
     private void handleCommandEntered() {
         String commandText = commandTextField.getText();
-        if (commandText.equals("")) {
+        if (commandText.isEmpty() && !isAwaitingConfirmation) {
             return;
         }
 
