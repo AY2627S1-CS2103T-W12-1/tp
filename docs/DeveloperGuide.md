@@ -21,6 +21,7 @@ The secretary can:
 
 The **v1.4 alpha** supports individual member management, name search, tag filtering, bulk tag
 editing, offline command help, local saving, CSV import/export, and name sorting.
+The current source build adds a selected-member privacy panel after that release.
 See [Limitations](#limitations) for constraints in the current release.
 
 ## Acknowledgements
@@ -98,7 +99,11 @@ This reduces their dependence on each other's implementation details, as shown b
 
 ![Structure of the UI component](images/UiClassDiagram.png)
 
-`MainWindow` contains `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`.
+The diagram shows the v1.4 alpha structure; the current source build also includes
+`MemberDetailsPanel` beside `PersonListPanel`.
+
+`MainWindow` contains `CommandBox`, `ResultDisplay`, `PersonListPanel`, `MemberDetailsPanel`,
+and `StatusBarFooter`.
 These classes inherit from `UiPart`, which provides behaviour shared by visible interface parts.
 
 The interface uses JavaFX. Matching `.fxml` files in `src/main/resources/view` define the layouts.
@@ -157,7 +162,7 @@ This allows common handling where appropriate, including in tests.
 The Model component stores:
 
 * **Member data:** `Person` objects held in a `UniquePersonList`.
-* **Displayed data:** a filtered list, such as name-search results.
+* **Displayed data:** a filtered list, such as name-search results or an index selection.
   A `SortedList` wraps it for optional name sorting while the stored roster keeps its original order.
   An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
 * **Preferences:** a `UserPrefs` object, currently containing GUI settings.
@@ -167,7 +172,8 @@ Model does not depend on UI, Logic, or Storage.
 Its data entities can be used independently of those components.
 
 `ModelManager#getFilteredPersonList()` exposes the `SortedList` backed by the `FilteredList`.
-`list` clears the search and tag predicates and disables sorting, restoring every member in stored order.
+`show` resolves indexes against the current sorted view and adds a selection predicate to narrow it.
+`list` clears the search, tag, and selection predicates and disables sorting, restoring every member in stored order.
 
 <div markdown="block" class="alert alert-info">
 
@@ -213,7 +219,7 @@ full intended product, including behaviour still to be implemented.
 
 #### Catalogue and command flow
 
-`CommandHelp` stores the fourteen implemented commands in one local catalogue.
+`CommandHelp` stores the fifteen implemented commands in one local catalogue.
 Each entry contains its purpose, syntax, example, expected result, and common errors.
 Only executable commands appear, so planned commands are never shown as available.
 
@@ -248,7 +254,8 @@ and reports the complete count using singular, plural, or empty-roster wording. 
 returns its result without invoking storage. Extra arguments are rejected by `AddressBookParser`
 before either the view or data changes.
 
-Member cards use labelled, wrapping rows and tags.
+Compact roster cards show member numbers, names, and tags. The details panel reveals contact fields
+for only the selected member.
 `LightTheme.css` provides the beige main-list palette. See [Offline command help](#offline-command-help) for the bundled guide.
 
 #### Clear and save recovery
@@ -284,7 +291,7 @@ These messages follow the list and clear feature specifications:
 #### Test coverage
 
 Regression coverage is in `ListClearIntegrationTest`, the two command tests, parser tests, and
-`FileUtilTest`. `PersonCardTest` lays out member cards off-screen and verifies complete field values,
+`FileUtilTest`. `PersonCardTest` lays out compact roster cards off-screen and verifies names,
 alphabetical tag order, hidden empty tag rows, and wrapping at narrow widths. Linux CI supplies a
 virtual display with `xvfb-run` for JavaFX. UI integration tests use synthetic members and temporary
 storage; they never open the user's roster.
@@ -300,10 +307,12 @@ Command tests cover:
 #### Member rows and results
 
 `Messages#format(Person)` formats names, phone numbers, email addresses, addresses, and sorted tags
-as labelled lines. Add, edit, and delete results reuse this format instead of one long semicolon-separated
-message. `ResultDisplay` wraps and scrolls text; a split pane lets the user resize its area.
-`PersonCard` separates the displayed index and name from labelled contact rows and wraps long values
-and tag labels.
+as labelled lines for command results. In the current source build, `MainWindow` removes contact-field
+lines from successful add, edit, and delete feedback before showing it. The roster's `PersonCard` displays
+only the member number, name, and tags. `MemberDetailsPanel` reveals one selected member's contact fields
+and provides copy buttons. Running any command clears the selection before the roster can change;
+F2 focuses the list and Escape hides the details. `ResultDisplay` wraps and scrolls text, and the split
+panes let the user resize the feedback and roster areas.
 
 `LightTheme.css` supplies the beige palette and dark text for the main window, help, and alerts.
 `HelpWindow.css` adds the help-card layout. A welcome message points to `help` and `help add`.
@@ -325,7 +334,7 @@ also recover to usable bounds. This handles monitor changes between sessions.
 #### Save policy
 
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
-`help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` return without saving member data.
+`help`, `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` return without saving member data.
 Successful `add`, `edit`, `delete`, `tagall`, `untagall`, `clear`, and `import` commands pass the complete
 roster, including hidden members,
 to `Storage#saveAddressBook`.
@@ -456,10 +465,12 @@ The parser checks the tag before constructing it; the shared `Tag` model enforce
 #### Execution
 
 `FilterCommand` passes the tag to `ModelManager#filterFilteredPersonListByTag`. The model
-combines it with the current predicate using logical AND, or applies it directly if no predicate is set.
-The model records each distinct active tag in application order and clears those names when
-`updateFilteredPersonList` replaces the conditions, as `find` and `list` do. The observable filtered list
-updates automatically, and the command reports the resulting member count and all active tag names.
+combines it with the active name and tag conditions using logical AND.
+The model keeps removable conditions in application order, which the UI shows left to right.
+`find` adds a name condition, while `list` clears all conditions. Applying the same conditions in a
+different order gives the same matching members when the roster is unchanged.
+The observable filtered list updates automatically, and the command reports the resulting member
+count and all active tag names.
 A single tag uses `N member(s) listed with tag "TAG".`; multiple tags use
 `N member(s) listed with tags "TAG1", "TAG2".` in application order.
 A zero-match result is successful.
@@ -472,7 +483,7 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
 
 * **Preserve earlier conditions:** combining predicates lets users narrow an existing name search or tag
   filter without restoring hidden members. For example, filtering by `committee` and then `year1` keeps
-  members with both tags. `find` replaces the existing conditions with a new name search; `list` clears them.
+  members with both tags. Another `find` also narrows the view; `list` clears all conditions.
 * **Keep filters active after edits:** the model retains the predicate rather than a fixed set of matching
   members. Replacing an edited member in the observable list re-evaluates that predicate. A member who no
   longer matches disappears from view but remains in the roster, so later commands operate on the updated group.
@@ -695,7 +706,7 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 
 | ID | Priority | As a... | I want to... | So that I can... | Scope decision |
 | --- | --- | --- | --- | --- | --- |
-| US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Retained from the earlier DG; no privacy-display mode in the MVP. |
+| US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Implemented in the current source build after v1.4 alpha; the roster hides details until selection. |
 | US19 | `**` | first-time user | follow a short in-app getting-started guide | learn the basic workflow step by step | Considered; the MVP provides command help, not an onboarding wizard. |
 | US22 | `**` | club secretary | review imported member records | confirm that an import completed correctly | Considered with US21; no separate review step for imported records in the MVP. |
 | US26 | `**` | club secretary | search using part of a name word | find someone when I cannot remember the complete word | Considered; the MVP uses complete-word matching. |
@@ -722,11 +733,12 @@ These rules describe the selected MVP and apply to the use cases below.
 3. A tag contains 1 to 30 ASCII letters or digits and is case-sensitive. It contains no internal
    whitespace. Store each tag once per member and display tags in ASCII order: digits,
    uppercase letters, then lowercase letters.
-4. `list` resets all searches and tag filters. `find KEYWORD [MORE_KEYWORDS]` searches the full
-   roster and replaces the previous search and filters. It matches complete name words,
-   ignores letter case, and accepts a match on any keyword. Repeated keywords do not repeat records.
+4. `list` resets all searches and tag filters. `find KEYWORD [MORE_KEYWORDS]` narrows the
+   displayed list. It matches complete name words, ignores letter case, and accepts a match on
+   any keyword within one command. Consecutive `find` commands retain the intersection of their
+   matches and any active tag filters. Repeated keywords do not repeat records.
 5. `filter t/TAG` narrows the currently displayed list using exact, case-sensitive tag matching.
-   Repeated filters retain the intersection of the tags and the active name search. A valid
+   Repeated filters retain the intersection of the tags and active name searches. A valid
    zero-match result is successful. Use `list` first to filter the whole roster.
 6. An index is an ASCII-digit integer from 1 through the current displayed count. Leading zeroes
    are accepted; signs, decimals, and internal whitespace are not. It refers to the list when
@@ -741,7 +753,7 @@ These rules describe the selected MVP and apply to the use cases below.
    filters after the whole batch. Changed and skipped counts refer to the original target set.
 9. Valid `add`, `edit`, `delete`, `clear`, `tagall`, `untagall`, and `import` commands save the complete
    roster, including valid operations that make no change. An empty bulk target is an error
-   and does not save. `help`, `list`, `sort`, `find`, `filter`, `export`, and `exit` do not save.
+   and does not save. `help`, `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` do not save.
 10. Report data-changing command success only after saving succeeds. A failed save preserves
     the previous saved file and reports a storage error. Except for `clear`, changes remain in
     memory and can be lost on exit. Failed `clear` restores the previous records, displayed
@@ -801,6 +813,7 @@ or window; it must remain keyboard accessible.
 * With networking disabled, `help` shows a concise summary of every executable command in the
   running version. The completed MVP includes `help`, `add`, `list`, `edit`, `find`, `delete`,
   `clear`, `exit`, `filter`, `tagall`, `untagall`, `sort`, `export`, and `import`.
+  The running version also includes `show`.
   An earlier iteration must not present an
   unimplemented command as available.
 * `help COMMAND` shows the command purpose, syntax, parameter rules, at least one valid example
@@ -814,11 +827,11 @@ or window; it must remain keyboard accessible.
 
 #### Member details and command feedback
 
-* Each member card separates its displayed index and name from clearly labelled Phone, Email,
-  and Address fields, followed by its tag labels. Long names and contact details wrap; tags wrap
-  onto another line when needed. All field content remains accessible without overlap or permanent truncation.
+* Each roster card shows the displayed index, name, and tags without contact details. Selecting
+  a member reveals Phone, Email, and Address in a separate panel with copy controls. F2 focuses
+  the roster, and Escape clears the selection. Long values remain accessible by wrapping and scrolling.
 * Successful `add`, `edit`, and `delete` feedback starts with the completed action and shows
-  the affected member using labelled fields on separate lines. Empty tags are shown as `(none)`.
+  the affected member's name and tags. The UI omits contact fields from this feedback.
   Feedback reports success only after saving; a save failure follows shared rule 10.
 * Validation errors name the problem and a correction or help route. The result area keeps
   long feedback accessible by wrapping and scrolling. Readability checks use NFR05.
@@ -828,9 +841,6 @@ For example, after a successful add and save:
 ```text
 Added member
 Name: Alice Tan
-Phone: 91234567
-Email: alice@example.com
-Address: 10 College Road
 Tags: committee, year1
 ```
 
@@ -900,8 +910,8 @@ address-book order, or in name order while `sort` is active.
 A successful search reports `1 member listed.`, `N members listed.`, or
 `0 members listed.` and does not save the data file. `find` with no keyword reports
 `Invalid command format.` followed by the `find` usage; a wrong-case command such as
-`FIND John` reports `Unknown command. Type help for available commands.` A new `find` searches the
-complete roster and replaces the previous search and filters.
+`FIND John` reports `Unknown command. Type help for available commands.` A new `find` narrows the
+displayed list and retains previous name searches and tag filters.
 
 #### UC03: Update a group's tags
 
@@ -1157,8 +1167,8 @@ such as incremental delivery, are also not product NFRs.
 | Member record | One member's name, phone number, email address, address, and tag assignments. |
 | Group | A set of members sharing a tag, such as a committee or cohort. Groups are not separate stored objects in the MVP. |
 | Tag | A case-sensitive label containing 1 to 30 ASCII letters or digits, assigned at most once to each member. |
-| Displayed list | The records currently visible after the active search and tag filters. It is the target set for a bulk tag command. |
-| Active search and filters | The current name-search condition and cumulative tag conditions used to determine which records are displayed. A new `find` replaces them; `list` clears them. |
+| Displayed list | The records currently visible after the active search, tag filters, and index selections. It is the target set for a bulk tag command. |
+| Active search and filters | The name-search, tag, and index-selection conditions used to determine which records are displayed. A new `find` adds a condition; `list` clears them all. |
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
 | Complete-word matching | Matching a whole word in a name. For example, `John` matches `John Tan`, but `Jo` does not. |
 | Bulk tag update | Adding or removing one tag for the fixed set of members displayed when the command is submitted. |
@@ -1199,7 +1209,13 @@ platform or release package has been verified. Use a disposable folder and synth
 
 ### Offline help and readable feedback
 
-1. Disable networking. Run `help`: verify four category cards containing all fourteen command names,
+In the current source build, verify that the roster initially shows only names and tags.
+Press F2, select a member with the arrow keys, and check that only that member's contact details
+appear in the panel. Copy a field, then press Escape and check that the details disappear and
+focus returns to the command box. Select a member again, then run `edit` and check that the
+panel clears and the result area omits phone, email, and address. Repeat for `add` and `delete`.
+
+1. Disable networking. Run `help`: verify four category cards containing all fifteen command names,
    descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
    layout when wide and one column when narrowed. Check the beige background, dark readable text,
    visible keyboard focus, and error styling in the main window, help, and alerts.
@@ -1234,9 +1250,14 @@ platform or release package has been verified. Use a disposable folder and synth
 6. Run `find Nobody`, then `list`. Expect `0 members listed.`, then `Showing N members.` for the
    total roster size. Test multiple name keywords, case-insensitive complete-word matching, and
    rejection of `find` with no keyword.
-   Run `filter t/committee`, then another filter. Check that the second filter narrows the current
-   view, `find` starts again from the full roster, and `list` restores everyone. A missing tag,
-   repeated tag, or invalid tag must leave the view unchanged. Filtering must not save the file.
+   Run `filter t/committee`, then another tag filter shared by at least one member. Check that it narrows the current
+   view. Run `find` with a name word from a displayed member and check that it retains both tag
+   filters. Remove its name box with X and check that the tag filters remain. Run `list` to restore
+   everyone. A missing tag, repeated tag, or invalid tag must leave the view unchanged. Filtering
+   must not save the file.
+   Run `list`, then `show 1 3` with at least three members visible. Expect only those two members
+   in their original order, renumbered 1 and 2. Run `show 2` to narrow the view again. An
+   out-of-range number must leave the view unchanged; `list` restores everyone.
 7. Paste a valid add command with actual tab separators before `n/`, `p/`, `e/`, and `a/`.
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
    or an internal tab keeps that text. For both `add` and `edit`, append `x/extra` or `T/committee`
