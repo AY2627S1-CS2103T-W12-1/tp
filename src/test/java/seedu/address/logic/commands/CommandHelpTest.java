@@ -27,7 +27,8 @@ public class CommandHelpTest {
                 ShowCommand.COMMAND_WORD,
                 HelpCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD, ExportCommand.COMMAND_WORD,
                 ImportCommand.COMMAND_WORD, FilterCommand.COMMAND_WORD, SortCommand.COMMAND_WORD,
-                TagCommand.COMMAND_WORD, TagAllCommand.COMMAND_WORD, UntagAllCommand.COMMAND_WORD), keywords);
+                TagCommand.COMMAND_WORD, TagAllCommand.COMMAND_WORD, UntagAllCommand.COMMAND_WORD,
+                RenameTagCommand.COMMAND_WORD), keywords);
         assertEquals(CommandHelp.values().length, keywords.size());
     }
 
@@ -50,6 +51,7 @@ public class CommandHelpTest {
         assertTrue(CommandHelp.find("tagall").isPresent());
         assertTrue(CommandHelp.find("tag").isPresent());
         assertTrue(CommandHelp.find("untagall").isPresent());
+        assertTrue(CommandHelp.find("renametag").isPresent());
         assertTrue(CommandHelp.find("filter").isPresent());
         assertTrue(CommandHelp.find("import").isPresent());
         assertTrue(CommandHelp.find("EXIT").isEmpty());
