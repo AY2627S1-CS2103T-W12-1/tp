@@ -106,15 +106,19 @@ public class FindCommandTest {
     }
 
     @Test
-    public void execute_partialKeyword_replacesPreviousSearchAndTagFilters() throws ParseException {
-        new FindCommandParser().parse("Carl").execute(model);
-        model.filterFilteredPersonListByTag(new Tag("missing"));
+    public void execute_partialKeyword_retainsPreviousSearchAndTagFilters() throws ParseException {
+        new FindCommandParser().parse("LIC").execute(model);
+        Tag friends = new Tag("friends");
+        model.filterFilteredPersonListByTag(friends);
 
-        CommandResult result = new FindCommandParser().parse("LIC").execute(model);
+        CommandResult result = new FindCommandParser().parse("MEI").execute(model);
 
-        assertEquals("1 member listed.", result.getFeedbackToUser());
-        assertEquals(List.of(ALICE), model.getFilteredPersonList());
-        assertTrue(model.getActiveTagFilters().isEmpty());
+        assertEquals("0 members listed.", result.getFeedbackToUser());
+        assertTrue(model.getFilteredPersonList().isEmpty());
+        assertEquals(List.of(friends), model.getActiveTagFilters());
+        model.removeActiveFilter(model.getActiveFilters().get(0));
+        assertEquals(List.of(BENSON, DANIEL), model.getFilteredPersonList());
+        assertEquals(getTypicalAddressBook(), model.getAddressBook());
     }
 
     @Test

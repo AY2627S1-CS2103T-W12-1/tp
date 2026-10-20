@@ -32,6 +32,11 @@ public class CommandBox extends UiPart<Region> {
         commandTextField.textProperty().addListener((unused1, unused2, unused3) -> setStyleToDefault());
     }
 
+    /** Returns keyboard focus to the command field after roster inspection. */
+    public void focusInput() {
+        commandTextField.requestFocus();
+    }
+
     /**
      * Handles the Enter button pressed event.
      */
