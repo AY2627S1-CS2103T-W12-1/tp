@@ -311,15 +311,29 @@ There is no confirmation or undo. A valid command saves the roster.
 
 ### Delete a member: `delete`
 
-`delete INDEX` removes one member using a positive number from the **currently displayed list**.
+`delete INDEX` removes one member using a positive number from the **currently displayed list**,
+after you confirm the deletion.
 
 1. Run `find Alice` and check the results.
-2. Use `delete 1` to remove the first match.
+2. Use `delete 1`. TrackCall names the first match and its tags, then asks you to confirm:
 
-Other records remain, and the remaining matches are renumbered.
+   ```text
+   Delete member Alice Tan?
+   Tags: committee
+   Type y and press Enter to confirm. Any other input cancels the deletion.
+   ```
+
+   The command box is highlighted until you answer. Asking for confirmation does not change or save the roster.
+3. Type `y` and press Enter to delete that member.
+
+Any other input, including another command, cancels the deletion with
+`Deletion cancelled. No member was removed.` That input is not run, so enter it again if you need it.
+Only lowercase `y` confirms.
+
+After you confirm, other records remain, and the remaining matches are renumbered.
 The result shows the removed member's details.
 
-**Deletion is immediate, with no confirmation or undo.** Back up records you may need later.
+**There is no undo after you confirm.** Back up records you may need later.
 
 ### Clear all members: `clear`
 
@@ -552,7 +566,7 @@ in memory.
 | Tag a group | `tagall t/TAG` | `tagall t/committee` adds the tag to every displayed member. |
 | Untag a group | `untagall t/TAG` | `untagall t/committee` removes the tag from every displayed member. |
 | Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every member. |
-| Delete one member | `delete INDEX` | `delete 1` removes the first currently displayed member. |
+| Delete one member | `delete INDEX`, then `y` | `delete 1`, then `y`, removes the first currently displayed member. |
 | Clear the roster | `clear` | `clear` removes all members, including those hidden by a search. |
 | Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |
 | Import members | `import p/FILE_PATH` | `import p/members.csv` appends unique valid records. |

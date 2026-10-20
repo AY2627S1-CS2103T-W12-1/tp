@@ -297,6 +297,7 @@ public class MainWindow extends UiPart<Stage> {
         } finally {
             // A failed save can retain a model change that also reset its filters.
             refreshActiveFilters();
+            commandBox.setAwaitingConfirmation(logic.isAwaitingConfirmation());
         }
     }
 

@@ -7,6 +7,7 @@ participant ":LogicManager" as LogicManager LOGIC_COLOR
 participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
 participant ":DeleteCommandParser" as DeleteCommandParser LOGIC_COLOR
 participant "d:DeleteCommand" as DeleteCommand LOGIC_COLOR
+participant "c:ConfirmDeleteCommand" as ConfirmDeleteCommand LOGIC_COLOR
 participant "r:CommandResult" as CommandResult LOGIC_COLOR
 end box
 
@@ -49,14 +50,21 @@ deactivate AddressBookParser
 LogicManager -> DeleteCommand : execute(m)
 activate DeleteCommand
 
-DeleteCommand -> Model : deletePerson(personToDelete)
+DeleteCommand -> Model : getFilteredPersonList()
 activate Model
 
-Model --> DeleteCommand
+Model --> DeleteCommand : personToDelete
 deactivate Model
 
+create ConfirmDeleteCommand
+DeleteCommand -> ConfirmDeleteCommand : personToDelete
+activate ConfirmDeleteCommand
+
+ConfirmDeleteCommand --> DeleteCommand : c
+deactivate ConfirmDeleteCommand
+
 create CommandResult
-DeleteCommand -> CommandResult
+DeleteCommand -> CommandResult : prompt, c
 activate CommandResult
 
 CommandResult --> DeleteCommand
@@ -64,6 +72,26 @@ deactivate CommandResult
 
 DeleteCommand --> LogicManager : r
 deactivate DeleteCommand
+
+LogicManager -> LogicManager : store c as pending deletion
+
+[<--LogicManager : r
+deactivate LogicManager
+
+[-> LogicManager : execute("y")
+activate LogicManager
+
+LogicManager -> ConfirmDeleteCommand : execute(m)
+activate ConfirmDeleteCommand
+
+ConfirmDeleteCommand -> Model : deletePerson(personToDelete)
+activate Model
+
+Model --> ConfirmDeleteCommand
+deactivate Model
+
+ConfirmDeleteCommand --> LogicManager : result
+deactivate ConfirmDeleteCommand
 
 [<--LogicManager
 deactivate LogicManager

@@ -11,6 +11,7 @@ import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ConfirmDeleteCommand;
 import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -43,6 +44,9 @@ public class LogicManager implements Logic {
     private final Storage storage;
     private final AddressBookParser addressBookParser;
 
+    /** The deletion awaiting confirmation by the next input, or null if none is pending. */
+    private ConfirmDeleteCommand pendingDeletion;
+
     /**
      * Constructs a {@code LogicManager} with the given {@code Model} and {@code Storage}.
      */
@@ -56,8 +60,34 @@ public class LogicManager implements Logic {
     public CommandResult execute(String commandText) throws CommandException, ParseException {
         logger.info("----------------[USER COMMAND][" + commandText + "]");
 
-        CommandResult commandResult;
+        if (pendingDeletion != null) {
+            ConfirmDeleteCommand confirmation = pendingDeletion;
+            // The next input always ends the confirmation, so a later "y" cannot delete anyone.
+            pendingDeletion = null;
+            if (!commandText.strip().equals(ConfirmDeleteCommand.CONFIRMATION_WORD)) {
+                logger.info("Deletion cancelled; the cancelling input was not run as a command");
+                return new CommandResult(ConfirmDeleteCommand.MESSAGE_CANCELLED);
+            }
+            logger.info("Deletion confirmed");
+            return executeAndSave(confirmation);
+        }
+
         Command command = addressBookParser.parseCommand(commandText);
+        CommandResult commandResult = executeAndSave(command);
+        pendingDeletion = commandResult.getPendingDeletion().orElse(null);
+        return commandResult;
+    }
+
+    @Override
+    public boolean isAwaitingConfirmation() {
+        return pendingDeletion != null;
+    }
+
+    /**
+     * Executes {@code command} and saves the roster unless the command is read-only.
+     */
+    private CommandResult executeAndSave(Command command) throws CommandException {
+        CommandResult commandResult;
         AddressBook beforeClear = command instanceof ClearCommand ? new AddressBook(model.getAddressBook()) : null;
         commandResult = command instanceof ExportCommand exportCommand
                 ? exportCommand.execute(model, storage.getAddressBookFilePath(), storage.getUserPrefsFilePath())

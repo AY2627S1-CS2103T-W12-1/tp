@@ -30,6 +30,8 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ConfirmDeleteCommand;
+import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
@@ -87,6 +89,62 @@ public class LogicManagerTest {
     public void execute_commandExecutionError_throwsCommandException() {
         String deleteCommand = "delete 9";
         assertCommandException(deleteCommand, MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+    }
+
+    @Test
+    public void execute_deleteThenConfirm_deletesNamedMemberAndSaves() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+
+        CommandResult prompt = logic.execute("delete 2");
+        assertEquals(String.format(DeleteCommand.MESSAGE_CONFIRM_DELETE, BOB.getName(), Messages.formatTags(BOB)),
+                prompt.getFeedbackToUser());
+        assertTrue(logic.isAwaitingConfirmation());
+        // Asking for confirmation neither removes the member nor saves the roster.
+        assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+
+        CommandResult result = logic.execute(" y ");
+        assertEquals(String.format(DeleteCommand.MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(BOB)),
+                result.getFeedbackToUser());
+        assertFalse(logic.isAwaitingConfirmation());
+        assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertEquals(List.of(AMY), saved.getPersonList());
+    }
+
+    @Test
+    public void execute_deleteThenOtherInput_cancelsWithoutRunningInput() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        String[] cancellingInputs = {"n", "Y", "yes", "", "clear", "delete 1"};
+
+        for (String input : cancellingInputs) {
+            logic.execute("delete 1");
+            CommandResult result = logic.execute(input);
+
+            assertEquals(ConfirmDeleteCommand.MESSAGE_CANCELLED, result.getFeedbackToUser(), input);
+            assertFalse(logic.isAwaitingConfirmation(), input);
+            assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList(), input);
+        }
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    @Test
+    public void execute_confirmationWordWithoutPendingDeletion_isUnknownCommand() {
+        model.addPerson(AMY);
+
+        assertParseException("y", MESSAGE_UNKNOWN_COMMAND);
+        assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void execute_invalidDeleteIndex_doesNotAwaitConfirmation() {
+        model.addPerson(AMY);
+
+        assertCommandException("delete 2", MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertFalse(logic.isAwaitingConfirmation());
     }
 
     @Test
@@ -367,6 +425,7 @@ public class LogicManagerTest {
         Person abel = new PersonBuilder(BOB).withName("Abel").build();
         assertEquals(List.of(aaron, abel, AMY), model.getFilteredPersonList());
         logic.execute("delete 2");
+        logic.execute("y");
         assertEquals(List.of(aaron, AMY), model.getFilteredPersonList());
         assertEquals(List.of(AMY, aaron), model.getAddressBook().getPersonList());
         logic.execute("find Amy");
@@ -552,10 +611,12 @@ public class LogicManagerTest {
         useFailingStorage(DUMMY_IO_EXCEPTION);
         logic.execute("find Amy Bob");
 
+        logic.execute("delete 1");
         SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
-                SaveFailureException.class, () -> logic.execute("delete 1"));
+                SaveFailureException.class, () -> logic.execute("y"));
 
         assertTrue(failure.isChangeApplied());
+        assertFalse(logic.isAwaitingConfirmation());
         assertEquals(List.of(BOB, hidden), model.getAddressBook().getPersonList());
         assertEquals(List.of(BOB), model.getFilteredPersonList());
         assertTrue(failure.getMessage().contains("previous saved roster is unchanged"));

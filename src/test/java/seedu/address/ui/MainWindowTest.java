@@ -34,6 +34,7 @@ import seedu.address.logic.LogicManager;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.CommandHelp;
+import seedu.address.logic.commands.ConfirmDeleteCommand;
 import seedu.address.model.ModelManager;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
@@ -116,6 +117,7 @@ public class MainWindowTest {
         onJavaFxThread(() -> {
             enter("find Alice");
             enter("delete 1");
+            enter("y");
             assertTrue(feedback.getText().contains("not saved"));
             assertEquals("", input.getText());
             assertEquals("Bob Lee", model.getAddressBook().getPersonList().getFirst().getName().fullName);
@@ -127,6 +129,28 @@ public class MainWindowTest {
             assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, feedback.getText());
             assertEquals("clear", input.getText());
             assertEquals(1, model.getFilteredPersonList().size());
+        });
+    }
+
+    @Test
+    public void enter_deleteAwaitingConfirmation_highlightsCommandBoxUntilAnswered() throws Exception {
+        onJavaFxThread(() -> {
+            enter("delete 1");
+            assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertEquals(CommandBox.CONFIRMATION_PROMPT, input.getPromptText());
+            assertEquals(2, model.getAddressBook().getPersonList().size());
+
+            enter("list");
+            assertEquals(ConfirmDeleteCommand.MESSAGE_CANCELLED, feedback.getText());
+            assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertEquals(CommandBox.DEFAULT_PROMPT, input.getPromptText());
+            assertEquals(2, model.getAddressBook().getPersonList().size());
+
+            enter("delete 1");
+            enter("y");
+            assertTrue(feedback.getText().startsWith("Deleted member"));
+            assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertEquals(1, model.getAddressBook().getPersonList().size());
         });
     }
 
@@ -224,6 +248,7 @@ public class MainWindowTest {
             enter("export " + exported);
             assertTrue(feedback.getText().startsWith("Exported 3 people to "));
             enter("delete 2");
+            enter("y");
             assertDisplayedNames("Zara Tan", "Alice Tan");
             enter("clear");
             enter("import p/\"" + exported + "\"");
@@ -283,6 +308,10 @@ public class MainWindowTest {
             assertFalse(feedback.getText().contains("carol@example.com"));
 
             enter("delete 3");
+            assertTrue(feedback.getText().startsWith("Delete member Carol Wong?"));
+            assertFalse(feedback.getText().contains("90000002"));
+            assertFalse(feedback.getText().contains("carol@example.com"));
+            enter("y");
             assertTrue(feedback.getText().contains("Deleted member"));
             assertFalse(feedback.getText().contains("90000002"));
         });

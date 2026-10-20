@@ -15,6 +15,9 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class CommandBox extends UiPart<Region> {
 
     public static final String ERROR_STYLE_CLASS = "error";
+    public static final String CONFIRMATION_STYLE_CLASS = "confirmation-pending";
+    public static final String DEFAULT_PROMPT = "Enter command here...";
+    public static final String CONFIRMATION_PROMPT = "Type y and press Enter to delete, or anything else to cancel";
     private static final String FXML = "CommandBox.fxml";
 
     private final CommandExecutor commandExecutor;
@@ -35,6 +38,18 @@ public class CommandBox extends UiPart<Region> {
     /** Returns keyboard focus to the command field after roster inspection. */
     public void focusInput() {
         commandTextField.requestFocus();
+    }
+
+    /**
+     * Highlights the command box and changes its hint while the next input confirms or cancels a deletion.
+     */
+    public void setAwaitingConfirmation(boolean isAwaitingConfirmation) {
+        ObservableList<String> styleClass = commandTextField.getStyleClass();
+        styleClass.remove(CONFIRMATION_STYLE_CLASS);
+        if (isAwaitingConfirmation) {
+            styleClass.add(CONFIRMATION_STYLE_CLASS);
+        }
+        commandTextField.setPromptText(isAwaitingConfirmation ? CONFIRMATION_PROMPT : DEFAULT_PROMPT);
     }
 
     /**

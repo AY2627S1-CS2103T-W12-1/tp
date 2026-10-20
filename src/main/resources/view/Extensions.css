@@ -7,3 +7,10 @@
     -fx-background-color: -tc-error-soft;
     -fx-border-color: -tc-error;
 }
+
+/* A pending deletion keeps the command box highlighted until the next input confirms or cancels it. */
+#commandTextField.confirmation-pending, #commandTextField.confirmation-pending:focused {
+    -fx-background-color: -tc-error-soft;
+    -fx-border-color: -tc-terracotta;
+    -fx-border-width: 2.5;
+}
