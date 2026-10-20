@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.io.FileNotFoundException;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
@@ -121,6 +122,41 @@ public class StringUtilTest {
 
         // Matches multiple words in sentence
         assertTrue(StringUtil.containsWordIgnoreCase("AAA bBb ccc  bbb", "bbB"));
+    }
+
+    @Test
+    public void containsPartialWordIgnoreCase_validInputs_matchesContiguousText() {
+        assertTrue(StringUtil.containsPartialWordIgnoreCase("Alice Tan", "ali"));
+        assertTrue(StringUtil.containsPartialWordIgnoreCase("Alice Tan", "LIC"));
+        assertTrue(StringUtil.containsPartialWordIgnoreCase("Alice Tan", "ice"));
+        assertTrue(StringUtil.containsPartialWordIgnoreCase("Alice Tan", "  tAN  "));
+        assertTrue(StringUtil.containsPartialWordIgnoreCase("EMILE", "mil"));
+        assertTrue(StringUtil.containsPartialWordIgnoreCase("Ann-Marie", "n-m"));
+        assertFalse(StringUtil.containsPartialWordIgnoreCase("Alice Tan", "Alicee"));
+        assertFalse(StringUtil.containsPartialWordIgnoreCase("Alice Tan", "alce"));
+        assertFalse(StringUtil.containsPartialWordIgnoreCase("Alice Tan", "ceTa"));
+        assertFalse(StringUtil.containsPartialWordIgnoreCase("Alice Tan", ".*"));
+        assertFalse(StringUtil.containsPartialWordIgnoreCase("", "ali"));
+    }
+
+    @Test
+    public void containsPartialWordIgnoreCase_turkishLocale_ignoresCase() {
+        Locale originalLocale = Locale.getDefault();
+        try {
+            Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+            assertTrue(StringUtil.containsPartialWordIgnoreCase("ILIAS Tan", "ili"));
+            assertTrue(StringUtil.containsPartialWordIgnoreCase("ilias Tan", "ILI"));
+        } finally {
+            Locale.setDefault(originalLocale);
+        }
+    }
+
+    @Test
+    public void containsPartialWordIgnoreCase_invalidInputs_throwsException() {
+        assertThrows(NullPointerException.class, () -> StringUtil.containsPartialWordIgnoreCase(null, "ali"));
+        assertThrows(NullPointerException.class, () -> StringUtil.containsPartialWordIgnoreCase("Alice", null));
+        assertThrows(IllegalArgumentException.class, () -> StringUtil.containsPartialWordIgnoreCase("Alice", "  "));
+        assertThrows(IllegalArgumentException.class, () -> StringUtil.containsPartialWordIgnoreCase("Alice", "a b"));
     }
 
     //---------------- Tests for getDetails --------------------------------------

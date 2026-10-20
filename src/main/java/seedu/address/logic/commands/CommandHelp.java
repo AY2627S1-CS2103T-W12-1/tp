@@ -24,12 +24,12 @@ public enum CommandHelp {
                     + "Check list numbers again before editing or deleting.",
             "Use sort with no extra arguments. Use list to restore the complete roster in stored order."),
     FIND("Browse members", "find", "Find a member by name", "find KEYWORD [MORE_KEYWORDS]", "find Alice Tan",
-            "Narrows the displayed members by any complete name word, ignoring letter case.",
+            "Narrows the displayed members by any complete or partial name word, ignoring letter case.",
             "Shows members whose names contain Alice or Tan. No match produces an empty list.",
             "Each find adds a name filter. Boxes appear left to right in command order, but find and filter "
                     + "order does not change the final matches. Use X to remove one box or list to show everyone. "
-                    + "Jo does not match John.",
-            "Supply at least one name word. Searches use names, not phone numbers or tags."),
+                    + "Jo and oh both match John.",
+            "Supply at least one name word or part of one. Searches use names, not phone numbers or tags."),
     FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
             "Shows currently displayed members with the specified tag without changing saved data.",
             "Shows only members tagged committee, in their current order with new displayed numbers.",
@@ -88,6 +88,14 @@ public enum CommandHelp {
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
                     + "recovery guidance before exiting."),
+    UNTAG("Manage members", "untag", "Untag one member", "untag INDEX t/TAG", "untag 1 t/friends",
+            "Removes one tag from the member at a displayed list number while retaining their other tags.",
+            "Removes friends from member 1 and shows their updated details after saving.",
+            "Check the current list number first. Other tags, searches, filters and sorting remain in place. "
+                    + "Removing a tag used by an active filter may hide the member from the current list.",
+            "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
+                    + "Invalid input or a missing member is rejected. If the member lacks the tag, no change is "
+                    + "made. If saving fails, follow the recovery guidance before exiting."),
     RENAMETAG("Manage members", "renametag", "Rename a tag for everyone", "renametag t/CURRENT_TAG t/NEW_TAG",
             "renametag t/batch2026 t/alumni",
             "Replaces one tag with another for every member, including members hidden by a search or filter.",

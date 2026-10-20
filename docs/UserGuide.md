@@ -5,7 +5,7 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers the **current source build**, based on TrackCall v1.4 alpha, and its sixteen available commands.
+This guide covers the **current source build**, based on TrackCall v1.4 alpha, and its eighteen available commands.
 The selected-member privacy panel is newer than the v1.4 alpha release JAR.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
@@ -85,7 +85,7 @@ Use the [command summary](#command-summary) for a compact reference.
 Open help by typing `help`, pressing **F1**, or choosing **Help → Help**.
 The guide works without internet access and does not change or save the roster.
 
-The overview groups all sixteen commands into four categories:
+The overview groups all eighteen commands into four categories:
 Browse members, Manage members, Remove records, and Help & session.
 Each command has a short description and a runnable example.
 The overview uses two columns in a wide window and one in a narrow window.
@@ -187,12 +187,36 @@ An edit that would make all four contact fields match another member is rejected
 
 Check the member number again after any command that changes the list.
 
+### Add or remove one tag: `tag`, `untag`
+
+Use `tag INDEX t/TAG` to add one tag to the member at a number in the **currently displayed list**.
+Use `untag INDEX t/TAG` to remove one tag from that member. Both commands retain all other tags
+and contact fields. For example:
+
+```text
+tag 2 t/committee
+untag 2 t/friends
+```
+
+Check the displayed number after searching, filtering, showing selected members, or sorting. The
+index identifies the member shown at that number when you submit the command. Hidden members are
+not changed. Tags must contain 1 to 30 ASCII letters or digits; matching is case-sensitive.
+
+If the member already has the tag (for `tag`) or lacks it (for `untag`), TrackCall reports that
+no change was made. A valid no-op still attempts to save. Searches, filters, sorting, and a `show`
+selection remain active after the command. Removing a tag required by an active filter may hide the
+member from that view; use `list` to show everyone again.
+
+If saving fails, the member change remains visible in the current session while the previous saved
+file stays unchanged. Follow [Correcting errors](#correcting-errors) before exiting.
+
 ### Find members: `find`
 
 `find Alice Tan` shows currently displayed members whose names contain **Alice or Tan**.
 
-* Matching ignores letter case and uses complete words.
-  `Alice` matches `Alice Tan`, but `Ali` does not.
+* Matching ignores letter case and accepts any contiguous part of a name word.
+  `Alice`, `Ali`, `lic`, and `ice` all match `Alice Tan`.
+  For example, `find ali tan` shows names containing either `ali` or `tan`.
 * Each new `find` adds another name filter. For example, `find Alice Tan` followed by `find Tan`
   keeps members matching both searches.
 * Phone numbers and tags are not searched.
@@ -231,7 +255,7 @@ active tags, it names every distinct tag in the order applied, for example:
 `1 member(s) listed with tags "committee", "year1".` Use `list` to clear all active filters.
 No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
 
-Check the displayed numbers before using `edit` or `delete`. Editing keeps the active search and filters.
+Check the displayed numbers before using `edit`, `tag`, `untag`, or `delete`. Editing keeps the active search and filters.
 If an edited member no longer matches, they disappear from view but remain in the roster.
 
 Supply exactly one tag of 1 to 30 ASCII letters or digits, with no internal spaces. Surrounding spaces
@@ -420,12 +444,13 @@ Rejected input leaves the roster and current list unchanged.
 
 * `add n/Alice` is incomplete. Use `help add`, then enter all four required fields.
 * `delete 0` is invalid. Use `list`, check the member, and enter its displayed number.
+* `tag 0 t/committee` and `untag 1 t/` are invalid. Use a positive current list number and one valid tag.
 
 ![The command edit 1 p/abc is highlighted as invalid, with feedback that phone numbers must contain only digits and be at least three digits long](images/user-guide/validation.png)
 
 *An invalid phone number leaves the member unchanged. Correct the command and press Enter to try again.*
 
-### A save fails after add, edit, delete, tagall, untagall, renametag, or import
+### A save fails after add, edit, delete, tag, untag, tagall, untagall, renametag, or import
 
 The change remains visible in this session, but the previous saved file stays unchanged.
 The command box clears the input to avoid repeating an already-applied change.
@@ -447,8 +472,8 @@ Fix the storage problem. Retry only if you still want to remove the entire roste
 
 ## Your data
 
-TrackCall automatically saves after successful `add`, `edit`, `delete`, `tagall`, `untagall`, `renametag`,
-`clear`, and `import` commands.
+TrackCall automatically saves after successful `add`, `edit`, `delete`, `tag`, `untag`, `tagall`, `untagall`,
+`renametag`, `clear`, and `import` commands.
 `help`, `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` do not save the roster.
 
 ### Locate or back up your roster
@@ -522,7 +547,12 @@ See [Your data](#your-data) for working-folder and backup instructions.
 ### Why did a member disappear after a search?
 
 A search changes the displayed list, not the saved roster. Run `list` to show everyone.
-Check the current displayed number before editing or deleting a member.
+Check the current displayed number before editing, tagging, untagging, or deleting a member.
+
+### How do I add or remove one member's tag?
+
+Use `tag INDEX t/TAG` to add a tag or `untag INDEX t/TAG` to remove one. Both commands preserve
+the member's other tags. Use `edit INDEX t/...` only when replacing the full tag set.
 
 ### Can I update a whole group's tags?
 
@@ -534,7 +564,7 @@ To rename a group's tag for everyone, use `renametag`. See [Rename a tag](#renam
 
 Follow [Correcting errors](#correcting-errors) before exiting.
 A failed `clear` save restores the roster.
-Unsaved changes from `add`, `edit`, `delete`, `tagall`, `untagall`, `renametag`, and `import` remain visible
+Unsaved changes from `add`, `edit`, `delete`, `tag`, `untag`, `tagall`, `untagall`, `renametag`, and `import` remain visible
 in memory.
 
 ## Command summary
@@ -547,6 +577,8 @@ in memory.
 | Show selected members | `show INDEX [MORE_INDEXES]...` | `show 1 3 4 5` keeps those members from the current list. |
 | Sort by name | `sort` | Sorts the current view from A to Z, ignoring letter case. |
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
+| Add one tag | `tag INDEX t/TAG` | `tag 2 t/committee` adds one tag to displayed member 2. |
+| Remove one tag | `untag INDEX t/TAG` | `untag 2 t/friends` removes one tag from displayed member 2. |
 | Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
 | Filter by tag | `filter t/TAG` | `filter t/committee` narrows the displayed members. |
 | Tag a group | `tagall t/TAG` | `tagall t/committee` adds the tag to every displayed member. |
