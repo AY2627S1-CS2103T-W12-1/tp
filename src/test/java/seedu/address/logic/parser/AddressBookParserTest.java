@@ -23,6 +23,7 @@ import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FilterCommand;
 import seedu.address.logic.commands.FindCommand;
+import seedu.address.logic.commands.FindEmailCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
@@ -30,8 +31,11 @@ import seedu.address.logic.commands.RenameTagCommand;
 import seedu.address.logic.commands.ShowCommand;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.TagAllCommand;
+import seedu.address.logic.commands.TagCommand;
 import seedu.address.logic.commands.UntagAllCommand;
+import seedu.address.logic.commands.UntagCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.EmailContainsKeywordsPredicate;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
@@ -95,6 +99,14 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_findEmail_routesEmailKeywords() throws Exception {
+        assertEquals(new FindEmailCommand(new EmailContainsKeywordsPredicate(List.of("@example.com", "alice+"))),
+                parser.parseCommand("  findemail   @example.com\talice+  "));
+        assertEquals(new HelpCommand("findemail"), parser.parseCommand("help findemail"));
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("FINDEMAIL alice"));
+    }
+
+    @Test
     public void parseCommand_filter_returnsFilterCommand() throws Exception {
         assertEquals(new FilterCommand(new Tag("committee")), parser.parseCommand("filter t/committee"));
     }
@@ -106,9 +118,21 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_tag_returnsTagCommand() throws Exception {
+        assertEquals(new TagCommand(Index.fromOneBased(2), new Tag("committee")),
+                parser.parseCommand("tag 2 t/committee"));
+    }
+
+    @Test
     public void parseCommand_untagAll_returnsUntagAllCommand() throws Exception {
         assertEquals(new UntagAllCommand(new Tag("committee")), parser.parseCommand("untagall t/committee"));
         assertEquals(new UntagAllCommand(new Tag("committee")), parser.parseCommand("  untagall   t/committee  "));
+    }
+
+    @Test
+    public void parseCommand_untag_returnsUntagCommand() throws Exception {
+        assertEquals(new UntagCommand(Index.fromOneBased(2), new Tag("committee")),
+                parser.parseCommand("untag 2 t/committee"));
     }
 
     @Test

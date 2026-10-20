@@ -2,15 +2,16 @@ package seedu.address.model;
 
 import java.util.function.Predicate;
 
+import seedu.address.model.person.EmailContainsKeywordsPredicate;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 
-/** One removable name or tag condition in the displayed member list. */
+/** One removable name, email or tag condition in the displayed member list. */
 public final class ActiveFilter {
     /** The kind of condition shown in the active filter row. */
     public enum Kind {
-        NAME, TAG
+        NAME, EMAIL, TAG
     }
 
     private final Kind kind;
@@ -28,6 +29,11 @@ public final class ActiveFilter {
     /** Creates a name condition whose keywords are alternatives within this one search. */
     public static ActiveFilter createNameFilter(NameContainsKeywordsPredicate predicate) {
         return new ActiveFilter(Kind.NAME, "Name: " + String.join(" ", predicate.getKeywords()), predicate, null);
+    }
+
+    /** Creates a condition matching any of the given email fragments. */
+    public static ActiveFilter createEmailFilter(EmailContainsKeywordsPredicate predicate) {
+        return new ActiveFilter(Kind.EMAIL, "Email: " + String.join(" ", predicate.getKeywords()), predicate, null);
     }
 
     /** Creates a condition requiring the given tag. */
@@ -48,7 +54,7 @@ public final class ActiveFilter {
         return predicate.test(person);
     }
 
-    /** Returns the tag for a tag condition, or null for a name condition. */
+    /** Returns the tag for a tag condition, or null for a search condition. */
     Tag getTag() {
         return tag;
     }
