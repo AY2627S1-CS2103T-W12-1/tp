@@ -99,7 +99,7 @@ This reduces their dependence on each other's implementation details, as shown b
 
 ![Structure of the UI component](images/UiClassDiagram.png)
 
-The diagram shows the v1.4 alpha structure; the current source build also includes
+The diagram shows the current source build, including
 `MemberDetailsPanel` beside `PersonListPanel`.
 
 `MainWindow` contains `CommandBox`, `ResultDisplay`, `PersonListPanel`, `MemberDetailsPanel`,
@@ -190,7 +190,7 @@ This allows common handling where appropriate, including in tests.
 
 **API:** [`Model.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
 
-<img src="images/ModelClassDiagram.png" width="717" alt="Member records, preferences, and JavaFX filtering and sorting views">
+<img src="images/ModelClassDiagram.png" width="717" alt="Member records, active filters, selections, preferences, and displayed list views">
 
 The Model component stores:
 
@@ -198,8 +198,10 @@ The Model component stores:
 * **Displayed data:** a filtered list, such as name-search results or an index selection.
   A `SortedList` wraps it for optional name sorting while the stored roster keeps its original order.
   An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
-* **Active tag filters:** the tags applied by `filter`, in the order they were added.
-  `list`, `find`, and a successful `import` or `clear` remove them.
+* **Removable filters (current source build):** `ModelManager` keeps `ActiveFilter` objects for
+  name and tag conditions. The UI uses these to show and remove individual filter boxes.
+  Filters retain application order; `list` and a successful `import` or `clear` remove them.
+  `show` selections use `PersonSelectionPredicate` objects retained separately.
 * **Preferences:** a `UserPrefs` object, currently containing GUI settings.
   Other components access it through `ReadOnlyUserPrefs`.
 
