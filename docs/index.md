@@ -21,8 +21,9 @@ newer than the v1.4 alpha release.
 * Add, edit, list, find, delete, and clear member records.
 * Filter the displayed members by tag, and sort them by name.
 * Add or remove a tag for every displayed member with `tagall` and `untagall`.
+* Rename a tag for every member with `renametag`.
 * Import and export member records as CSV files.
-* Offline help for all fifteen commands.
+* Offline help for all sixteen commands.
 * Local saving after successful data changes, with recovery guidance for save errors.
   A failed clear restores the roster.
 
