@@ -5,7 +5,7 @@ title: User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers **TrackCall v1.4 alpha** and its fourteen available commands.
+This guide covers **TrackCall v1.4 alpha** and its fifteen available commands.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
@@ -76,7 +76,7 @@ Use the [command summary](#command-summary) for a compact reference.
 Open help by typing `help`, pressing **F1**, or choosing **Help → Help**.
 The guide works without internet access and does not change or save the roster.
 
-The overview groups all fourteen commands into four categories:
+The overview groups all fifteen commands into four categories:
 Browse members, Manage members, Remove records, and Help & session.
 Each command has a short description and a runnable example.
 The overview uses two columns in a wide window and one in a narrow window.

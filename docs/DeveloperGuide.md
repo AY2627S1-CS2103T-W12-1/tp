@@ -214,7 +214,7 @@ full intended product, including behaviour still to be implemented.
 
 #### Catalogue and command flow
 
-`CommandHelp` stores the fourteen implemented commands in one local catalogue.
+`CommandHelp` stores the fifteen implemented commands in one local catalogue.
 Each entry contains its purpose, syntax, example, expected result, and common errors.
 Only executable commands appear, so planned commands are never shown as available.
 
@@ -1201,7 +1201,7 @@ platform or release package has been verified. Use a disposable folder and synth
 
 ### Offline help and readable feedback
 
-1. Disable networking. Run `help`: verify four category cards containing all fourteen command names,
+1. Disable networking. Run `help`: verify four category cards containing all fifteen command names,
    descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
    layout when wide and one column when narrowed. Check the beige background, dark readable text,
    visible keyboard focus, and error styling in the main window, help, and alerts.
