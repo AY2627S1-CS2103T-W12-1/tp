@@ -157,7 +157,7 @@ This allows common handling where appropriate, including in tests.
 
 **API:** [`Model.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
 
-<img src="images/ModelClassDiagram.png" width="717" alt="Member records, preferences, and JavaFX filtering and sorting views">
+<img src="images/ModelClassDiagram.png" width="717" alt="Member records, active filters, selections, preferences, and displayed list views">
 
 The Model component stores:
 
@@ -165,6 +165,9 @@ The Model component stores:
 * **Displayed data:** a filtered list, such as name-search results or an index selection.
   A `SortedList` wraps it for optional name sorting while the stored roster keeps its original order.
   An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
+* **Removable filters (current source build):** `ModelManager` keeps `ActiveFilter` objects for
+  name and tag conditions. The UI uses these to show and remove individual filter boxes.
+  `show` selections use `PersonSelectionPredicate` objects retained separately.
 * **Preferences:** a `UserPrefs` object, currently containing GUI settings.
   Other components access it through `ReadOnlyUserPrefs`.
 
