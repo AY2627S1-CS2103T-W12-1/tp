@@ -151,6 +151,39 @@ public class MainWindowTest {
     }
 
     @Test
+    public void emailFilterChip_replacesSelectionAndCanBeRemovedWithoutSaving() throws Exception {
+        onJavaFxThread(() -> {
+            enter("edit 1 e/alice@example.com t/committee");
+            enter("edit 2 e/bob@school.edu t/committee");
+        });
+        Path dataFile = temporaryFolder.resolve("members.json");
+        String savedRoster = Files.readString(dataFile);
+        onJavaFxThread(() -> {
+            enter("sort");
+            enter("find Bob");
+            enter("filter t/committee");
+            enter("show 1");
+            enter("findemail @example.com");
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+            assertEquals(List.of("Email: @example.com"), chipLabels(chips));
+            assertTrue(chips.isVisible());
+            assertTrue(((HBox) chips.getChildren().getFirst()).getStyleClass().contains("filter-chip-email"));
+            assertDisplayedNames("Alice Tan");
+
+            enter("filter t/committee");
+            enter("find Bob");
+            assertDisplayedNames();
+            removeChip(chips, 2);
+            assertDisplayedNames("Alice Tan");
+            assertEquals(List.of("Email: @example.com", "Tag: committee"), chipLabels(chips));
+            removeChip(chips, 0);
+            assertEquals(List.of("Tag: committee"), chipLabels(chips));
+            assertDisplayedNames("Alice Tan", "Bob Lee");
+        });
+        assertEquals(savedRoster, Files.readString(dataFile));
+    }
+
+    @Test
     public void activeFilterChips_removeIndividualFiltersAndUpdateDisplayedMembers() throws Exception {
         onJavaFxThread(() -> {
             Person alice = model.getAddressBook().getPersonList().get(0);

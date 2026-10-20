@@ -19,9 +19,8 @@ command fails])
 else ([command succeeds])
 endif
 
-if () then ([help, list, show,
-sort, find, filter,
-export or exit])
+if () then ([help, list, show, sort, find,
+findemail, filter, export or exit])
     :Show result without saving;
     stop
 else ([add, edit, tag, untag, delete,

@@ -13,13 +13,13 @@ The intended MVP supports overlapping groups without repetitive edits to each re
 
 The secretary can:
 
-* Find members by name and narrow the displayed group by tag.
+* Find members by name or email and narrow the displayed group by tag.
 * Add or remove a tag for the whole displayed group in one operation.
 * Keep unrelated tags and hidden members unchanged.
 * Save valid changes automatically to a local file.
 * Complete the core workflow without an internet connection or a separate save command.
 
-The **v1.4 alpha** supports individual member management, name search, tag filtering, bulk tag
+The **v1.4 alpha** supports individual member management, name and email search, tag filtering, bulk tag
 editing, offline command help, local saving, CSV import/export, and name sorting.
 The current source build adds a selected-member privacy panel after that release.
 See [Limitations](#limitations) for constraints in the current release.
@@ -172,7 +172,7 @@ The Model component stores:
   A `SortedList` wraps it for optional name sorting while the stored roster keeps its original order.
   An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
 * **Removable filters (current source build):** `ModelManager` keeps `ActiveFilter` objects for
-  name and tag conditions. The UI uses these to show and remove individual filter boxes.
+  name, email and tag conditions. The UI uses these to show and remove individual filter boxes.
   Filters retain application order; `list` and a successful `import` or `clear` remove them.
   `show` selections use `PersonSelectionPredicate` objects retained separately.
 * **Preferences:** a `UserPrefs` object, currently containing GUI settings.
@@ -231,7 +231,7 @@ full intended product, including behaviour still to be implemented.
 
 #### Catalogue and command flow
 
-`CommandHelp` stores the eighteen implemented commands in one local catalogue.
+`CommandHelp` stores the nineteen implemented commands in one local catalogue.
 Each entry contains its purpose, syntax, example, expected result, and common errors.
 Only executable commands appear, so planned commands are never shown as available.
 
@@ -346,7 +346,7 @@ also recover to usable bounds. This handles monitor changes between sessions.
 #### Save policy
 
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
-`help`, `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` return without saving member data.
+`help`, `list`, `show`, `sort`, `find`, `findemail`, `filter`, `export`, and `exit` return without saving member data.
 Successful `add`, `edit`, `tag`, `untag`, `delete`, `tagall`, `untagall`, `renametag`, `clear`, and `import` commands pass the complete
 roster, including hidden members,
 to `Storage#saveAddressBook`.
@@ -463,6 +463,21 @@ A write or replacement failure preserves the previous destination and attempts t
 On success, `isReadOnly()` prevents the logic layer from saving the automatic JSON roster.
 Neither successful nor failed export changes the displayed filters or sorting.
 
+### Find members by email
+
+`findemail KEYWORD [MORE_KEYWORDS]...` searches the full roster for email addresses containing any
+whitespace-separated keyword. It accepts a full address or a fragment such as `@example.com`.
+Matching lowercases the email and keywords with `Locale.ROOT` and uses literal substring matching,
+not regular expressions. Names and phone numbers are not searched. Blank input is rejected.
+
+`FindEmailCommand` replaces the model's current search predicate, clearing earlier name searches,
+email searches, tag filters, and `show` selections while preserving active name sorting. The observable list re-evaluates
+the email predicate after edits; a member whose email no longer matches disappears from the view.
+`filter` can narrow these results, and `list` restores the full roster in stored order.
+The command is read-only and does not save the roster. Edit and delete continue to use current displayed indices.
+The email predicate is stored as a removable `ActiveFilter`, so the filter row shows the active query.
+Removing that chip clears only the email condition and preserves any subsequent name or tag conditions.
+
 ### Filter members by tag
 
 `filter t/TAG` narrows the displayed list to members with one exact, case-sensitive tag without changing member data.
@@ -477,10 +492,11 @@ The parser checks the tag before constructing it; the shared `Tag` model enforce
 #### Execution
 
 `FilterCommand` passes the tag to `ModelManager#filterFilteredPersonListByTag`. The model
-combines it with the active name and tag conditions using logical AND.
-The model keeps removable conditions in application order, which the UI shows left to right.
-`find` adds a name condition, while `list` clears all conditions. Applying the same conditions in a
-different order gives the same matching members when the roster is unchanged.
+combines it with the active name, email, and tag conditions using logical AND.
+The model keeps removable name, email and tag conditions in application order, which the UI shows left to right.
+`find` adds a name condition, while `list` clears all conditions. `findemail` replaces all conditions
+with an email search. Applying name and tag conditions in a different order gives the same matching
+members when the roster is unchanged.
 The observable filtered list updates automatically, and the command reports the resulting member
 count and all active tag names.
 A single tag uses `N member(s) listed with tag "TAG".`; multiple tags use
@@ -493,9 +509,10 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
 
 #### Design considerations
 
-* **Preserve earlier conditions:** combining predicates lets users narrow an existing name search or tag
+* **Preserve earlier conditions:** combining predicates lets users narrow an existing name search, email search, or tag
   filter without restoring hidden members. For example, filtering by `committee` and then `year1` keeps
-  members with both tags. Another `find` also narrows the view; `list` clears all conditions.
+  members with both tags. Another `find` also narrows the view; `findemail` replaces the search and
+  filters, while `list` clears all conditions.
 * **Keep filters active after edits:** the model retains the predicate rather than a fixed set of matching
   members. Replacing an edited member in the observable list re-evaluates that predicate. A member who no
   longer matches disappears from view but remains in the roster, so later commands operate on the updated group.
@@ -678,7 +695,7 @@ The MVP includes these commands:
 
 * **Help and session:** `help`, `exit`.
 * **Individual records:** `add`, `edit`, `delete`.
-* **Roster and search:** `list`, `find`, `clear`, `filter`.
+* **Roster and search:** `list`, `find`, `findemail`, `clear`, `filter`.
 * **Individual and group tags:** `tag`, `untag`, `tagall`, `untagall`, `renametag`.
 * **CSV files:** `export`, `import`.
 * **Display order:** `sort`.
@@ -695,8 +712,8 @@ The broader narrative must be read with these MVP decisions:
 * Bulk selection means everyone in the displayed list after searching or filtering. There is
   no arbitrary multi-selection or direct edit/delete-by-name command. Individual edits and
   deletions use the current displayed index, which the secretary must check first.
-* `find` matches complete or partial name words. Phone-number search is a considered idea,
-  not current MVP search behaviour.
+* `find` matches complete or partial name words. `findemail` matches literal email substrings.
+  Phone-number search is a considered idea, not current MVP search behaviour.
 * Name sorting is available through `sort`; `list` restores stored order.
 * vCard import/export, sorting by criteria other than name, archiving,
   bulk editing of non-tag fields, and an in-app handover/access feature are outside the
@@ -758,6 +775,7 @@ Overlapping stories are consolidated as follows:
 | US28 | `***` | club secretary | remove one member's tag while retaining their other tags | update their group membership without losing unrelated information |
 | US29 | `**` | club secretary | rename a group tag across its members | correct a group name without rebuilding its membership |
 | US35 | `***` | club secretary | have exact duplicate records rejected during data entry | avoid recording the same contact details twice |
+| US37 | `**` | club secretary | find members by a full email address or domain fragment | retrieve contacts or select an email-domain group |
 
 US24 is implemented by `tag INDEX t/TAG`; US28 is implemented by `untag INDEX t/TAG`. Each
 command changes one tag while retaining all other tags. An individual `edit` still requires the
@@ -780,7 +798,7 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 | US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Implemented in the current source build after v1.4 alpha; the roster hides details until selection. |
 | US19 | `**` | first-time user | follow a short in-app getting-started guide | learn the basic workflow step by step | Considered; the MVP provides command help, not an onboarding wizard. |
 | US22 | `**` | club secretary | review imported member records | confirm that an import completed correctly | Considered with US21; no separate review step for imported records in the MVP. |
-| US27 | `**` | club secretary | search by phone number | identify a member when I only have their number | Considered; the MVP searches names only. |
+| US27 | `**` | club secretary | search by phone number | identify a member when I only have their number | Considered; the MVP searches names and emails only. |
 | US30 | `**` | club secretary | update a non-tag field for a group in one operation | handle repeated renewal changes efficiently | Considered; bulk changes in the MVP affect tags only. |
 | US31 | `**` | long-time secretary | archive an inactive member | reduce clutter while keeping their history | Considered; deletion in the MVP does not retain history. |
 | US32 | `*` | long-time secretary | archive an unused group tag | keep old groups out of my active work without losing their history | Considered; no tag archive or separate tag catalogue in the MVP. |
@@ -806,8 +824,10 @@ These rules describe the selected MVP and apply to the use cases below.
    displayed list. It matches complete or partial name words, ignores letter case, and accepts a match on
    any keyword within one command. Consecutive `find` commands retain the intersection of their
    matches and any active tag filters. Repeated keywords do not repeat records.
+   `findemail KEYWORD [MORE_KEYWORDS]...` replaces previous searches and filters, but matches
+   literal email substrings using any whitespace-separated keyword, ignoring case. Neither search disables sorting.
 5. `filter t/TAG` narrows the currently displayed list using exact, case-sensitive tag matching.
-   Repeated filters retain the intersection of the tags and active name searches. A valid
+   Repeated filters retain the intersection of the tags and active name or email searches. A valid
    zero-match result is successful. Use `list` first to filter the whole roster.
 6. An index is an ASCII-digit integer from 1 through the current displayed count. Leading zeroes
    are accepted; signs, decimals, and internal whitespace are not. It refers to the list when
@@ -826,7 +846,7 @@ These rules describe the selected MVP and apply to the use cases below.
 9. Valid `add`, `edit`, `tag`, `untag`, `delete`, `clear`, `tagall`, `untagall`, `renametag`, and `import` commands save
    the complete roster, including valid operations that make no change. An empty bulk target, or a
    `renametag` current tag that no member has, is an error and does not save. `help`, `list`, `show`,
-   `sort`, `find`, `filter`, `export`, and `exit` do not save.
+   `sort`, `find`, `findemail`, `filter`, `export`, and `exit` do not save.
 10. Report data-changing command success only after saving succeeds. A failed save preserves
     the previous saved file and reports a storage error. Except for `clear`, changes remain in
     memory and can be lost on exit. Failed `clear` restores the previous records, displayed
@@ -884,7 +904,7 @@ or window; it must remain keyboard accessible.
 #### Offline help
 
 * With networking disabled, `help` shows a concise summary of every executable command in the
-  running version. The completed MVP includes `help`, `add`, `list`, `edit`, `find`, `delete`,
+  running version. The completed MVP includes `help`, `add`, `list`, `edit`, `find`, `findemail`, `delete`,
   `clear`, `exit`, `filter`, `tag`, `untag`, `tagall`, `untagall`, `renametag`, `sort`, `export`, and `import`.
   The running version also includes `show`.
   An earlier iteration must not present an
@@ -991,6 +1011,12 @@ displayed list and retains previous name searches and tag filters.
 Partial matching uses contiguous text within a name word: `Jo`, `oh`, and `hn` each match `John Tan`.
 It does not correct spelling or match across spaces. `find oh Tan` matches either keyword, and
 repeated keywords do not duplicate members. Only names are searched; contact details and tags are excluded.
+
+`findemail KEYWORD [MORE_KEYWORDS]...` (US37) searches the full roster and replaces earlier
+name searches, tag filters, and `show` selections.
+It matches literal email substrings rather than complete name words, with case-insensitive OR matching.
+For example, `findemail alice@example.com @school.edu` matches either fragment. It preserves name sorting
+and does not save. Missing keywords report invalid command format and preserve the current view.
 
 #### UC03: Update a group's tags
 
@@ -1247,7 +1273,7 @@ such as incremental delivery, are also not product NFRs.
 | Group | A set of members sharing a tag, such as a committee or cohort. Groups are not separate stored objects in the MVP. |
 | Tag | A case-sensitive label containing 1 to 30 ASCII letters or digits, assigned at most once to each member. |
 | Displayed list | The records currently visible after the active search, tag filters, and index selections. It is the target set for a bulk tag command. |
-| Active search and filters | The name-search, tag, and index-selection conditions used to determine which records are displayed. A new `find` adds a condition; `list` clears them all. |
+| Active search and filters | The name-search, email-search, tag, and index-selection conditions used to determine which records are displayed. A new `find` adds a condition; `findemail` replaces them, and `list` clears them all. |
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
 | Partial-word matching | Matching any contiguous part of a name word, ignoring case. For example, `John`, `Jo`, and `oh` all match `John Tan`. |
 | Bulk tag update | Adding or removing one tag for the fixed set of members displayed when the command is submitted. |
@@ -1294,7 +1320,7 @@ appear in the panel. Copy a field, then press Escape and check that the details 
 focus returns to the command box. Select a member again, then run `edit` and check that the
 panel clears and the result area omits phone, email, and address. Repeat for `add` and `delete`.
 
-1. Disable networking. Run `help`: verify four category cards containing all eighteen command names,
+1. Disable networking. Run `help`: verify four category cards containing all nineteen command names,
    descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
    layout when wide and one column when narrowed. Check the beige background, dark readable text,
    visible keyboard focus, and error styling in the main window, help, and alerts.
@@ -1302,7 +1328,7 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    syntax, example, expected result, notes, and errors. Check All commands navigation, Up/Down,
    Page Up/Page Down, Home/End, and Escape. Resize the guide and check long lines remain readable.
 3. Try `help ADD`, `help unknown`, and `help add edit`. Expect useful errors without record changes.
-   `help filter`, `help tag`, `help untag`, `help tagall`, `help untagall`, and `help renametag` must show the implemented commands.
+   `help filter`, `help tag`, `help untag`, `help tagall`, `help untagall`, `help renametag`, and `help findemail` must show the implemented commands.
 4. Add a synthetic member with long name, email, address, and multiple tags. Verify labelled,
    wrapped member rows and separate feedback lines; no value should be permanently truncated.
    Resize the result area using its divider and check both feedback and roster scrolling.
@@ -1362,6 +1388,25 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
 10. With two stored records and a search showing only one, run `clear`. After saving, expect
    `Cleared 2 members. The address book is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
    `The address book is already empty. No changes were made.`
+
+### Email search
+
+Use a disposable roster. Add Alice Tan with `alice@example.com` and tag `committee`, Bob Lee with
+`bob@school.edu` and tag `committee`, and Zara Lim with `zara@example.com` and tag `friends`.
+
+1. Run `sort`, `find Nobody`, then `findemail @EXAMPLE.COM`. Expect Alice and Zara in name order,
+   confirming case-insensitive matching, full-roster search, and preserved sorting.
+   Run `filter t/committee`: expect Alice only. Run `findemail @school.edu`: expect Bob,
+   confirming that the new email search replaces the previous search and tag filter.
+2. Run `findemail alice@example.com @school.edu`: expect Alice and Bob. Run `findemail example.com`:
+   expect Alice and Zara. Verify that keywords containing regex syntax are treated literally,
+   and that names and phone numbers are not searched. A nonmatching query shows `0 members listed.`.
+   Run `findemail` without a keyword: expect invalid command format with the prior view unchanged.
+3. Run `findemail @example.com`, check the displayed index for Alice, then change her email to
+   `alice@other.net` with `edit`. Expect Alice to disappear while Zara remains. Run `list` to verify
+   Alice is still stored and all three members reappear in stored order.
+4. Back up the roster file, record its bytes and modification time, and run valid `findemail` searches.
+   Verify that neither the file contents nor its modification time changes.
 
 ### Sorting and CSV workflows
 

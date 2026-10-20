@@ -210,7 +210,7 @@ public class MainWindow extends UiPart<Stage> {
         });
         HBox chip = new HBox(6, label, removeButton);
         chip.getStyleClass().add("filter-chip");
-        chip.getStyleClass().add(filter.getKind() == ActiveFilter.Kind.NAME ? "filter-chip-name" : "filter-chip-tag");
+        chip.getStyleClass().add("filter-chip-" + filter.getKind().name().toLowerCase(java.util.Locale.ROOT));
         return chip;
     }
 

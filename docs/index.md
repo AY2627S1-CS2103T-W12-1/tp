@@ -19,12 +19,13 @@ newer than the v1.4 alpha release.
 ## Features in v1.4 alpha
 
 * Add, edit, list, find, delete, and clear member records.
+* Find members by email address or domain fragment with `findemail`.
 * Filter the displayed members by tag, and sort them by name.
 * Add or remove one tag from a displayed member with `tag INDEX t/TAG` or `untag INDEX t/TAG`.
 * Add or remove a tag for every displayed member with `tagall` and `untagall`.
 * Rename a tag for every member with `renametag`.
 * Import and export member records as CSV files.
-* Offline help for all eighteen commands.
+* Offline help for all nineteen commands.
 * Local saving after successful data changes, with recovery guidance for save errors.
   A failed clear restores the roster.
 
