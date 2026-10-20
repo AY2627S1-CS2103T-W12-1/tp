@@ -11,7 +11,7 @@ import javafx.scene.layout.Region;
 import seedu.address.model.person.Person;
 
 /**
- * A UI component that displays information of a {@code Person}.
+ * A compact roster row that keeps contact details out of the main list.
  */
 public class PersonCard extends UiPart<Region> {
 
@@ -34,12 +34,6 @@ public class PersonCard extends UiPart<Region> {
     @FXML
     private Label id;
     @FXML
-    private Label phone;
-    @FXML
-    private Label address;
-    @FXML
-    private Label email;
-    @FXML
     private FlowPane tags;
 
     /**
@@ -49,18 +43,12 @@ public class PersonCard extends UiPart<Region> {
         super(FXML);
         this.person = person;
         id.setText(Integer.toString(displayedIndex));
-        configureWrappedField(name, 68);
-        configureWrappedField(phone, 106);
-        configureWrappedField(email, 106);
-        configureWrappedField(address, 106);
+        configureWrappedName();
         tags.prefWrapLengthProperty().bind(Bindings.max(0, cardPane.prefWidthProperty().subtract(32)));
         tags.setMinHeight(Region.USE_PREF_SIZE);
         tags.setVisible(!person.getTags().isEmpty());
         tags.setManaged(!person.getTags().isEmpty());
         name.setText(person.getName().fullName);
-        phone.setText(person.getPhone().value);
-        address.setText(person.getAddress().value);
-        email.setText(person.getEmail().value);
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))
                 .forEach(tag -> {
@@ -74,12 +62,11 @@ public class PersonCard extends UiPart<Region> {
     }
 
     /**
-     * Gives layout a width before it measures wrapped height, and prevents rows from shrinking to one line.
-     * The reserved width accounts for card padding and the index or field caption beside the value.
+     * Reserves space for the index so long names wrap inside the row.
      */
-    private void configureWrappedField(Label label, double reservedWidth) {
-        label.prefWidthProperty().bind(Bindings.max(0, cardPane.prefWidthProperty().subtract(reservedWidth)));
-        label.maxWidthProperty().bind(label.prefWidthProperty());
-        label.setMinHeight(Region.USE_PREF_SIZE);
+    private void configureWrappedName() {
+        name.prefWidthProperty().bind(Bindings.max(0, cardPane.prefWidthProperty().subtract(68)));
+        name.maxWidthProperty().bind(name.prefWidthProperty());
+        name.setMinHeight(Region.USE_PREF_SIZE);
     }
 }

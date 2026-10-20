@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 
@@ -20,7 +21,7 @@ import seedu.address.testutil.JavaFxTestUtil;
 import seedu.address.testutil.PersonBuilder;
 
 /**
- * Checks member-card content and off-screen JavaFX layout without opening application windows.
+ * Checks that compact roster rows show identity and tags without revealing contact fields.
  */
 public class PersonCardTest {
 
@@ -30,15 +31,15 @@ public class PersonCardTest {
     }
 
     @Test
-    public void card_memberWithTags_showsEveryFieldAndSortedTags() throws Exception {
+    public void card_memberWithTags_showsNameAndSortedTagsOnly() throws Exception {
         onJavaFxThread(() -> {
             Person person = new PersonBuilder().withTags("year1", "Committee", "2026").build();
             Region card = layoutCard(person, 3, 700);
             assertEquals("3", ((Label) card.lookup("#id")).getText());
             assertEquals(person.getName().fullName, ((Label) card.lookup("#name")).getText());
-            assertEquals(person.getPhone().value, ((Label) card.lookup("#phone")).getText());
-            assertEquals(person.getEmail().value, ((Label) card.lookup("#email")).getText());
-            assertEquals(person.getAddress().value, ((Label) card.lookup("#address")).getText());
+            assertNull(card.lookup("#phone"));
+            assertNull(card.lookup("#email"));
+            assertNull(card.lookup("#address"));
             FlowPane tags = (FlowPane) card.lookup("#tags");
             assertTrue(tags.isVisible());
             assertEquals(List.of("2026", "Committee", "year1"), tags.getChildren().stream()
@@ -58,21 +59,20 @@ public class PersonCardTest {
     }
 
     @Test
-    public void card_narrowWidth_wrapsLongAddressAndTagWithoutLosingText() throws Exception {
+    public void card_narrowWidth_wrapsLongNameAndTagWithoutLosingText() throws Exception {
         onJavaFxThread(() -> {
-            String addressText = "12 Orchard Road, Membership Office, Level 3, Community Building beside the "
-                    + "main entrance, Singapore, Visiting hours Monday to Friday, please contact reception for access";
+            String nameText = "Alexandra Catherine Bernadette Longname";
             String tagText = "A".repeat(30);
-            Person person = new PersonBuilder().withAddress(addressText).withTags(tagText).build();
+            Person person = new PersonBuilder().withName(nameText).withTags(tagText).build();
             Region card = layoutCard(person, 1, 160);
-            Label address = (Label) card.lookup("#address");
+            Label name = (Label) card.lookup("#name");
             Label tag = (Label) ((FlowPane) card.lookup("#tags")).getChildren().getFirst();
 
-            assertEquals(addressText, address.getText());
+            assertEquals(nameText, name.getText());
             assertEquals(tagText, tag.getText());
-            assertTrue(address.getHeight() > 2 * address.getFont().getSize(), "Address should occupy multiple lines");
+            assertTrue(name.getHeight() > 2 * name.getFont().getSize(), "Name should occupy multiple lines");
             assertTrue(tag.getHeight() > 2 * tag.getFont().getSize(), "Long tag should occupy multiple lines");
-            assertTrue(address.getWidth() < card.getWidth(), "Address should fit within the card");
+            assertTrue(name.getWidth() < card.getWidth(), "Name should fit within the card");
             assertTrue(tag.getWidth() < card.getWidth(), "Tag should fit within the card");
         });
     }
