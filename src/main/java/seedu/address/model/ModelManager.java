@@ -15,6 +15,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonSelectionPredicate;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -103,6 +104,15 @@ public class ModelManager implements Model {
         requireAllNonNull(target, editedPerson);
 
         addressBook.setPerson(target, editedPerson);
+        boolean selectionChanged = false;
+        for (Predicate<Person> filter : additionalFilters) {
+            if (filter instanceof PersonSelectionPredicate selection && selection.replacePerson(target, editedPerson)) {
+                selectionChanged = true;
+            }
+        }
+        if (selectionChanged) {
+            refreshFilteredPersons();
+        }
     }
 
     //=========== Filtered Person List Accessors =============================================================
