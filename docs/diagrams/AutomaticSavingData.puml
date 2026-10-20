@@ -24,7 +24,7 @@ filter, export or exit])
     :Show result without saving;
     stop
 else ([add, edit, tag, untag, delete,
-tagall, untagall, clear or import])
+tagall, untagall, renametag, clear or import])
 endif
 
 :Write the roster to a temporary file,

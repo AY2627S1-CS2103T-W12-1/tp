@@ -49,7 +49,7 @@
   <path class="line" d="M390 445 V485" />
   <text class="label" x="404" y="470">Yes</text>
   <rect class="box" x="190" y="485" width="400" height="100" rx="16" />
-  <text class="text" x="390" y="520"><tspan x="390">Save the roster atomically</tspan><tspan class="small" x="390" dy="24">add, edit, tag, untag, delete, tagall,</tspan><tspan class="small" x="390" dy="20">untagall, clear, import</tspan></text>
+  <text class="text" x="390" y="520"><tspan x="390">Save the roster atomically</tspan><tspan class="small" x="390" dy="24">add, edit, tag, untag, delete, tagall,</tspan><tspan class="small" x="390" dy="20">untagall, renametag, clear, import</tspan></text>
 
   <path class="line" d="M390 585 V620" />
   <polygon class="diamond" points="390,620 510,675 390,730 270,675" />

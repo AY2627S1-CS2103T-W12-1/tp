@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.LogCapture;
 
@@ -40,7 +41,8 @@ public class FilterCommandTest {
             CommandResult result = new FilterCommand(friends).execute(model);
 
             assertEquals("3 member(s) listed with tag \"friends\".", result.getFeedbackToUser());
-            assertEquals(List.of("filter t/friends: 3 member(s) displayed with 1 active tag filter(s)"),
+            assertEquals(List.of("filter t/friends: 3 member(s) displayed; active tag filters (1): \"friends\"; "
+                            + "name searches are not included"),
                     logs.getInfoMessages());
         }
         assertEquals(List.of(ALICE, BENSON, DANIEL), model.getFilteredPersonList());
@@ -54,7 +56,8 @@ public class FilterCommandTest {
             CommandResult result = new FilterCommand(new Tag("missing")).execute(model);
 
             assertEquals("0 member(s) listed with tag \"missing\".", result.getFeedbackToUser());
-            assertEquals(List.of("filter t/missing: 0 member(s) displayed with 1 active tag filter(s)"),
+            assertEquals(List.of("filter t/missing: 0 member(s) displayed; active tag filters (1): \"missing\"; "
+                            + "name searches are not included"),
                     logs.getInfoMessages());
         }
         assertEquals(List.of(), model.getFilteredPersonList());
@@ -75,9 +78,12 @@ public class FilterCommandTest {
                     stackedResult.getFeedbackToUser());
             assertEquals(stackedResult.getFeedbackToUser(), repeatedResult.getFeedbackToUser());
             assertEquals(List.of(
-                    "filter t/friends: 3 member(s) displayed with 1 active tag filter(s)",
-                    "filter t/owesMoney: 1 member(s) displayed with 2 active tag filter(s)",
-                    "filter t/owesMoney: 1 member(s) displayed with 2 active tag filter(s)"),
+                    "filter t/friends: 3 member(s) displayed; active tag filters (1): \"friends\"; "
+                            + "name searches are not included",
+                    "filter t/owesMoney: 1 member(s) displayed; active tag filters (2): \"friends\", "
+                            + "\"owesMoney\"; name searches are not included",
+                    "filter t/owesMoney: 1 member(s) displayed; active tag filters (2): \"friends\", "
+                            + "\"owesMoney\"; name searches are not included"),
                     logs.getInfoMessages());
         }
         assertEquals(List.of(BENSON), model.getFilteredPersonList());
@@ -92,10 +98,27 @@ public class FilterCommandTest {
             CommandResult result = new FilterCommand(friends).execute(model);
 
             assertEquals("2 member(s) listed with tag \"friends\".", result.getFeedbackToUser());
-            assertEquals(List.of("filter t/friends: 2 member(s) displayed with 1 active tag filter(s)"),
+            assertEquals(List.of("filter t/friends: 2 member(s) displayed; active tag filters (1): \"friends\"; "
+                            + "name searches are not included"),
                     logs.getInfoMessages());
         }
         assertEquals(List.of(ALICE, BENSON), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_afterNameSearch_logsTagScopeWithoutChangingSearch() {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        new FindCommand(new NameContainsKeywordsPredicate(List.of("Alice"))).execute(model);
+
+        try (LogCapture logs = new LogCapture(FilterCommand.class)) {
+            CommandResult result = new FilterCommand(friends).execute(model);
+
+            assertEquals("1 member(s) listed with tag \"friends\".", result.getFeedbackToUser());
+            assertEquals(List.of("filter t/friends: 1 member(s) displayed; active tag filters (1): \"friends\"; "
+                            + "name searches are not included"),
+                    logs.getInfoMessages());
+        }
+        assertEquals(List.of(ALICE), model.getFilteredPersonList());
     }
 
     @Test

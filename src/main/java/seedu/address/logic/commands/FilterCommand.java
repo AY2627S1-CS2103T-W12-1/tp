@@ -45,8 +45,8 @@ public class FilterCommand extends Command {
                 .collect(Collectors.joining(", "));
         String tagLabel = activeTags.size() == 1 ? "tag" : "tags";
         int displayedCount = model.getFilteredPersonList().size();
-        logger.info(String.format("filter t/%s: %d member(s) displayed with %d active tag filter(s)",
-                tag.tagName, displayedCount, activeTags.size()));
+        logger.info(String.format("filter t/%s: %d member(s) displayed; active tag filters (%d): %s; "
+                + "name searches are not included", tag.tagName, displayedCount, activeTags.size(), tagNames));
         return new CommandResult(String.format(MESSAGE_SUCCESS, displayedCount, tagLabel, tagNames));
     }
 
