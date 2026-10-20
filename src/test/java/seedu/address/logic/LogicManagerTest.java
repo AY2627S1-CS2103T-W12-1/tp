@@ -495,6 +495,29 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_untagOnFilteredList_updatesOneMemberAndSaves() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("filter t/friends");
+
+        logic.execute("untag 2 t/friends");
+
+        assertEquals(List.of(ALICE, DANIEL), logic.getFilteredPersonList());
+        assertFalse(model.getAddressBook().getPersonList().get(1).getTags().contains(new Tag("friends")));
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook().getPersonList(), saved.getPersonList());
+    }
+
+    @Test
+    public void execute_untagWithMissingTag_stillSaves() throws Exception {
+        model.addPerson(ALICE);
+
+        logic.execute("untag 1 t/committee");
+
+        assertTrue(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    @Test
     public void execute_untagAllWithNoChanges_stillSaves() throws Exception {
         model.addPerson(BOB);
         Path dataFile = temporaryFolder.resolve("addressBook.json");
