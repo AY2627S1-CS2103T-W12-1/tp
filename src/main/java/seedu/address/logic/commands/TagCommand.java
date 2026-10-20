@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
@@ -51,8 +52,11 @@ public class TagCommand extends Command {
         Person updated = new Person(target.getName(), target.getPhone(), target.getEmail(), target.getAddress(),
                 updatedTags);
         model.setPerson(target, updated);
+        String sortedTags = updated.getTags().stream().map(memberTag -> memberTag.tagName)
+                .sorted().collect(Collectors.joining(", "));
+        String summary = "Name: " + updated.getName() + "\nTags: " + sortedTags;
         return new CommandResult(String.format(MESSAGE_SUCCESS, tag.tagName, targetIndex.getOneBased(),
-                Messages.format(updated)));
+                summary));
     }
 
     @Override

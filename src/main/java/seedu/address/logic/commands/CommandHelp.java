@@ -62,7 +62,7 @@ public enum CommandHelp {
                     + "clears; follow the recovery guidance before exiting."),
     TAG("Manage members", "tag", "Tag one member", "tag INDEX t/TAG", "tag 1 t/committee",
             "Adds one tag to the member at a displayed list number while retaining their other tags.",
-            "Adds committee to member 1 and shows their updated details after saving.",
+            "Adds committee to member 1 and shows their name and updated tags after saving.",
             "Check the current list number first. Existing tags, searches, filters and sorting remain in place. "
                     + "A member who already has the tag is left unchanged.",
             "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
