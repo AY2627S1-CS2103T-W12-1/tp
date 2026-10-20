@@ -155,6 +155,23 @@ public class MainWindowTest {
     }
 
     @Test
+    public void removeFilterChip_deleteAwaitingConfirmation_keepsPromptVisible() throws Exception {
+        onJavaFxThread(() -> {
+            enter("find Alice");
+            enter("delete 1");
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+
+            removeChip(chips, 0);
+
+            assertTrue(feedback.getText().startsWith("Removed Name: Alice. 2 member(s) listed."));
+            assertTrue(feedback.getText().contains("Delete member Alice Tan?"));
+            assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            enter("y");
+            assertDisplayedNames("Bob Lee");
+        });
+    }
+
+    @Test
     public void enter_failedAddSave_refreshesFilterChipsToMatchRetainedRoster() throws Exception {
         Files.createDirectory(temporaryFolder.resolve("members.json"));
         onJavaFxThread(() -> {
