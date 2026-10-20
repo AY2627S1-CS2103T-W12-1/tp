@@ -59,7 +59,7 @@ public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
     private static final IOException DUMMY_AD_EXCEPTION = new AccessDeniedException("dummy access denied exception");
     private static final String[] READ_ONLY_COMMANDS = {
-        "list", "sort", "find Amy", "filter t/friend", "help", "help add", "help filter", "exit"
+        "list", "sort", "find Amy", "find m", "filter t/friend", "help", "help add", "help filter", "exit"
     };
 
     @TempDir
@@ -455,6 +455,29 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_tagOnFilteredList_updatesOneMemberAndSaves() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("filter t/friends");
+
+        logic.execute("tag 2 t/committee");
+
+        assertTrue(model.getFilteredPersonList().get(1).getTags().contains(new Tag("committee")));
+        assertFalse(model.getFilteredPersonList().get(0).getTags().contains(new Tag("committee")));
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook().getPersonList(), saved.getPersonList());
+    }
+
+    @Test
+    public void execute_tagWithExistingTag_stillSaves() throws Exception {
+        model.addPerson(ALICE);
+
+        logic.execute("tag 1 t/friends");
+
+        assertTrue(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    @Test
     public void execute_tagAllWithNoChanges_stillSaves() throws Exception {
         model.addPerson(BOB);
         Path dataFile = temporaryFolder.resolve("addressBook.json");
@@ -492,6 +515,29 @@ public class LogicManagerTest {
         ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
                 temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
         assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+    }
+
+    @Test
+    public void execute_untagOnFilteredList_updatesOneMemberAndSaves() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("filter t/friends");
+
+        logic.execute("untag 2 t/friends");
+
+        assertEquals(List.of(ALICE, DANIEL), logic.getFilteredPersonList());
+        assertFalse(model.getAddressBook().getPersonList().get(1).getTags().contains(new Tag("friends")));
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook().getPersonList(), saved.getPersonList());
+    }
+
+    @Test
+    public void execute_untagWithMissingTag_stillSaves() throws Exception {
+        model.addPerson(ALICE);
+
+        logic.execute("untag 1 t/committee");
+
+        assertTrue(Files.exists(temporaryFolder.resolve("addressBook.json")));
     }
 
     @Test

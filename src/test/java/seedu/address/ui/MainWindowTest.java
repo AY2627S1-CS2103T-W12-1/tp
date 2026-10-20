@@ -289,6 +289,31 @@ public class MainWindowTest {
     }
 
     @Test
+    public void enter_tagWithDetailsHidden_reportsOnlyNameAndTagsAndSavesMember() throws Exception {
+        Person original = new PersonBuilder().withName("Alice Tan").withPhone("90000123")
+                .withEmail("alice@example.com").withAddress("12 Test Road").withTags("zebra", "friends").build();
+        Person expected = new PersonBuilder(original).withTags("zebra", "friends", "committee").build();
+        onJavaFxThread(() -> {
+            model.setPerson(model.getAddressBook().getPersonList().getFirst(), original);
+            ScrollPane details = (ScrollPane) window.getPrimaryStage().getScene().lookup("#detailsScroll");
+            assertFalse(details.isVisible());
+
+            enter("tag 1 t/committee");
+
+            assertFalse(details.isVisible());
+            assertTrue(feedback.getText().contains("Name: Alice Tan"));
+            assertTrue(feedback.getText().contains("Tags: committee, friends, zebra"));
+            for (String hidden : List.of("Phone:", "Email:", "Address:", original.getPhone().value,
+                    original.getEmail().value, original.getAddress().value)) {
+                assertFalse(feedback.getText().contains(hidden), hidden);
+            }
+            assertEquals(expected, model.getAddressBook().getPersonList().getFirst());
+        });
+        assertEquals(expected, new JsonAddressBookStorage(temporaryFolder.resolve("members.json"))
+                .readAddressBook().orElseThrow().getPersonList().getFirst());
+    }
+
+    @Test
     public void privacyPanel_escapeFromCopyControl_hidesDetails() throws Exception {
         onJavaFxThread(() -> {
             ListView<?> list = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");

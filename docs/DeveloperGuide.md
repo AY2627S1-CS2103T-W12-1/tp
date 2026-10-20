@@ -231,7 +231,7 @@ full intended product, including behaviour still to be implemented.
 
 #### Catalogue and command flow
 
-`CommandHelp` stores the sixteen implemented commands in one local catalogue.
+`CommandHelp` stores the eighteen implemented commands in one local catalogue.
 Each entry contains its purpose, syntax, example, expected result, and common errors.
 Only executable commands appear, so planned commands are never shown as available.
 
@@ -347,13 +347,13 @@ also recover to usable bounds. This handles monitor changes between sessions.
 
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
 `help`, `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` return without saving member data.
-Successful `add`, `edit`, `delete`, `tagall`, `untagall`, `renametag`, `clear`, and `import` commands pass the complete
+Successful `add`, `edit`, `tag`, `untag`, `delete`, `tagall`, `untagall`, `renametag`, `clear`, and `import` commands pass the complete
 roster, including hidden members,
 to `Storage#saveAddressBook`.
 Parsing and execution failures do not save. Data-changing commands return normal success only after
 the save succeeds.
 
-![Automatic-saving workflow after each command](images/AutomaticSavingData.png)
+![Automatic-saving workflow after each command](images/AutomaticSavingData.svg)
 
 #### File writes
 
@@ -369,7 +369,7 @@ partial overwrite. An existing saved file remains intact on failure; temporary-f
 If saving fails, `LogicManager` reports a `SaveFailureException`, a `CommandException` subtype that
 also records whether the change remains applied.
 
-For `add`, `edit`, `delete`, `tagall`, `untagall`, and `renametag`, the model change
+For `add`, `edit`, `tag`, `untag`, `delete`, `tagall`, `untagall`, and `renametag`, the model change
 remains in memory. `CommandBox` clears the already-applied input so pressing Enter cannot accidentally
 repeat an indexed edit or deletion. The result explains that the previous saved roster is unchanged.
 
@@ -506,6 +506,31 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
 * `LogicManagerTest` covers cumulative filters, case-sensitive matching, empty results, interactions with
   `find`, `list`, and sorting, and execution without saving.
 * `EditCommandTest` checks that edits retain search and tag conditions and hide members who no longer match.
+
+### Individual tag editing
+
+`tag INDEX t/TAG` adds one tag to the member at the displayed index. `untag INDEX t/TAG` removes
+one tag from that member. Both commands use the displayed-index convention of `edit` and `delete`
+and the existing single-tag validation used by the bulk tag parsers.
+
+Each command reads the member from `Model#getFilteredPersonList()` at execution time. It copies the
+member's tag set, changes only the requested tag, constructs a new `Person` with the original
+contact fields, and calls `Model#setPerson`. This preserves active search and tag filters, sorting,
+and `show` selection. If removing a tag causes a member to fail an active filter, the member leaves
+the displayed list but remains in the roster.
+
+Adding an existing tag or removing an absent tag is a valid no-op with explicit feedback. No model
+replacement occurs, but `LogicManager` still saves the full roster. A bad or out-of-range index and
+invalid arguments fail before saving. A save failure after an actual change follows the standard
+`SaveFailureException` path and leaves the change in memory.
+
+#### Test coverage
+
+* `TagCommandTest` and `UntagCommandTest` cover tag preservation, no-op results, displayed indices,
+  filters, selected members, and invalid indices.
+* `TagCommandParserTest` and `UntagCommandParserTest` cover index syntax, tag validation, malformed
+  arguments, and tag boundaries.
+* `LogicManagerTest` checks single-member updates, persistence, and saving valid no-op commands.
 
 ### Bulk tag editing
 
@@ -654,7 +679,7 @@ The MVP includes these commands:
 * **Help and session:** `help`, `exit`.
 * **Individual records:** `add`, `edit`, `delete`.
 * **Roster and search:** `list`, `find`, `clear`, `filter`.
-* **Group tags:** `tagall`, `untagall`, `renametag`.
+* **Individual and group tags:** `tag`, `untag`, `tagall`, `untagall`, `renametag`.
 * **CSV files:** `export`, `import`.
 * **Display order:** `sort`.
 
@@ -670,7 +695,7 @@ The broader narrative must be read with these MVP decisions:
 * Bulk selection means everyone in the displayed list after searching or filtering. There is
   no arbitrary multi-selection or direct edit/delete-by-name command. Individual edits and
   deletions use the current displayed index, which the secretary must check first.
-* `find` matches complete name words. Substring and phone-number search are considered ideas,
+* `find` matches complete or partial name words. Phone-number search is a considered idea,
   not current MVP search behaviour.
 * Name sorting is available through `sort`; `list` restores stored order.
 * vCard import/export, sorting by criteria other than name, archiving,
@@ -701,7 +726,7 @@ Overlapping stories are consolidated as follows:
 * Rows 9 and 14 share US09.
 * Rows 22 and 23 share US17. Class-based sorting is recorded in US33.
 * Row 28 is covered by the group-removal workflow in US10.
-* Row 24 is split between complete-word lookup (US05) and substring lookup (US26).
+* Row 24 is covered by name lookup (US05), including substring lookup (US26).
 
 #### Stories selected for the MVP
 
@@ -711,7 +736,7 @@ Overlapping stories are consolidated as follows:
 | US02 | `***` | club secretary | add a member with contact details and optional tags | record a new club member |
 | US03 | `***` | club secretary | see every member in a readable list with their current displayed index | review the roster and select the right record |
 | US04 | `***` | club secretary | edit a member's contact details | correct mistakes and keep the roster up to date |
-| US05 | `***` | club secretary | find members using complete words from their names | retrieve a member's contact details quickly |
+| US05 | `***` | club secretary | find members using complete or partial words from their names | retrieve a member's contact details quickly |
 | US06 | `***` | club secretary | delete one selected member record | remove a record that is no longer needed |
 | US07 | `***` | club secretary | clear the whole roster | reset the directory when all existing records are no longer needed |
 | US08 | `***` | club secretary | filter the displayed members by an exact tag | work with one group or an overlap of groups |
@@ -729,13 +754,15 @@ Overlapping stories are consolidated as follows:
 | US23 | `***` | club secretary | assign a valid group tag to a member | represent groups such as Committee or Batch2026 |
 | US24 | `***` | club secretary | add a tag to one member while retaining their other tags | let that member belong to several groups |
 | US25 | `***` | club secretary | view a member's complete contact details and tags | check the correct record before using its details |
+| US26 | `**` | club secretary | search using part of a name word | find someone when I cannot remember the complete word |
 | US28 | `***` | club secretary | remove one member's tag while retaining their other tags | update their group membership without losing unrelated information |
 | US29 | `**` | club secretary | rename a group tag across its members | correct a group name without rebuilding its membership |
 | US35 | `***` | club secretary | have exact duplicate records rejected during data entry | avoid recording the same contact details twice |
 
-US24 and US28 do not introduce new commands. For an individual `edit`, the secretary supplies
-the complete tag set that should remain. The bulk commands preserve unrelated tags and can
-also be used when the checked displayed list contains exactly one intended member.
+US24 is implemented by `tag INDEX t/TAG`; US28 is implemented by `untag INDEX t/TAG`. Each
+command changes one tag while retaining all other tags. An individual `edit` still requires the
+complete tag set that should remain. The bulk commands preserve unrelated tags and can also be
+used when the checked displayed list contains exactly one intended member.
 
 The following source stories remain explicit even where their requirements overlap other workflows.
 The row numbers refer to the **User Stories** tab of the [planning workbook][planning-workbook].
@@ -753,7 +780,6 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 | US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Implemented in the current source build after v1.4 alpha; the roster hides details until selection. |
 | US19 | `**` | first-time user | follow a short in-app getting-started guide | learn the basic workflow step by step | Considered; the MVP provides command help, not an onboarding wizard. |
 | US22 | `**` | club secretary | review imported member records | confirm that an import completed correctly | Considered with US21; no separate review step for imported records in the MVP. |
-| US26 | `**` | club secretary | search using part of a name word | find someone when I cannot remember the complete word | Considered; the MVP uses complete-word matching. |
 | US27 | `**` | club secretary | search by phone number | identify a member when I only have their number | Considered; the MVP searches names only. |
 | US30 | `**` | club secretary | update a non-tag field for a group in one operation | handle repeated renewal changes efficiently | Considered; bulk changes in the MVP affect tags only. |
 | US31 | `**` | long-time secretary | archive an inactive member | reduce clutter while keeping their history | Considered; deletion in the MVP does not retain history. |
@@ -777,7 +803,7 @@ These rules describe the selected MVP and apply to the use cases below.
    whitespace. Store each tag once per member and display tags in ASCII order: digits,
    uppercase letters, then lowercase letters.
 4. `list` resets all searches and tag filters. `find KEYWORD [MORE_KEYWORDS]` narrows the
-   displayed list. It matches complete name words, ignores letter case, and accepts a match on
+   displayed list. It matches complete or partial name words, ignores letter case, and accepts a match on
    any keyword within one command. Consecutive `find` commands retain the intersection of their
    matches and any active tag filters. Repeated keywords do not repeat records.
 5. `filter t/TAG` narrows the currently displayed list using exact, case-sensitive tag matching.
@@ -790,11 +816,14 @@ These rules describe the selected MVP and apply to the use cases below.
    Supplied tags replace the full existing tag set. A lone `t/` clears all tags and cannot be
    combined with a non-empty tag. Reapply the active search and filters after an edit; an edited
    member can disappear from the view while remaining stored.
+   `tag INDEX t/TAG` adds one tag to a displayed member; `untag INDEX t/TAG` removes one tag.
+   Both retain the member's other tags and contact fields. An existing or absent tag is a valid
+   no-op that still attempts to save. Removing a tag used by a filter can hide the member.
 8. `tagall t/TAG` and `untagall t/TAG` accept exactly one tag and fix their target set to everyone
    displayed when the command is submitted. Hidden members and unrelated tags are unchanged.
    Adding an existing tag or removing an absent tag skips that member. Reapply searches and
    filters after the whole batch. Changed and skipped counts refer to the original target set.
-9. Valid `add`, `edit`, `delete`, `clear`, `tagall`, `untagall`, `renametag`, and `import` commands save
+9. Valid `add`, `edit`, `tag`, `untag`, `delete`, `clear`, `tagall`, `untagall`, `renametag`, and `import` commands save
    the complete roster, including valid operations that make no change. An empty bulk target, or a
    `renametag` current tag that no member has, is an error and does not save. `help`, `list`, `show`,
    `sort`, `find`, `filter`, `export`, and `exit` do not save.
@@ -856,7 +885,7 @@ or window; it must remain keyboard accessible.
 
 * With networking disabled, `help` shows a concise summary of every executable command in the
   running version. The completed MVP includes `help`, `add`, `list`, `edit`, `find`, `delete`,
-  `clear`, `exit`, `filter`, `tagall`, `untagall`, `renametag`, `sort`, `export`, and `import`.
+  `clear`, `exit`, `filter`, `tag`, `untag`, `tagall`, `untagall`, `renametag`, `sort`, `export`, and `import`.
   The running version also includes `show`.
   An earlier iteration must not present an
   unimplemented command as available.
@@ -920,18 +949,20 @@ These are representative user workflows for the planned product, not implementat
 
 #### UC02: Find and update a member
 
-**Related stories:** US03, US04, US05, US24, US25, US28.
+**Related stories:** US03, US04, US05, US24, US25, US26, US28.
 
 **Goal:** correct one member's record.
 
 **MSS**
 
-1. The secretary searches for complete words from the member's name.
+1. The secretary searches for complete words or parts of words from the member's name.
 2. TrackCall lists matching records and their current indices.
 3. The secretary checks the contact details to identify the intended member, then submits its
-   displayed index and the fields to change.
-4. TrackCall validates the edit, updates the record, saves the roster, and reapplies the search and filters.
-5. TrackCall reports the edited details. The use case ends.
+   displayed index and the fields to change, or uses `tag INDEX t/TAG` / `untag INDEX t/TAG` to
+   adjust one tag while retaining the rest.
+4. TrackCall validates the request, updates the record, saves the roster, and reapplies the search
+   and filters.
+5. TrackCall reports the updated details. The use case ends.
 
 **Extensions**
 
@@ -948,14 +979,18 @@ An edited member that no longer matches the search or filters disappears from th
 but remains in the roster. The secretary can use `list` to see it again.
 
 The search command is `find KEYWORD [MORE_KEYWORDS]`. It accepts one or more whitespace-separated
-keywords, ignores case, matches complete name words, and returns records matching any keyword in
-address-book order, or in name order while `sort` is active.
+keywords, ignores case, matches complete or partial name words, and returns records matching any keyword
+in address-book order, or in name order while `sort` is active.
 
 A successful search reports `1 member listed.`, `N members listed.`, or
 `0 members listed.` and does not save the data file. `find` with no keyword reports
 `Invalid command format.` followed by the `find` usage; a wrong-case command such as
 `FIND John` reports `Unknown command. Type help for available commands.` A new `find` narrows the
 displayed list and retains previous name searches and tag filters.
+
+Partial matching uses contiguous text within a name word: `Jo`, `oh`, and `hn` each match `John Tan`.
+It does not correct spelling or match across spaces. `find oh Tan` matches either keyword, and
+repeated keywords do not duplicate members. Only names are searched; contact details and tags are excluded.
 
 #### UC03: Update a group's tags
 
@@ -1214,7 +1249,7 @@ such as incremental delivery, are also not product NFRs.
 | Displayed list | The records currently visible after the active search, tag filters, and index selections. It is the target set for a bulk tag command. |
 | Active search and filters | The name-search, tag, and index-selection conditions used to determine which records are displayed. A new `find` adds a condition; `list` clears them all. |
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
-| Complete-word matching | Matching a whole word in a name. For example, `John` matches `John Tan`, but `Jo` does not. |
+| Partial-word matching | Matching any contiguous part of a name word, ignoring case. For example, `John`, `Jo`, and `oh` all match `John Tan`. |
 | Bulk tag update | Adding or removing one tag for the fixed set of members displayed when the command is submitted. |
 | Duplicate record | A record whose trimmed name, phone, email, and address all exactly match another record, including case and internal spacing. Tags are ignored. |
 | No-op | A valid operation that leaves record values unchanged. A valid data-changing no-op can still retry saving; a bulk command with no targets is an error. |
@@ -1222,7 +1257,7 @@ such as incremental delivery, are also not product NFRs.
 | Persisted data | The roster successfully written to the local data file and available for a later session. |
 | Session | One period of use beginning when TrackCall starts and ending when the application closes. |
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
-| Data-changing command | `add`, `edit`, `delete`, `clear`, `import`, `tagall`, `untagall`, or `renametag`. A valid invocation attempts to save even if its values do not change. |
+| Data-changing command | `add`, `edit`, `tag`, `untag`, `delete`, `clear`, `import`, `tagall`, `untagall`, or `renametag`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
 | JSON | The structured text format of the local data file. It uses a `persons` array and each member's `tags` array. |
 | CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; `import p/FILE_PATH` validates and imports it. |
@@ -1259,7 +1294,7 @@ appear in the panel. Copy a field, then press Escape and check that the details 
 focus returns to the command box. Select a member again, then run `edit` and check that the
 panel clears and the result area omits phone, email, and address. Repeat for `add` and `delete`.
 
-1. Disable networking. Run `help`: verify four category cards containing all sixteen command names,
+1. Disable networking. Run `help`: verify four category cards containing all eighteen command names,
    descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
    layout when wide and one column when narrowed. Check the beige background, dark readable text,
    visible keyboard focus, and error styling in the main window, help, and alerts.
@@ -1267,7 +1302,7 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    syntax, example, expected result, notes, and errors. Check All commands navigation, Up/Down,
    Page Up/Page Down, Home/End, and Escape. Resize the guide and check long lines remain readable.
 3. Try `help ADD`, `help unknown`, and `help add edit`. Expect useful errors without record changes.
-   `help filter`, `help tagall`, `help untagall`, and `help renametag` must show the implemented commands.
+   `help filter`, `help tag`, `help untag`, `help tagall`, `help untagall`, and `help renametag` must show the implemented commands.
 4. Add a synthetic member with long name, email, address, and multiple tags. Verify labelled,
    wrapped member rows and separate feedback lines; no value should be permanently truncated.
    Resize the result area using its divider and check both feedback and roster scrolling.
@@ -1293,7 +1328,7 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    Add another record matching the original Bob's name, phone, email, and address exactly.
    It must be rejected with the duplicate contact details message and suggest `edit`.
 6. Run `find Nobody`, then `list`. Expect `0 members listed.`, then `Showing N members.` for the
-   total roster size. Test multiple name keywords, case-insensitive complete-word matching, and
+   total roster size. Test multiple name keywords, case-insensitive partial-word matching, and
    rejection of `find` with no keyword.
    Run `filter t/committee`, then another tag filter shared by at least one member. Check that it narrows the current
    view. Run `find` with a name word from a displayed member and check that it retains both tag
@@ -1318,7 +1353,13 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    `year1` to be renamed, then `list` to show `alumni` on hidden members too. Try `renametag t/year1 t/x`,
    `renametag t/alumni`, and `renametag t/alumni t/alumni`. Expect errors and no changes.
    Restart and check that the tag changes were saved.
-9. With two stored records and a search showing only one, run `clear`. After saving, expect
+9. Use a disposable roster with at least two members. Ensure the first member has `committee` and
+   `friends`, and the second has `committee`. Run `tag 1 t/year1` and confirm only the first displayed
+   member gains the tag while retaining other tags. Repeat it and expect a no-op message. Apply
+   `filter t/committee`, then run `untag 1 t/committee`; expect that member to disappear from the view
+   but remain stored. Run `list` to verify. Try `tag 0 t/year1`,
+   `untag 999 t/year1`, `tag 1 t/`, and `untag 1 t/a t/b`; each must fail without changing the roster.
+10. With two stored records and a search showing only one, run `clear`. After saving, expect
    `Cleared 2 members. The address book is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
    `The address book is already empty. No changes were made.`
 
@@ -1371,7 +1412,7 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
    default preferences. The normal preferences setup may replace that file with valid defaults.
 5. In a disposable folder, start with a valid roster, then make the data directory unwritable or replace
    the data file with a directory while the app is open.
-   Test `add`, `edit`, `delete`, and `tagall` separately:
+   Test `add`, `edit`, `tag`, `untag`, `delete`, `tagall`, and `untagall` separately:
    * Expect a save error and recovery guidance instead of success.
    * Check that the change remains visible and the command box clears the already-applied input.
    * Press Enter again. It must not repeat the edit or deletion.
