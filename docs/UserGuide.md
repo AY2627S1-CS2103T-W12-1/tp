@@ -461,7 +461,7 @@ Fix the storage problem. Retry only if you still want to remove the entire roste
 
 ## Your data
 
-TrackCall automatically saves after successful `add`, `edit`, `delete`, `tagall`, `untagall`, `renametag`,
+TrackCall automatically saves after successful `add`, `edit`, confirmed `delete`, `tagall`, `untagall`, `renametag`,
 `clear`, and `import` commands.
 `help`, `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` do not save the roster.
 

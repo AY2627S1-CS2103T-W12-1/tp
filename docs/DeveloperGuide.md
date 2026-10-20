@@ -154,7 +154,8 @@ An implementation may need several calls to complete that step.
    returns true, so this step neither changes nor saves the roster.
 2. `LogicManager` stores the pending `ConfirmDeleteCommand`. While one is pending,
    `Logic#isAwaitingConfirmation()` returns true. `MainWindow` then highlights the `CommandBox` and
-   shows a confirmation hint.
+   shows a confirmation hint. If a filter box is removed before the user answers, `MainWindow` shows
+   the prompt again below the filter message, so the member to be deleted stays visible.
 3. The next input does not reach `AddressBookParser`. If it is exactly `y` after surrounding whitespace
    is ignored, `LogicManager` executes the `ConfirmDeleteCommand` and saves the roster as for other
    data-changing commands. Any other input cancels the deletion and is not run as a command.
@@ -820,10 +821,11 @@ These rules describe the selected MVP and apply to the use cases below.
    displayed when the command is submitted. Hidden members and unrelated tags are unchanged.
    Adding an existing tag or removing an absent tag skips that member. Reapply searches and
    filters after the whole batch. Changed and skipped counts refer to the original target set.
-9. Valid `add`, `edit`, `delete`, `clear`, `tagall`, `untagall`, `renametag`, and `import` commands save
-   the complete roster, including valid operations that make no change. An empty bulk target, or a
-   `renametag` current tag that no member has, is an error and does not save. `help`, `list`, `show`,
-   `sort`, `find`, `filter`, `export`, and `exit` do not save.
+9. Valid `add`, `edit`, confirmed `delete`, `clear`, `tagall`, `untagall`, `renametag`, and `import`
+   commands save the complete roster, including valid operations that make no change. An empty bulk
+   target, or a `renametag` current tag that no member has, is an error and does not save. `help`,
+   `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` do not save. Neither does `delete INDEX`
+   while it waits for confirmation, nor a cancelled deletion.
 10. Report data-changing command success only after saving succeeds. A failed save preserves
     the previous saved file and reports a storage error. Except for `clear`, changes remain in
     memory and can be lost on exit. Failed `clear` restores the previous records, displayed
@@ -1253,7 +1255,7 @@ such as incremental delivery, are also not product NFRs.
 | Persisted data | The roster successfully written to the local data file and available for a later session. |
 | Session | One period of use beginning when TrackCall starts and ending when the application closes. |
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
-| Data-changing command | `add`, `edit`, `delete`, `clear`, `import`, `tagall`, `untagall`, or `renametag`. A valid invocation attempts to save even if its values do not change. |
+| Data-changing command | `add`, `edit`, confirmed `delete`, `clear`, `import`, `tagall`, `untagall`, or `renametag`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
 | JSON | The structured text format of the local data file. It uses a `persons` array and each member's `tags` array. |
 | CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; `import p/FILE_PATH` validates and imports it. |
