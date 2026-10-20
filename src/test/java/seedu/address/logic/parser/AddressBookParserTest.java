@@ -30,6 +30,7 @@ import seedu.address.logic.commands.ShowCommand;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.TagAllCommand;
 import seedu.address.logic.commands.UntagAllCommand;
+import seedu.address.logic.commands.UntagCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
@@ -108,6 +109,12 @@ public class AddressBookParserTest {
     public void parseCommand_untagAll_returnsUntagAllCommand() throws Exception {
         assertEquals(new UntagAllCommand(new Tag("committee")), parser.parseCommand("untagall t/committee"));
         assertEquals(new UntagAllCommand(new Tag("committee")), parser.parseCommand("  untagall   t/committee  "));
+    }
+
+    @Test
+    public void parseCommand_untag_returnsUntagCommand() throws Exception {
+        assertEquals(new UntagCommand(Index.fromOneBased(2), new Tag("committee")),
+                parser.parseCommand("untag 2 t/committee"));
     }
 
     @Test

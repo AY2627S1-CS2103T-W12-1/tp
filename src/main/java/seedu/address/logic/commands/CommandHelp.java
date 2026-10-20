@@ -80,6 +80,14 @@ public enum CommandHelp {
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
                     + "recovery guidance before exiting."),
+    UNTAG("Manage members", "untag", "Untag one member", "untag INDEX t/TAG", "untag 1 t/friends",
+            "Removes one tag from the member at a displayed list number while retaining their other tags.",
+            "Removes friends from member 1 and shows their updated details after saving.",
+            "Check the current list number first. Other tags, searches, filters and sorting remain in place. "
+                    + "Removing a tag used by an active filter may hide the member from the current list.",
+            "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
+                    + "Invalid input or a missing member is rejected. If the member lacks the tag, no change is "
+                    + "made. If saving fails, follow the recovery guidance before exiting."),
     EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
             "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
             "Creates members.csv with name, phone, email, address and tags columns.",

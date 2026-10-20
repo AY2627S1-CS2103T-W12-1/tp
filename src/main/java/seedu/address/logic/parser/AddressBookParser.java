@@ -24,6 +24,7 @@ import seedu.address.logic.commands.ShowCommand;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.TagAllCommand;
 import seedu.address.logic.commands.UntagAllCommand;
+import seedu.address.logic.commands.UntagCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 
 /**
@@ -72,6 +73,7 @@ public class AddressBookParser {
             case FilterCommand.COMMAND_WORD -> new FilterCommandParser().parse(arguments);
             case ShowCommand.COMMAND_WORD -> new ShowCommandParser().parse(arguments);
             case TagAllCommand.COMMAND_WORD -> new TagAllCommandParser().parse(arguments);
+            case UntagCommand.COMMAND_WORD -> new UntagCommandParser().parse(arguments);
             case UntagAllCommand.COMMAND_WORD -> new UntagAllCommandParser().parse(arguments);
             case SortCommand.COMMAND_WORD -> {
                 requireNoArguments(arguments, SortCommand.MESSAGE_USAGE);
