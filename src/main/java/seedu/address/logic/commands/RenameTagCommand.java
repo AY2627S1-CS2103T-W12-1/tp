@@ -28,6 +28,7 @@ public class RenameTagCommand extends Command {
     public static final String MESSAGE_SUCCESS = "Renamed tag \"%1$s\" to \"%2$s\" for %3$d member(s).";
     public static final String MESSAGE_MERGED = " %1$d already had \"%2$s\".";
     public static final String MESSAGE_TAG_NOT_FOUND = "No member has the tag \"%1$s\".";
+    public static final String MESSAGE_SAME_TAG = "The new tag must be different from the current tag.";
 
     private static final Logger logger = LogsCenter.getLogger(RenameTagCommand.class);
 
@@ -46,6 +47,9 @@ public class RenameTagCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
+        if (oldTag.equals(newTag)) {
+            throw new CommandException(MESSAGE_SAME_TAG);
+        }
         // Copies the targets first, as updating a member changes the roster being read.
         List<Person> targets = model.getAddressBook().getPersonList().stream()
                 .filter(person -> person.getTags().contains(oldTag))
