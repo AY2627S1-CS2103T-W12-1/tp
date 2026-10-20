@@ -16,6 +16,8 @@ Class MemberDetailsPanel
 Class PersonCard
 Class StatusBarFooter
 Class CommandBox
+Class WindowPlacement
+Class RosterRecoveryDialog
 }
 
 package Model <<Rectangle>> {
@@ -48,6 +50,13 @@ HelpWindow --|> UiPart
 
 PersonCard ..> Model
 MemberDetailsPanel ..> Model
+MainWindow ..> WindowPlacement
+HelpWindow ..> Logic
+
+note bottom of RosterRecoveryDialog
+JavaFX Alert shown by MainApp
+when the saved roster cannot be loaded.
+end note
 UiManager -right-> Logic
 MainWindow -left-> Logic
 MainWindow ..> Model
@@ -56,6 +65,8 @@ PersonListPanel -[hidden]left- HelpWindow
 HelpWindow -[hidden]left- CommandBox
 CommandBox -[hidden]left- ResultDisplay
 ResultDisplay -[hidden]left- StatusBarFooter
+PersonCard -[hidden]right- WindowPlacement
+WindowPlacement -[hidden]right- RosterRecoveryDialog
 
 MainWindow -[hidden]-|> UiPart
 @enduml

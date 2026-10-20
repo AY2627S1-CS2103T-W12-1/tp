@@ -58,4 +58,5 @@ ModelManager --> "1" SortedPersonList : sortedPersons
 SortedPersonList --> "1" FilteredPersonList : source
 FilteredPersonList --> Person : filtered [*]
 SortedPersonList --> Person : displayed [*]
+ActiveFilter --> "0..1" Tag : tag
 @enduml

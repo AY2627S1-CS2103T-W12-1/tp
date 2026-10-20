@@ -99,12 +99,15 @@ This reduces their dependence on each other's implementation details, as shown b
 
 ![Structure of the UI component](images/UiClassDiagram.png)
 
-The diagram shows the v1.4 alpha structure; the current source build also includes
+The diagram shows the current source build, including
 `MemberDetailsPanel` beside `PersonListPanel`.
 
 `MainWindow` contains `CommandBox`, `ResultDisplay`, `PersonListPanel`, `MemberDetailsPanel`,
 and `StatusBarFooter`.
 These classes inherit from `UiPart`, which provides behaviour shared by visible interface parts.
+`HelpWindow` builds its command cards from `CommandHelp` in the Logic component.
+`MainWindow` uses `WindowPlacement` to restore the saved window size and position.
+`RosterRecoveryDialog` is a JavaFX `Alert` that `MainApp` shows when the saved roster cannot be loaded.
 
 The interface uses JavaFX. Matching `.fxml` files in `src/main/resources/view` define the layouts.
 For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/resources/view/MainWindow.fxml)
@@ -149,6 +152,9 @@ An implementation may need several calls to complete that step.
 `AddressBookParser` creates a command-specific parser, represented here as `XYZCommandParser`.
 For example, `AddCommandParser` uses the helper classes to create an `AddCommand`.
 `AddressBookParser` returns the result as a `Command`.
+`AddCommandParser` and `EditCommandParser` use `PrefixValidator` to reject unsupported field prefixes.
+`TagAllCommandParser`, `UntagAllCommandParser`, and `RenameTagCommandParser` use `BulkTagArgumentParser`
+to check tag values.
 
 Command-specific parsers implement the shared `Parser` interface.
 This allows common handling where appropriate, including in tests.
@@ -167,6 +173,7 @@ The Model component stores:
   An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
 * **Removable filters (current source build):** `ModelManager` keeps `ActiveFilter` objects for
   name and tag conditions. The UI uses these to show and remove individual filter boxes.
+  Filters retain application order; `list` and a successful `import` or `clear` remove them.
   `show` selections use `PersonSelectionPredicate` objects retained separately.
 * **Preferences:** a `UserPrefs` object, currently containing GUI settings.
   Other components access it through `ReadOnlyUserPrefs`.
@@ -191,11 +198,13 @@ Each `Person` would reference those shared objects instead of holding its own co
 
 **API:** [`Storage.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/storage/Storage.java)
 
-<img src="images/StorageClassDiagram.png" width="550" alt="StorageManager and the JSON storage classes">
+<img src="images/StorageClassDiagram.png" width="550" alt="StorageManager, the JSON storage classes, and the CSV import and export classes">
 
 Storage reads and writes member data and preferences as JSON.
 `StorageManager` delegates file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage`, one class per file.
 It depends on model classes because it saves and restores model objects.
+`ImportCommand` and `ExportCommand` use the CSV classes directly, not through `StorageManager`.
+`CsvAddressBookCsv` holds the CSV header and format shared by the importer and exporter.
 
 CSV export is implemented as a separate `CsvAddressBookExporter` in the `storage` package. `ExportCommand` supplies the
 complete address book person list and the destination path; the exporter writes a UTF-8 CSV file with a header row and
@@ -222,7 +231,7 @@ full intended product, including behaviour still to be implemented.
 
 #### Catalogue and command flow
 
-`CommandHelp` stores the fifteen implemented commands in one local catalogue.
+`CommandHelp` stores the sixteen implemented commands in one local catalogue.
 Each entry contains its purpose, syntax, example, expected result, and common errors.
 Only executable commands appear, so planned commands are never shown as available.
 
@@ -338,7 +347,7 @@ also recover to usable bounds. This handles monitor changes between sessions.
 
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
 `help`, `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` return without saving member data.
-Successful `add`, `edit`, `delete`, `tagall`, `untagall`, `clear`, and `import` commands pass the complete
+Successful `add`, `edit`, `delete`, `tagall`, `untagall`, `renametag`, `clear`, and `import` commands pass the complete
 roster, including hidden members,
 to `Storage#saveAddressBook`.
 Parsing and execution failures do not save. Data-changing commands return normal success only after
@@ -360,7 +369,7 @@ partial overwrite. An existing saved file remains intact on failure; temporary-f
 If saving fails, `LogicManager` reports a `SaveFailureException`, a `CommandException` subtype that
 also records whether the change remains applied.
 
-For `add`, `edit`, `delete`, `tagall`, and `untagall`, the model change
+For `add`, `edit`, `delete`, `tagall`, `untagall`, and `renametag`, the model change
 remains in memory. `CommandBox` clears the already-applied input so pressing Enter cannot accidentally
 repeat an indexed edit or deletion. The result explains that the previous saved roster is unchanged.
 
@@ -552,6 +561,37 @@ memory and the previous saved file is unchanged.
 * `LogicManagerTest` checks that only displayed members change, that no-op batches save, and that an empty
   list does not save.
 
+#### Renaming a tag
+
+`renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for every member who has it.
+
+`RenameTagCommandParser` tokenizes only `t/` and requires exactly two values. A different count, or text
+before the first `t/`, reports invalid command format with the `renametag` usage. Each value is validated by
+`BulkTagArgumentParser#parseTagName`, so empty and invalid tags report the same messages as `tagall` and
+`untagall`. Identical tags report `The new tag must be different from the current tag.`
+
+`RenameTagCommand#execute`:
+
+1. Collects every member in `Model#getAddressBook()` who has the current tag. Unlike `tagall` and `untagall`,
+   the target set is the **whole roster**, including members hidden by a search or filter.
+2. Rejects an empty target set with `No member has the tag "CURRENT_TAG".` This throws before saving.
+3. For each target, builds a new `Person` whose tag set has the current tag removed and the new tag added,
+   then calls `Model#setPerson`. A target that already has the new tag keeps one copy and is counted as merged.
+4. Reports the changed count, and the merged count when it is non-zero, for example
+   `Renamed tag "year1" to "year2" for 10 member(s). 2 already had "year2".`
+
+Like the other bulk commands, it keeps the current search, filters and sorting, and saves the complete roster
+through the standard data-changing path.
+
+* **Whole roster instead of displayed list:** a rename that left the old tag on hidden members would split one
+  group into two names. Renaming everywhere keeps each group under one name (US29).
+* **Reject an unused current tag:** reporting `0 member(s)` would hide a likely typo, because tags are
+  case-sensitive. Rejecting it also avoids an unnecessary save.
+
+`RenameTagCommandTest`, `RenameTagCommandParserTest`, and `LogicManagerTest` cover renaming, merging with an
+existing tag, hidden members, unused and wrong-case tags, wrong tag counts, invalid and identical tags, and
+whether each case saves.
+
 ### Limitations
 
 These are constraints of the current implementation:
@@ -614,7 +654,7 @@ The MVP includes these commands:
 * **Help and session:** `help`, `exit`.
 * **Individual records:** `add`, `edit`, `delete`.
 * **Roster and search:** `list`, `find`, `clear`, `filter`.
-* **Group tags:** `tagall`, `untagall`.
+* **Group tags:** `tagall`, `untagall`, `renametag`.
 * **CSV files:** `export`, `import`.
 * **Display order:** `sort`.
 
@@ -633,7 +673,7 @@ The broader narrative must be read with these MVP decisions:
 * `find` matches complete name words. Substring and phone-number search are considered ideas,
   not current MVP search behaviour.
 * Name sorting is available through `sort`; `list` restores stored order.
-* vCard import/export, sorting by criteria other than name, archiving, global tag renaming,
+* vCard import/export, sorting by criteria other than name, archiving,
   bulk editing of non-tag fields, and an in-app handover/access feature are outside the
   selected MVP. The initial discussion also considered dedicated grade, class,
   membership-status, and joining-date fields. These remain future ideas; the MVP stores the
@@ -690,6 +730,7 @@ Overlapping stories are consolidated as follows:
 | US24 | `***` | club secretary | add a tag to one member while retaining their other tags | let that member belong to several groups |
 | US25 | `***` | club secretary | view a member's complete contact details and tags | check the correct record before using its details |
 | US28 | `***` | club secretary | remove one member's tag while retaining their other tags | update their group membership without losing unrelated information |
+| US29 | `**` | club secretary | rename a group tag across its members | correct a group name without rebuilding its membership |
 | US35 | `***` | club secretary | have exact duplicate records rejected during data entry | avoid recording the same contact details twice |
 
 US24 and US28 do not introduce new commands. For an individual `edit`, the secretary supplies
@@ -714,7 +755,6 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 | US22 | `**` | club secretary | review imported member records | confirm that an import completed correctly | Considered with US21; no separate review step for imported records in the MVP. |
 | US26 | `**` | club secretary | search using part of a name word | find someone when I cannot remember the complete word | Considered; the MVP uses complete-word matching. |
 | US27 | `**` | club secretary | search by phone number | identify a member when I only have their number | Considered; the MVP searches names only. |
-| US29 | `**` | club secretary | rename a group tag across its members | correct a group name without rebuilding its membership | Considered; no atomic global rename operation in the MVP. |
 | US30 | `**` | club secretary | update a non-tag field for a group in one operation | handle repeated renewal changes efficiently | Considered; bulk changes in the MVP affect tags only. |
 | US31 | `**` | long-time secretary | archive an inactive member | reduce clutter while keeping their history | Considered; deletion in the MVP does not retain history. |
 | US32 | `*` | long-time secretary | archive an unused group tag | keep old groups out of my active work without losing their history | Considered; no tag archive or separate tag catalogue in the MVP. |
@@ -754,9 +794,10 @@ These rules describe the selected MVP and apply to the use cases below.
    displayed when the command is submitted. Hidden members and unrelated tags are unchanged.
    Adding an existing tag or removing an absent tag skips that member. Reapply searches and
    filters after the whole batch. Changed and skipped counts refer to the original target set.
-9. Valid `add`, `edit`, `delete`, `clear`, `tagall`, `untagall`, and `import` commands save the complete
-   roster, including valid operations that make no change. An empty bulk target is an error
-   and does not save. `help`, `list`, `show`, `sort`, `find`, `filter`, `export`, and `exit` do not save.
+9. Valid `add`, `edit`, `delete`, `clear`, `tagall`, `untagall`, `renametag`, and `import` commands save
+   the complete roster, including valid operations that make no change. An empty bulk target, or a
+   `renametag` current tag that no member has, is an error and does not save. `help`, `list`, `show`,
+   `sort`, `find`, `filter`, `export`, and `exit` do not save.
 10. Report data-changing command success only after saving succeeds. A failed save preserves
     the previous saved file and reports a storage error. Except for `clear`, changes remain in
     memory and can be lost on exit. Failed `clear` restores the previous records, displayed
@@ -815,7 +856,7 @@ or window; it must remain keyboard accessible.
 
 * With networking disabled, `help` shows a concise summary of every executable command in the
   running version. The completed MVP includes `help`, `add`, `list`, `edit`, `find`, `delete`,
-  `clear`, `exit`, `filter`, `tagall`, `untagall`, `sort`, `export`, and `import`.
+  `clear`, `exit`, `filter`, `tagall`, `untagall`, `renametag`, `sort`, `export`, and `import`.
   The running version also includes `show`.
   An earlier iteration must not present an
   unimplemented command as available.
@@ -1181,7 +1222,7 @@ such as incremental delivery, are also not product NFRs.
 | Persisted data | The roster successfully written to the local data file and available for a later session. |
 | Session | One period of use beginning when TrackCall starts and ending when the application closes. |
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
-| Data-changing command | `add`, `edit`, `delete`, `clear`, `import`, `tagall`, or `untagall`. A valid invocation attempts to save even if its values do not change. |
+| Data-changing command | `add`, `edit`, `delete`, `clear`, `import`, `tagall`, `untagall`, or `renametag`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
 | JSON | The structured text format of the local data file. It uses a `persons` array and each member's `tags` array. |
 | CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; `import p/FILE_PATH` validates and imports it. |
@@ -1218,7 +1259,7 @@ appear in the panel. Copy a field, then press Escape and check that the details 
 focus returns to the command box. Select a member again, then run `edit` and check that the
 panel clears and the result area omits phone, email, and address. Repeat for `add` and `delete`.
 
-1. Disable networking. Run `help`: verify four category cards containing all fifteen command names,
+1. Disable networking. Run `help`: verify four category cards containing all sixteen command names,
    descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
    layout when wide and one column when narrowed. Check the beige background, dark readable text,
    visible keyboard focus, and error styling in the main window, help, and alerts.
@@ -1226,7 +1267,7 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    syntax, example, expected result, notes, and errors. Check All commands navigation, Up/Down,
    Page Up/Page Down, Home/End, and Escape. Resize the guide and check long lines remain readable.
 3. Try `help ADD`, `help unknown`, and `help add edit`. Expect useful errors without record changes.
-   `help filter`, `help tagall`, and `help untagall` must show the implemented commands.
+   `help filter`, `help tagall`, `help untagall`, and `help renametag` must show the implemented commands.
 4. Add a synthetic member with long name, email, address, and multiple tags. Verify labelled,
    wrapped member rows and separate feedback lines; no value should be permanently truncated.
    Resize the result area using its divider and check both feedback and roster scrolling.
@@ -1272,6 +1313,9 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    from the filtered view, and `list` shows them without `committee`. Run `filter t/missing`, then
    `tagall t/year1`, and expect `There are no members in the current list to update.`
    Try `tagall`, `tagall t/`, `tagall t/a t/b`, and `tagall committee`. Expect errors and no changes.
+   Run `find` for one member tagged `year1`, then `renametag t/year1 t/alumni`. Expect every member with
+   `year1` to be renamed, then `list` to show `alumni` on hidden members too. Try `renametag t/year1 t/x`,
+   `renametag t/alumni`, and `renametag t/alumni t/alumni`. Expect errors and no changes.
    Restart and check that the tag changes were saved.
 9. With two stored records and a search showing only one, run `clear`. After saving, expect
    `Cleared 2 members. The address book is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
