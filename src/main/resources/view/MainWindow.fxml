@@ -52,7 +52,7 @@
           <SplitPane orientation="HORIZONTAL" dividerPositions="0.43" minHeight="180">
             <VBox fx:id="personList" styleClass="pane-with-border" minWidth="145" minHeight="0">
               <padding><Insets top="10" right="8" bottom="10" left="10" /></padding>
-              <Label text="ROSTER" styleClass="panel-heading" />
+              <Label fx:id="rosterHeading" text="ROSTER" styleClass="panel-heading" />
               <StackPane fx:id="personListPanelPlaceholder" minHeight="0" VBox.vgrow="ALWAYS"/>
             </VBox>
             <StackPane fx:id="memberDetailsPlaceholder" styleClass="pane-with-border"

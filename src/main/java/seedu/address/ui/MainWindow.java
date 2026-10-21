@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
@@ -30,6 +31,7 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ActiveFilter;
+import seedu.address.model.person.Person;
 
 /**
  * The Main Window. Provides the basic application layout containing
@@ -66,6 +68,9 @@ public class MainWindow extends UiPart<Stage> {
 
     @FXML
     private StackPane personListPanelPlaceholder;
+
+    @FXML
+    private Label rosterHeading;
 
     @FXML
     private StackPane memberDetailsPlaceholder;
@@ -153,6 +158,8 @@ public class MainWindow extends UiPart<Stage> {
         personListPanel = new PersonListPanel(logic.getFilteredPersonList());
         personListPanelPlaceholder.getChildren().add(personListPanel.getRoot());
         personListPanel.setOnSelectionChanged(this::showSelectedMember);
+        logic.getFilteredPersonList().addListener((ListChangeListener<Person>) change -> refreshRosterHeading());
+        refreshRosterHeading();
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
@@ -187,15 +194,45 @@ public class MainWindow extends UiPart<Stage> {
         }
     }
 
-    /** Rebuilds the removable boxes from the filters currently applied to the displayed list. */
+    /** Keeps the roster heading aligned with the number of members currently displayed. */
+    private void refreshRosterHeading() {
+        int count = logic.getFilteredPersonList().size();
+        rosterHeading.setText("ROSTER · " + count + " shown");
+    }
+
+    /** Rebuilds the filter and show boxes for the displayed list. */
     private void refreshActiveFilters() {
         activeFiltersPane.getChildren().clear();
         for (ActiveFilter filter : logic.getActiveFilters()) {
             activeFiltersPane.getChildren().add(createFilterChip(filter));
         }
+        int showSelectionCount = logic.getActiveShowSelectionCount();
+        if (showSelectionCount > 0) {
+            activeFiltersPane.getChildren().add(createShowIndicator(showSelectionCount));
+        }
         boolean hasFilters = !activeFiltersPane.getChildren().isEmpty();
         activeFiltersPane.setVisible(hasFilters);
         activeFiltersPane.setManaged(hasFilters);
+    }
+
+    /** Shows that {@code show} still narrows the roster and lets the user clear every show selection. */
+    private HBox createShowIndicator(int showSelectionCount) {
+        Label label = new Label("Show: active");
+        label.setAccessibleText("Show selection active");
+        String times = showSelectionCount == 1 ? "once" : showSelectionCount + " times";
+        label.setTooltip(new Tooltip("Show has been applied " + times + ". X removes all show selections."));
+        Button removeButton = new Button("×");
+        removeButton.getStyleClass().add("filter-chip-remove");
+        removeButton.setAccessibleText("Remove all show selections");
+        removeButton.setTooltip(new Tooltip("Remove all show selections"));
+        removeButton.setOnAction(event -> {
+            personListPanel.clearSelection();
+            logic.clearShowSelections();
+            showChipRemoval("Removed all show selections.");
+        });
+        HBox chip = new HBox(6, label, removeButton);
+        chip.getStyleClass().addAll("filter-chip", "filter-chip-show");
+        return chip;
     }
 
     /** Creates a box whose X removes exactly the condition represented by {@code filter}. */
@@ -209,7 +246,7 @@ public class MainWindow extends UiPart<Stage> {
         removeButton.setOnAction(event -> {
             personListPanel.clearSelection();
             logic.removeActiveFilter(filter);
-            showFilterRemoval("Removed " + filter.getLabel() + ".");
+            showChipRemoval("Removed " + filter.getLabel() + ".");
         });
         HBox chip = new HBox(6, label, removeButton);
         chip.getStyleClass().add("filter-chip");
@@ -217,11 +254,11 @@ public class MainWindow extends UiPart<Stage> {
         return chip;
     }
 
-    private void showFilterRemoval(String message) {
+    private void showChipRemoval(String message) {
         refreshActiveFilters();
         String feedback = message + " " + logic.getFilteredPersonList().size() + " member(s) listed.";
         if (logic.isAwaitingConfirmation()) {
-            // Removing a filter keeps the deletion pending, so the member it names must stay visible.
+            // Removing a view restriction keeps the deletion pending, so the member it names must stay visible.
             feedback += "\n\n" + pendingDeletionPrompt;
         }
         resultDisplay.setFeedbackToUser(feedback);

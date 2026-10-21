@@ -341,6 +341,20 @@
     -fx-background-color: #cadbf2;
 }
 
+.filter-chip-show {
+    -fx-background-color: #f5e8d5;
+    -fx-border-color: #d7b98b;
+    -fx-padding: 4 10;
+}
+
+.filter-chip-show .label, .filter-chip-show .filter-chip-remove {
+    -fx-text-fill: #74512f;
+}
+
+.filter-chip-show .filter-chip-remove:hover, .filter-chip-show .filter-chip-remove:focused {
+    -fx-background-color: #ead2af;
+}
+
 .scroll-pane, .scroll-pane > .viewport {
     -fx-background-color: -tc-canvas;
 }

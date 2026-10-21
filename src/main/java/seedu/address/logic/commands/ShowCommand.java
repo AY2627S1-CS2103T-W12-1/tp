@@ -17,9 +17,9 @@ import seedu.address.model.person.PersonSelectionPredicate;
 public class ShowCommand extends Command {
     public static final String COMMAND_WORD = "show";
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Shows selected members from the currently displayed list.\n"
+            + ": Shows only the members at the specified numbers in the current list.\n"
             + "Parameters: INDEX [MORE_INDEXES]... (positive integers)\n"
-            + "Example: " + COMMAND_WORD + " 1 3 4 5";
+            + "Example: " + COMMAND_WORD + " 1 3";
     public static final String MESSAGE_SINGLE = "Showing 1 member.";
     public static final String MESSAGE_MULTIPLE = "Showing %d members.";
 

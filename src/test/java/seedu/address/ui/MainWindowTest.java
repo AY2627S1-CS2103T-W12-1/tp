@@ -259,6 +259,45 @@ public class MainWindowTest {
     }
 
     @Test
+    public void showIndicatorAndRosterHeading_followDisplayedViewAndReset() throws Exception {
+        onJavaFxThread(() -> {
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+            Label heading = (Label) window.getPrimaryStage().getScene().lookup("#rosterHeading");
+            assertEquals("ROSTER · 2 shown", heading.getText());
+            assertFalse(chips.isVisible());
+
+            enter("show 1");
+            assertEquals("ROSTER · 1 shown", heading.getText());
+            assertEquals(List.of("Show: active"), chipLabels(chips));
+            assertEquals(2, ((HBox) chips.getChildren().getFirst()).getChildren().size());
+            Label showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
+            assertEquals("Show has been applied once. X removes all show selections.",
+                    showLabel.getTooltip().getText());
+
+            enter("show 1");
+            showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
+            assertEquals("Show has been applied 2 times. X removes all show selections.",
+                    showLabel.getTooltip().getText());
+            removeChip(chips, 0);
+            assertEquals("ROSTER · 2 shown", heading.getText());
+            assertFalse(chips.isVisible());
+
+            enter("show 1");
+            enter("find Bob");
+            assertEquals("ROSTER · 0 shown", heading.getText());
+            assertEquals(List.of("Name: Bob", "Show: active"), chipLabels(chips));
+            removeChip(chips, 1);
+            assertEquals("ROSTER · 1 shown", heading.getText());
+            assertEquals(List.of("Name: Bob"), chipLabels(chips));
+            assertDisplayedNames("Bob Lee");
+
+            enter("list");
+            assertEquals("ROSTER · 2 shown", heading.getText());
+            assertFalse(chips.isVisible());
+        });
+    }
+
+    @Test
     public void activeFilterChips_removeIndividualFiltersAndUpdateDisplayedMembers() throws Exception {
         onJavaFxThread(() -> {
             Person alice = model.getAddressBook().getPersonList().get(0);
