@@ -1,0 +1,49 @@
+@startuml
+!include style.puml
+skinparam ActivityFontSize 15
+skinparam ArrowFontSize 12
+skinparam ActivityBackgroundColor #F5EFE5
+skinparam ActivityBorderColor #A48D71
+skinparam ActivityDiamondBackgroundColor #F5EFE5
+skinparam ActivityDiamondBorderColor #A48D71
+skinparam ActivityStartColor #382E25
+skinparam ActivityEndColor #382E25
+
+start
+:User submits a command;
+if () then ([input is invalid or
+command fails])
+    :Show error;
+    note right: Roster and saved file\nare unchanged
+    stop
+else ([command succeeds])
+endif
+
+if () then ([help, list, show, sort, find,
+findemail, filter, export, exit,
+delete prompt or cancelled deletion])
+    :Show result without saving;
+    stop
+else ([add, edit, tag, untag, confirmed delete,
+tagall, untagall, renametag, clear or import])
+endif
+
+:Write the roster to a temporary file,
+then replace the data file atomically;
+note right: A failed save leaves the\nprevious data file unchanged
+if () then ([save succeeds])
+    :Show result;
+    stop
+else ([save fails])
+endif
+
+if () then ([clear])
+    :Restore the previous roster and view;
+    :Show clear save error;
+else ([other data-changing command])
+    :Keep the change in memory only;
+    :Show save error;
+    note right: Import reports its own error; other\ncommands also show recovery guidance
+endif
+stop
+@enduml

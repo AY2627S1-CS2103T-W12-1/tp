@@ -1,0 +1,234 @@
+{
+  "enableSearch": true,
+  "pages": [
+    {
+      "src": "AboutUs.md",
+      "title": "About Us",
+      "headings": {
+        "about-us": "About Us",
+        "project-team": "Project team",
+        "calvin-yoel-pandiangan": "Calvin Yoel Pandiangan",
+        "eron-dathan": "Eron Dathan",
+        "glory-charity-lion": "Glory Charity Lion",
+        "ian-abiel-wangsa": "Ian Abiel Wangsa",
+        "noah": "Noah"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "DevOps.md",
+      "title": "DevOps guide",
+      "headings": {
+        "devops-guide": "DevOps guide",
+        "build-automation": "Build automation",
+        "continuous-integration-ci": "Continuous integration (CI)",
+        "code-coverage": "Code coverage",
+        "repository-wide-checks": "Repository-wide checks",
+        "making-a-release": "Making a release"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "DeveloperGuide.md",
+      "title": "Developer Guide",
+      "headings": {
+        "developer-guide": "Developer Guide",
+        "value-proposition": "Value proposition",
+        "acknowledgements": "Acknowledgements",
+        "setting-up-getting-started": "Setting up, getting started",
+        "design": "Design",
+        "architecture": "Architecture",
+        "ui-component": "UI component",
+        "logic-component": "Logic component",
+        "model-component": "Model component",
+        "storage-component": "Storage component",
+        "common-classes": "Common classes",
+        "implementation": "Implementation",
+        "offline-command-help": "Offline command help",
+        "list-and-clear-commands": "List and clear commands",
+        "readable-member-details-and-feedback": "Readable member details and feedback",
+        "automatic-data-saving-and-load-recovery": "Automatic data saving and load recovery",
+        "command-parsing": "Command parsing",
+        "csv-import": "CSV import",
+        "csv-export": "CSV export",
+        "find-members-by-email": "Find members by email",
+        "filter-members-by-tag": "Filter members by tag",
+        "individual-tag-editing": "Individual tag editing",
+        "bulk-tag-editing": "Bulk tag editing",
+        "limitations": "Limitations",
+        "documentation-logging-testing-dev-ops": "Documentation, logging, testing, dev-ops",
+        "appendix-requirements": "Appendix: Requirements",
+        "product-scope": "Product scope",
+        "user-stories": "User stories",
+        "shared-behaviour-rules": "Shared behaviour rules",
+        "offline-help-and-readable-feedback": "Offline help and readable feedback",
+        "use-cases": "Use cases",
+        "non-functional-requirements": "Non-functional requirements",
+        "glossary": "Glossary",
+        "appendix-instructions-for-manual-testing": "Appendix: Instructions for manual testing",
+        "launch-and-shutdown": "Launch and shutdown",
+        "offline-help-and-readable-feedback-1": "Offline help and readable feedback",
+        "commands-and-displayed-indices": "Commands and displayed indices",
+        "email-search": "Email search",
+        "sorting-and-csv-workflows": "Sorting and CSV workflows",
+        "persistence-and-invalid-files": "Persistence and invalid files",
+        "release-acceptance-checks-still-required": "Release acceptance checks still required"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "Documentation.md",
+      "title": "Documentation guide",
+      "headings": {
+        "documentation-guide": "Documentation guide",
+        "previewing-documentation-locally": "Previewing documentation locally",
+        "maintaining-the-site": "Maintaining the site",
+        "publishing-the-site": "Publishing the site",
+        "style-guidance": "Style guidance",
+        "diagrams": "Diagrams",
+        "converting-documentation-to-pdf": "Converting documentation to PDF"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "Logging.md",
+      "title": "Logging guide",
+      "headings": {
+        "logging-guide": "Logging guide"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "SettingUp.md",
+      "title": "Setting up and getting started",
+      "headings": {
+        "setting-up-and-getting-started": "Setting up and getting started",
+        "setting-up-the-project-on-your-computer": "Setting up the project on your computer",
+        "before-writing-code": "Before writing code"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "Testing.md",
+      "title": "Testing guide",
+      "headings": {
+        "testing-guide": "Testing guide",
+        "running-tests": "Running tests",
+        "types-of-tests": "Types of tests"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "UserGuide.md",
+      "title": "User Guide",
+      "headings": {
+        "user-guide": "User Guide",
+        "quick-start": "Quick start",
+        "install-and-launch": "Install and launch",
+        "read-the-interface": "Read the interface",
+        "try-your-first-commands": "Try your first commands",
+        "commands": "Commands",
+        "read-command-formats": "Read command formats",
+        "offline-help-help": "Offline help: help",
+        "add-a-member-add": "Add a member: add",
+        "show-all-members-list": "Show all members: list",
+        "show-selected-members-show": "Show selected members: show",
+        "sort-members-by-name-sort": "Sort members by name: sort",
+        "update-a-member-edit": "Update a member: edit",
+        "add-or-remove-one-tag-tag-untag": "Add or remove one tag: tag, untag",
+        "find-members-find": "Find members: find",
+        "find-members-by-email-findemail": "Find members by email: findemail",
+        "filter-displayed-members-by-tag-filter": "Filter displayed members by tag: filter",
+        "tag-or-untag-a-group-tagall-untagall": "Tag or untag a group: tagall, untagall",
+        "rename-a-tag-renametag": "Rename a tag: renametag",
+        "delete-a-member-delete": "Delete a member: delete",
+        "clear-all-members-clear": "Clear all members: clear",
+        "export-members-to-csv-export": "Export members to CSV: export",
+        "import-members-from-csv-import": "Import members from CSV: import",
+        "finish-your-session-exit": "Finish your session: exit",
+        "correcting-errors": "Correcting errors",
+        "invalid-input": "Invalid input",
+        "a-save-fails-after-add-edit-delete-tag-untag-tagall-untagall-renametag-or-import": "A save fails after add, edit, delete, tag, untag, tagall, untagall, renametag, or import",
+        "a-save-fails-after-clear": "A save fails after clear",
+        "your-data": "Your data",
+        "locate-or-back-up-your-roster": "Locate or back up your roster",
+        "editing-the-file-manually": "Editing the file manually",
+        "missing-or-invalid-files": "Missing or invalid files",
+        "automatic-backup-and-recovery": "Automatic backup and recovery",
+        "field-prefix-syntax": "Field prefix syntax",
+        "faq": "FAQ",
+        "how-do-i-move-my-roster-to-another-computer": "How do I move my roster to another computer?",
+        "why-did-a-member-disappear-after-a-search": "Why did a member disappear after a search?",
+        "how-do-i-add-or-remove-one-members-tag": "How do I add or remove one member's tag?",
+        "can-i-update-a-whole-groups-tags": "Can I update a whole group's tags?",
+        "what-should-i-do-after-a-save-error": "What should I do after a save error?",
+        "command-summary": "Command summary"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "index.md",
+      "title": "",
+      "headings": {
+        "trackcall": "TrackCall",
+        "interface": "Interface",
+        "features-in-v14-alpha": "Features in v1.4 alpha",
+        "find-the-right-guide": "Find the right guide",
+        "acknowledgements": "Acknowledgements"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "iterations/v1.4.md",
+      "title": "v1.4 iteration notes",
+      "headings": {
+        "v1-4-iteration-notes": "v1.4 iteration notes",
+        "v13-postmortem-draft": "v1.3 postmortem draft",
+        "alpha-scope-and-order": "Alpha scope and order",
+        "individual-dashboard-checks": "Individual dashboard checks",
+        "local-preparation-status": "Local preparation status"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "releases/v1.3/README.md",
+      "title": "v1.3 release records",
+      "headings": {
+        "v1-3-release-records": "v1.3 release records",
+        "recorded-deliverables": "Recorded deliverables",
+        "verify-the-published-downloads": "Verify the published downloads"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "releases/v1.3/RELEASE_NOTES.md",
+      "title": "v1.3 release notes",
+      "headings": {
+        "trackcall-v1-3-first-mvp-release": "TrackCall v1.3: first MVP release",
+        "what-s-new-compared-with-ab3": "What's new compared with AB3",
+        "product-screenshots": "Product screenshots",
+        "redesigned-interface-and-first-launch-guidance": "Redesigned interface and first-launch guidance",
+        "filter-a-single-group": "Filter a single group",
+        "show-every-active-filter-new-in-pr-137": "Show every active filter — new in PR #137",
+        "bulk-tagging-a-displayed-group": "Bulk tagging a displayed group",
+        "correcting-invalid-input": "Correcting invalid input",
+        "download-and-run": "Download and run",
+        "scope-and-known-limitations": "Scope and known limitations",
+        "build-and-validation": "Build and validation"
+      },
+      "headingKeywords": {}
+    },
+    {
+      "src": "releases/v1.4/RELEASE_NOTES.md",
+      "title": "v1.4 release notes",
+      "headings": {
+        "trackcall-v1-4-alpha": "TrackCall v1.4 alpha",
+        "changes-since-v1-3": "Changes since v1.3",
+        "run-the-alpha": "Run the alpha",
+        "validation": "Validation",
+        "remaining-limitations": "Remaining limitations"
+      },
+      "headingKeywords": {}
+    }
+  ]
+}

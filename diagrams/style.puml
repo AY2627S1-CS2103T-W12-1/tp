@@ -1,0 +1,81 @@
+/' TrackCall documentation palette: beige surfaces, dark text, and restrained component accents. '/
+!define UI_COLOR #DFE8D4
+!define UI_COLOR_T1 #F0F4EA
+!define UI_COLOR_T2 #CFDDC0
+!define UI_COLOR_T3 #5C7050
+!define UI_COLOR_T4 #40513A
+
+!define LOGIC_COLOR #E8DDCA
+!define LOGIC_COLOR_T1 #F5EFE5
+!define LOGIC_COLOR_T2 #DACEB8
+!define LOGIC_COLOR_T3 #7B684A
+!define LOGIC_COLOR_T4 #5E4D35
+
+!define MODEL_COLOR #EFDDCE
+!define MODEL_COLOR_T1 #FAF1E9
+!define MODEL_COLOR_T2 #E2C7AF
+!define MODEL_COLOR_T3 #8A614A
+!define MODEL_COLOR_T4 #654531
+
+!define STORAGE_COLOR #E9E4CA
+!define STORAGE_COLOR_T1 #F7F4E7
+!define STORAGE_COLOR_T2 #DAD3AF
+!define STORAGE_COLOR_T3 #7D754B
+!define STORAGE_COLOR_T4 #5C5537
+
+!define USER_COLOR #382E25
+
+skinparam BackgroundColor #FFFDF8
+skinparam DefaultFontName Arial
+skinparam DefaultFontColor #382E25
+skinparam ArrowColor #796750
+skinparam ArrowFontColor #382E25
+skinparam NoteBackgroundColor #F5EFE5
+skinparam NoteBorderColor #C7B79F
+skinparam NoteFontColor #382E25
+skinparam Package {
+    BackgroundColor #FFFDF8
+    BorderColor #C7B79F
+    BorderThickness 1
+    FontColor #382E25
+    FontSize 16
+}
+skinparam Class {
+    FontColor #382E25
+    FontSize 15
+    BorderThickness 1
+    BorderColor #A48D71
+    StereotypeFontColor #554636
+    FontName Arial
+}
+skinparam Actor {
+    BorderColor USER_COLOR
+    Color USER_COLOR
+    FontColor USER_COLOR
+    FontName Arial
+}
+skinparam Sequence {
+    MessageAlign center
+    BoxFontSize 15
+    BoxPadding 0
+    BoxFontColor #382E25
+    LifeLineBorderColor #A48D71
+    LifeLineBackgroundColor #FFFDF8
+    GroupBackgroundColor #F5EFE5
+    GroupBorderColor #C7B79F
+    GroupFontColor #382E25
+    FontName Arial
+}
+skinparam Participant {
+    FontColor #382E25
+    BorderColor #A48D71
+    Padding 20
+}
+skinparam ArrowFontStyle bold
+skinparam MinClassWidth 50
+skinparam Shadowing false
+skinparam DefaultTextAlignment center
+skinparam packageStyle Rectangle
+hide footbox
+hide members
+hide circle

@@ -1,0 +1,75 @@
+TrackCall v1.3 release validation — updated to include PR #137
+Date: 2026-10-15 (Asia/Singapore)
+Repository: AY2627S1-CS2103T-W12-1/tp
+Source commit: e3872268dd2bdd8967ab2778c15ca8bb37430beb
+Source tree: a0e507bed92049ce47eb2a20f2cd2e3b67891af0 (unmodified)
+PR #137 head: cae9ebee2d4778836ded57e79979dec2c72b173e
+The tested PR head and the final merge commit have identical source trees.
+Build JDK: Microsoft OpenJDK 25.0.4
+Local platform: macOS ARM64
+
+Build commands:
+  JAVA_HOME=<Java 25 home> ./gradlew clean check coverage shadowJar
+  JAVA_HOME=<Java 25 home> ./gradlew shadowJar javadoc
+Result: BUILD SUCCESSFUL
+Tests: 505; failures: 0; errors: 0; skipped: 0
+Checkstyle and repository-wide checks: passed
+Changed executable lines for PR #137: 16/16 fully covered in local JaCoCo;
+no missed branches on those changed lines. This is not a Codecov percentage.
+GitHub checks page for the PR head: Windows, macOS, and Linux CI jobs passed.
+Javadoc: generated; 100 existing warnings reported
+
+JAR: trackcall.jar
+Size: 13,893,874 bytes
+SHA-256: 52a6d36bcd33010740f32bdbe8184d8cc3996f422be32866dfa92fe725b80d46
+Main class: seedu.address.Main
+Java class version: 69 (Java 25)
+Packaged natives: Windows x64, Linux x64, Mac x64, Mac ARM64
+
+Packaged smoke check:
+Production classes loaded from the final release JAR, with a separate working
+directory and disposable records. All fourteen command types were exercised
+through LogicManager. Assertions checked sorting, filtering, bulk tags, complete
+CSV export despite a filtered view, import round trip and duplicate skipping,
+persisted records, protected exports, backup loading, preservation of damaged
+bytes, and restoration without changing the backup. Result: PASS.
+
+Native UI verification and screenshot provenance:
+The final JAR was launched on macOS using a temporary JDK 25 jpackage launcher
+named TrackCallCapture. The JAR inside the launcher was byte-for-byte identical
+to trackcall.jar above. No application source or UI was changed for capture.
+This launcher is only a local capture aid; the release executable is the JAR.
+The following real commands were entered through the native command box:
+  filter t/friends
+  filter t/colleagues
+Observed: 1 member(s) listed with tags "friends", "colleagues".
+Bernice Yu remained visible, confirming the new PR #137 feedback in the JAR.
+  list
+  filter t/friends
+  tagall t/event2026
+Observed: Added tag "event2026" to 2 member(s).
+  edit 1 p/abc
+Observed: Phone numbers should only contain digits, and should be at least 3 digits long
+The invalid edit preserved Alex's phone number (87438807).
+  list
+Observed: Showing 6 members.
+
+interface.jpg, tag-group.jpg, validation.jpg:
+Fresh, unedited native-window captures of that rebuilt JAR using sample data.
+They are the exact JPEG bytes returned by the native screenshot API; no
+cropping, compositing, AI image generation, or pixel modifications were applied.
+The temporary launcher/data path is visible in the status bar.
+
+filter-single.jpg, filter-multiple.jpg:
+Eron's original screenshots, supplied by Ian for the release on 15 October.
+Copied byte-for-byte from PHOTO-2026-10-15-15-51-09.jpg and
+PHOTO-2026-10-15-15-52-04.jpg respectively. These depict the same filter behavior
+independently verified above. Their exact original build provenance was not
+independently established; they are not claimed as captures from this session.
+The private chat screenshot was not included in the release.
+
+Verification limits:
+- Separate Windows/Linux manual execution was not performed in this session.
+- PR #134's previously published Codecov patch result is 98.97959%, not 100%.
+- Existing Javadoc warnings and documented MVP limitations remain.
+- This validation is not a guarantee that the release is free of all defects.

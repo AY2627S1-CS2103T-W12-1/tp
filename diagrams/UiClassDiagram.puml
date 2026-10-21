@@ -1,0 +1,72 @@
+@startuml
+!include style.puml
+skinparam arrowThickness 1.1
+skinparam arrowColor UI_COLOR_T4
+skinparam classBackgroundColor UI_COLOR
+
+package UI <<Rectangle>>{
+Class "<<interface>>\nUi" as Ui
+Class "{abstract}\nUiPart" as UiPart
+Class UiManager
+Class MainWindow
+Class HelpWindow
+Class ResultDisplay
+Class PersonListPanel
+Class MemberDetailsPanel
+Class PersonCard
+Class StatusBarFooter
+Class CommandBox
+Class WindowPlacement
+Class RosterRecoveryDialog
+}
+
+package Model <<Rectangle>> {
+}
+
+package Logic <<Rectangle>> {
+}
+
+
+UiManager .left.|> Ui
+UiManager -down-> "1" MainWindow
+MainWindow *-down->  "1" CommandBox
+MainWindow *-down-> "1" ResultDisplay
+MainWindow *-down-> "1" PersonListPanel
+MainWindow *-down-> "1" MemberDetailsPanel
+MainWindow *-down-> "1" StatusBarFooter
+MainWindow --> "1" HelpWindow
+
+PersonListPanel -down-> "*" PersonCard
+
+MainWindow -left-|> UiPart
+
+ResultDisplay --|> UiPart
+CommandBox --|> UiPart
+PersonListPanel --|> UiPart
+MemberDetailsPanel --|> UiPart
+PersonCard --|> UiPart
+StatusBarFooter --|> UiPart
+HelpWindow --|> UiPart
+
+PersonCard ..> Model
+MemberDetailsPanel ..> Model
+MainWindow ..> WindowPlacement
+HelpWindow ..> Logic
+
+note bottom of RosterRecoveryDialog
+JavaFX Alert shown by MainApp
+when the saved roster cannot be loaded.
+end note
+UiManager -right-> Logic
+MainWindow -left-> Logic
+MainWindow ..> Model
+
+PersonListPanel -[hidden]left- HelpWindow
+HelpWindow -[hidden]left- CommandBox
+CommandBox -[hidden]left- ResultDisplay
+ResultDisplay -[hidden]left- StatusBarFooter
+PersonCard -[hidden]right- WindowPlacement
+WindowPlacement -[hidden]right- RosterRecoveryDialog
+
+MainWindow -[hidden]-|> UiPart
+@enduml
