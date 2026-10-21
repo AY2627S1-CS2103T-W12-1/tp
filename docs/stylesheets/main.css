@@ -107,6 +107,13 @@ mark {
   display: none;
 }
 
+/* Native details adds an inner wrapper, so constrain the panel that actually scrolls. */
+@media screen and (min-width: 1300px) {
+  #page-nav .nav-component {
+    max-height: calc(100vh - var(--sticky-header-height));
+  }
+}
+
 @media screen and (max-width: 1299.98px) {
   #flex-body {
     flex-wrap: wrap;
