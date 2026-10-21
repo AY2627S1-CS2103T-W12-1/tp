@@ -188,6 +188,18 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public int getActiveShowSelectionCount() {
+        return (int) additionalFilters.stream().filter(PersonSelectionPredicate.class::isInstance).count();
+    }
+
+    @Override
+    public void clearShowSelections() {
+        if (additionalFilters.removeIf(PersonSelectionPredicate.class::isInstance)) {
+            refreshFilteredPersons();
+        }
+    }
+
+    @Override
     public void removeActiveFilter(ActiveFilter filter) {
         requireNonNull(filter);
         if (activeFilters.remove(filter)) {

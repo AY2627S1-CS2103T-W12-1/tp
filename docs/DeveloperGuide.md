@@ -204,6 +204,9 @@ The Model component stores:
   name, email and tag conditions. The UI uses these to show and remove individual filter boxes.
   Filters retain application order; `list` and a successful `import` or `clear` remove them.
   `show` selections use `PersonSelectionPredicate` objects retained separately.
+  The UI displays one **Show: active** box whenever at least one selection remains. Its X clears all
+  selection predicates while retaining name, email, tag, and other additional filters.
+  The roster heading follows the observable displayed-list size, including zero-result views.
 * **Preferences:** a `UserPrefs` object, currently containing GUI settings.
   Other components access it through `ReadOnlyUserPrefs`.
 

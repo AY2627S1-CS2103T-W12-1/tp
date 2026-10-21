@@ -149,9 +149,14 @@ Extra arguments produce `Invalid command format. Usage: list` without changing t
 
 ### Show selected members: `show`
 
-`show 1 3 4 5` keeps members at those numbers in the **currently displayed list**.
+`show 1 3` shows only members 1 and 3 from the **currently displayed list**.
 The selected members stay in their current order and receive new displayed numbers starting at 1.
 You can use `show` again with those new numbers, or use `list` to restore the full roster.
+While a `show` selection is active, a **Show: active** box appears under the command field.
+It stays visible even if you remove other search or filter boxes. Hover over it to see how many times
+`show` has been applied. Select its **X** to remove all `show` selections at once while keeping any
+name, email, or tag filters. The **ROSTER** heading shows how many members are currently displayed,
+including when the result is empty.
 
 Supply one or more positive numbers separated by spaces. Repeating a number selects that member once.
 If any number is invalid or outside the current list, the view stays unchanged. `show` does not change
@@ -614,7 +619,7 @@ in memory.
 | Open help | `help [COMMAND]` | `help add` opens the add instructions. |
 | Add a member | `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...` | The quick-start example adds Alice. |
 | Show everyone | `list` | `list` restores the complete roster. |
-| Show selected members | `show INDEX [MORE_INDEXES]...` | `show 1 3 4 5` keeps those members from the current list. |
+| Show selected members | `show INDEX [MORE_INDEXES]...` | `show 1 3` shows only members 1 and 3 from the current list. |
 | Sort by name | `sort` | Sorts the current view from A to Z, ignoring letter case. |
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
 | Add one tag | `tag INDEX t/TAG` | `tag 2 t/committee` adds one tag to displayed member 2. |

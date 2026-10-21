@@ -176,6 +176,16 @@ public class AddCommandTest {
         }
 
         @Override
+        public int getActiveShowSelectionCount() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public void clearShowSelections() {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public void removeActiveFilter(ActiveFilter filter) {
             throw new AssertionError("This method should not be called.");
         }

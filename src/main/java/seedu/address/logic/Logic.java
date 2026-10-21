@@ -34,6 +34,12 @@ public interface Logic {
     /** Returns the removable name and tag filters in application order. */
     List<ActiveFilter> getActiveFilters();
 
+    /** Returns the number of active {@code show} selections. */
+    int getActiveShowSelectionCount();
+
+    /** Clears all {@code show} selections without changing other filters or saved data. */
+    void clearShowSelections();
+
     /** Removes one active filter without changing the saved roster. */
     void removeActiveFilter(ActiveFilter filter);
 
