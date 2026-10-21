@@ -1,0 +1,63 @@
+{
+  "baseUrl": "",
+  "titlePrefix": "",
+  "titleSuffix": "TrackCall",
+  "faviconPath": "images/SeEduLogo.png",
+  "style": {
+    "codeTheme": "light"
+  },
+  "ignore": [
+    "_markbind/",
+    "scripts/",
+    "_markbind/layouts/*",
+    "_markbind/logs/*",
+    "_site/*",
+    "site.json",
+    "package*.json",
+    "node_modules/*",
+    "*.md",
+    "*.njk",
+    ".git/*",
+    "_templates/*",
+    "!releases/**/RELEASE_NOTES.md"
+  ],
+  "pagesExclude": [
+    "node_modules/*",
+    "_templates/*"
+  ],
+  "pages": [
+    {
+      "glob": [
+        "**/*.md"
+      ],
+      "layout": "default.md"
+    },
+    {
+      "src": "releases/v1.3/RELEASE_NOTES.md",
+      "title": "v1.3 release notes",
+      "frontmatter": {
+        "legacyAnchors": {
+          "trackcall-v1-3-first-mvp-release": "trackcall-v13-first-mvp-release",
+          "what-s-new-compared-with-ab3": "whats-new-compared-with-ab3",
+          "show-every-active-filter-new-in-pr-137": "show-every-active-filter--new-in-pr-137"
+        },
+        "pageNav": 3
+      }
+    },
+    {
+      "src": "releases/v1.4/RELEASE_NOTES.md",
+      "title": "v1.4 release notes",
+      "frontmatter": {
+        "legacyAnchors": {
+          "trackcall-v1-4-alpha": "trackcall-v14-alpha",
+          "changes-since-v1-3": "changes-since-v13"
+        },
+        "pageNav": 3
+      }
+    }
+  ],
+  "timeZone": "Asia/Singapore",
+  "plugins": [
+    "legacyAnchors"
+  ]
+}

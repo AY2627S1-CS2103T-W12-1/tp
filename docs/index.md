@@ -1,7 +1,15 @@
 ---
-layout: page
-title: TrackCall
+layout: default.md
+title: ""
+pageNav: false
 ---
+
+# TrackCall
+
+[![CI Status](https://github.com/AY2627S1-CS2103T-W12-1/tp/workflows/Java%20CI/badge.svg)](https://github.com/AY2627S1-CS2103T-W12-1/tp/actions)
+[![codecov](https://codecov.io/gh/AY2627S1-CS2103T-W12-1/tp/branch/master/graph/badge.svg)](https://app.codecov.io/gh/AY2627S1-CS2103T-W12-1/tp)
+
+![TrackCall showing a compact roster and one selected member's details](images/Ui.png)
 
 TrackCall helps membership secretaries keep their organisation's member records up to date.
 Use typed commands to manage contact details, find members, and update a group's tags at once.
@@ -10,13 +18,11 @@ The performance target is 500 members. This is not a hard record limit.
 
 ## Interface
 
-![TrackCall showing a compact roster and one selected member's details](images/Ui.png)
-
 In the current source build, the command box is followed by the result display and a compact roster beside
 the selected member's details. Contact details stay hidden until a member is selected. This UI update is
 newer than the v1.4 alpha release.
 
-## Features in v1.4 alpha
+## Features in v1.4 alpha {id="features-in-v14-alpha"}
 
 * Add, edit, list, find, delete, and clear member records.
 * Find members by email address or domain fragment with `findemail`.

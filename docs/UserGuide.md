@@ -1,7 +1,10 @@
 ---
-layout: page
+layout: default.md
 title: User Guide
+pageNav: 3
 ---
+
+# User Guide
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
@@ -12,9 +15,6 @@ The latest downloadable release is v1.3; the v1.4 alpha source build described h
 The commands and interface below describe that source build and may differ from the v1.3 download.
 
 Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
-
-* Table of Contents
-{:toc}
 
 ## Quick start
 
@@ -32,7 +32,7 @@ Start with [Quick start](#quick-start), or use the [command summary](#command-su
 
 TrackCall opens with sample members and a welcome message on your first launch.
 To use the commands and selected-member panel described in this guide, run the current source checkout
-with `./gradlew run` after following the [Setting up guide](SettingUp.md).
+with `./gradlew run` after following the [Setting up guide](SettingUp.html).
 
 ### Read the interface
 
@@ -574,7 +574,7 @@ an address. For example, `edit 1 a/Main Road T/committee` reports invalid input;
 to assign a tag. Standalone `c/o`, URLs, numeric slashes such as `12/3`, and slashes inside words
 remain valid address text.
 
-The [Developer Guide](DeveloperGuide.md#limitations) explains current limitations and records
+The [Developer Guide](DeveloperGuide.html#limitations) explains current limitations and records
 ideas for later versions in its requirements appendix.
 
 ## FAQ
@@ -589,12 +589,12 @@ See [Your data](#your-data) for working-folder and backup instructions.
 A search changes the displayed list, not the saved roster. Run `list` to show everyone.
 Check the current displayed number before editing, tagging, untagging, or deleting a member.
 
-### How do I add or remove one member's tag?
+### How do I add or remove one member's tag? {id="how-do-i-add-or-remove-one-members-tag"}
 
 Use `tag INDEX t/TAG` to add a tag or `untag INDEX t/TAG` to remove one. Both commands preserve
 the member's other tags. Use `edit INDEX t/...` only when replacing the full tag set.
 
-### Can I update a whole group's tags?
+### Can I update a whole group's tags? {id="can-i-update-a-whole-groups-tags"}
 
 Yes. Use `find` or `filter t/TAG` to display the group, then use `tagall t/TAG` or `untagall t/TAG`.
 Only the displayed members change. See [Tag or untag a group](#tag-or-untag-a-group-tagall-untagall).

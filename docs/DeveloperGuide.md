@@ -1,10 +1,10 @@
 ---
-layout: page
+layout: default.md
 title: Developer Guide
+pageNav: 3
 ---
-* Table of Contents
-{:toc}
 
+# Developer Guide
 
 ## Value proposition
 
@@ -33,27 +33,29 @@ See [Limitations](#limitations) for constraints in the current release.
   [Jackson](https://github.com/FasterXML/jackson) for JSON storage.
 * [Apache Commons CSV](https://commons.apache.org/proper/commons-csv/) handles CSV import/export parsing and quoting.
   Its use was [approved by the teaching team](https://github.com/NUS-CS2103-AY2627-S1/forum/issues/627).
-* The documentation website layout adapts the
+* The documentation website uses [MarkBind](https://markbind.org/) and adapts the
+  [CS2103T starter layout](https://github.com/NUS-CS2103-AY2627-S1/tp/tree/switch-docs-to-markbind)
+  with TrackCall's name, repository links, and guide sections.
+* The previous Jekyll website adapted the
   [W13-1 team's layout](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/docs/stylesheets/main.css),
   including its sidebar widths, reading width, and responsive breakpoints, under its
   [MIT licence](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/LICENSE).
-  TrackCall supplies its own palette, Jekyll templates, and navigation/search behaviour.
 * [JUnit](https://junit.org/junit5/), [Gradle](https://gradle.org/),
   [Checkstyle](https://checkstyle.org/), and [JaCoCo](https://www.jacoco.org/jacoco/) support testing and builds.
 
 
 ## Setting up, getting started
 
-Refer to the guide [_Setting up and getting started_](SettingUp.md).
+Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
 
 ## Design
 
-<div markdown="span" class="alert alert-primary">
+<box type="tip">
 
 :bulb: **Tip:** Diagram sources are in `docs/diagrams`.
 See the [PlantUML tutorial](https://se-education.org/guides/tutorials/plantUml.html) to create or edit a diagram.
-</div>
+</box>
 
 ### Architecture
 
@@ -130,10 +132,10 @@ The following sequence diagram illustrates `execute("delete 1")` followed by `ex
 
 ![Logic interactions for the delete 1 command and its confirmation](images/DeleteSequenceDiagram.png)
 
-<div markdown="span" class="alert alert-info">
+<box type="info">
 :information_source: **Note:** PlantUML extends the `DeleteCommandParser` lifeline beyond its destroy marker (X).
 The lifeline should end at that marker.
-</div>
+</box>
 
 #### Command execution
 
@@ -212,14 +214,14 @@ Its data entities can be used independently of those components.
 `show` resolves indexes against the current sorted view and adds a selection predicate to narrow it.
 `list` clears the search, tag, and selection predicates and disables sorting, restoring every member in stored order.
 
-<div markdown="block" class="alert alert-info">
+<box type="info">
 
 **Alternative design:** `AddressBook` could keep one shared `Tag` object for each unique tag.
 Each `Person` would reference those shared objects instead of holding its own copies.
 
 <img src="images/BetterModelClassDiagram.png" width="450" alt="Alternative model with a shared list of unique tags">
 
-</div>
+</box>
 
 ### Storage component
 
@@ -277,7 +279,7 @@ The layout uses two columns in a wide window and one in a narrow window.
 * **F1** and the Help menu open the overview.
 * Arrow and page keys scroll. **Home/End** move to the ends, and **Escape** closes help.
 
-#### Test coverage
+#### Test coverage {id="test-coverage"}
 
 * `CommandHelpTest` checks catalogue completeness and executable examples.
 * `HelpWindowTest` checks the overview, detail pages, responsive columns, navigation, and keyboard scrolling.
@@ -327,7 +329,7 @@ These messages follow the list and clear feature specifications:
 | Invalid clear arguments | `Invalid command format. Usage: clear. This command removes all members.` |
 | Failed clear save | `Unable to clear the address book because the changes could not be saved. No members were removed.` |
 
-#### Test coverage
+#### Test coverage {id="test-coverage-1"}
 
 Regression coverage is in `ListClearIntegrationTest`, the two command tests, parser tests, and
 `FileUtilTest`. `PersonCardTest` lays out compact roster cards off-screen and verifies names,
@@ -509,15 +511,15 @@ Removing that chip clears only the email condition and preserves any subsequent 
 ### Filter members by tag
 
 `filter t/TAG` narrows the displayed list to members with one exact, case-sensitive tag without changing member data.
-Usage examples are in the [User Guide](UserGuide.md#filter-displayed-members-by-tag-filter).
+Usage examples are in the [User Guide](UserGuide.html#filter-displayed-members-by-tag-filter).
 
-#### Parsing
+#### Parsing {id="parsing"}
 
 `FilterCommandParser` accepts one `t/TAG` argument, trims surrounding whitespace, and requires 1 to 30
 ASCII letters or digits. Missing, repeated, or invalid arguments are rejected before the view changes.
 The parser checks the tag before constructing it; the shared `Tag` model enforces the same 1 to 30 character rule.
 
-#### Execution
+#### Execution {id="execution"}
 
 `FilterCommand` passes the tag to `ModelManager#filterFilteredPersonListByTag`. The model
 combines it with the active name, email, and tag conditions using logical AND.
@@ -535,7 +537,7 @@ Filtering preserves the current display order, including name sorting. Visible m
 and subsequent `edit` and `delete` commands use those displayed indices. The command is read-only, so
 `LogicManager` returns its result without saving the roster.
 
-#### Design considerations
+#### Design considerations {id="design-considerations"}
 
 * **Preserve earlier conditions:** combining predicates lets users narrow an existing name search, email search, or tag
   filter without restoring hidden members. For example, filtering by `committee` and then `year1` keeps
@@ -545,7 +547,7 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
   members. Replacing an edited member in the observable list re-evaluates that predicate. A member who no
   longer matches disappears from view but remains in the roster, so later commands operate on the updated group.
 
-#### Test coverage
+#### Test coverage {id="test-coverage-2"}
 
 * `FilterCommandParserTest` and `FilterCommandTest` cover argument validation and narrowing an existing view.
 * `LogicManagerTest` covers cumulative filters, case-sensitive matching, empty results, interactions with
@@ -569,7 +571,7 @@ replacement occurs, but `LogicManager` still saves the full roster. A bad or out
 invalid arguments fail before saving. A save failure after an actual change follows the standard
 `SaveFailureException` path and leaves the change in memory.
 
-#### Test coverage
+#### Test coverage {id="individual-tag-test-coverage"}
 
 * `TagCommandTest` and `UntagCommandTest` cover tag preservation, no-op results, displayed indices,
   filters, selected members, and invalid indices.
@@ -581,7 +583,7 @@ invalid arguments fail before saving. A save failure after an actual change foll
 
 `tagall t/TAG` adds one tag, and `untagall t/TAG` removes one tag, for every member in the displayed list.
 
-#### Parsing
+#### Parsing {id="parsing-1"}
 
 `TagAllCommandParser` and `UntagAllCommandParser` both delegate to `BulkTagArgumentParser#parse`, so the two
 commands share one grammar and one set of error messages. It tokenizes only `t/` and accepts exactly one tag of
@@ -592,7 +594,7 @@ commands share one grammar and one set of error messages. It tokenizes only `t/`
 * More than one `t/` reports `Only one tag can be applied per command.`
 * Other invalid tags, including internal spaces and other prefixes after the tag, report the tag-format message.
 
-#### Execution
+#### Execution {id="execution-1"}
 
 `TagAllCommand#execute` and `UntagAllCommand#execute` follow the same steps:
 
@@ -614,7 +616,7 @@ roster after every valid invocation, including one where every target is skipped
 before saving. A failed save follows the standard `SaveFailureException` path: the whole batch remains in
 memory and the previous saved file is unchanged.
 
-#### Design considerations
+#### Design considerations {id="design-considerations-1"}
 
 * **One shared argument parser:** keeps `tagall` and `untagall` input rules and messages identical.
   The 1 to 30 character limit is enforced in this parser, in `FilterCommandParser`, and in the shared `Tag`
@@ -622,7 +624,7 @@ memory and the previous saved file is unchanged.
 * **Skip instead of reject:** a member who already has (or lacks) the tag is skipped and counted, so one
   overlapping group does not block the rest of the batch (UC03 extension 6b).
 
-#### Test coverage
+#### Test coverage {id="test-coverage-3"}
 
 * `TagAllCommandTest` and `UntagAllCommandTest` cover partial, complete, and zero changes, filtered lists with
   hidden members, removing the filtered tag, and empty lists.
@@ -673,15 +675,15 @@ These are constraints of the current implementation:
   confirmation step or undo. After an accidental clear,
   stop making changes and close TrackCall before restoring. Each successful save replaces the one
   previous saved roster in `data/addressbook.json.bak`; another `clear` can replace the useful backup
-  with an empty roster. Follow the [User Guide's manual recovery steps](UserGuide.md#automatic-backup-and-recovery).
+  with an empty roster. Follow the [User Guide's manual recovery steps](UserGuide.html#automatic-backup-and-recovery).
 
 
 ## Documentation, logging, testing, dev-ops
 
-* [Documentation guide](Documentation.md)
-* [Testing guide](Testing.md)
-* [Logging guide](Logging.md)
-* [DevOps guide](DevOps.md)
+* [Documentation guide](Documentation.html)
+* [Testing guide](Testing.html)
+* [Logging guide](Logging.html)
+* [DevOps guide](DevOps.html)
 
 
 ## Appendix: Requirements
@@ -923,7 +925,7 @@ Allowed email local-part punctuation:
 + _ . -
 ```
 
-### Offline help and readable feedback
+### Offline help and readable feedback {id="offline-help-and-readable-feedback"}
 
 These acceptance requirements refine US01, US03, US12, US20, and US25. They describe the intended
 behaviour and must be checked when the corresponding functional increment is delivered.
@@ -1049,7 +1051,7 @@ It matches literal email substrings rather than complete name words, with case-i
 For example, `findemail alice@example.com @school.edu` matches either fragment. It preserves name sorting
 and does not save. Missing keywords report invalid command format and preserve the current view.
 
-#### UC03: Update a group's tags
+#### UC03: Update a group's tags {id="uc03-update-a-groups-tags"}
 
 **Related stories:** US08, US09, US10.
 
@@ -1338,7 +1340,7 @@ platform or release package has been verified. Use a disposable folder and synth
    For a packaged build, use `./gradlew shadowJar`, copy `build/libs/trackcall.jar` into the
    test folder, and run `java -jar trackcall.jar` there. On macOS, use the JDK+FX distribution in
    the [course installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html).
-   See [DevOps](DevOps.md#build-automation) for the distinction between local ARM runs and release testing.
+   See [DevOps](DevOps.html#build-automation) for the distinction between local ARM runs and release testing.
 2. With no member file, check that samples appear, `list` displays them, and `exit` closes the app.
 3. Restart. Try `list extra`, `clear extra`, and `exit extra`. Each must report invalid input, preserve the
    roster, and keep the app open. Surrounding whitespace on a valid command should be accepted.
@@ -1347,7 +1349,7 @@ platform or release package has been verified. Use a disposable folder and synth
    and restart: the window must appear within an available display. Also check recovery from
    oversized or invalid saved bounds. Recovery is performed at startup.
 
-### Offline help and readable feedback
+### Offline help and readable feedback {id="offline-help-and-readable-feedback-1"}
 
 In the current source build, verify that the roster initially shows only names and tags.
 Press F2, select a member with the arrow keys, and check that only that member's contact details
