@@ -19,8 +19,8 @@ The performance target is 500 members. This is not a hard record limit.
 ## Interface
 
 In the current source build, the command box is followed by the result display and a compact roster beside
-the selected member's details. Contact details stay hidden until a member is selected. This UI update is
-newer than the v1.4 alpha release.
+the selected member's details. That panel stays hidden until a member is selected. This UI update is
+included in the v1.4 alpha release.
 
 ## Features in v1.4 alpha {id="features-in-v14-alpha"}
 
