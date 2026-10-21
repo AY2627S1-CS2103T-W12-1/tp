@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import seedu.address.commons.util.ToStringBuilder;
 
@@ -22,6 +23,9 @@ public class CommandResult {
     /** The application should exit. */
     private final boolean exit;
 
+    /** The deletion that runs only if the user confirms it next, or null if nothing awaits confirmation. */
+    private final ConfirmDeleteCommand pendingDeletion;
+
     /**
      * Constructs a {@code CommandResult} with the specified fields.
      */
@@ -33,10 +37,14 @@ public class CommandResult {
      * Constructs a result with an optional command topic for the offline help window.
      */
     public CommandResult(String feedbackToUser, boolean showHelp, boolean exit, String helpTopic) {
-        this.feedbackToUser = requireNonNull(feedbackToUser);
-        this.showHelp = showHelp;
-        this.exit = exit;
-        this.helpTopic = requireNonNull(helpTopic);
+        this(feedbackToUser, showHelp, exit, helpTopic, null);
+    }
+
+    /**
+     * Constructs a result that asks the user to confirm {@code pendingDeletion} with their next input.
+     */
+    public CommandResult(String feedbackToUser, ConfirmDeleteCommand pendingDeletion) {
+        this(feedbackToUser, false, false, "", requireNonNull(pendingDeletion));
     }
 
     /**
@@ -45,6 +53,15 @@ public class CommandResult {
      */
     public CommandResult(String feedbackToUser) {
         this(feedbackToUser, false, false);
+    }
+
+    private CommandResult(String feedbackToUser, boolean showHelp, boolean exit, String helpTopic,
+            ConfirmDeleteCommand pendingDeletion) {
+        this.feedbackToUser = requireNonNull(feedbackToUser);
+        this.showHelp = showHelp;
+        this.exit = exit;
+        this.helpTopic = requireNonNull(helpTopic);
+        this.pendingDeletion = pendingDeletion;
     }
 
     public String getFeedbackToUser() {
@@ -66,6 +83,13 @@ public class CommandResult {
         return exit;
     }
 
+    /**
+     * Returns the deletion awaiting the user's confirmation, if this result asks for one.
+     */
+    public Optional<ConfirmDeleteCommand> getPendingDeletion() {
+        return Optional.ofNullable(pendingDeletion);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == this) {
@@ -80,12 +104,13 @@ public class CommandResult {
         return feedbackToUser.equals(otherCommandResult.feedbackToUser)
                 && showHelp == otherCommandResult.showHelp
                 && exit == otherCommandResult.exit
-                && helpTopic.equals(otherCommandResult.helpTopic);
+                && helpTopic.equals(otherCommandResult.helpTopic)
+                && Objects.equals(pendingDeletion, otherCommandResult.pendingDeletion);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(feedbackToUser, showHelp, exit, helpTopic);
+        return Objects.hash(feedbackToUser, showHelp, exit, helpTopic, pendingDeletion);
     }
 
     @Override
@@ -95,6 +120,7 @@ public class CommandResult {
                 .add("showHelp", showHelp)
                 .add("exit", exit)
                 .add("helpTopic", helpTopic)
+                .add("pendingDeletion", pendingDeletion)
                 .toString();
     }
 

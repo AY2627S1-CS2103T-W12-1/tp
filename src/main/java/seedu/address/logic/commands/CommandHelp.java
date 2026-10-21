@@ -140,9 +140,11 @@ public enum CommandHelp {
             "Supply one readable .csv path after p/. Invalid files do not change the roster. If saving fails, the "
                     + "imported batch remains in this session and can be saved by a later data-changing command."),
     DELETE("Remove records", "delete", "Delete one member", "delete INDEX", "delete 2",
-            "Permanently removes the member at a displayed list number.",
-            "Deletes the second member in the current list and shows their details after saving.",
-            "Search first if needed, then check the number and contact details. There is no undo or confirmation.",
+            "Permanently removes the member at a displayed list number after you confirm the deletion.",
+            "Asks you to confirm deleting the second member in the current list. Typing y deletes them and shows "
+                    + "their details after saving.",
+            "Search first if needed, then check the number and contact details. The confirmation names the member; "
+                    + "any input other than y cancels without running that input. There is no undo after confirming.",
             "Supply one positive number shown in the current list. Zero, negative numbers and missing members "
                     + "are rejected. If saving fails, the deletion remains in this session and the command box clears; "
                     + "do not repeat the deletion to retry saving."),

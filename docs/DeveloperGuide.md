@@ -80,9 +80,9 @@ and [`MainApp`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/mai
 
 #### Component interactions
 
-The sequence diagram shows how the components handle `delete 1`.
+The sequence diagram shows how the components handle `delete 1` and the `y` that confirms it.
 
-<img src="images/ArchitectureSequenceDiagram.png" width="574" alt="Component interactions when executing delete 1">
+<img src="images/ArchitectureSequenceDiagram.png" width="574" alt="Component interactions when executing delete 1 and confirming it with y">
 
 Each of the four main components defines an API through an interface with the component's name.
 A corresponding manager class implements that interface.
@@ -126,9 +126,9 @@ The UI component:
 
 <img src="images/LogicClassDiagram.png" width="550" alt="Main classes in the Logic component">
 
-The following sequence diagram illustrates `execute("delete 1")`.
+The following sequence diagram illustrates `execute("delete 1")` followed by `execute("y")`.
 
-![Logic interactions for the delete 1 command](images/DeleteSequenceDiagram.png)
+![Logic interactions for the delete 1 command and its confirmation](images/DeleteSequenceDiagram.png)
 
 <div markdown="span" class="alert alert-info">
 :information_source: **Note:** PlantUML extends the `DeleteCommandParser` lifeline beyond its destroy marker (X).
@@ -144,6 +144,33 @@ The lifeline should end at that marker.
 
 The diagram groups model interactions into one step for clarity.
 An implementation may need several calls to complete that step.
+
+#### Deletion confirmation
+
+`delete INDEX` deletes only after the user confirms it with the next input:
+
+1. `DeleteCommand` checks the index and returns a `CommandResult` naming the member and their tags.
+   The result also carries a `ConfirmDeleteCommand` for that `Person`. `DeleteCommand#isReadOnly()`
+   returns true, so this step neither changes nor saves the roster.
+2. `LogicManager` stores the pending `ConfirmDeleteCommand`. While one is pending,
+   `Logic#isAwaitingConfirmation()` returns true. `MainWindow` then highlights the `CommandBox` and
+   shows a confirmation hint. If a filter box is removed before the user answers, `MainWindow` shows
+   the prompt again below the filter message, so the member to be deleted stays visible.
+3. The next input does not reach `AddressBookParser`. If it is exactly `y` after surrounding whitespace
+   is ignored, `LogicManager` executes the `ConfirmDeleteCommand` and saves the roster as for other
+   data-changing commands. Any other input cancels the deletion and is not run as a command.
+   Either way, the pending deletion is cleared.
+
+`ConfirmDeleteCommand` stores the member rather than the index. A filter removed while the prompt is
+shown therefore cannot redirect the deletion to a different member. `y` without a pending deletion
+is an unknown command.
+
+Alternatives considered:
+
+* **A pop-up dialog:** clearer for mouse users, but it interrupts typing, and a modal dialog
+  would block the UI tests that drive `MainWindow`.
+* **Running the cancelling input as a command:** saves retyping, but a reply such as `n` would then
+  be reported as an unknown command instead of a cancellation.
 
 #### Parsing classes
 
@@ -347,8 +374,9 @@ also recover to usable bounds. This handles monitor changes between sessions.
 
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
 `help`, `list`, `show`, `sort`, `find`, `findemail`, `filter`, `export`, and `exit` return without saving member data.
-Successful `add`, `edit`, `tag`, `untag`, `delete`, `tagall`, `untagall`, `renametag`, `clear`, and `import` commands pass the complete
-roster, including hidden members,
+`delete INDEX` also returns without saving because it only asks for confirmation.
+Successful `add`, `edit`, `tag`, `untag`, confirmed `delete`, `tagall`, `untagall`, `renametag`, `clear`, and `import` commands
+pass the complete roster, including hidden members,
 to `Storage#saveAddressBook`.
 Parsing and execution failures do not save. Data-changing commands return normal success only after
 the save succeeds.
@@ -641,7 +669,8 @@ These are constraints of the current implementation:
 * The saved JSON format uses a `persons` array with a `tags` array for each member. Loading
   ignores unknown member fields, keeps the last value of repeated fields, and accepts JSON
   numbers in text fields as text. Comments and trailing commas are rejected.
-* Deletion and clearing take effect without a confirmation step or undo. After an accidental clear,
+* Deletion asks for confirmation but cannot be undone once confirmed. Clearing takes effect without a
+  confirmation step or undo. After an accidental clear,
   stop making changes and close TrackCall before restoring. Each successful save replaces the one
   previous saved roster in `data/addressbook.json.bak`; another `clear` can replace the useful backup
   with an empty roster. Follow the [User Guide's manual recovery steps](UserGuide.md#automatic-backup-and-recovery).
@@ -721,7 +750,7 @@ The broader narrative must be read with these MVP decisions:
   membership-status, and joining-date fields. These remain future ideas; the MVP stores the
   contact fields and tags listed above. Cohorts, tiers, or paid/unpaid categories
   may be represented by tags, without calculating fees or payment status.
-* Deletion is immediate and has no confirmation or undo. Archiving with retained history is
+* Deletion asks for confirmation and has no undo. Archiving with retained history is
   different from deleting a record.
 * Sharing for president verification, newsletters, mail merge, phone contacts, or submissions is
   the motivation for the CSV export story (US15). `export [FILEPATH]` and `import p/FILE_PATH`
@@ -803,7 +832,7 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 | US31 | `**` | long-time secretary | archive an inactive member | reduce clutter while keeping their history | Considered; deletion in the MVP does not retain history. |
 | US32 | `*` | long-time secretary | archive an unused group tag | keep old groups out of my active work without losing their history | Considered; no tag archive or separate tag catalogue in the MVP. |
 | US33 | `*` | club secretary | sort members by class | review members in the order relevant to my task | Considered; no class field or class sorting is implemented. |
-| US34 | `**` | club secretary | cancel a deletion before confirming it | avoid losing a record after selecting the wrong member | Not selected; MVP deletion and clearing are immediate, without confirmation or undo. |
+| US34 | `**` | club secretary | cancel a deletion before confirming it | avoid losing a record after selecting the wrong member | Implemented in the current source build after v1.4 alpha; `delete INDEX` asks for confirmation, and any input other than `y` cancels. `clear` remains immediate. |
 | US36 | `**` | outgoing secretary | hand over my roster and command guidance to my successor | let the next secretary continue club administration | No in-app access-transfer feature. Shared accounts and routine multi-user data access are excluded by the course's single-user constraint. |
 
 ### Shared behaviour rules
@@ -843,19 +872,21 @@ These rules describe the selected MVP and apply to the use cases below.
    displayed when the command is submitted. Hidden members and unrelated tags are unchanged.
    Adding an existing tag or removing an absent tag skips that member. Reapply searches and
    filters after the whole batch. Changed and skipped counts refer to the original target set.
-9. Valid `add`, `edit`, `tag`, `untag`, `delete`, `clear`, `tagall`, `untagall`, `renametag`, and `import` commands save
-   the complete roster, including valid operations that make no change. An empty bulk target, or a
-   `renametag` current tag that no member has, is an error and does not save. `help`, `list`, `show`,
-   `sort`, `find`, `findemail`, `filter`, `export`, and `exit` do not save.
+9. Valid `add`, `edit`, `tag`, `untag`, confirmed `delete`, `clear`, `tagall`, `untagall`, `renametag`, and `import`
+   commands save the complete roster, including valid operations that make no change. An empty bulk
+   target, or a `renametag` current tag that no member has, is an error and does not save. `help`,
+   `list`, `show`, `sort`, `find`, `findemail`, `filter`, `export`, and `exit` do not save. Neither does `delete INDEX`
+   while it waits for confirmation, nor a cancelled deletion.
 10. Report data-changing command success only after saving succeeds. A failed save preserves
     the previous saved file and reports a storage error. Except for `clear`, changes remain in
     memory and can be lost on exit. Failed `clear` restores the previous records, displayed
     list, and filters. To retry saving, resolve the storage problem and run a valid data-changing
     command; a valid no-op can be used without making another data change.
-11. `add` restores the full list and appends the record. `delete` removes one indexed record and
-    retains the active search and filters. `clear` removes all records, including hidden ones,
-    resets the view, and preserves application settings. Deletion and clearing have no
-    confirmation or undo. `list`, `sort`, `clear`, and `exit` reject extra arguments. `exit` closes the
+11. `add` restores the full list and appends the record. `delete` names one indexed record and
+    removes it only after the next input is `y`; any other input cancels without running it. The
+    deletion retains the active search and filters. `clear` removes all records, including hidden ones,
+    resets the view, and preserves application settings. Clearing has no confirmation, and neither
+    deletion nor clearing has undo. `list`, `sort`, `clear`, and `exit` reject extra arguments. `exit` closes the
     app without a final save or another warning about unsaved changes.
 12. Startup reads the local `data/addressbook.json` relative to the JAR folder in packaged builds
     or the working directory in development. A missing file loads sample members and logs that
@@ -1057,7 +1088,7 @@ not delete them. Counts still refer to the target set fixed at step 6.
 
 #### UC04: Remove one member
 
-**Related stories:** US05, US06, US25.
+**Related stories:** US05, US06, US25, US34.
 
 **Goal:** remove one unwanted record while retaining other members.
 
@@ -1066,9 +1097,11 @@ not delete them. Counts still refer to the target set fixed at step 6.
 1. The secretary lists, searches, or filters the roster.
 2. TrackCall displays the resulting records and their current indices.
 3. The secretary checks the intended member's details and requests deletion using its displayed index.
-4. TrackCall validates the request, removes that record, saves the roster, and renumbers the
-   remaining displayed records while retaining the active search and filters.
-5. TrackCall reports the deleted record. The use case ends.
+4. TrackCall validates the request and asks for confirmation, naming the member and their tags.
+5. The secretary confirms the deletion.
+6. TrackCall removes that record, saves the roster, and renumbers the remaining displayed records
+   while retaining the active search and filters.
+7. TrackCall reports the deleted record. The use case ends.
 
 **Extensions**
 
@@ -1077,11 +1110,13 @@ not delete them. Counts still refer to the target set fixed at step 6.
 * **2a.** The result is empty. No member can be selected. The use case ends without changes.
 * **4a.** The deletion command or index is invalid. TrackCall reports the error and removes nothing.
   The secretary checks the current list and retries step 3.
-* **4b.** Saving fails. The record remains deleted in memory but may return after restart. TrackCall
+* **5a.** The secretary enters anything other than `y`. TrackCall cancels the deletion, removes
+  nothing, does not run that input, and does not save. The use case ends.
+* **6a.** Saving fails. The record remains deleted in memory but may return after restart. TrackCall
   reports the storage error and leaves the saved file unchanged. The use case ends without
   confirmed persistence; recovery follows rule 10.
 
-Deletion has no confirmation or undo. It removes the underlying record, not just its visible card.
+Deletion has no undo after confirmation. It removes the underlying record, not just its visible card.
 
 The command is `delete INDEX`, where `INDEX` is one positive ASCII-digit index from the current
 displayed list; leading zeroes are accepted. Signs, decimals, letters, whitespace inside the index,
@@ -1283,7 +1318,7 @@ such as incremental delivery, are also not product NFRs.
 | Persisted data | The roster successfully written to the local data file and available for a later session. |
 | Session | One period of use beginning when TrackCall starts and ending when the application closes. |
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
-| Data-changing command | `add`, `edit`, `tag`, `untag`, `delete`, `clear`, `import`, `tagall`, `untagall`, or `renametag`. A valid invocation attempts to save even if its values do not change. |
+| Data-changing command | `add`, `edit`, `tag`, `untag`, confirmed `delete`, `clear`, `import`, `tagall`, `untagall`, or `renametag`. A valid invocation attempts to save even if its values do not change. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
 | JSON | The structured text format of the local data file. It uses a `persons` array and each member's `tags` array. |
 | CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; `import p/FILE_PATH` validates and imports it. |
@@ -1339,7 +1374,9 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
 
 1. Run `clear`, then `add n/Alice Tan p/12345678 e/alice@example.com a/Main Street t/committee`.
    Expect one member with those details. Add Bob with a different name, phone, and email.
-2. Run `find Alice`, then `delete 1`. Expect Alice to disappear and Bob to remain when `list` runs.
+2. Run `find Alice`, then `delete 1`. Expect a confirmation naming Alice, a highlighted command box,
+   and no change yet. Enter `n`; expect `Deletion cancelled. No member was removed.` with Alice still
+   listed. Run `delete 1` again and enter `y`. Expect Alice to disappear and Bob to remain when `list` runs.
 3. Try `delete 0`, `delete -1`, `delete 999999999999999999999`, and `delete 2` with only one
    displayed member. Expect errors with the roster unchanged.
 4. Run `edit 1 t/committee t/year1`, then `edit 1 t/`. Expect the tag set to be replaced, then
@@ -1457,7 +1494,7 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
    default preferences. The normal preferences setup may replace that file with valid defaults.
 5. In a disposable folder, start with a valid roster, then make the data directory unwritable or replace
    the data file with a directory while the app is open.
-   Test `add`, `edit`, `tag`, `untag`, `delete`, `tagall`, and `untagall` separately:
+   Test `add`, `edit`, `tag`, `untag`, `delete` (confirmed with `y`), `tagall`, and `untagall` separately:
    * Expect a save error and recovery guidance instead of success.
    * Check that the change remains visible and the command box clears the already-applied input.
    * Press Enter again. It must not repeat the edit or deletion.

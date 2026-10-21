@@ -20,10 +20,11 @@ else ([command succeeds])
 endif
 
 if () then ([help, list, show, sort, find,
-findemail, filter, export or exit])
+findemail, filter, export, exit,
+delete prompt or cancelled deletion])
     :Show result without saving;
     stop
-else ([add, edit, tag, untag, delete,
+else ([add, edit, tag, untag, confirmed delete,
 tagall, untagall, renametag, clear or import])
 endif
 

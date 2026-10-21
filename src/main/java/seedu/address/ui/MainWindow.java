@@ -52,6 +52,9 @@ public class MainWindow extends UiPart<Stage> {
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
 
+    /** The latest deletion prompt, shown again if a filter is removed before the user answers it. */
+    private String pendingDeletionPrompt = "";
+
     @FXML
     private StackPane commandBoxPlaceholder;
 
@@ -216,7 +219,12 @@ public class MainWindow extends UiPart<Stage> {
 
     private void showFilterRemoval(String message) {
         refreshActiveFilters();
-        resultDisplay.setFeedbackToUser(message + " " + logic.getFilteredPersonList().size() + " member(s) listed.");
+        String feedback = message + " " + logic.getFilteredPersonList().size() + " member(s) listed.";
+        if (logic.isAwaitingConfirmation()) {
+            // Removing a filter keeps the deletion pending, so the member it names must stay visible.
+            feedback += "\n\n" + pendingDeletionPrompt;
+        }
+        resultDisplay.setFeedbackToUser(feedback);
     }
 
     /**
@@ -280,6 +288,9 @@ public class MainWindow extends UiPart<Stage> {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(hideContactDetails(commandResult.getFeedbackToUser()));
+            if (logic.isAwaitingConfirmation()) {
+                pendingDeletionPrompt = commandResult.getFeedbackToUser();
+            }
 
             if (commandResult.isShowHelp()) {
                 helpWindow.show(commandResult.getHelpTopic());
@@ -297,6 +308,7 @@ public class MainWindow extends UiPart<Stage> {
         } finally {
             // A failed save can retain a model change that also reset its filters.
             refreshActiveFilters();
+            commandBox.setAwaitingConfirmation(logic.isAwaitingConfirmation());
         }
     }
 

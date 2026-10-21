@@ -23,6 +23,11 @@ public interface Logic {
      */
     CommandResult execute(String commandText) throws CommandException, ParseException;
 
+    /**
+     * Returns true if the next input confirms or cancels a pending deletion instead of running as a command.
+     */
+    boolean isAwaitingConfirmation();
+
     /** Returns an unmodifiable view of the filtered list of persons */
     ObservableList<Person> getFilteredPersonList();
 

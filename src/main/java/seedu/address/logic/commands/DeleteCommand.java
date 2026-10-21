@@ -12,16 +12,22 @@ import seedu.address.model.Model;
 import seedu.address.model.person.Person;
 
 /**
- * Deletes a person identified using its displayed index from the address book.
+ * Asks the user to confirm deleting a person identified using its displayed index from the address book.
+ * The deletion itself runs only if the user confirms it with the next input.
  */
 public class DeleteCommand extends Command {
 
     public static final String COMMAND_WORD = "delete";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Deletes the person identified by the index number used in the displayed person list.\n"
+            + ": Deletes the person identified by the index number used in the displayed person list "
+            + "after you confirm the deletion.\n"
             + "Parameters: INDEX (must be a positive integer)\n"
             + "Example: " + COMMAND_WORD + " 1";
+
+    public static final String MESSAGE_CONFIRM_DELETE = "Delete member %1$s?\nTags: %2$s\n"
+            + "Type " + ConfirmDeleteCommand.CONFIRMATION_WORD
+            + " and press Enter to confirm. Any other input cancels the deletion.";
 
     public static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted member\n%1$s";
 
@@ -29,6 +35,14 @@ public class DeleteCommand extends Command {
 
     public DeleteCommand(Index targetIndex) {
         this.targetIndex = targetIndex;
+    }
+
+    /**
+     * Returns true because asking for confirmation neither changes records nor saves the roster.
+     */
+    @Override
+    public boolean isReadOnly() {
+        return true;
     }
 
     @Override
@@ -41,8 +55,9 @@ public class DeleteCommand extends Command {
         }
 
         Person personToDelete = lastShownList.get(targetIndex.getZeroBased());
-        model.deletePerson(personToDelete);
-        return new CommandResult(String.format(MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(personToDelete)));
+        String prompt = String.format(MESSAGE_CONFIRM_DELETE, personToDelete.getName(),
+                Messages.formatTags(personToDelete));
+        return new CommandResult(prompt, new ConfirmDeleteCommand(personToDelete));
     }
 
     @Override
