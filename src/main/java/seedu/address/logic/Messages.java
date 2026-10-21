@@ -38,7 +38,7 @@ public class Messages {
         return "Name: " + person.getName()
                 + "\nPhone: " + person.getPhone()
                 + "\nEmail: " + person.getEmail()
-                + "\nAddress: " + person.getAddress()
+                + "\nAddress: " + (person.getAddress().value.isEmpty() ? "(none)" : person.getAddress())
                 + "\nTags: " + formatTags(person);
     }
 

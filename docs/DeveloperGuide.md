@@ -732,7 +732,7 @@ The MVP includes these commands:
 * **Display order:** `sort`.
 
 The MVP also includes automatic saving and manual editing of the local data file.
-Each member has a name, phone number, email address, address, and zero or more tags.
+Each member has a name, phone number, email address, an optional address, and zero or more tags.
 
 #### Scope boundaries
 
@@ -843,7 +843,8 @@ These rules describe the selected MVP and apply to the use cases below.
 
 1. Command keywords and prefixes are lowercase. Trim surrounding spaces and tabs from values.
    Reject invalid input before changing records, the displayed list, filters, or the saved file.
-   The fields below use the same validation in `add`, `edit`, and manual data loading.
+   Supplied field values use the same validation in `add` and `edit`. Manual data loading also accepts
+   an empty address value to represent an address that was not supplied.
 2. Two records are duplicates only when their trimmed name, phone, email, and address all match
    exactly, including case and internal spacing. Tags do not affect identity. Different people
    may share a name when another contact field differs. An edit excludes its own record from
@@ -905,7 +906,7 @@ These rules describe the selected MVP and apply to the use cases below.
 
 #### Member field rules
 
-`add` requires `n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS` and accepts optional repeated `t/TAG`
+`add` requires `n/NAME p/PHONE_NUMBER e/EMAIL` and accepts optional `a/ADDRESS` and repeated `t/TAG`
 parameters. Prefixes begin separate tokens and fields may appear in any order. `edit` uses the
 same field rules for supplied values. Both commands reject unsupported single-letter prefixes.
 Repeated `n/`, `p/`, `e/`, or `a/` prefixes are rejected. Check command structure, then values in
@@ -916,7 +917,7 @@ name/phone/email/address/tag order, then duplicate identity.
 | Name | ASCII letters, digits, and spaces, with at least one letter or digit. Preserve internal spaces and case. |
 | Phone | At least three ASCII digits, without signs, punctuation, or internal whitespace. This does not verify reachability. |
 | Email | Exactly one `@` and no whitespace. The local part allows ASCII letters, digits, and the punctuation listed below. Domain labels are separated by dots; each starts and ends with a letter or digit, with hyphens allowed internally. Syntax validation does not verify mailbox existence. |
-| Address | Non-empty single-line text after trimming surrounding spaces or tabs. Preserve internal spaces, tabs, and case. |
+| Address | Optional for `add`; omission stores an empty value. When supplied, it must be non-empty single-line text after trimming surrounding spaces or tabs. Preserve internal spaces, tabs, and case. |
 | Tags | Rule 3 applies. A member can have zero or more tags. Repeated identical tags collapse into one assignment. An empty tag is invalid except for the lone `t/` edit operation in rule 7. |
 
 Allowed email local-part punctuation:
@@ -1207,8 +1208,8 @@ leave member data and the displayed member list unchanged and do not save the da
   opening an editable roster. The secretary fixes access or restores a backup, then retries step 2.
 
 The file uses UTF-8 JSON with a `persons` array. TrackCall writes `name`, `phone`, `email`, and
-`address` fields and a `tags` array of strings for each member. Loading treats a missing or null
-`tags` field as an empty array. Member values follow the shared field rules, including rule 3
+`address` fields and a `tags` array of strings for each member. An empty `address` represents no
+provided address. Loading treats a missing or null `tags` field as an empty array. Member values follow rule 3
 for tags. Missing or null required contact fields, invalid values, null entries, duplicate members,
 comments, and trailing commas invalidate the file. Repeated identical tags collapse into one
 assignment. Unknown member fields are ignored, repeated fields keep their last value, and JSON
@@ -1389,7 +1390,9 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    should disappear from view. Run `list` to verify the edited member remains in the roster.
 5. Try an add with a missing required field, a repeated `n/`, an invalid phone, and an invalid email.
    Expect errors and no new member.
-   Add a second record with Bob's exact name but different contact details. It must succeed.
+   Add a member without `a/` and verify the address displays as `(none)` and persists after a restart.
+   Supplying an empty `a/` must fail. Add a second record with Bob's exact name but different contact
+   details. It must succeed.
    Add another record matching the original Bob's name, phone, email, and address exactly.
    It must be rejected with the duplicate contact details message and suggest `edit`.
 6. Run `find Nobody`, then `list`. Expect `0 members listed.`, then `Showing N members.` for the

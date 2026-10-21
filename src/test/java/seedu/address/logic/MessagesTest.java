@@ -29,4 +29,11 @@ public class MessagesTest {
         assertEquals("Name: Alice Tan\nPhone: 91234567\nEmail: alice@example.com"
                 + "\nAddress: " + address + "\nTags: (none)", Messages.format(member));
     }
+
+    @Test
+    public void format_noAddress_showsNone() {
+        Person member = new PersonBuilder().withAddress("").withTags().build();
+        assertEquals("Name: Amy Bee\nPhone: 85355255\nEmail: amy@gmail.com"
+                + "\nAddress: (none)\nTags: (none)", Messages.format(member));
+    }
 }

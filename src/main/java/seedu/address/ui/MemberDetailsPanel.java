@@ -48,7 +48,7 @@ public class MemberDetailsPanel extends UiPart<Region> {
         name.setText(person.getName().fullName);
         phone.setText(person.getPhone().value);
         email.setText(person.getEmail().value);
-        address.setText(person.getAddress().value);
+        address.setText(person.getAddress().value.isEmpty() ? "(none)" : person.getAddress().value);
         tags.getChildren().clear();
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))

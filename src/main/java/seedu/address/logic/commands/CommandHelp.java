@@ -53,12 +53,13 @@ public enum CommandHelp {
             "Supply exactly one tag of 1 to 30 ASCII letters or digits. Empty tags, internal spaces, "
                     + "multiple tags, and extra arguments are rejected."),
     ADD("Manage members", "add", "Add a member",
-            "add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...",
+            "add n/NAME p/PHONE e/EMAIL [a/ADDRESS] [t/TAG]...",
             "add n/Alice Tan p/91234567 e/alice@example.com a/12 Orchard Road t/committee",
-            "Creates a member with a name, phone, email and address. Tags are optional.",
+            "Creates a member with a name, phone and email. Address and tags are optional.",
             "Adds Alice Tan and shows the complete roster after the record is saved.",
             "Fields can appear in any order. Use one t/ prefix per tag; tag names contain letters and digits.",
-            "Include all four required fields once. Phone numbers need at least three digits. "
+            "Include name, phone and email once. Omit a/ if the address is unknown; a/ needs a value when used. "
+                    + "Phone numbers need at least three digits. "
                     + "An existing member with the same four contact fields is rejected. If saving fails, the member "
                     + "remains in this session and the command box clears; follow the recovery guidance before "
                     + "exiting."),

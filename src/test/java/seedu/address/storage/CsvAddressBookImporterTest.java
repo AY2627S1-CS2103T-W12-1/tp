@@ -19,7 +19,6 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
@@ -91,6 +90,16 @@ public class CsvAddressBookImporterTest {
         CsvAddressBookExporter.export(List.of(person), file);
 
         assertEquals(List.of(expected), CsvAddressBookImporter.read(file));
+    }
+
+    @Test
+    public void read_exportedRecordWithoutAddress_restoresMember() throws Exception {
+        Person person = new PersonBuilder().withName("Alice").withAddress("").build();
+        Path file = tempDir.resolve("exported.csv");
+
+        CsvAddressBookExporter.export(List.of(person), file);
+
+        assertEquals(List.of(person), CsvAddressBookImporter.read(file));
     }
 
     @Test
@@ -261,15 +270,13 @@ public class CsvAddressBookImporterTest {
     }
 
     @Test
-    public void read_invalidNameEmailAndAddress_reportsMatchingValidationMessage() throws Exception {
+    public void read_invalidNameAndEmail_reportsMatchingValidationMessage() throws Exception {
         List<String> records = List.of(
                 ",123,a@example.com,Home,",
-                "Alice,123,invalid-email,Home,",
-                "Alice,123,a@example.com,   ,");
+                "Alice,123,invalid-email,Home,");
         List<String> reasons = List.of(
                 Name.MESSAGE_CONSTRAINTS,
-                Email.MESSAGE_CONSTRAINTS,
-                Address.MESSAGE_CONSTRAINTS);
+                Email.MESSAGE_CONSTRAINTS);
 
         for (int index = 0; index < records.size(); index++) {
             Path file = write("name,phone,email,address,tags\n" + records.get(index) + "\n");
