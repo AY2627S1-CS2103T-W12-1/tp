@@ -26,7 +26,7 @@ Type commands to find members and update their contact details quickly.
 
 The current source build shows names and tags in the roster. Select a member to reveal their contact details
 in a separate panel, where each field can be copied. Press **F2** to focus the roster and **Escape** to hide
-the selected details and return to the command box. This UI update is newer than the v1.4 alpha release.
+the selected details and return to the command box. This interface is included in the v1.4 alpha release.
 
 ![TrackCall showing a compact roster and one selected member's details](docs/images/Ui.png)
 
