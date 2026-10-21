@@ -76,7 +76,8 @@ for storage and backup instructions.
 
 * Use lowercase keywords without a leading slash: `help`, not `/help`.
 * Replace `UPPER_CASE` placeholders with your own values.
-* Square brackets mark optional input. `[t/TAG]...` means zero or more tags.
+* Square brackets mark optional input. `[a/ADDRESS]` means the address may be omitted;
+  `[t/TAG]...` means zero or more tags.
 * Do not type the brackets or ellipsis.
 * Submit each command on one line.
 
@@ -103,10 +104,10 @@ Help accepts at most one lowercase topic.
 
 ### Add a member: `add`
 
-Provide a name, phone, email, and address.
+Provide a name, phone, and email. Address and tags are optional.
 Required prefixes may appear in any order, but each must appear exactly once.
 Separate each prefix from the preceding value with whitespace; pasted tabs also work.
-Use a separate `t/` for each optional tag.
+Use `a/` if you have an address, and a separate `t/` for each tag.
 Add reserves whitespace-delimited single ASCII letters followed by `/` for field prefixes.
 Only lowercase `n/`, `p/`, `e/`, `a/`, and `t/` are accepted; `x/extra` and `T/committee`
 report an invalid command format. The standalone abbreviation `c/o` (in any letter case),
@@ -117,7 +118,7 @@ URLs, numeric slashes such as `12/3`, and slashes embedded in words remain addre
 | Name | ASCII letters, digits, and spaces. Cannot be blank. |
 | Phone | At least three ASCII digits. No spaces or punctuation. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
-| Address | Non-blank text. |
+| Address | Non-blank text when supplied. |
 | Tag | 1 to 30 ASCII letters or digits, without spaces. Tags are case-sensitive. |
 
 **Email rules:**
@@ -134,6 +135,7 @@ add n/Bob Lee p/92345678 e/bob@example.com a/20 College Road t/committee t/year1
 
 This adds Bob with two tags, saves the roster, and shows the complete member list.
 Repeated identical tags appear once.
+If you omit `a/`, the address is shown as `(none)` until you add one with `edit`.
 
 A member is a duplicate only when its trimmed name, phone, email, and address all exactly match an
 existing member, including case and internal spaces. Tags do not affect identity. A same-name member
@@ -459,7 +461,8 @@ Every later non-blank row must have exactly five fields. CSV quoting supports co
 quotes. A double quote inside an unquoted field, such as `Main" Street`, is invalid CSV syntax.
 Surrounding spaces and tabs are trimmed from field values and individual tags before validation;
 internal spaces, tabs, and case are preserved. Line breaks inside fields are not supported. Separate tags
-with semicolons; leave the tags field empty for no tags. An optional UTF-8 byte-order mark is accepted.
+with semicolons; leave the tags field empty for no tags. Leave the address field empty when it is unknown.
+An optional UTF-8 byte-order mark is accepted.
 
 ```text
 name,phone,email,address,tags
@@ -487,7 +490,7 @@ An unknown command points you to `help`.
 A known command with missing or invalid input shows the problem and its rules.
 Rejected input leaves the roster and current list unchanged.
 
-* `add n/Alice` is incomplete. Use `help add`, then enter all four required fields.
+* `add n/Alice` is incomplete. Use `help add`, then enter the required name, phone, and email fields.
 * `delete 0` is invalid. Use `list`, check the member, and enter its displayed number.
 * `tag 0 t/committee` and `untag 1 t/` are invalid. Use a positive current list number and one valid tag.
 
@@ -537,7 +540,7 @@ start from the same folder to keep using the same roster.
 Close TrackCall and make a backup first. Keep the existing JSON structure:
 
 * A `persons` array contains the members.
-* Each member has `name`, `phone`, `email`, `address`, and `tags` fields.
+* Each member has `name`, `phone`, `email`, `address`, and `tags` fields. An empty `address` means none was provided.
 * Use `tags` for each member's group assignments.
 
 ### Missing or invalid files
@@ -617,7 +620,7 @@ in memory.
 | Task | Format | Example and result |
 | --- | --- | --- |
 | Open help | `help [COMMAND]` | `help add` opens the add instructions. |
-| Add a member | `add n/NAME p/PHONE e/EMAIL a/ADDRESS [t/TAG]...` | The quick-start example adds Alice. |
+| Add a member | `add n/NAME p/PHONE e/EMAIL [a/ADDRESS] [t/TAG]...` | The quick-start example adds Alice. |
 | Show everyone | `list` | `list` restores the complete roster. |
 | Show selected members | `show INDEX [MORE_INDEXES]...` | `show 1 3` shows only members 1 and 3 from the current list. |
 | Sort by name | `sort` | Sorts the current view from A to Z, ignoring letter case. |
