@@ -47,5 +47,6 @@ Limits
 - No independent manual Windows/Linux execution of the downloaded JAR is claimed.
 - Hosted platform CI and automated UI checks are distinct from manual platform acceptance.
 - The course dashboard updates daily; its rendered badges are not an immediate GitHub check.
-- Postmortem notes are in PR #144 and docs/iterations/v1.4.md; their existing draft/discussion-pending
-  status is preserved. A completed team discussion or tutor confirmation is not inferred from a build.
+- Postmortem notes originated in PR #144 and docs/iterations/v1.4.md. On 22 October the release
+  coordinator confirmed that the team had discussed and agreed those conclusions. This is the team's
+  confirmation, not a result inferred from the build. Tutor confirmation and dashboard refresh remain external.
