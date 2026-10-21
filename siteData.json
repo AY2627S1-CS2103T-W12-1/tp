@@ -183,10 +183,11 @@
       "title": "v1.4 iteration notes",
       "headings": {
         "v1-4-iteration-notes": "v1.4 iteration notes",
-        "v13-postmortem-draft": "v1.3 postmortem draft",
+        "v13-postmortem-draft": "v1.3 postmortem",
         "alpha-scope-and-order": "Alpha scope and order",
         "individual-dashboard-checks": "Individual dashboard checks",
-        "local-preparation-status": "Local preparation status"
+        "local-preparation-status": "Local preparation status",
+        "final-alpha-validation-22-october-2026": "Final alpha validation: 22 October 2026"
       },
       "headingKeywords": {}
     },
@@ -224,8 +225,8 @@
       "headings": {
         "trackcall-v1-4-alpha": "TrackCall v1.4 alpha",
         "changes-since-v1-3": "Changes since v1.3",
-        "run-the-alpha": "Run the alpha",
-        "validation": "Validation",
+        "install-and-run": "Install and run",
+        "validation-and-provenance": "Validation and provenance",
         "remaining-limitations": "Remaining limitations"
       },
       "headingKeywords": {}
