@@ -18,7 +18,8 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.platform }}
+    # Avoid the ARM64 macOS capacity queue while preserving required check names.
+    runs-on: ${{ matrix.platform == 'macos-latest' && 'macos-15-intel' || matrix.platform }}
 
     steps:
       - name: Set up repository
@@ -37,7 +38,8 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '25'
-          java-package: jdk+fx
+          # macOS tests use the JavaFX dependencies declared by Gradle.
+          java-package: ${{ runner.os == 'macOS' && 'jdk' || 'jdk+fx' }}
 
       - name: Build and check with Gradle on Linux
         if: runner.os == 'Linux'
@@ -56,3 +58,27 @@ jobs:
           fail_ci_if_error: true
           files: build/reports/jacoco/coverage/coverage.xml
           disable_search: true
+
+      - name: Collect macOS failure diagnostics
+        if: failure() && runner.os == 'macOS'
+        shell: bash
+        run: |
+          mkdir -p build/ci-diagnostics
+          reports="$HOME/Library/Logs/DiagnosticReports"
+          if [ -d "$reports" ]; then
+            find "$reports" -maxdepth 1 -type f -name 'java*' -mmin -15 \
+              -exec cp {} build/ci-diagnostics/ \;
+          fi
+
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-diagnostics-${{ matrix.platform }}
+          path: |
+            build/ci-diagnostics/
+            build/test-results/test/
+            build/reports/tests/test/
+            hs_err_pid*.log
+          if-no-files-found: ignore
+          retention-days: 3

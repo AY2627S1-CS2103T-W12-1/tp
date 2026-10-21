@@ -4,9 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -15,7 +13,10 @@ import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.model.person.EmailContainsKeywordsPredicate;
+import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonSelectionPredicate;
 import seedu.address.model.tag.Tag;
 
 /**
@@ -27,8 +28,10 @@ public class ModelManager implements Model {
     private final AddressBook addressBook;
     private final UserPrefs userPrefs;
     private final FilteredList<Person> filteredPersons;
-    private final List<Predicate<Person>> activeFilters = new ArrayList<>();
-    private final Set<Tag> activeTagFilters = new LinkedHashSet<>();
+    /** Extra predicates used internally by commands and tests, without removable UI boxes. */
+    private final List<Predicate<Person>> additionalFilters = new ArrayList<>();
+    /** Removable name, email and tag conditions, kept in the order they were applied. */
+    private final List<ActiveFilter> activeFilters = new ArrayList<>();
     /** Live display ordering; the underlying roster retains its stored order. */
     private final SortedList<Person> sortedPersons;
 
@@ -102,6 +105,15 @@ public class ModelManager implements Model {
         requireAllNonNull(target, editedPerson);
 
         addressBook.setPerson(target, editedPerson);
+        boolean selectionChanged = false;
+        for (Predicate<Person> filter : additionalFilters) {
+            if (filter instanceof PersonSelectionPredicate selection && selection.replacePerson(target, editedPerson)) {
+                selectionChanged = true;
+            }
+        }
+        if (selectionChanged) {
+            refreshFilteredPersons();
+        }
     }
 
     //=========== Filtered Person List Accessors =============================================================
@@ -129,36 +141,68 @@ public class ModelManager implements Model {
     @Override
     public void updateFilteredPersonList(Predicate<Person> predicate) {
         requireNonNull(predicate);
+        additionalFilters.clear();
         activeFilters.clear();
-        activeTagFilters.clear();
-        activeFilters.add(predicate);
+        if (predicate instanceof NameContainsKeywordsPredicate namePredicate) {
+            activeFilters.add(ActiveFilter.createNameFilter(namePredicate));
+        } else if (predicate instanceof EmailContainsKeywordsPredicate emailPredicate) {
+            activeFilters.add(ActiveFilter.createEmailFilter(emailPredicate));
+        } else {
+            additionalFilters.add(predicate);
+        }
         refreshFilteredPersons();
     }
 
     @Override
     public void filterFilteredPersonList(Predicate<Person> predicate) {
         requireNonNull(predicate);
-        activeFilters.add(predicate);
+        additionalFilters.add(predicate);
+        refreshFilteredPersons();
+    }
+
+    @Override
+    public void filterFilteredPersonListByName(NameContainsKeywordsPredicate predicate) {
+        requireNonNull(predicate);
+        activeFilters.add(ActiveFilter.createNameFilter(predicate));
         refreshFilteredPersons();
     }
 
     @Override
     public void filterFilteredPersonListByTag(Tag tag) {
         requireNonNull(tag);
-        if (activeTagFilters.add(tag)) {
-            activeFilters.add(person -> person.getTags().contains(tag));
+        if (!getActiveTagFilters().contains(tag)) {
+            activeFilters.add(ActiveFilter.createTagFilter(tag));
             refreshFilteredPersons();
         }
     }
 
     @Override
     public List<Tag> getActiveTagFilters() {
-        return List.copyOf(activeTagFilters);
+        return activeFilters.stream().filter(filter -> filter.getKind() == ActiveFilter.Kind.TAG)
+                .map(ActiveFilter::getTag).toList();
+    }
+
+    @Override
+    public List<ActiveFilter> getActiveFilters() {
+        return List.copyOf(activeFilters);
+    }
+
+    @Override
+    public void removeActiveFilter(ActiveFilter filter) {
+        requireNonNull(filter);
+        if (activeFilters.remove(filter)) {
+            refreshFilteredPersons();
+        }
     }
 
     private void refreshFilteredPersons() {
         filteredPersons.setPredicate(person -> {
-            for (Predicate<Person> filter : activeFilters) {
+            for (Predicate<Person> filter : additionalFilters) {
+                if (!filter.test(person)) {
+                    return false;
+                }
+            }
+            for (ActiveFilter filter : activeFilters) {
                 if (!filter.test(person)) {
                     return false;
                 }

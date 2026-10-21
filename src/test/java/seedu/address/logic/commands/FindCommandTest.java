@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.testutil.TypicalPersons.ALICE;
+import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.CARL;
+import static seedu.address.testutil.TypicalPersons.DANIEL;
 import static seedu.address.testutil.TypicalPersons.ELLE;
 import static seedu.address.testutil.TypicalPersons.FIONA;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
@@ -13,10 +16,13 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.parser.FindCommandParser;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
+import seedu.address.model.tag.Tag;
 
 /**
  * Contains integration tests (interaction with the Model) for {@code FindCommand}.
@@ -86,6 +92,33 @@ public class FindCommandTest {
         expectedModel.updateFilteredPersonList(predicate);
         assertCommandSuccess(command, model, "3 members listed.", expectedModel);
         assertEquals(List.of(CARL, ELLE, FIONA), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_partialKeywords_matchesAnyKeywordWithoutDuplicates() throws ParseException {
+        FindCommand command = new FindCommandParser().parse("LIC mei MEI");
+        CommandResult result = command.execute(model);
+
+        assertEquals("3 members listed.", result.getFeedbackToUser());
+        assertEquals(List.of(ALICE, BENSON, DANIEL), model.getFilteredPersonList());
+        assertEquals(getTypicalAddressBook(), model.getAddressBook());
+        assertTrue(command.isReadOnly());
+    }
+
+    @Test
+    public void execute_partialKeyword_retainsPreviousSearchAndTagFilters() throws ParseException {
+        new FindCommandParser().parse("LIC").execute(model);
+        Tag friends = new Tag("friends");
+        model.filterFilteredPersonListByTag(friends);
+
+        CommandResult result = new FindCommandParser().parse("MEI").execute(model);
+
+        assertEquals("0 members listed.", result.getFeedbackToUser());
+        assertTrue(model.getFilteredPersonList().isEmpty());
+        assertEquals(List.of(friends), model.getActiveTagFilters());
+        model.removeActiveFilter(model.getActiveFilters().get(0));
+        assertEquals(List.of(BENSON, DANIEL), model.getFilteredPersonList());
+        assertEquals(getTypicalAddressBook(), model.getAddressBook());
     }
 
     @Test

@@ -35,15 +35,22 @@ public class Messages {
      * Formats member details as labelled rows, with tags in a stable alphabetical order.
      */
     public static String format(Person person) {
-        String tags = person.getTags().stream()
-                .map(tag -> tag.tagName)
-                .sorted()
-                .collect(Collectors.joining(", "));
         return "Name: " + person.getName()
                 + "\nPhone: " + person.getPhone()
                 + "\nEmail: " + person.getEmail()
                 + "\nAddress: " + person.getAddress()
-                + "\nTags: " + (tags.isEmpty() ? "(none)" : tags);
+                + "\nTags: " + formatTags(person);
+    }
+
+    /**
+     * Formats a member's tags in a stable alphabetical order, or {@code (none)} if they have no tags.
+     */
+    public static String formatTags(Person person) {
+        String tags = person.getTags().stream()
+                .map(tag -> tag.tagName)
+                .sorted()
+                .collect(Collectors.joining(", "));
+        return tags.isEmpty() ? "(none)" : tags;
     }
 
 }

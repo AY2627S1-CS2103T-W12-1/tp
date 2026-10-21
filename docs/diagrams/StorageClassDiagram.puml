@@ -20,6 +20,18 @@ Class JsonAdaptedPerson
 Class JsonAdaptedTag
 }
 
+package "CSV Import and Export" #F5EFE5{
+Class CsvAddressBookImporter
+Class CsvAddressBookExporter
+Class CsvAddressBookCsv
+Class CsvImportException
+}
+
+}
+
+package Logic {
+Class ImportCommand LOGIC_COLOR
+Class ExportCommand LOGIC_COLOR
 }
 
 
@@ -30,5 +42,11 @@ StorageManager -down-> "1" JsonAddressBookStorage
 JsonAddressBookStorage ..> JsonSerializableAddressBook
 JsonSerializableAddressBook --> "*" JsonAdaptedPerson
 JsonAdaptedPerson --> "*" JsonAdaptedTag
+
+ImportCommand ..> CsvAddressBookImporter
+ExportCommand ..> CsvAddressBookExporter
+CsvAddressBookImporter ..> CsvAddressBookCsv
+CsvAddressBookExporter ..> CsvAddressBookCsv
+CsvAddressBookImporter ..> CsvImportException : <<throws>>
 
 @enduml

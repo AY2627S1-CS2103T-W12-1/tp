@@ -1,7 +1,10 @@
 ---
-layout: page
+layout: default.md
 title: Logging guide
+pageNav: 3
 ---
+
+# Logging guide
 
 * The project uses the `java.util.logging` package for logging.
 * `LogsCenter` manages logging levels and destinations.

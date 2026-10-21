@@ -1,10 +1,13 @@
 package seedu.address.logic;
 
+import java.util.List;
+
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.ActiveFilter;
 import seedu.address.model.person.Person;
 
 /**
@@ -20,8 +23,19 @@ public interface Logic {
      */
     CommandResult execute(String commandText) throws CommandException, ParseException;
 
+    /**
+     * Returns true if the next input confirms or cancels a pending deletion instead of running as a command.
+     */
+    boolean isAwaitingConfirmation();
+
     /** Returns an unmodifiable view of the filtered list of persons */
     ObservableList<Person> getFilteredPersonList();
+
+    /** Returns the removable name and tag filters in application order. */
+    List<ActiveFilter> getActiveFilters();
+
+    /** Removes one active filter without changing the saved roster. */
+    void removeActiveFilter(ActiveFilter filter);
 
     /**
      * Returns the user prefs' GUI settings.

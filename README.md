@@ -9,19 +9,26 @@ Type commands to find members and update their contact details quickly.
 
 ## Features in v1.4 alpha
 
-* Add, edit, list, find, delete, and clear member records.
+* Add, edit, list, show selected members by index, find, delete, and clear member records.
+* Find members by a full email address or domain fragment with `findemail KEYWORD [MORE_KEYWORDS]...`.
 * Open offline instructions for all available commands with `help`, or one command with `help COMMAND`.
-* Read labeled member cards and multiline feedback in a light beige interface, with wrapping and scrolling.
+* Read member cards and multiline feedback in a light beige interface, with wrapping and scrolling.
 * Save data changes locally, with clear recovery guidance if saving fails and rollback for a failed clear.
 * Keep the previous valid saved roster as an automatic backup, and recover damaged files at startup.
 * Leave the roster file unchanged when running read-only commands.
-* Narrow the displayed members by an exact tag using `filter t/TAG`, then use their displayed numbers to edit or delete.
+* Narrow the displayed members by an exact tag using `filter t/TAG`, then use their displayed numbers to edit, tag, untag, or delete.
+* Add or remove one member's tag with `tag INDEX t/TAG` or `untag INDEX t/TAG`, retaining their other tags.
 * Add or remove a tag for every displayed member with `tagall t/TAG` or `untagall t/TAG`.
+* Rename a tag for every member with `renametag t/CURRENT_TAG t/NEW_TAG`.
 * Import and export CSV member records, and sort the displayed list by name.
 
 ## Interface
 
-![TrackCall showing two committee members after filter t/committee](docs/images/Ui.png)
+The current source build shows names and tags in the roster. Select a member to reveal their contact details
+in a separate panel, where each field can be copied. Press **F2** to focus the roster and **Escape** to hide
+the selected details and return to the command box. This UI update is newer than the v1.4 alpha release.
+
+![TrackCall showing a compact roster and one selected member's details](docs/images/Ui.png)
 
 ## Documentation
 
@@ -30,7 +37,7 @@ Type commands to find members and update their contact details quickly.
 * [Developer Guide](https://ay2627s1-cs2103t-w12-1.github.io/tp/DeveloperGuide.html)
 * [About Us](https://ay2627s1-cs2103t-w12-1.github.io/tp/AboutUs.html)
 
-The User Guide describes the v1.4 alpha. The Developer Guide documents the current implementation,
+The User Guide covers the current source build. The Developer Guide documents the current implementation,
 its limitations, and requirements for later versions. Published documentation follows the team's
 merged default branch.
 

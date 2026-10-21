@@ -1,0 +1,17 @@
+{
+  "name": "trackcall-documentation",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TrackCall project documentation built with MarkBind",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "verify": "node scripts/verify-site.mjs",
+    "serve": "markbind serve --port 8080"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "devDependencies": {
+    "markbind-cli": "7.2.1"
+  }
+}

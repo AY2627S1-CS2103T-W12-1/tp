@@ -153,6 +153,78 @@
     -fx-text-fill: -tc-text;
 }
 
+.panel-heading {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -tc-muted;
+    -fx-padding: 0 4 8 4;
+}
+
+.member-details-panel {
+    -fx-background-color: -tc-surface;
+    -fx-border-color: -tc-border;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.member-details-panel .scroll-pane,
+.member-details-panel .scroll-pane > .viewport {
+    -fx-background-color: -tc-surface;
+}
+
+.details-empty-state {
+    -fx-text-fill: -tc-muted;
+    -fx-alignment: center;
+    -fx-text-alignment: center;
+    -fx-padding: 24;
+}
+
+.details-index {
+    -fx-font-size: 12px;
+    -fx-text-fill: -tc-terracotta;
+    -fx-font-weight: bold;
+}
+
+.details-name {
+    -fx-font-size: 23px;
+    -fx-font-weight: bold;
+}
+
+.member-details-panel #tags .label {
+    -fx-background-color: -tc-sage-soft;
+    -fx-background-radius: 5;
+    -fx-text-fill: -tc-sage;
+    -fx-padding: 3 7;
+    -fx-font-size: 12px;
+}
+
+.copy-button {
+    -fx-min-width: 30px;
+    -fx-min-height: 30px;
+    -fx-pref-width: 30px;
+    -fx-pref-height: 30px;
+    -fx-padding: 5;
+    -fx-background-color: -tc-surface;
+    -fx-border-color: -tc-border;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+.copy-button:hover {
+    -fx-background-color: -tc-sage-soft;
+    -fx-border-color: -tc-focus;
+}
+
+.copy-icon {
+    -fx-fill: transparent;
+    -fx-stroke: -tc-muted;
+    -fx-stroke-width: 1.5;
+}
+
+.copy-button:hover .copy-icon {
+    -fx-stroke: -tc-sage;
+}
+
 #tags {
     -fx-hgap: 7;
     -fx-vgap: 5;
@@ -225,6 +297,48 @@
 
 .button:disabled {
     -fx-opacity: 0.55;
+}
+
+.filter-chip {
+    -fx-alignment: center-left;
+    -fx-background-color: -tc-sage-soft;
+    -fx-background-radius: 6;
+    -fx-border-color: #bdcaae;
+    -fx-border-radius: 6;
+    -fx-padding: 4 6 4 10;
+}
+
+.filter-chip .label {
+    -fx-text-fill: -tc-sage;
+    -fx-font-size: 13px;
+}
+
+.filter-chip-remove {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0 4;
+    -fx-font-size: 17px;
+    -fx-text-fill: -tc-sage;
+}
+
+.filter-chip-remove:hover, .filter-chip-remove:focused {
+    -fx-background-color: #cbd9c0;
+    -fx-border-color: transparent;
+}
+
+.filter-chip-name, .filter-chip-email {
+    -fx-background-color: #e2ebfa;
+    -fx-border-color: #a9bede;
+}
+
+.filter-chip-name .label, .filter-chip-name .filter-chip-remove,
+.filter-chip-email .label, .filter-chip-email .filter-chip-remove {
+    -fx-text-fill: #284a75;
+}
+
+.filter-chip-name .filter-chip-remove:hover, .filter-chip-name .filter-chip-remove:focused,
+.filter-chip-email .filter-chip-remove:hover, .filter-chip-email .filter-chip-remove:focused {
+    -fx-background-color: #cadbf2;
 }
 
 .scroll-pane, .scroll-pane > .viewport {

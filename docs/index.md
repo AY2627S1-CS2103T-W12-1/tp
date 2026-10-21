@@ -1,7 +1,15 @@
 ---
-layout: page
-title: TrackCall
+layout: default.md
+title: ""
+pageNav: false
 ---
+
+# TrackCall
+
+[![CI Status](https://github.com/AY2627S1-CS2103T-W12-1/tp/workflows/Java%20CI/badge.svg)](https://github.com/AY2627S1-CS2103T-W12-1/tp/actions)
+[![codecov](https://codecov.io/gh/AY2627S1-CS2103T-W12-1/tp/branch/master/graph/badge.svg)](https://app.codecov.io/gh/AY2627S1-CS2103T-W12-1/tp)
+
+![TrackCall showing a compact roster and one selected member's details](images/Ui.png)
 
 TrackCall helps membership secretaries keep their organisation's member records up to date.
 Use typed commands to manage contact details, find members, and update a group's tags at once.
@@ -10,17 +18,20 @@ The performance target is 500 members. This is not a hard record limit.
 
 ## Interface
 
-![TrackCall showing two committee members after filter t/committee](images/Ui.png)
+In the current source build, the command box is followed by the result display and a compact roster beside
+the selected member's details. Contact details stay hidden until a member is selected. This UI update is
+newer than the v1.4 alpha release.
 
-The command box is at the top, followed by the result display, the member list, and the data-file status bar.
-
-## Features in v1.4 alpha
+## Features in v1.4 alpha {id="features-in-v14-alpha"}
 
 * Add, edit, list, find, delete, and clear member records.
+* Find members by email address or domain fragment with `findemail`.
 * Filter the displayed members by tag, and sort them by name.
+* Add or remove one tag from a displayed member with `tag INDEX t/TAG` or `untag INDEX t/TAG`.
 * Add or remove a tag for every displayed member with `tagall` and `untagall`.
+* Rename a tag for every member with `renametag`.
 * Import and export member records as CSV files.
-* Offline help for all fourteen commands.
+* Offline help for all nineteen commands.
 * Local saving after successful data changes, with recovery guidance for save errors.
   A failed clear restores the roster.
 

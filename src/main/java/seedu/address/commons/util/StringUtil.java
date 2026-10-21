@@ -25,17 +25,39 @@ public class StringUtil {
      */
     public static boolean containsWordIgnoreCase(String sentence, String word) {
         requireNonNull(sentence);
-        requireNonNull(word);
+        String preppedWord = prepareSingleWord(word);
 
+        return Arrays.stream(sentence.split("\\s+"))
+                .anyMatch(preppedWord::equalsIgnoreCase);
+    }
+
+    /**
+     * Returns true if {@code sentence} contains a contiguous part matching {@code word}, ignoring case.
+     * Matching is independent of the default locale. The query must be a single non-empty word;
+     * surrounding whitespace is ignored.
+     *
+     * @param sentence cannot be null
+     * @param word cannot be null, cannot be empty, must be a single word
+     */
+    public static boolean containsPartialWordIgnoreCase(String sentence, String word) {
+        requireNonNull(sentence);
+        String preppedWord = prepareSingleWord(word);
+
+        for (int start = 0; start <= sentence.length() - preppedWord.length(); start++) {
+            if (sentence.regionMatches(true, start, preppedWord, 0, preppedWord.length())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Trims and validates a single non-empty search word. */
+    private static String prepareSingleWord(String word) {
+        requireNonNull(word);
         String preppedWord = word.trim();
         checkArgument(!preppedWord.isEmpty(), "Word parameter cannot be empty");
         checkArgument(preppedWord.split("\\s+").length == 1, "Word parameter should be a single word");
-
-        String preppedSentence = sentence;
-        String[] wordsInPreppedSentence = preppedSentence.split("\\s+");
-
-        return Arrays.stream(wordsInPreppedSentence)
-                .anyMatch(preppedWord::equalsIgnoreCase);
+        return preppedWord;
     }
 
     /**

@@ -1,20 +1,19 @@
 ---
-layout: page
+layout: default.md
 title: Setting up and getting started
+pageNav: 3
 ---
 
-* Table of Contents
-{:toc}
-
+# Setting up and getting started
 
 --------------------------------------------------------------------------------------------------------------------
 
 ## Setting up the project on your computer
 
-<div markdown="span" class="alert alert-warning">:exclamation: **Caution:**
+<box type="warning">:exclamation: **Caution:**
 
 Follow the steps below precisely. The setup may fail if you skip or change a step.
-</div>
+</box>
 
 First, **fork** this repo, and **clone** the fork into your computer.
 
@@ -24,7 +23,7 @@ If you plan to use IntelliJ IDEA (highly recommended):
   :exclamation: Note: Importing a Gradle project is slightly different from importing a normal Java project.
 1. **Verify the setup**:
    1. Run `seedu.address.Main` and try a few commands.
-   1. [Run the tests](Testing.md) to ensure they all pass.
+   1. [Run the tests](Testing.html) to ensure they all pass.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -34,10 +33,10 @@ If you plan to use IntelliJ IDEA (highly recommended):
 
    If using IDEA, follow the guide [_[se-edu/guides] IDEA: Configuring the code style_](https://se-education.org/guides/tutorials/intellijCodeStyle.html) to set up IDEA's coding style to match ours.
 
-   <div markdown="span" class="alert alert-primary">:bulb: **Tip:**
+   <box type="tip">:bulb: **Tip:**
 
    Optionally, follow the guide [_[se-edu/guides] Using Checkstyle_](https://se-education.org/guides/tutorials/checkstyle.html) to learn how to use Checkstyle in IDEA, for example to report problems _as_ you write code.
-   </div>
+   </box>
 
 1. **Set up CI**
 
@@ -45,7 +44,7 @@ If you plan to use IntelliJ IDEA (highly recommended):
 
 1. **Learn the design**
 
-   When you are ready to start coding, we recommend that you get some sense of the overall design by reading about [TrackCall’s architecture](DeveloperGuide.md#architecture).
+   When you are ready to start coding, we recommend that you get some sense of the overall design by reading about [TrackCall’s architecture](DeveloperGuide.html#architecture).
 
 1. **Do the tutorials**
    These tutorials will help you get acquainted with the codebase.

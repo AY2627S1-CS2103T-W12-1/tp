@@ -1,8 +1,11 @@
-<!-- Starter example only. Replace every claim and link before publishing a portfolio. -->
 ---
-layout: page
+layout: default.md
 title: John Doe's Project Portfolio Page
+pageNav: 3
 ---
+
+<!-- Starter example only. Replace every claim and link before publishing a portfolio. -->
+# John Doe's Project Portfolio Page
 
 ### Project: AddressBook Level 3
 
