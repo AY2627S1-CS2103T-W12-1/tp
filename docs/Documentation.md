@@ -51,6 +51,11 @@ Keep `package.json` and `package-lock.json` together when updating dependencies.
 * Update `docs/_markbind/layouts/default.md` for the shared layout and navigation.
 * Update `docs/stylesheets/main.css` for styling; it starts from the course-provided MarkBind stylesheet.
 * Keep section headings stable when possible: changing a heading can break links to its section.
+* Link to generated pages with `.html`, for example `DeveloperGuide.html#limitations`.
+* Give headings containing apostrophes or dots an explicit stable ID when they are linked from elsewhere,
+  for example `### How do I add or remove one member's tag? {id="how-do-i-add-or-remove-one-members-tag"}`.
+* Start new pages with `layout: default.md` front matter and a `# Title` heading.
+* After updating your branch from `master`, run `npm run build` in `docs/` to check the combined pages.
 * Preview the User Guide, Developer Guide, and navigation at both desktop and phone widths after layout changes.
 * IntelliJ users can enable [soft wrapping for Markdown files](https://se-education.org/guides/tutorials/intellijUsefulSettings.html#enabling-soft-wrapping)
   to make long paragraphs easier to edit.

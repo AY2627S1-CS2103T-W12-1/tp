@@ -34,6 +34,7 @@ import seedu.address.logic.LogicManager;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.CommandHelp;
+import seedu.address.logic.commands.ConfirmDeleteCommand;
 import seedu.address.model.ModelManager;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
@@ -116,6 +117,7 @@ public class MainWindowTest {
         onJavaFxThread(() -> {
             enter("find Alice");
             enter("delete 1");
+            enter("y");
             assertTrue(feedback.getText().contains("not saved"));
             assertEquals("", input.getText());
             assertEquals("Bob Lee", model.getAddressBook().getPersonList().getFirst().getName().fullName);
@@ -127,6 +129,79 @@ public class MainWindowTest {
             assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, feedback.getText());
             assertEquals("clear", input.getText());
             assertEquals(1, model.getFilteredPersonList().size());
+        });
+    }
+
+    @Test
+    public void enter_blankReplyCancelsDeletionAndLaterConfirmationCannotDelete() throws Exception {
+        onJavaFxThread(() -> {
+            enter("edit 1 p/90000001");
+            enter("edit 2 p/90000002");
+        });
+        Path dataFile = temporaryFolder.resolve("members.json");
+        Path backupFile = temporaryFolder.resolve("members.json.bak");
+        String savedRoster = Files.readString(dataFile);
+        String savedBackup = Files.readString(backupFile);
+        var rosterModified = Files.getLastModifiedTime(dataFile);
+        var backupModified = Files.getLastModifiedTime(backupFile);
+
+        onJavaFxThread(() -> {
+            enter("delete 1");
+            assertEquals("", input.getText());
+            input.fireEvent(new ActionEvent());
+            assertEquals(ConfirmDeleteCommand.MESSAGE_CANCELLED, feedback.getText());
+            assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertEquals(CommandBox.DEFAULT_PROMPT, input.getPromptText());
+            assertDisplayedNames("Alice Tan", "Bob Lee");
+            enter("y");
+            assertEquals(Messages.MESSAGE_UNKNOWN_COMMAND, feedback.getText());
+            assertEquals(2, model.getAddressBook().getPersonList().size());
+            input.clear();
+            input.fireEvent(new ActionEvent());
+            assertEquals(Messages.MESSAGE_UNKNOWN_COMMAND, feedback.getText());
+        });
+        assertEquals(savedRoster, Files.readString(dataFile));
+        assertEquals(savedBackup, Files.readString(backupFile));
+        assertEquals(rosterModified, Files.getLastModifiedTime(dataFile));
+        assertEquals(backupModified, Files.getLastModifiedTime(backupFile));
+    }
+
+    @Test
+    public void enter_deleteAwaitingConfirmation_highlightsCommandBoxUntilAnswered() throws Exception {
+        onJavaFxThread(() -> {
+            enter("delete 1");
+            assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertEquals(CommandBox.CONFIRMATION_PROMPT, input.getPromptText());
+            assertEquals(2, model.getAddressBook().getPersonList().size());
+
+            enter("list");
+            assertEquals(ConfirmDeleteCommand.MESSAGE_CANCELLED, feedback.getText());
+            assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertEquals(CommandBox.DEFAULT_PROMPT, input.getPromptText());
+            assertEquals(2, model.getAddressBook().getPersonList().size());
+
+            enter("delete 1");
+            enter("y");
+            assertTrue(feedback.getText().startsWith("Deleted member"));
+            assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertEquals(1, model.getAddressBook().getPersonList().size());
+        });
+    }
+
+    @Test
+    public void removeFilterChip_deleteAwaitingConfirmation_keepsPromptVisible() throws Exception {
+        onJavaFxThread(() -> {
+            enter("find Alice");
+            enter("delete 1");
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+
+            removeChip(chips, 0);
+
+            assertTrue(feedback.getText().startsWith("Removed Name: Alice. 2 member(s) listed."));
+            assertTrue(feedback.getText().contains("Delete member Alice Tan?"));
+            assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            enter("y");
+            assertDisplayedNames("Bob Lee");
         });
     }
 
@@ -148,6 +223,39 @@ public class MainWindowTest {
             assertFalse(chips.isManaged());
             assertDisplayedNames("Alice Tan", "Bob Lee", "Carol Wong");
         });
+    }
+
+    @Test
+    public void emailFilterChip_replacesSelectionAndCanBeRemovedWithoutSaving() throws Exception {
+        onJavaFxThread(() -> {
+            enter("edit 1 e/alice@example.com t/committee");
+            enter("edit 2 e/bob@school.edu t/committee");
+        });
+        Path dataFile = temporaryFolder.resolve("members.json");
+        String savedRoster = Files.readString(dataFile);
+        onJavaFxThread(() -> {
+            enter("sort");
+            enter("find Bob");
+            enter("filter t/committee");
+            enter("show 1");
+            enter("findemail @example.com");
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+            assertEquals(List.of("Email: @example.com"), chipLabels(chips));
+            assertTrue(chips.isVisible());
+            assertTrue(((HBox) chips.getChildren().getFirst()).getStyleClass().contains("filter-chip-email"));
+            assertDisplayedNames("Alice Tan");
+
+            enter("filter t/committee");
+            enter("find Bob");
+            assertDisplayedNames();
+            removeChip(chips, 2);
+            assertDisplayedNames("Alice Tan");
+            assertEquals(List.of("Email: @example.com", "Tag: committee"), chipLabels(chips));
+            removeChip(chips, 0);
+            assertEquals(List.of("Tag: committee"), chipLabels(chips));
+            assertDisplayedNames("Alice Tan", "Bob Lee");
+        });
+        assertEquals(savedRoster, Files.readString(dataFile));
     }
 
     @Test
@@ -224,6 +332,7 @@ public class MainWindowTest {
             enter("export " + exported);
             assertTrue(feedback.getText().startsWith("Exported 3 people to "));
             enter("delete 2");
+            enter("y");
             assertDisplayedNames("Zara Tan", "Alice Tan");
             enter("clear");
             enter("import p/\"" + exported + "\"");
@@ -283,9 +392,38 @@ public class MainWindowTest {
             assertFalse(feedback.getText().contains("carol@example.com"));
 
             enter("delete 3");
+            assertTrue(feedback.getText().startsWith("Delete member Carol Wong?"));
+            assertFalse(feedback.getText().contains("90000002"));
+            assertFalse(feedback.getText().contains("carol@example.com"));
+            enter("y");
             assertTrue(feedback.getText().contains("Deleted member"));
             assertFalse(feedback.getText().contains("90000002"));
         });
+    }
+
+    @Test
+    public void enter_tagWithDetailsHidden_reportsOnlyNameAndTagsAndSavesMember() throws Exception {
+        Person original = new PersonBuilder().withName("Alice Tan").withPhone("90000123")
+                .withEmail("alice@example.com").withAddress("12 Test Road").withTags("zebra", "friends").build();
+        Person expected = new PersonBuilder(original).withTags("zebra", "friends", "committee").build();
+        onJavaFxThread(() -> {
+            model.setPerson(model.getAddressBook().getPersonList().getFirst(), original);
+            ScrollPane details = (ScrollPane) window.getPrimaryStage().getScene().lookup("#detailsScroll");
+            assertFalse(details.isVisible());
+
+            enter("tag 1 t/committee");
+
+            assertFalse(details.isVisible());
+            assertTrue(feedback.getText().contains("Name: Alice Tan"));
+            assertTrue(feedback.getText().contains("Tags: committee, friends, zebra"));
+            for (String hidden : List.of("Phone:", "Email:", "Address:", original.getPhone().value,
+                    original.getEmail().value, original.getAddress().value)) {
+                assertFalse(feedback.getText().contains(hidden), hidden);
+            }
+            assertEquals(expected, model.getAddressBook().getPersonList().getFirst());
+        });
+        assertEquals(expected, new JsonAddressBookStorage(temporaryFolder.resolve("members.json"))
+                .readAddressBook().orElseThrow().getPersonList().getFirst());
     }
 
     @Test

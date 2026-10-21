@@ -52,6 +52,9 @@ public class MainWindow extends UiPart<Stage> {
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
 
+    /** The latest deletion prompt, shown again if a filter is removed before the user answers it. */
+    private String pendingDeletionPrompt = "";
+
     @FXML
     private StackPane commandBoxPlaceholder;
 
@@ -210,13 +213,18 @@ public class MainWindow extends UiPart<Stage> {
         });
         HBox chip = new HBox(6, label, removeButton);
         chip.getStyleClass().add("filter-chip");
-        chip.getStyleClass().add(filter.getKind() == ActiveFilter.Kind.NAME ? "filter-chip-name" : "filter-chip-tag");
+        chip.getStyleClass().add("filter-chip-" + filter.getKind().name().toLowerCase(java.util.Locale.ROOT));
         return chip;
     }
 
     private void showFilterRemoval(String message) {
         refreshActiveFilters();
-        resultDisplay.setFeedbackToUser(message + " " + logic.getFilteredPersonList().size() + " member(s) listed.");
+        String feedback = message + " " + logic.getFilteredPersonList().size() + " member(s) listed.";
+        if (logic.isAwaitingConfirmation()) {
+            // Removing a filter keeps the deletion pending, so the member it names must stay visible.
+            feedback += "\n\n" + pendingDeletionPrompt;
+        }
+        resultDisplay.setFeedbackToUser(feedback);
     }
 
     /**
@@ -280,6 +288,9 @@ public class MainWindow extends UiPart<Stage> {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
             resultDisplay.setFeedbackToUser(hideContactDetails(commandResult.getFeedbackToUser()));
+            if (logic.isAwaitingConfirmation()) {
+                pendingDeletionPrompt = commandResult.getFeedbackToUser();
+            }
 
             if (commandResult.isShowHelp()) {
                 helpWindow.show(commandResult.getHelpTopic());
@@ -297,6 +308,7 @@ public class MainWindow extends UiPart<Stage> {
         } finally {
             // A failed save can retain a model change that also reset its filters.
             refreshActiveFilters();
+            commandBox.setAwaitingConfirmation(logic.isAwaitingConfirmation());
         }
     }
 

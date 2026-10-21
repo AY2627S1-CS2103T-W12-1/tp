@@ -11,6 +11,8 @@ Class "<<interface>>\nModel" as Model
 Class AddressBook
 Class ModelManager
 Class UserPrefs
+Class ActiveFilter
+Class PersonSelectionPredicate
 
 Class UniquePersonList
 Class Person
@@ -33,6 +35,8 @@ Model .right.> ReadOnlyUserPrefs
 Model .left.> ReadOnlyAddressBook
 ModelManager -left-> "1" AddressBook
 ModelManager -right-> "1" UserPrefs
+ModelManager --> "0..*" ActiveFilter : activeFilters
+ModelManager --> "0..*" PersonSelectionPredicate : show selections
 UserPrefs .up.|> ReadOnlyUserPrefs
 
 AddressBook *--> "1" UniquePersonList
@@ -42,6 +46,7 @@ Person *--> Phone
 Person *--> Email
 Person *--> Address
 Person *--> "*" Tag
+PersonSelectionPredicate --> "*" Person : selected
 
 
 Name -[hidden]right-> Phone
@@ -53,5 +58,5 @@ ModelManager --> "1" SortedPersonList : sortedPersons
 SortedPersonList --> "1" FilteredPersonList : source
 FilteredPersonList --> Person : filtered [*]
 SortedPersonList --> Person : displayed [*]
-ModelManager --> "*" Tag : activeTagFilters
+ActiveFilter --> "0..1" Tag : tag
 @enduml

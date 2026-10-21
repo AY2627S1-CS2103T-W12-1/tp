@@ -30,7 +30,10 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ConfirmDeleteCommand;
+import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditCommand;
+import seedu.address.logic.commands.FindEmailCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.RenameTagCommand;
@@ -59,7 +62,8 @@ public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
     private static final IOException DUMMY_AD_EXCEPTION = new AccessDeniedException("dummy access denied exception");
     private static final String[] READ_ONLY_COMMANDS = {
-        "list", "sort", "find Amy", "filter t/friend", "help", "help add", "help filter", "exit"
+        "list", "sort", "find Amy", "find m", "findemail @example.com", "findemail absent@", "filter t/friend",
+        "help", "help add", "help filter", "help findemail", "exit"
     };
 
     @TempDir
@@ -87,6 +91,62 @@ public class LogicManagerTest {
     public void execute_commandExecutionError_throwsCommandException() {
         String deleteCommand = "delete 9";
         assertCommandException(deleteCommand, MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+    }
+
+    @Test
+    public void execute_deleteThenConfirm_deletesNamedMemberAndSaves() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+
+        CommandResult prompt = logic.execute("delete 2");
+        assertEquals(String.format(DeleteCommand.MESSAGE_CONFIRM_DELETE, BOB.getName(), Messages.formatTags(BOB)),
+                prompt.getFeedbackToUser());
+        assertTrue(logic.isAwaitingConfirmation());
+        // Asking for confirmation neither removes the member nor saves the roster.
+        assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+
+        CommandResult result = logic.execute(" y ");
+        assertEquals(String.format(DeleteCommand.MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(BOB)),
+                result.getFeedbackToUser());
+        assertFalse(logic.isAwaitingConfirmation());
+        assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertEquals(List.of(AMY), saved.getPersonList());
+    }
+
+    @Test
+    public void execute_deleteThenOtherInput_cancelsWithoutRunningInput() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        String[] cancellingInputs = {"n", "Y", "yes", "", "clear", "delete 1"};
+
+        for (String input : cancellingInputs) {
+            logic.execute("delete 1");
+            CommandResult result = logic.execute(input);
+
+            assertEquals(ConfirmDeleteCommand.MESSAGE_CANCELLED, result.getFeedbackToUser(), input);
+            assertFalse(logic.isAwaitingConfirmation(), input);
+            assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList(), input);
+        }
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    @Test
+    public void execute_confirmationWordWithoutPendingDeletion_isUnknownCommand() {
+        model.addPerson(AMY);
+
+        assertParseException("y", MESSAGE_UNKNOWN_COMMAND);
+        assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void execute_invalidDeleteIndex_doesNotAwaitConfirmation() {
+        model.addPerson(AMY);
+
+        assertCommandException("delete 2", MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertFalse(logic.isAwaitingConfirmation());
     }
 
     @Test
@@ -193,6 +253,79 @@ public class LogicManagerTest {
         Files.createDirectory(temporaryFolder.resolve("addressBook.json"));
         for (String command : READ_ONLY_COMMANDS) {
             logic.execute(command);
+        }
+    }
+
+    @Test
+    public void execute_findEmail_resetsSearchAndTagsWithoutChangingSavedFiles() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        Path dataFile = temporaryFolder.resolve("addressBook.json");
+        Path backupFile = temporaryFolder.resolve("addressBook.json.bak");
+        new JsonAddressBookStorage(dataFile).saveAddressBook(model.getAddressBook());
+        Files.writeString(backupFile, "Preserve the previous backup");
+        FileTime originalTime = FileTime.fromMillis(946684800000L);
+        Files.setLastModifiedTime(dataFile, originalTime);
+        Files.setLastModifiedTime(backupFile, originalTime);
+        String originalData = Files.readString(dataFile);
+        logic.execute("find Bob");
+        logic.execute("filter t/husband");
+        assertEquals(List.of(BOB), model.getFilteredPersonList());
+
+        assertEquals("1 member listed.", logic.execute("findemail AMY@").getFeedbackToUser());
+        assertEquals(List.of(AMY), model.getFilteredPersonList());
+        assertTrue(model.getActiveTagFilters().isEmpty());
+        assertEquals("0 members listed.", logic.execute("findemail missing@").getFeedbackToUser());
+        assertEquals("2 members listed.", logic.execute("findemail @example.com").getFeedbackToUser());
+
+        assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
+        assertEquals(originalData, Files.readString(dataFile));
+        assertEquals("Preserve the previous backup", Files.readString(backupFile));
+        assertEquals(originalTime, Files.getLastModifiedTime(dataFile));
+        assertEquals(originalTime, Files.getLastModifiedTime(backupFile));
+    }
+
+    @Test
+    public void execute_findEmail_retainsSortingAndUpdatesLiveResultsAfterEdits() throws Exception {
+        model.addPerson(BOB);
+        model.addPerson(AMY);
+        logic.execute("sort");
+        logic.execute("find Bob");
+        logic.execute("filter t/husband");
+
+        logic.execute("findemail @example.com");
+        assertEquals(List.of(AMY, BOB), model.getFilteredPersonList());
+        assertEquals(List.of(BOB, AMY), model.getAddressBook().getPersonList());
+        logic.execute("filter t/husband");
+        assertEquals(List.of(BOB), model.getFilteredPersonList());
+        logic.execute("edit 1 p/9876543");
+        Person updatedBob = new PersonBuilder(BOB).withPhone("9876543").build();
+        assertEquals(List.of(updatedBob), model.getFilteredPersonList());
+        logic.execute("edit 1 e/bob@another.org");
+        Person changedEmail = new PersonBuilder(updatedBob).withEmail("bob@another.org").build();
+        assertTrue(model.getFilteredPersonList().isEmpty());
+        assertEquals(List.of(changedEmail, AMY), model.getAddressBook().getPersonList());
+
+        logic.execute("list");
+        assertEquals(List.of(changedEmail, AMY), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_blankEmailSearch_preservesCurrentViewAndStorage() throws Exception {
+        model.addPerson(BOB);
+        model.addPerson(AMY);
+        logic.execute("sort");
+        logic.execute("find Bob");
+        logic.execute("filter t/husband");
+        String expected = String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, FindEmailCommand.MESSAGE_USAGE);
+
+        for (String command : List.of("findemail", "findemail \t  ")) {
+            assertThrows(ParseException.class, expected, () -> logic.execute(command));
+            assertEquals(List.of(BOB), model.getFilteredPersonList());
+            assertEquals(List.of(new Tag("husband")), model.getActiveTagFilters());
+            assertEquals(List.of(BOB, AMY), model.getAddressBook().getPersonList());
+            assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+            assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json.bak")));
         }
     }
 
@@ -367,6 +500,7 @@ public class LogicManagerTest {
         Person abel = new PersonBuilder(BOB).withName("Abel").build();
         assertEquals(List.of(aaron, abel, AMY), model.getFilteredPersonList());
         logic.execute("delete 2");
+        logic.execute("y");
         assertEquals(List.of(aaron, AMY), model.getFilteredPersonList());
         assertEquals(List.of(AMY, aaron), model.getAddressBook().getPersonList());
         logic.execute("find Amy");
@@ -455,6 +589,29 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_tagOnFilteredList_updatesOneMemberAndSaves() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("filter t/friends");
+
+        logic.execute("tag 2 t/committee");
+
+        assertTrue(model.getFilteredPersonList().get(1).getTags().contains(new Tag("committee")));
+        assertFalse(model.getFilteredPersonList().get(0).getTags().contains(new Tag("committee")));
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook().getPersonList(), saved.getPersonList());
+    }
+
+    @Test
+    public void execute_tagWithExistingTag_stillSaves() throws Exception {
+        model.addPerson(ALICE);
+
+        logic.execute("tag 1 t/friends");
+
+        assertTrue(Files.exists(temporaryFolder.resolve("addressBook.json")));
+    }
+
+    @Test
     public void execute_tagAllWithNoChanges_stillSaves() throws Exception {
         model.addPerson(BOB);
         Path dataFile = temporaryFolder.resolve("addressBook.json");
@@ -492,6 +649,29 @@ public class LogicManagerTest {
         ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
                 temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
         assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+    }
+
+    @Test
+    public void execute_untagOnFilteredList_updatesOneMemberAndSaves() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("filter t/friends");
+
+        logic.execute("untag 2 t/friends");
+
+        assertEquals(List.of(ALICE, DANIEL), logic.getFilteredPersonList());
+        assertFalse(model.getAddressBook().getPersonList().get(1).getTags().contains(new Tag("friends")));
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook().getPersonList(), saved.getPersonList());
+    }
+
+    @Test
+    public void execute_untagWithMissingTag_stillSaves() throws Exception {
+        model.addPerson(ALICE);
+
+        logic.execute("untag 1 t/committee");
+
+        assertTrue(Files.exists(temporaryFolder.resolve("addressBook.json")));
     }
 
     @Test
@@ -552,10 +732,12 @@ public class LogicManagerTest {
         useFailingStorage(DUMMY_IO_EXCEPTION);
         logic.execute("find Amy Bob");
 
+        logic.execute("delete 1");
         SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
-                SaveFailureException.class, () -> logic.execute("delete 1"));
+                SaveFailureException.class, () -> logic.execute("y"));
 
         assertTrue(failure.isChangeApplied());
+        assertFalse(logic.isAwaitingConfirmation());
         assertEquals(List.of(BOB, hidden), model.getAddressBook().getPersonList());
         assertEquals(List.of(BOB), model.getFilteredPersonList());
         assertTrue(failure.getMessage().contains("previous saved roster is unchanged"));

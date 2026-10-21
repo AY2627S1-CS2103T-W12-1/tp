@@ -21,6 +21,27 @@
   </navbar>
 </header>
 
+<details class="compact-site-nav">
+  <summary>Site Map</summary>
+  <nav aria-label="Compact site map">
+    <ul>
+      <li><a href="{{baseUrl}}/index.html">Home</a></li>
+      <li><a href="{{baseUrl}}/UserGuide.html">User Guide</a></li>
+      <li><a href="{{baseUrl}}/DeveloperGuide.html">Developer Guide</a></li>
+      <li><a href="{{baseUrl}}/AboutUs.html">About Us</a></li>
+      <li><a href="{{baseUrl}}/SettingUp.html">Setting up</a></li>
+      <li><a href="{{baseUrl}}/Testing.html">Testing</a></li>
+      <li><a href="{{baseUrl}}/Documentation.html">Documentation</a></li>
+      <li><a href="{{baseUrl}}/Logging.html">Logging</a></li>
+      <li><a href="{{baseUrl}}/DevOps.html">DevOps</a></li>
+      <li><a href="{{baseUrl}}/iterations/v1.4.html">v1.4 iteration</a></li>
+      <li><a href="{{baseUrl}}/releases/v1.3/README.html">v1.3 release</a></li>
+      <li><a href="{{baseUrl}}/releases/v1.3/RELEASE_NOTES.html">v1.3 release notes</a></li>
+      <li><a href="{{baseUrl}}/releases/v1.4/RELEASE_NOTES.html">v1.4 release notes</a></li>
+    </ul>
+  </nav>
+</details>
+
 <div id="flex-body">
   <nav id="site-nav">
     <div class="site-nav-top">
@@ -59,13 +80,16 @@
     <span id="overview"></span>
     {{ content }}
   </main>
-  <nav id="page-nav">
+  <details id="page-nav">
+    <summary>On this page</summary>
     <div class="nav-component slim-scroll">
       <page-nav />
     </div>
-  </nav>
+  </details>
   <scroll-top-button></scroll-top-button>
 </div>
+
+<script src="{{baseUrl}}/javascripts/responsive-navigation.js" defer></script>
 
 <footer>
   <!-- Support MarkBind by including a link to us on your landing page! -->

@@ -19,12 +19,13 @@ command fails])
 else ([command succeeds])
 endif
 
-if () then ([help, list, sort, find,
-filter, export or exit])
+if () then ([help, list, show, sort, find,
+findemail, filter, export, exit,
+delete prompt or cancelled deletion])
     :Show result without saving;
     stop
-else ([add, edit, delete, tagall,
-untagall, renametag, clear or import])
+else ([add, edit, tag, untag, confirmed delete,
+tagall, untagall, renametag, clear or import])
 endif
 
 :Write the roster to a temporary file,
@@ -41,7 +42,8 @@ if () then ([clear])
     :Show clear save error;
 else ([other data-changing command])
     :Keep the change in memory only;
-    :Show save error with retry guidance;
+    :Show save error;
+    note right: Import reports its own error; other\ncommands also show recovery guidance
 endif
 stop
 @enduml

@@ -93,14 +93,47 @@ mark {
   border-left: 1px solid lightgrey;
 }
 
+.compact-site-nav {
+  display: none;
+  padding: 0.5rem 20px;
+}
+
+.compact-site-nav summary, #page-nav summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+#page-nav summary {
+  display: none;
+}
+
 @media screen and (max-width: 1299.98px) {
+  #flex-body {
+    flex-wrap: wrap;
+  }
+
   #page-nav {
-    display: none;
+    position: static;
+    order: -1;
+    flex-basis: 100%;
+    max-width: none;
+    max-height: none;
+    width: 100%;
+    border-left: 0;
+    padding: 0.5rem 20px;
+  }
+
+  #page-nav summary {
+    display: list-item;
   }
 }
 
 /* Bootstrap medium(md) responsive breakpoint */
 @media screen and (max-width: 991.98px) {
+  .compact-site-nav {
+    display: block;
+  }
+
   #site-nav {
     display: none;
   }
@@ -126,6 +159,10 @@ mark {
 
 /* Hide site navigation when printing */
 @media print {
+  .compact-site-nav {
+    display: none;
+  }
+
   #site-nav {
     display: none;
   }
