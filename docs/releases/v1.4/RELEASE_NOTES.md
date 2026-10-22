@@ -33,6 +33,29 @@ optional addresses. It requires Java 25.
 - CI runs the complete Linux, macOS, and Windows test matrix. Feature branches use PR checks;
   superseded runs are cancelled automatically to avoid duplicate work.
 
+## Product screenshots
+
+These captures show the compact roster, visible search and tag conditions, and selected-member
+details. They use sample data. The data-file path in the status bar depends on where the app runs.
+
+### Compact roster
+
+The roster lists member names and tags while keeping contact details in a separate panel.
+
+![TrackCall roster with member names and tags](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/roster-overview.png)
+
+### Active search and tag conditions
+
+The name search and family tag filter appear above the roster, with a separate X button for each.
+
+![TrackCall showing the active family tag filter and Alex name search](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/active-filters.png)
+
+### Selected-member details
+
+Selecting Andy reveals contact fields and copy buttons alongside the filtered roster.
+
+![TrackCall showing Andy selected with phone, email, address, tags, and copy buttons](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/selected-member.png)
+
 ## Install and run
 
 Download `trackcall.jar` from this release, put it in an empty writable folder, and use Java 25:
@@ -70,3 +93,7 @@ The October 16 preparation record is superseded by these final release records.
 - Successful `untag` feedback can include contact fields even when the selected-member panel is hidden.
 - Automated Windows and Linux CI is distinct from manual execution of the downloaded JAR on those
   platforms. Separate manual Windows/Linux acceptance is not claimed by this release.
+
+Release source: [`e00be2a94386967185d5a1b308b3317c37ca7221`](https://github.com/AY2627S1-CS2103T-W12-1/tp/commit/e00be2a94386967185d5a1b308b3317c37ca7221). The lightweight `v1.4` tag points to this verified merge commit.
+
+Final build checks: [master Java CI](https://github.com/AY2627S1-CS2103T-W12-1/tp/actions/runs/39634782333), [v1.4 tag Java CI](https://github.com/AY2627S1-CS2103T-W12-1/tp/actions/runs/39634952042), [documentation build and publication](https://github.com/AY2627S1-CS2103T-W12-1/tp/actions/runs/39634782431).
