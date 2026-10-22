@@ -51,8 +51,9 @@ public class UntagCommand extends Command {
         Person updated = new Person(target.getName(), target.getPhone(), target.getEmail(), target.getAddress(),
                 updatedTags);
         model.setPerson(target, updated);
+        String summary = "Name: " + updated.getName() + "\nTags: " + Messages.formatTags(updated);
         return new CommandResult(String.format(MESSAGE_SUCCESS, tag.tagName, targetIndex.getOneBased(),
-                Messages.format(updated)));
+                summary));
     }
 
     @Override
