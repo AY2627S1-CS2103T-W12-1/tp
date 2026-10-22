@@ -225,6 +225,10 @@
       "headings": {
         "trackcall-v1-4-alpha": "TrackCall v1.4 alpha",
         "changes-since-v1-3": "Changes since v1.3",
+        "product-screenshots": "Product screenshots",
+        "compact-roster": "Compact roster",
+        "active-search-and-tag-conditions": "Active search and tag conditions",
+        "selected-member-details": "Selected-member details",
         "install-and-run": "Install and run",
         "validation-and-provenance": "Validation and provenance",
         "remaining-limitations": "Remaining limitations"
