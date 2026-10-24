@@ -1,7 +1,7 @@
 ---
 layout: default.md
 title: Developer Guide
-pageNav: 3
+pageNav: 6
 ---
 
 # Developer Guide
@@ -35,6 +35,11 @@ See [Limitations](#limitations) for constraints in the current release.
 * The documentation website uses [MarkBind](https://markbind.org/) and adapts the
   [CS2103T starter layout](https://github.com/NUS-CS2103-AY2627-S1/tp/tree/switch-docs-to-markbind)
   with TrackCall's name, repository links, and guide sections.
+* The feature grouping and release-note presentation were inspired by the
+  [W12-3 team's User Guide](https://ay2627s1-cs2103t-w12-3.github.io/tp/UserGuide.html) and
+  [CoordiMate releases](https://github.com/AY2627S1-CS2103T-W12-3/tp/releases).
+  The adaptation concerns documentation layout and presentation; TrackCall retains its own feature descriptions,
+  examples, screenshots, and application behaviour.
 * The previous Jekyll website adapted the
   [W13-1 team's layout](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/docs/stylesheets/main.css),
   including its sidebar widths, reading width, and responsive breakpoints, under its
@@ -43,7 +48,7 @@ See [Limitations](#limitations) for constraints in the current release.
   [Checkstyle](https://checkstyle.org/), and [JaCoCo](https://www.jacoco.org/jacoco/) support testing and builds.
 
 
-## Setting up, getting started
+## Getting started {id="setting-up-getting-started"}
 
 Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
@@ -680,7 +685,7 @@ These are constraints of the current implementation:
   with an empty roster. Follow the [User Guide's manual recovery steps](UserGuide.html#automatic-backup-and-recovery).
 
 
-## Documentation, logging, testing, dev-ops
+## Development workflow {id="documentation-logging-testing-dev-ops"}
 
 * [Documentation guide](Documentation.html)
 * [Testing guide](Testing.html)
@@ -688,7 +693,7 @@ These are constraints of the current implementation:
 * [DevOps guide](DevOps.html)
 
 
-## Appendix: Requirements
+## Appendix: Requirements {id="appendix-requirements"}
 
 These requirements describe the intended product, including features beyond the v1.4 alpha.
 See [Limitations](#limitations) for constraints of the current release.
@@ -767,23 +772,26 @@ The broader narrative must be read with these MVP decisions:
 ### User stories
 
 Priorities describe importance to the target user: `***` = essential, `**` = useful,
-`*` = convenience. **MVP** identifies the delivered core stories. **Considered** means recorded
-for future decisions, with no delivery commitment.
+`*` = convenience. The current-release table contains implemented stories. The separate backlog
+retains unimplemented and excluded ideas without presenting them as current features.
 
-The tables cover all 32 source stories. Existing story IDs are retained.
-Overlapping stories are consolidated as follows:
+The [planning workbook][planning-workbook] contains **41 story rows**: **36 covered by v1.4**
+and **5 future stories**. Its coverage column identifies the command or workflow for every row.
+The original 32 rows and existing story IDs are retained. Overlapping source stories are consolidated:
 
-* Rows 9 and 14 share US09.
-* Rows 22 and 23 share US17. Class-based sorting is recorded in US33.
+* Rows 9 and 14 share US09; row 14 also uses `show` (US40) before bulk tagging.
+* Row 22 maps to name sorting (US17). Row 23 also requests class sorting, which remains future (US33).
 * Row 28 is covered by the group-removal workflow in US10.
-* Row 24 is covered by name lookup (US05), including substring lookup (US26).
+* Row 24 maps to substring name lookup (US26), alongside the general lookup story US05.
+* Added rows 33–41 cover exit, clearing, saving, recovery, privacy, manual file editing,
+  removing active conditions, showing a subset, and email lookup.
 
-#### Stories selected for the MVP
+#### Stories implemented in v1.4 {id="stories-selected-for-the-mvp"}
 
 | ID | Priority | As a... | I want to... | So that I can... |
 | --- | --- | --- | --- | --- |
 | US01 | `***` | new secretary | see an offline summary of all available commands and help for one command | check syntax without leaving the app |
-| US02 | `***` | club secretary | add a member with contact details and optional tags | record a new club member |
+| US02 | `***` | club secretary | add a member with name, phone, email, an optional address and optional tags | record a new member even before their address is known |
 | US03 | `***` | club secretary | see every member in a readable list with their current displayed index | review the roster and select the right record |
 | US04 | `***` | club secretary | edit a member's contact details | correct mistakes and keep the roster up to date |
 | US05 | `***` | club secretary | find members using complete or partial words from their names | retrieve a member's contact details quickly |
@@ -797,23 +805,34 @@ Overlapping stories are consolidated as follows:
 | US13 | `***` | club secretary | close the app with a command | finish my work using the keyboard |
 | US14 | `***` | experienced secretary | edit a backed-up data file while the app is closed | make awkward data corrections outside the app when necessary |
 | US15 | `**` | club secretary | export member records as a CSV file | share a copy for verification, newsletters, mail merge, or submissions |
+| US16 | `**` | club secretary | hide private contact details until a member is selected | reduce accidental disclosure to people nearby |
 | US17 | `*` | club secretary | sort the displayed members by name | browse a long roster more easily |
 | US18 | `***` | prospective club secretary | try TrackCall with sample member data | understand the workflow without risking real records |
+| US19 | `**` | first-time user | follow the User Guide's quick start | learn the basic workflow |
 | US20 | `***` | first-time user | read valid command examples and their expected results in offline help | learn to use commands independently |
 | US21 | `**` | club secretary | import member records from a CSV file | avoid entering every member manually |
+| US22 | `**` | club secretary | check import counts and inspect the resulting member list | verify accepted records and skipped duplicates |
 | US23 | `***` | club secretary | assign a valid group tag to a member | represent groups such as Committee or Batch2026 |
 | US24 | `***` | club secretary | add a tag to one member while retaining their other tags | let that member belong to several groups |
-| US25 | `***` | club secretary | view a member's complete contact details and tags | check the correct record before using its details |
+| US25 | `***` | club secretary | view a selected member's details and copy their contact fields | check the correct record and reuse contact details without retyping |
 | US26 | `**` | club secretary | search using part of a name word | find someone when I cannot remember the complete word |
 | US28 | `***` | club secretary | remove one member's tag while retaining their other tags | update their group membership without losing unrelated information |
 | US29 | `**` | club secretary | rename a group tag across its members | correct a group name without rebuilding its membership |
+| US34 | `**` | club secretary | cancel a pending single-member deletion before confirming it | avoid losing a record after choosing the wrong member |
 | US35 | `***` | club secretary | have exact duplicate records rejected during data entry | avoid recording the same contact details twice |
 | US37 | `**` | club secretary | find members by a full email address or domain fragment | retrieve contacts or select an email-domain group |
+| US38 | `***` | club secretary | choose a startup recovery action when the roster cannot be read | recover usable records while keeping a copy of the damaged file |
+| US39 | `**` | club secretary | remove one active search, tag filter or show selection | broaden the displayed results while keeping other conditions |
+| US40 | `**` | club secretary | show a subset using current displayed member numbers | focus on selected records before applying a group command |
 
 US24 is implemented by `tag INDEX t/TAG`; US28 is implemented by `untag INDEX t/TAG`. Each
 command changes one tag while retaining all other tags. An individual `edit` still requires the
 complete tag set that should remain. The bulk commands preserve unrelated tags and can also be
 used when the checked displayed list contains exactly one intended member.
+
+US19 uses the website's quick start. US22 uses the import result counts and manual inspection of
+the resulting roster. A separate in-app onboarding wizard and a staged import-review screen
+remain potential extensions.
 
 The following source stories remain explicit even where their requirements overlap other workflows.
 The row numbers refer to the **User Stories** tab of the [planning workbook][planning-workbook].
@@ -824,20 +843,17 @@ The row numbers refer to the **User Stories** tab of the [planning workbook][pla
 | 31 | Detect duplicate member records during entry. | US35; shared rule 2; UC01 extension 2a and UC02 extension 4a. |
 | 32 | Show valid examples and expected results. | US20; offline-help acceptance requirements; UC06 and UC09. |
 
-#### Considered stories and extensions to the selected MVP
+#### Future and excluded stories {id="considered-stories-and-extensions-to-the-selected-mvp"}
 
 | ID | Priority | As a... | I want to... | So that I can... | Scope decision |
 | --- | --- | --- | --- | --- | --- |
-| US16 | `**` | club secretary | hide private contact details on screen | reduce accidental disclosure to people nearby | Implemented in the current source build after v1.4 alpha; the roster hides details until selection. |
-| US19 | `**` | first-time user | follow a short in-app getting-started guide | learn the basic workflow step by step | Considered; the MVP provides command help, not an onboarding wizard. |
-| US22 | `**` | club secretary | review imported member records | confirm that an import completed correctly | Considered with US21; no separate review step for imported records in the MVP. |
 | US27 | `**` | club secretary | search by phone number | identify a member when I only have their number | Considered; the MVP searches names and emails only. |
 | US30 | `**` | club secretary | update a non-tag field for a group in one operation | handle repeated renewal changes efficiently | Considered; bulk changes in the MVP affect tags only. |
 | US31 | `**` | long-time secretary | archive an inactive member | reduce clutter while keeping their history | Considered; deletion in the MVP does not retain history. |
 | US32 | `*` | long-time secretary | archive an unused group tag | keep old groups out of my active work without losing their history | Considered; no tag archive or separate tag catalogue in the MVP. |
 | US33 | `*` | club secretary | sort members by class | review members in the order relevant to my task | Considered; no class field or class sorting is implemented. |
-| US34 | `**` | club secretary | cancel a deletion before confirming it | avoid losing a record after selecting the wrong member | Implemented in the current source build after v1.4 alpha; `delete INDEX` asks for confirmation, and any input other than `y` cancels. `clear` remains immediate. |
 | US36 | `**` | outgoing secretary | hand over my roster and command guidance to my successor | let the next secretary continue club administration | No in-app access-transfer feature. Shared accounts and routine multi-user data access are excluded by the course's single-user constraint. |
+
 
 ### Shared behaviour rules
 
@@ -1332,7 +1348,7 @@ such as incremental delivery, are also not product NFRs.
 | MVP | Minimum viable product: the core feature set delivered by TrackCall. |
 
 
-## Appendix: Instructions for manual testing
+## Appendix: Instructions for Manual Testing {id="appendix-instructions-for-manual-testing"}
 
 These checks cover the v1.4 alpha. They are test instructions, not a claim that every
 platform or release package has been verified. Use a disposable folder and synthetic contacts.

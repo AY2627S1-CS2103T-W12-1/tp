@@ -1,60 +1,150 @@
-# TrackCall v1.4 alpha
+# v1.4 - TrackCall
 
-TrackCall v1.4 alpha brings the membership workflow to nineteen commands. This release includes
-all features merged into the team repository for v1.4, including the selected-member panel and
-optional addresses. It requires Java 25.
+TrackCall v1.4 alpha expands the membership workflow to nineteen commands, with more flexible searches, finer tag control, and a compact roster beside selected-member details.
 
-## Changes since v1.3
+## What's New in v1.4
 
-- Find members by a full email address or any literal email fragment with
-  `findemail KEYWORD [MORE_KEYWORDS]...`. Matching ignores case and accepts any supplied keyword;
-  a new email search replaces earlier searches, tag filters, and show selections.
-- Find partial name words with `find`, rather than having to type a complete word.
-- Select a subset of displayed members with `show INDEX [MORE_INDICES]...`.
-- Add or remove one displayed member's tag with `tag INDEX t/TAG` and `untag INDEX t/TAG`.
-  Other tags and contact fields are retained. Repeating an operation reports that no change is needed.
-- Rename a tag across the whole roster with `renametag t/CURRENT_TAG t/NEW_TAG`.
-- Add a member without an address by omitting `a/ADDRESS`. Missing addresses appear as `(none)`
-  and survive saving, loading, and CSV export/import. A supplied blank `a/` is still rejected.
-- Confirm a deletion with `y` as the next input. Other submitted input cancels deletion and is not
-  executed as a command. Clearing the entire roster remains immediate.
-- Read names and tags in a compact roster and select a member to see and copy contact fields.
-  F2 focuses the roster; Escape hides the selected details and returns to the command box.
-- See active name, email, tag, and show conditions above the roster. Remove an individual condition
-  with its X button. The Show indicator reports active show selections; clearing it retains other
-  filters. The roster heading shows the displayed member count, including zero results.
-- Reject unknown or uppercase single-letter field prefixes in `edit` before changing records or
-  files. Valid address text containing standalone `c/o`, URLs, numeric slashes, or embedded slashes
-  remains supported. Add and edit share prefix validation.
-- Use the course MarkBind website layout, shared Site Map, page outlines, and documentation search.
-  Existing page paths and legacy section anchors are retained. Long desktop page outlines scroll.
-- Updated guides, UML diagrams, command help, filtering diagnostics, and regression tests accompany
-  the implemented features. Gradle application and test tasks explicitly enable Java assertions.
-- CI runs the complete Linux, macOS, and Windows test matrix. Feature branches use PR checks;
-  superseded runs are cancelled automatically to avoid duplicate work.
+* **Find members with less typing.** `find` accepts parts of name words. `findemail` searches full email addresses or literal fragments, ignores case, and accepts any supplied keyword; a new email search replaces earlier searches, filters, and show selections.
+* **Focus on the members you need.** `show INDEX [MORE_INDICES]...` selects a subset of the displayed list. Visible name, email, tag, and show conditions have individual X controls, and the roster heading reports the displayed count.
+* **Read and copy contact details when needed.** The compact roster shows names and tags. Select a member to reveal contact fields and copy buttons; F2 focuses the roster and Escape hides the selected details and returns to the command box.
+* **Adjust one member's tags without replacing the rest.** `tag INDEX t/TAG` and `untag INDEX t/TAG` retain other tags and contact fields. Repeated operations report when no change is needed.
+* **Rename a group across the whole roster.** `renametag t/CURRENT_TAG t/NEW_TAG` updates every matching member, including hidden records, while keeping their other tags.
+* **Add members before their address is known.** Omit `a/ADDRESS` when adding a member. The missing address appears as `(none)` and survives saving, reloading, and CSV export/import. A supplied blank `a/` is rejected.
+* **Check before deleting a member.** `delete INDEX` asks for `y` as the next input. Any other submitted input cancels and is not executed as a command. Clearing the whole roster remains immediate.
+* **Catch mistyped field prefixes before saving.** `add` and `edit` share validation for unknown or uppercase single-letter prefixes. Legitimate address text containing `c/o`, URLs, numeric slashes, and embedded slashes remains supported.
+* **Navigate updated guides more easily.** The MarkBind website adds a shared Site Map, page outlines, and documentation search while retaining existing paths and legacy section anchors. Long desktop outlines scroll. Offline help covers all nineteen commands.
+* **Keep maintenance and diagnostics current.** Updated UML diagrams, filtering diagnostics, regression tests, explicit Java assertions, and the Linux/macOS/Windows CI matrix accompany the implemented features. Superseded CI runs are cancelled automatically.
 
-## Product screenshots
+Download **[trackcall.jar](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/trackcall.jar)** and use **Java 25**. See the [User Guide](https://ay2627s1-cs2103t-w12-1.github.io/tp/UserGuide.html) for complete command instructions.
 
-These captures show the compact roster, visible search and tag conditions, and selected-member
-details. They use sample data. The data-file path in the status bar depends on where the app runs.
+## Complete feature set
 
-### Compact roster
+This release includes **nineteen commands**. It carries forward the v1.3 workflow and retains and adapts
+AB3's core `add`, `edit`, `delete`, `clear`, `list`, `find`, `help`, and `exit` commands.
 
-The roster lists member names and tags while keeping contact details in a separate panel.
+| Task | Commands | Available in v1.4 |
+| --- | --- | --- |
+| Maintain member records | `add`, `edit` | Record a name, phone, email, optional address, and tags; update contact details or replace a member's tags. Select a member to read and copy contact fields. |
+| Browse and find members | `list`, `show`, `find`, `findemail`, `filter`, `sort` | Show all or selected members, search partial names or emails, combine tag filters, and sort displayed names from A to Z. Active conditions can be removed individually. |
+| Organise member groups | `tag`, `untag`, `tagall`, `untagall`, `renametag` | Change one member's tag, update every displayed member, or rename a tag across the full roster while preserving other tags. |
+| Exchange rosters | `export`, `import` | Export every member to CSV or validate a CSV and append unique member records, including records without an address. |
+| Remove records | `delete`, `clear` | Confirm before deleting one displayed member, or clear the whole roster immediately. Neither operation has undo. |
+| Get help and finish working | `help`, `exit` | Read built-in help for all nineteen commands offline, then close the application. |
 
-![TrackCall roster with member names and tags](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/roster-overview.png)
+Member records retain their contact fields and tag assignments. Successful data changes are saved locally;
+automatic backups keep the previous saved roster, and startup recovery offers choices when a roster is unreadable.
+See the installation and limitations below for file locations and save-error guidance.
 
-### Active search and tag conditions
+## TrackCall in Action
 
-The name search and family tag filter appear above the roster, with a separate X button for each.
+All thirteen screenshots use a consistent centered frame, white margins, and soft shadow. Windows are scaled proportionally, and dialogs keep their natural proportions. The original captures remain available in the release assets; `VALIDATION.txt` records their provenance. Sample data is shown, and the status-bar path depends on the launch folder. Successful commands clear the command box; each caption identifies the relevant command.
 
-![TrackCall showing the active family tag filter and Alex name search](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/active-filters.png)
+### 1. A compact membership roster
 
-### Selected-member details
+Names and tags stay in the roster, with contact details available in a separate panel when a member is selected.
 
-Selecting Andy reveals contact fields and copy buttons alongside the filtered roster.
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-roster-overview.png"><img width="960" alt="TrackCall v1.4 compact roster showing member names and tags" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-roster-overview.png"></a>
+</p>
 
-![TrackCall showing Andy selected with phone, email, address, tags, and copy buttons](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/selected-member.png)
+### 2. See and remove active conditions
+
+Name and tag conditions appear above the roster. Use an individual condition's X button to remove that condition.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-active-filters.png"><img width="960" alt="TrackCall v1.4 showing active family tag and Alex name conditions with separate removal controls" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-active-filters.png"></a>
+</p>
+
+### 3. Select a member to read and copy details
+
+Selecting Andy reveals phone, email, address, tags, and adjacent copy buttons. Use F2 to focus the roster and Escape to hide the details.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-selected-member.png"><img width="960" alt="TrackCall v1.4 selected-member panel showing Andy and contact-field copy buttons" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-selected-member.png"></a>
+</p>
+
+### 4. Search using part of a name
+
+`find lex` matches Alex Yeoh without requiring the complete name word.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-partial-name.png"><img width="960" alt="TrackCall v1.4 finding Alex Yeoh with the partial name lex" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-partial-name.png"></a>
+</p>
+
+### 5. Search email addresses with multiple keywords
+
+`findemail berniceyu roy` returns members whose email contains either keyword, ignoring case. The active Email condition stays visible.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-email-search.png"><img width="960" alt="TrackCall v1.4 email search returning Bernice Yu and Roy Balakrishnan" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-email-search.png"></a>
+</p>
+
+### 6. Show selected members only
+
+`show 1 3 5` keeps the selected members from the current list. The Show indicator and roster count make the restricted view visible.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-show-selection.png"><img width="960" alt="TrackCall v1.4 showing three selected members with an active Show indicator and roster count" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-show-selection.png"></a>
+</p>
+
+### 7. Add one member's tag
+
+`tag 1 t/committee` adds committee to Alex while retaining friends.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-tag-member.png"><img width="960" alt="TrackCall v1.4 adding committee to Alex while retaining the friends tag" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-tag-member.png"></a>
+</p>
+
+### 8. Remove one member's tag
+
+`untag 1 t/committee` removes committee from Alex while keeping friends and the contact fields.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-untag-member.png"><img width="960" alt="TrackCall v1.4 removing committee from Alex and retaining friends" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-untag-member.png"></a>
+</p>
+
+### 9. Rename a tag throughout the roster
+
+`renametag t/colleagues t/committee` replaces colleagues for every matching member and reports how many changed.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-rename-tag.png"><img width="960" alt="TrackCall v1.4 reporting that colleagues was renamed to committee for two members" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-rename-tag.png"></a>
+</p>
+
+### 10. Record an unknown address
+
+`add n/Mei Tan p/91234567 e/mei@example.com t/committee` creates Mei without an address. Selecting the record shows `(none)` in the address field.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-optional-address.png"><img width="960" alt="TrackCall v1.4 showing Mei Tan with no address supplied" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-optional-address.png"></a>
+</p>
+
+### 11. Confirm a member deletion
+
+`delete 1` names Alex and asks for confirmation. Type `y` to delete or submit any other input to cancel. No record is removed while this prompt is pending.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-delete-confirmation.png"><img width="960" alt="TrackCall v1.4 pending deletion prompt with a highlighted confirmation command box" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-delete-confirmation.png"></a>
+</p>
+
+### 12. Reject a mistyped field prefix
+
+`edit 1 a/Main Road T/committee` is rejected because the tag prefix must be lowercase. The roster is unchanged.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-prefix-validation.png"><img width="960" alt="TrackCall v1.4 rejecting an uppercase T field prefix before applying an edit" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-prefix-validation.png"></a>
+</p>
+
+### 13. Read help for the expanded workflow
+
+`help findemail` opens the email-search instructions, syntax, example, and common errors. Select All commands to return to the nineteen-command offline catalogue.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-offline-help.png"><img width="960" alt="TrackCall v1.4 offline help showing the new email-search command" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.4/framed-offline-help.png"></a>
+</p>
+
+<details>
+<summary>Installation, validation and known limitations</summary>
 
 ## Install and run
 
@@ -97,3 +187,5 @@ The October 16 preparation record is superseded by these final release records.
 Release source: [`e00be2a94386967185d5a1b308b3317c37ca7221`](https://github.com/AY2627S1-CS2103T-W12-1/tp/commit/e00be2a94386967185d5a1b308b3317c37ca7221). The lightweight `v1.4` tag points to this verified merge commit.
 
 Final build checks: [master Java CI](https://github.com/AY2627S1-CS2103T-W12-1/tp/actions/runs/39634782333), [v1.4 tag Java CI](https://github.com/AY2627S1-CS2103T-W12-1/tp/actions/runs/39634952042), [documentation build and publication](https://github.com/AY2627S1-CS2103T-W12-1/tp/actions/runs/39634782431).
+
+</details>
