@@ -1,20 +1,16 @@
 ---
 layout: default.md
 title: DevOps guide
-pageNav: 3
+pageNav: 6
 ---
 
 # DevOps guide
-
---------------------------------------------------------------------------------------------------------------------
 
 ## Build automation
 
 This project uses Gradle for **build automation and dependency management**. **We recommend reading [this Gradle tutorial from se-edu/guides](https://se-education.org/guides/tutorials/gradle.html).**
 
-
 The following commands perform common Gradle tasks.
-
 
 * **`clean`**: Deletes the files created during the previous build tasks (e.g. files in the `build` folder).<br>
   For example: `./gradlew clean`
@@ -31,8 +27,6 @@ The following commands perform common Gradle tasks.
 * **`test`**
   * `./gradlew test`: Runs all tests.
   * `./gradlew clean test`: Cleans the project before running all tests
-
---------------------------------------------------------------------------------------------------------------------
 
 ## Continuous integration (CI)
 
@@ -66,8 +60,6 @@ Any warnings or errors will be printed out to the console.
   * LINE is the line of the file where the error occurred and MESSAGE is the message explaining the error.
 
 * Check scripts must exit with a non-zero exit code if any errors occur.
-
---------------------------------------------------------------------------------------------------------------------
 
 ## Making a release
 

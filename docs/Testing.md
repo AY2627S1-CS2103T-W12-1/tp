@@ -1,12 +1,10 @@
 ---
 layout: default.md
 title: Testing guide
-pageNav: 3
+pageNav: 6
 ---
 
 # Testing guide
-
---------------------------------------------------------------------------------------------------------------------
 
 ## Running tests
 
@@ -26,8 +24,6 @@ In an IntelliJ Application run configuration, add `-ea` to the VM options.
 
 <box type="info">:link: **Link**: Read [this Gradle Tutorial from the se-edu/guides](https://se-education.org/guides/tutorials/gradle.html) to learn more about using Gradle.
 </box>
-
---------------------------------------------------------------------------------------------------------------------
 
 ## Types of tests
 

@@ -1,20 +1,25 @@
 ---
 layout: default.md
 title: User Guide
-pageNav: 3
+pageNav: 6
 ---
 
-# User Guide
+# TrackCall User Guide {id="user-guide"}
 
 TrackCall helps a club's membership secretary maintain member contact details using typed commands.
 
-This guide covers the **current source build**, based on TrackCall v1.4 alpha, and its nineteen available commands.
+The full feature set includes AB3's core member workflows: `add`, `edit`, `delete`, `clear`, `list`,
+`find`, `help`, and `exit`, together with contact tags and local saving. TrackCall adds the membership,
+search, group-editing, and CSV tools documented below.
+
+This guide covers **TrackCall v1.4** and its nineteen available commands.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
-Download v1.4 alpha from the [team release](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/tag/v1.4).
+Download v1.4 from the [team release](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/tag/v1.4).
 The commands and interface below are included in that release.
 
-Start with [Quick start](#quick-start), or use the [command summary](#command-summary) to look up a command.
+Start with [Quick start](#quick-start), browse the [feature groups](#commands), or use the
+[command summary](#command-summary) to look up a command.
 
 ## Quick start
 
@@ -70,7 +75,19 @@ Alice appears in the list and TrackCall reports `Added member`. Your changes are
 Use the [command summary](#command-summary) to choose your next task, or see [Your data](#your-data)
 for storage and backup instructions.
 
-## Commands
+## Features {id="commands"}
+
+Choose a task below. The six groups cover all **nineteen commands**, including the core AB3 commands
+retained and adapted for TrackCall. Each group explains the relevant commands, examples, and error conditions.
+
+| I want to… | Feature group | Commands |
+| --- | --- | --- |
+| Find members and organise the view | [Browse and find members](#browse-members) | `list`, `show`, `find`, `findemail`, `filter`, `sort` |
+| Maintain contact details | [Add and update members](#manage-members) | `add`, `edit` |
+| Manage overlapping groups | [Organise member groups](#manage-tags) | `tag`, `untag`, `tagall`, `untagall`, `renametag` |
+| Move records between rosters | [Exchange rosters with CSV](#csv-files) | `export`, `import` |
+| Remove old records | [Remove member records](#remove-records) | `delete`, `clear` |
+| Get help or finish working | [Help and session](#help-and-session) | `help`, `exit` |
 
 ### Read command formats
 
@@ -83,26 +100,124 @@ for storage and backup instructions.
 
 Use the [command summary](#command-summary) for a compact reference.
 
-### Offline help: `help`
+### Browse and find members {id="browse-members"}
 
-Open help by typing `help`, pressing **F1**, or choosing **Help → Help**.
-The guide works without internet access and does not change or save the roster.
+Find the right people, narrow the displayed roster, or change its order.
 
-The overview groups all nineteen commands into four categories:
-Browse members, Manage members, Remove records, and Help & session.
-Each command has a short description and a runnable example.
-The overview uses two columns in a wide window and one in a narrow window.
+#### Show all members: `list`
 
-* **Open details:** select a command-name button or type `help COMMAND`, such as `help edit`.
-  Details include syntax, an example, the expected result, usage notes, and common errors.
-* **Return to the overview:** select **All commands**, or close help and type `help`.
-* **Scroll:** use **Up/Down**, **Page Up/Page Down**, or **Home/End**.
-* **Close:** press **Escape**.
+`list` removes name-search, email-search, and tag-filter restrictions and shows the full roster in its existing order.
+It does not change or save records.
 
-Help accepts at most one lowercase topic.
-`help ADD`, `help unknown`, and `help add edit` report errors.
+The result is `Showing 1 member.`, `Showing N members.`, or `No members in the address book.`
+Extra arguments produce `Invalid command format. Usage: list` without changing the current view.
 
-### Add a member: `add`
+#### Show selected members: `show`
+
+`show 1 3` shows only members 1 and 3 from the **currently displayed list**.
+The selected members stay in their current order and receive new displayed numbers starting at 1.
+You can use `show` again with those new numbers, or use `list` to restore the full roster.
+While a `show` selection is active, a **Show: active** box appears under the command field.
+It stays visible even if you remove other search or filter boxes. Hover over it to see how many times
+`show` has been applied. Select its **X** to remove all `show` selections at once while keeping any
+name, email, or tag filters. The **ROSTER** heading shows how many members are currently displayed,
+including when the result is empty.
+
+Supply one or more positive numbers separated by spaces. Repeating a number selects that member once.
+If any number is invalid or outside the current list, the view stays unchanged. `show` does not change
+or save member data.
+
+#### Find members: `find`
+
+`find Alice Tan` shows currently displayed members whose names contain **Alice or Tan**.
+
+* Matching ignores letter case and accepts any contiguous part of a name word.
+  `Alice`, `Ali`, `lic`, and `ice` all match `Alice Tan`.
+  For example, `find ali tan` shows names containing either `ali` or `tan`.
+* Each new `find` adds another name filter. For example, `find Alice Tan` followed by `find Tan`
+  keeps members matching both searches.
+* Email addresses, phone numbers, and tags are not searched.
+* Supply at least one keyword.
+
+The result reports `1 member listed.` or `N members listed.`
+No matches produce `0 members listed.` and an empty list. No records are deleted.
+Active name, email and tag filters appear as boxes under the command field. Search boxes are blue and tag boxes
+are green. The boxes appear left to right in the order applied. With an unchanged roster, their order
+does not change who matches:
+`filter t/committee` then `find Alice` gives the same final members as `find Alice` then
+`filter t/committee`. Select a box's **X** to remove only that condition, or use `list` to show everyone again.
+Searching does not save the data file.
+
+#### Find members by email: `findemail`
+
+Format: `findemail KEYWORD [MORE_KEYWORDS]...`
+
+Search by a full email address or any part of an email address:
+
+* `findemail alice@example.com` finds emails containing that address.
+* `findemail @example.com` finds emails containing that domain fragment.
+* `findemail @example.com @school.edu` finds emails containing **either** fragment.
+
+Matching ignores letter case. Whitespace separates keywords, and any keyword can match.
+Keywords are literal text, not regular expressions; names and phone numbers are not searched.
+Supply at least one keyword. No matches produce `0 members listed.` and an empty list.
+
+Each new `findemail` searches the full roster and replaces earlier name searches, email searches,
+tag filters, and `show` selections. Active name sorting stays applied. Use `filter t/TAG` to narrow the email results,
+or `list` to show everyone again. Searching does not change records or save the data file.
+Check the current displayed numbers before using `edit` or `delete`. Editing keeps the email search;
+if an edited email no longer matches, the member disappears from view but remains in the roster.
+Use `help findemail` for the same instructions offline.
+The filter row shows an **Email:** box with the search terms. Remove it with its **X** button to
+clear only the email condition while keeping any later name or tag filters.
+
+#### Filter displayed members by tag: `filter`
+
+`filter t/TAG` shows members with that tag from the **currently displayed list**.
+
+1. Use `list` to start with everyone, `find` for name-search results, or `findemail` for email-search results.
+2. Supply one tag:
+
+   ```text
+   filter t/committee
+   ```
+
+This keeps only committee members in the current view. Their order, including active name sorting,
+stays the same, and their displayed numbers update.
+
+* Matching is exact and case-sensitive: `committee` and `Committee` are different tags.
+* Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
+  Applying the same tag again does not add a duplicate condition.
+* A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
+  A new `findemail` searches the whole roster and replaces previous filters.
+
+The result reports `N member(s) listed with tag "TAG".` for one active tag filter. With multiple
+active tags, it names every distinct tag in the order applied, for example:
+`1 member(s) listed with tags "committee", "year1".` Use `list` or `findemail` to clear all active tag filters.
+No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
+
+Check the displayed numbers before using `edit`, `tag`, `untag`, or `delete`. Editing keeps the active search and filters.
+If an edited member no longer matches, they disappear from view but remain in the roster.
+
+Supply exactly one tag of 1 to 30 ASCII letters or digits, with no internal spaces. Surrounding spaces
+are ignored. Missing or extra parameters and invalid tags are rejected without changing the view.
+For example, `filter t/committee t/year1` is invalid; apply each tag in a separate command.
+
+#### Sort members by name: `sort`
+
+`sort` orders the currently displayed members by full name from A to Z, ignoring letter case.
+It preserves the current search restriction and does not change or save the stored roster order.
+Sorting stays active as members are added, edited, deleted, or searched. Use `list` to restore
+the complete roster in stored order, or restart the app to return to stored order.
+A successful `import` also restores the complete roster in stored order.
+Check the displayed member numbers again before using `edit` or `delete`.
+Extra arguments such as `sort date` produce `Invalid command format. Usage: sort`.
+
+### Add and update members {id="manage-members"}
+
+Keep member contact details up to date.
+
+#### Add a member: `add`
 
 Provide a name, phone, and email. Address and tags are optional.
 Required prefixes may appear in any order, but each must appear exactly once.
@@ -141,40 +256,7 @@ A member is a duplicate only when its trimmed name, phone, email, and address al
 existing member, including case and internal spaces. Tags do not affect identity. A same-name member
 with different contact details is allowed.
 
-### Show all members: `list`
-
-`list` removes name-search, email-search, and tag-filter restrictions and shows the full roster in its existing order.
-It does not change or save records.
-
-The result is `Showing 1 member.`, `Showing N members.`, or `No members in the address book.`
-Extra arguments produce `Invalid command format. Usage: list` without changing the current view.
-
-### Show selected members: `show`
-
-`show 1 3` shows only members 1 and 3 from the **currently displayed list**.
-The selected members stay in their current order and receive new displayed numbers starting at 1.
-You can use `show` again with those new numbers, or use `list` to restore the full roster.
-While a `show` selection is active, a **Show: active** box appears under the command field.
-It stays visible even if you remove other search or filter boxes. Hover over it to see how many times
-`show` has been applied. Select its **X** to remove all `show` selections at once while keeping any
-name, email, or tag filters. The **ROSTER** heading shows how many members are currently displayed,
-including when the result is empty.
-
-Supply one or more positive numbers separated by spaces. Repeating a number selects that member once.
-If any number is invalid or outside the current list, the view stays unchanged. `show` does not change
-or save member data.
-
-### Sort members by name: `sort`
-
-`sort` orders the currently displayed members by full name from A to Z, ignoring letter case.
-It preserves the current search restriction and does not change or save the stored roster order.
-Sorting stays active as members are added, edited, deleted, or searched. Use `list` to restore
-the complete roster in stored order, or restart the app to return to stored order.
-A successful `import` also restores the complete roster in stored order.
-Check the displayed member numbers again before using `edit` or `delete`.
-Extra arguments such as `sort date` produce `Invalid command format. Usage: sort`.
-
-### Update a member: `edit`
+#### Update a member: `edit`
 
 1. Select the member and check their displayed number and contact details in the details panel.
 2. Supply that number and at least one field:
@@ -196,7 +278,11 @@ An edit that would make all four contact fields match another member is rejected
 
 Check the member number again after any command that changes the list.
 
-### Add or remove one tag: `tag`, `untag`
+### Organise member groups {id="manage-tags"}
+
+Use tags for overlapping groups, then update one member or the whole displayed group.
+
+#### Add or remove one tag: `tag`, `untag`
 
 Use `tag INDEX t/TAG` to add one tag to the member at a number in the **currently displayed list**.
 Use `untag INDEX t/TAG` to remove one tag from that member. Both commands retain all other tags
@@ -219,83 +305,7 @@ member from that view; use `list` to show everyone again.
 If saving fails, the member change remains visible in the current session while the previous saved
 file stays unchanged. Follow [Correcting errors](#correcting-errors) before exiting.
 
-### Find members: `find`
-
-`find Alice Tan` shows currently displayed members whose names contain **Alice or Tan**.
-
-* Matching ignores letter case and accepts any contiguous part of a name word.
-  `Alice`, `Ali`, `lic`, and `ice` all match `Alice Tan`.
-  For example, `find ali tan` shows names containing either `ali` or `tan`.
-* Each new `find` adds another name filter. For example, `find Alice Tan` followed by `find Tan`
-  keeps members matching both searches.
-* Email addresses, phone numbers, and tags are not searched.
-* Supply at least one keyword.
-
-The result reports `1 member listed.` or `N members listed.`
-No matches produce `0 members listed.` and an empty list. No records are deleted.
-Active name, email and tag filters appear as boxes under the command field. Search boxes are blue and tag boxes
-are green. The boxes appear left to right in the order applied. With an unchanged roster, their order
-does not change who matches:
-`filter t/committee` then `find Alice` gives the same final members as `find Alice` then
-`filter t/committee`. Select a box's **X** to remove only that condition, or use `list` to show everyone again.
-Searching does not save the data file.
-
-### Find members by email: `findemail`
-
-Format: `findemail KEYWORD [MORE_KEYWORDS]...`
-
-Search by a full email address or any part of an email address:
-
-* `findemail alice@example.com` finds emails containing that address.
-* `findemail @example.com` finds emails containing that domain fragment.
-* `findemail @example.com @school.edu` finds emails containing **either** fragment.
-
-Matching ignores letter case. Whitespace separates keywords, and any keyword can match.
-Keywords are literal text, not regular expressions; names and phone numbers are not searched.
-Supply at least one keyword. No matches produce `0 members listed.` and an empty list.
-
-Each new `findemail` searches the full roster and replaces earlier name searches, email searches,
-tag filters, and `show` selections. Active name sorting stays applied. Use `filter t/TAG` to narrow the email results,
-or `list` to show everyone again. Searching does not change records or save the data file.
-Check the current displayed numbers before using `edit` or `delete`. Editing keeps the email search;
-if an edited email no longer matches, the member disappears from view but remains in the roster.
-Use `help findemail` for the same instructions offline.
-The filter row shows an **Email:** box with the search terms. Remove it with its **X** button to
-clear only the email condition while keeping any later name or tag filters.
-
-### Filter displayed members by tag: `filter`
-
-`filter t/TAG` shows members with that tag from the **currently displayed list**.
-
-1. Use `list` to start with everyone, `find` for name-search results, or `findemail` for email-search results.
-2. Supply one tag:
-
-   ```text
-   filter t/committee
-   ```
-
-This keeps only committee members in the current view. Their order, including active name sorting,
-stays the same, and their displayed numbers update.
-
-* Matching is exact and case-sensitive: `committee` and `Committee` are different tags.
-* Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
-  Applying the same tag again does not add a duplicate condition.
-* A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
-  A new `findemail` searches the whole roster and replaces previous filters.
-
-The result reports `N member(s) listed with tag "TAG".` for one active tag filter. With multiple
-active tags, it names every distinct tag in the order applied, for example:
-`1 member(s) listed with tags "committee", "year1".` Use `list` or `findemail` to clear all active tag filters.
-No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
-
-Check the displayed numbers before using `edit`, `tag`, `untag`, or `delete`. Editing keeps the active search and filters.
-If an edited member no longer matches, they disappear from view but remain in the roster.
-
-Supply exactly one tag of 1 to 30 ASCII letters or digits, with no internal spaces. Surrounding spaces
-are ignored. Missing or extra parameters and invalid tags are rejected without changing the view.
-For example, `filter t/committee t/year1` is invalid; apply each tag in a separate command.
-
-### Tag or untag a group: `tagall`, `untagall`
+#### Tag or untag a group: `tagall`, `untagall`
 
 `tagall t/TAG` adds one tag to every member in the **currently displayed list**.
 `untagall t/TAG` removes one tag from every displayed member.
@@ -313,10 +323,6 @@ tagall t/event2026
 ```
 
 Every displayed committee member now also has the `event2026` tag.
-
-![TrackCall reporting that event2026 was added to two members, with Bob Lee and Daniel Wong showing both committee and event2026 tags](images/user-guide/tag-group.png)
-
-*After tagging the displayed committee members, their existing tags are kept.*
 
 To export the roster afterwards, run `export members.csv`. This exports **every member in the roster**,
 including those hidden by the committee filter.
@@ -338,7 +344,7 @@ are rejected without changing any member. If no members are displayed, TrackCall
 
 There is no confirmation or undo. A valid command saves the roster, even when every member is skipped.
 
-### Rename a tag: `renametag`
+#### Rename a tag: `renametag`
 
 `renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for **every member in the roster**,
 including members hidden by `find` or `filter`. Each member's other tags are kept.
@@ -366,53 +372,11 @@ changing any member.
 
 There is no confirmation or undo. A valid command saves the roster.
 
-### Delete a member: `delete`
+### Exchange rosters with CSV {id="csv-files"}
 
-`delete INDEX` removes one member using a positive number from the **currently displayed list**,
-after you confirm the deletion.
+Export a complete roster or bring existing member records into TrackCall.
 
-1. Run `find Alice` and check the results.
-2. Use `delete 1`. TrackCall names the first match and its tags, then asks you to confirm:
-
-   ```text
-   Delete member Alice Tan?
-   Tags: committee
-   Type y and press Enter to confirm. Any other input cancels the deletion.
-   ```
-
-   The command box is highlighted until you answer. Asking for confirmation does not change or save the roster.
-3. Type `y` and press Enter to delete that member.
-
-Any other input, including another command, cancels the deletion with
-`Deletion cancelled. No member was removed.` That input is not run, so enter it again if you need it.
-Only lowercase `y` confirms.
-
-After you confirm, other records remain, and the remaining matches are renumbered.
-The result shows the removed member's details.
-
-**There is no undo after you confirm.** Back up records you may need later.
-
-### Clear all members: `clear`
-
-`clear` removes the entire roster, including members hidden by a search.
-It saves the empty roster and resets the search after a successful save.
-
-**Clearing is immediate, with no confirmation or undo.**
-
-| Situation | Feedback after saving |
-| --- | --- |
-| One member removed | `Cleared 1 member. The address book is now empty.` |
-| Multiple members removed | `Cleared N members. The address book is now empty.` |
-| Roster already empty | `The address book is already empty. No changes were made.` |
-
-The count includes hidden members.
-Extra arguments produce `Invalid command format. Usage: clear. This command removes all members.`
-
-If saving fails, TrackCall restores the roster and previous view. It reports:
-`Unable to clear the address book because the changes could not be saved. No members were removed.`
-See [Correcting errors](#correcting-errors) for recovery steps.
-
-### Export members to CSV: `export`
+#### Export members to CSV: `export`
 
 `export [FILEPATH]` writes every member to a UTF-8 CSV file, including members hidden by a search.
 The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
@@ -435,7 +399,7 @@ Examples:
 * `export member list.csv` writes `member list.csv`. Unlike `import`, do not put quotes around an export path;
   everything after `export` is used as the path.
 
-### Import members from CSV: `import`
+#### Import members from CSV: `import`
 
 `import p/FILE_PATH` validates a local UTF-8 CSV file ending in `.csv`, appends unique members in file order, saves the
 complete roster, and restores the full list in stored order. The import always checks the full roster,
@@ -476,7 +440,80 @@ A header-only or duplicate-only file succeeds with zero imports and still retrie
 If a row, header, CSV structure, or UTF-8 encoding is invalid, no records or view state change. The first
 error identifies the row where applicable. The source CSV is never modified.
 
-### Finish your session: `exit`
+### Remove member records {id="remove-records"}
+
+Remove one member with confirmation, or clear the whole roster.
+
+#### Delete a member: `delete`
+
+`delete INDEX` removes one member using a positive number from the **currently displayed list**,
+after you confirm the deletion.
+
+1. Run `find Alice` and check the results.
+2. Use `delete 1`. TrackCall names the first match and its tags, then asks you to confirm:
+
+   ```text
+   Delete member Alice Tan?
+   Tags: committee
+   Type y and press Enter to confirm. Any other input cancels the deletion.
+   ```
+
+   The command box is highlighted until you answer. Asking for confirmation does not change or save the roster.
+3. Type `y` and press Enter to delete that member.
+
+Any other input, including another command, cancels the deletion with
+`Deletion cancelled. No member was removed.` That input is not run, so enter it again if you need it.
+Only lowercase `y` confirms.
+
+After you confirm, other records remain, and the remaining matches are renumbered.
+The result identifies the removed member without displaying their phone, email, or address.
+
+**There is no undo after you confirm.** Back up records you may need later.
+
+#### Clear all members: `clear`
+
+`clear` removes the entire roster, including members hidden by a search.
+It saves the empty roster and resets the search after a successful save.
+
+**Clearing is immediate, with no confirmation or undo.**
+
+| Situation | Feedback after saving |
+| --- | --- |
+| One member removed | `Cleared 1 member. The address book is now empty.` |
+| Multiple members removed | `Cleared N members. The address book is now empty.` |
+| Roster already empty | `The address book is already empty. No changes were made.` |
+
+The count includes hidden members.
+Extra arguments produce `Invalid command format. Usage: clear. This command removes all members.`
+
+If saving fails, TrackCall restores the roster and previous view. It reports:
+`Unable to clear the address book because the changes could not be saved. No members were removed.`
+See [Correcting errors](#correcting-errors) for recovery steps.
+
+### Help and session {id="help-and-session"}
+
+Read command instructions offline and close TrackCall when you are finished.
+
+#### Offline help: `help`
+
+Open help by typing `help`, pressing **F1**, or choosing **Help → Help**.
+The guide works without internet access and does not change or save the roster.
+
+The overview groups all nineteen commands into four categories:
+Browse members, Manage members, Remove records, and Help & session.
+Each command has a short description and a runnable example.
+The overview uses two columns in a wide window and one in a narrow window.
+
+* **Open details:** select a command-name button or type `help COMMAND`, such as `help edit`.
+  Details include syntax, an example, the expected result, usage notes, and common errors.
+* **Return to the overview:** select **All commands**, or close help and type `help`.
+* **Scroll:** use **Up/Down**, **Page Up/Page Down**, or **Home/End**.
+* **Close:** press **Escape**.
+
+Help accepts at most one lowercase topic.
+`help ADD`, `help unknown`, and `help add edit` report errors.
+
+#### Finish your session: `exit`
 
 `exit` closes TrackCall and its help window. It accepts no arguments.
 Successful data changes have already been saved.
@@ -494,11 +531,23 @@ Rejected input leaves the roster and current list unchanged.
 * `delete 0` is invalid. Use `list`, check the member, and enter its displayed number.
 * `tag 0 t/committee` and `untag 1 t/` are invalid. Use a positive current list number and one valid tag.
 
-![The command edit 1 p/abc is highlighted as invalid, with feedback that phone numbers must contain only digits and be at least three digits long](images/user-guide/validation.png)
+![TrackCall rejects edit 1 a/Main Road T/committee because the tag prefix is uppercase, and shows the valid edit format](images/user-guide/validation.png)
 
-*An invalid phone number leaves the member unchanged. Correct the command and press Enter to try again.*
+*An unsupported field prefix leaves the member unchanged. Use lowercase `t/`, then press Enter to try again.*
 
-### A save fails after add, edit, delete, tag, untag, tagall, untagall, renametag, or import
+### Field prefix syntax {id="field-prefix-syntax"}
+
+Both `add` and `edit` reject unknown or uppercase single-letter field prefixes, including inside
+an address. For example, `edit 1 a/Main Road T/committee` reports invalid input; use lowercase `t/`
+to assign a tag. Standalone `c/o`, URLs, numeric slashes such as `12/3`, and slashes inside words
+remain valid address text.
+
+The [Developer Guide](DeveloperGuide.html#limitations) explains current limitations and records
+ideas for later versions in its requirements appendix.
+
+### A save fails after changing records {id="a-save-fails-after-add-edit-delete-tag-untag-tagall-untagall-renametag-or-import"}
+
+This applies to `add`, `edit`, `delete`, `tag`, `untag`, `tagall`, `untagall`, `renametag`, and `import`.
 
 The change remains visible in this session, but the previous saved file stays unchanged.
 The command box clears the input to avoid repeating an already-applied change.
@@ -574,16 +623,6 @@ an editable roster. Fix the file or folder permissions, or restore a backup manu
 To restore a backup manually, close TrackCall, keep a copy of the current roster, and copy
 `addressbook.json.bak` to `addressbook.json`. These files are stored beside each other in `data`.
 Export cannot overwrite the automatic backup or a preserved recovery file.
-
-## Field prefix syntax
-
-Both `add` and `edit` reject unknown or uppercase single-letter field prefixes, including inside
-an address. For example, `edit 1 a/Main Road T/committee` reports invalid input; use lowercase `t/`
-to assign a tag. Standalone `c/o`, URLs, numeric slashes such as `12/3`, and slashes inside words
-remain valid address text.
-
-The [Developer Guide](DeveloperGuide.html#limitations) explains current limitations and records
-ideas for later versions in its requirements appendix.
 
 ## FAQ
 

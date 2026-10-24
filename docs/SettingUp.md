@@ -1,12 +1,10 @@
 ---
 layout: default.md
 title: Setting up and getting started
-pageNav: 3
+pageNav: 6
 ---
 
 # Setting up and getting started
-
---------------------------------------------------------------------------------------------------------------------
 
 ## Setting up the project on your computer
 
@@ -24,8 +22,6 @@ If you plan to use IntelliJ IDEA (highly recommended):
 1. **Verify the setup**:
    1. Run `seedu.address.Main` and try a few commands.
    1. [Run the tests](Testing.html) to ensure they all pass.
-
---------------------------------------------------------------------------------------------------------------------
 
 ## Before writing code
 
