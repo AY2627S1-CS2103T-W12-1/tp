@@ -59,7 +59,7 @@ public class LogicManager implements Logic {
 
     @Override
     public CommandResult execute(String commandText) throws CommandException, ParseException {
-        logger.info("----------------[USER COMMAND][" + commandText + "]");
+        logger.info("User command received");
 
         if (pendingDeletion != null) {
             ConfirmDeleteCommand confirmation = pendingDeletion;
@@ -109,7 +109,8 @@ public class LogicManager implements Logic {
             }
             if (command instanceof ImportCommand) {
                 String details = ioe.getMessage() == null ? ioe.toString() : ioe.getMessage();
-                throw new SaveFailureException(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, details), ioe, true);
+                throw new SaveFailureException(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, details)
+                        + UNSAVED_CHANGE_GUIDANCE, ioe, true);
             }
             String errorFormat = ioe instanceof AccessDeniedException
                     ? FILE_OPS_PERMISSION_ERROR_FORMAT : FILE_OPS_ERROR_FORMAT;

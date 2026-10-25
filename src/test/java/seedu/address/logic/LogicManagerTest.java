@@ -445,7 +445,8 @@ public class LogicManagerTest {
         SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
                 SaveFailureException.class, () -> logic.execute("import p/" + csvFile));
 
-        assertEquals(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, DUMMY_IO_EXCEPTION.getMessage()),
+        assertEquals(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, DUMMY_IO_EXCEPTION.getMessage())
+                + LogicManager.UNSAVED_CHANGE_GUIDANCE,
                 failure.getMessage());
         assertTrue(failure.isChangeApplied());
         assertEquals(1, model.getAddressBook().getPersonList().size());
@@ -463,7 +464,8 @@ public class LogicManagerTest {
         SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
                 SaveFailureException.class, () -> logic.execute("import p/" + csvFile));
 
-        assertEquals(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, failureWithoutMessage), failure.getMessage());
+        assertEquals(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, failureWithoutMessage)
+                + LogicManager.UNSAVED_CHANGE_GUIDANCE, failure.getMessage());
         assertTrue(failure.isChangeApplied());
         assertEquals(1, model.getAddressBook().getPersonList().size());
     }
