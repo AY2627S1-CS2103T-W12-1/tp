@@ -230,6 +230,13 @@ public class MainWindow extends UiPart<Stage> {
         activeFiltersPane.setManaged(hasFilters);
         activeFiltersScroll.setVisible(hasFilters);
         activeFiltersScroll.setManaged(hasFilters);
+        if (hasFilters) {
+            // Font metrics differ across platforms; reserve enough height for one complete styled row.
+            activeFiltersScroll.applyCss();
+            double rowHeight = activeFiltersPane.getChildren().stream()
+                    .mapToDouble(chip -> ((Region) chip).prefHeight(-1)).max().orElse(0);
+            activeFiltersScroll.setMinHeight(rowHeight);
+        }
         if (activeFiltersPane.getChildren().size() > previousCount) {
             Node newestChip = activeFiltersPane.getChildren().getLast();
             // Wait for wrapping to settle without taking keyboard focus away from command entry.

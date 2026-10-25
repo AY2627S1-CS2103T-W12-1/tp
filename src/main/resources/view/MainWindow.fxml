@@ -42,7 +42,7 @@
           </padding>
           <StackPane fx:id="commandBoxPlaceholder" />
           <ScrollPane fx:id="activeFiltersScroll" fitToWidth="true" hbarPolicy="NEVER" prefHeight="80" maxHeight="80"
-                      minHeight="35" visible="false" managed="false" focusTraversable="true"
+                      minHeight="0" visible="false" managed="false" focusTraversable="true"
                       accessibleText="Active view conditions"
                       styleClass="active-filters-scroll">
             <FlowPane fx:id="activeFiltersPane" hgap="8" vgap="6" minWidth="0" />

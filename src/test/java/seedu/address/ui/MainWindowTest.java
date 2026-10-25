@@ -456,6 +456,52 @@ public class MainWindowTest {
         });
     }
 
+    @Test
+    public void activeFilterChips_tallerFontMetrics_keepsWholeRowsAndMainPanelsVisible() throws Exception {
+        Path largerFontStylesheet = temporaryFolder.resolve("larger-filter-font.css");
+        Files.writeString(largerFontStylesheet, ".filter-chip-remove { -fx-font-size: 24px; }");
+        onJavaFxThread(() -> window.getPrimaryStage().getScene().getStylesheets()
+                .add(largerFontStylesheet.toUri().toString()));
+        for (int[] size : new int[][]{{853, 480}, {450, 450}}) {
+            resizeWindow(size[0], size[1]);
+            onJavaFxThread(() -> {
+                enter("list");
+                for (int index = 0; index < 22; index++) {
+                    enter("find Alice Group" + index);
+                }
+                layoutWindow();
+            });
+            awaitLayoutPulses();
+            onJavaFxThread(() -> {
+                Stage stage = window.getPrimaryStage();
+                ScrollPane scroll = (ScrollPane) stage.getScene().lookup("#activeFiltersScroll");
+                FlowPane chips = (FlowPane) scroll.getContent();
+                HBox lastChip = (HBox) chips.getChildren().getLast();
+                assertTrue(lastChip.getHeight() > 35, "Exercise a row taller than the original fixed minimum");
+                assertTrue(scroll.getViewportBounds().getHeight() >= lastChip.getHeight());
+                assertInside(lastChip, scroll.lookup(".viewport"));
+                assertInScene(stage.getScene().lookup("#mainSplit"));
+                assertInScene(stage.getScene().lookup("#statusbarPlaceholder"));
+                Button firstRemove = (Button) ((HBox) chips.getChildren().getFirst()).getChildren().get(1);
+                firstRemove.requestFocus();
+                layoutWindow();
+                assertInside(chips.getChildren().getFirst(), scroll.lookup(".viewport"));
+                Button lastRemove = (Button) lastChip.getChildren().get(1);
+                lastRemove.requestFocus();
+                layoutWindow();
+                assertInside(lastChip, scroll.lookup(".viewport"));
+                lastRemove.fire();
+            });
+            awaitLayoutPulses();
+            onJavaFxThread(() -> {
+                ScrollPane scroll = (ScrollPane) window.getPrimaryStage().getScene().lookup("#activeFiltersScroll");
+                FlowPane chips = (FlowPane) scroll.getContent();
+                assertInside(chips.getChildren().getLast(), scroll.lookup(".viewport"));
+                assertDisplayedNames("Alice Tan");
+            });
+        }
+    }
+
     /** Resizes on a separate JavaFX turn so the native window can update its scene dimensions. */
     private void resizeWindow(double width, double height) throws Exception {
         onJavaFxThread(() -> {
