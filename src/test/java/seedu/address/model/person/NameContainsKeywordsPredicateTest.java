@@ -4,10 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.commands.FindCommand;
 import seedu.address.testutil.PersonBuilder;
 
 public class NameContainsKeywordsPredicateTest {
@@ -35,6 +38,21 @@ public class NameContainsKeywordsPredicateTest {
 
         // different person -> returns false
         assertFalse(firstPredicate.equals(secondPredicate));
+    }
+
+    @Test
+    public void hashCode_equalPredicatesAndCommands_areFoundInHashCollections() {
+        NameContainsKeywordsPredicate predicate = new NameContainsKeywordsPredicate(List.of("Alice", "Bob"));
+        NameContainsKeywordsPredicate equalPredicate = new NameContainsKeywordsPredicate(List.of("Alice", "Bob"));
+        Set<NameContainsKeywordsPredicate> predicates = new HashSet<>();
+        predicates.add(predicate);
+        assertTrue(predicates.contains(equalPredicate));
+        assertFalse(predicates.add(equalPredicate));
+
+        Set<FindCommand> commands = new HashSet<>();
+        commands.add(new FindCommand(predicate));
+        assertTrue(commands.contains(new FindCommand(equalPredicate)));
+        assertFalse(commands.add(new FindCommand(equalPredicate)));
     }
 
     @Test

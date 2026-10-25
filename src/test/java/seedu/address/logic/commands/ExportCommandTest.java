@@ -44,7 +44,7 @@ public class ExportCommandTest {
 
         assertEquals("name,phone,email,address,tags\r\n"
                 + "Alice,85355255,amy@gmail.com,Block 1,\r\n", Files.readString(destination));
-        assertEquals(String.format(ExportCommand.MESSAGE_SUCCESS, 1, destination.toAbsolutePath().normalize()),
+        assertEquals(String.format(ExportCommand.MESSAGE_SINGLE, destination.toAbsolutePath().normalize()),
                 result.getFeedbackToUser());
         assertEquals(List.of(person), model.getAddressBook().getPersonList());
         assertTrue(model.getFilteredPersonList().isEmpty());

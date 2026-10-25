@@ -24,10 +24,11 @@ public class ExportCommand extends Command {
     public static final String COMMAND_WORD = "export";
     public static final String DEFAULT_FILE_NAME = "addressbook.csv";
     public static final String MESSAGE_USAGE = COMMAND_WORD + " [FILEPATH]\n"
-            + "Exports all people to a CSV file. If FILEPATH is omitted, writes " + DEFAULT_FILE_NAME
+            + "Exports all members to a CSV file. If FILEPATH is omitted, writes " + DEFAULT_FILE_NAME
             + " beside the JAR, or in the working directory during development.";
-    public static final String MESSAGE_SUCCESS = "Exported %1$d people to %2$s.";
-    public static final String MESSAGE_FAILURE = "Could not export people to %1$s: %2$s";
+    public static final String MESSAGE_SUCCESS = "Exported %1$d members to %2$s.";
+    public static final String MESSAGE_SINGLE = "Exported 1 member to %1$s.";
+    public static final String MESSAGE_FAILURE = "Could not export members to %1$s: %2$s";
     public static final String MESSAGE_PROTECTED_DESTINATION =
             "The export destination is used by TrackCall. Choose a different file.";
 
@@ -79,8 +80,8 @@ public class ExportCommand extends Command {
         } catch (IOException e) {
             throw new CommandException(String.format(MESSAGE_FAILURE, targetPath, e.getMessage()), e);
         }
-        return new CommandResult(String.format(MESSAGE_SUCCESS,
-                people.size(), targetPath));
+        return new CommandResult(people.size() == 1 ? String.format(MESSAGE_SINGLE, targetPath)
+                : String.format(MESSAGE_SUCCESS, people.size(), targetPath));
     }
 
     /** Rejects both equivalent path spellings and existing file aliases such as hard links. */
