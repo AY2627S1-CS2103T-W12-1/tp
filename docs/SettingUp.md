@@ -36,7 +36,7 @@ If you plan to use IntelliJ IDEA (highly recommended):
 
 1. **Set up CI**
 
-   This project includes GitHub Actions configuration files in `.github/workflows`. GitHub runs CI automatically for every push and pull request. No setup is required.
+   This project includes GitHub Actions configuration files in `.github/workflows`. GitHub runs Java CI for pull requests, pushes to `master`, and tags. Documentation changes also run the website build. No workflow setup is required.
 
 1. **Learn the design**
 

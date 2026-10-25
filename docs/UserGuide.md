@@ -12,11 +12,14 @@ The full feature set includes AB3's core member workflows: `add`, `edit`, `delet
 `find`, `help`, and `exit`, together with contact tags and local saving. TrackCall adds the membership,
 search, group-editing, and CSV tools documented below.
 
-This guide covers **TrackCall v1.4** and its nineteen available commands.
+This guide covers the **v1.5 preparation build (unreleased)** and its nineteen available commands.
 Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
 
-Download v1.4 from the [team release](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/tag/v1.4).
-The commands and interface below are included in that release.
+The published download is still [v1.4 alpha](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/tag/v1.4).
+For that JAR, use the [version-matched User Guide](https://github.com/AY2627S1-CS2103T-W12-1/tp/blob/v1.4/docs/UserGuide.md).
+The source build adds single-instance protection, clearing an address with `edit INDEX a/`, preservation of the
+previous distinct backup, improved import-save recovery feedback, and less sensitive diagnostic logging.
+These changes are not yet in the v1.4 download.
 
 Start with [Quick start](#quick-start), browse the [feature groups](#commands), or use the
 [command summary](#command-summary) to look up a command.
@@ -28,7 +31,7 @@ Start with [Quick start](#quick-start), browse the [feature groups](#commands), 
 1. Install Java **25**. On macOS, use the compatible JDK+FX distribution in the
    [course installation guide](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 2. Download `trackcall.jar` from the [team releases page](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases).
-3. Place it in an empty folder of your choice.
+3. Place it in an empty folder that you can write to. Keep the JAR and its data folder together.
 4. Open a terminal in that folder and run:
 
    ```text
@@ -36,8 +39,12 @@ Start with [Quick start](#quick-start), browse the [feature groups](#commands), 
    ```
 
 TrackCall opens with sample members and a welcome message on your first launch.
-The downloaded v1.4 JAR includes the commands and selected-member panel described in this guide.
-To run from source instead, use `./gradlew run` after following the [Setting up guide](SettingUp.html).
+In the v1.5 preparation build, only one instance can use a JAR folder at a time. If a second launch reports that TrackCall is already
+running, use the existing window or close it before restarting. The `.trackcall.lock` file may remain
+after exit; its presence alone does not block startup, and you do not need to delete it.
+The v1.4 JAR does not enforce this restriction; keep only one window open to avoid overwriting another session's changes.
+To run the preparation build from source, use `./gradlew run` after following the [Setting up guide](SettingUp.html).
+Screenshots show the existing interface; the preparation changes above affect the specified behaviour.
 
 ### Read the interface
 
@@ -97,6 +104,8 @@ retained and adapted for TrackCall. Each group explains the relevant commands, e
   `[t/TAG]...` means zero or more tags.
 * Do not type the brackets or ellipsis.
 * Submit each command on one line.
+* Examples are independent. A command using a member number needs a member at that number in the
+  currently displayed list. Use `list` and inspect the roster before adapting an example to your data.
 
 Use the [command summary](#command-summary) for a compact reference.
 
@@ -106,8 +115,8 @@ Find the right people, narrow the displayed roster, or change its order.
 
 #### Show all members: `list`
 
-`list` removes name-search, email-search, and tag-filter restrictions and shows the full roster in its existing order.
-It does not change or save records.
+`list` clears name searches, email searches, tag filters, and `show` selections. It also turns off name sorting
+and shows the full roster in stored order. It does not change or save records.
 
 The result is `Showing 1 member.`, `Showing N members.`, or `No members in the address book.`
 Extra arguments produce `Invalid command format. Usage: list` without changing the current view.
@@ -233,7 +242,7 @@ URLs, numeric slashes such as `12/3`, and slashes embedded in words remain addre
 | Name | ASCII letters, digits, and spaces. Cannot be blank. |
 | Phone | At least three ASCII digits. No spaces or punctuation. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
-| Address | Non-blank text when supplied. |
+| Address | Non-blank text when adding; `edit INDEX a/` clears an existing address. |
 | Tag | 1 to 30 ASCII letters or digits, without spaces. Tags are case-sensitive. |
 
 **Email rules:**
@@ -266,7 +275,9 @@ with different contact details is allowed.
    ```
 
 This changes the first displayed member's phone and email. Omitted fields stay unchanged.
-After saving, TrackCall shows the updated details and keeps the active search, tag filters, and sorting.
+Use `edit INDEX a/` to remove an address that is no longer known; the details panel then shows `(none)`.
+After saving, TrackCall confirms the member's name and tags and keeps the active search, tag filters, and sorting.
+The details panel stays hidden until you select a member again to inspect the changed contact fields.
 If the updated member no longer matches the search or filters, they disappear from view but remain
 in the roster. Use `list` to show everyone again.
 An edit that would make all four contact fields match another member is rejected.
@@ -387,7 +398,7 @@ Tags for each member are sorted alphabetically and joined with semicolons.
 * Packaged builds resolve relative paths from the JAR folder and accept absolute paths only inside
   that folder. The parent directory must already exist and be writable.
 * An existing destination file is overwritten.
-  The active roster file, preferences file, and running JAR cannot be used as export destinations.
+  The active roster file, preferences file, application lock, and running JAR cannot be used as export destinations.
   If exporting fails, an existing destination file is left unchanged.
 * Export leaves the roster, current search, and automatic JSON data file unchanged.
 * An empty roster produces a file containing only the column headers.
@@ -449,15 +460,16 @@ Remove one member with confirmation, or clear the whole roster.
 `delete INDEX` removes one member using a positive number from the **currently displayed list**,
 after you confirm the deletion.
 
-1. Run `find Alice` and check the results.
+1. Run `list`, then `find Alice`, and check the results. Select the intended member to check their contact details.
 2. Use `delete 1`. TrackCall names the first match and its tags, then asks you to confirm:
 
    ```text
    Delete member Alice Tan?
-   Tags: committee
+   Tags: (none)
    Type y and press Enter to confirm. Any other input cancels the deletion.
    ```
 
+   The tags shown depend on the member; Alice from the quick start has none.
    The command box is highlighted until you answer. Asking for confirmation does not change or save the roster.
 3. Type `y` and press Enter to delete that member.
 
@@ -554,11 +566,14 @@ The command box clears the input to avoid repeating an already-applied change.
 
 1. Fix the reported file or folder problem.
 2. Check the current list.
-3. Use `edit` to reapply an existing field value. This retries saving without changing anything else.
-   If the roster is empty, use `clear` to retry saving it.
+3. If no members are currently displayed, run `list` to see the full roster.
+4. Use `edit` with the displayed member number and an existing field value, for example `edit 1 p/91234567`
+   only when member 1 already has that phone number. This retries saving without changing anything else.
+   If the entire roster is empty, use `clear` to retry saving it.
 
-For import, the complete imported batch remains in memory and TrackCall reports
-`Could not save data to file: DETAILS`. Exiting before a successful retry loses unsaved changes.
+For import, the complete imported batch remains in memory. TrackCall reports
+`Could not save data to file: DETAILS`, followed by the unsaved-change warning and retry instructions.
+Exiting before a successful retry loses unsaved changes.
 
 ### A save fails after clear
 
@@ -605,7 +620,8 @@ If an expected roster is missing, close the app and repair or restore the file f
 ### Automatic backup and recovery
 
 Before replacing an existing valid roster, TrackCall saves its previous contents to
-`data/addressbook.json.bak`. This is one previous saved version; each successful backup replaces it.
+`data/addressbook.json.bak`. This is the previous distinct saved version. A save with unchanged member data retries persistence
+without replacing that backup, including `clear` on an already-empty roster.
 If the backup cannot be written, the roster save fails and the existing roster stays unchanged.
 
 If the roster cannot be loaded, TrackCall first preserves its exact contents in a uniquely named
@@ -666,7 +682,7 @@ in memory.
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
 | Add one tag | `tag INDEX t/TAG` | `tag 2 t/committee` adds one tag to displayed member 2. |
 | Remove one tag | `untag INDEX t/TAG` | `untag 2 t/friends` removes one tag from displayed member 2. |
-| Find by name | `find KEYWORD [MORE_KEYWORDS]` | `find Alice Tan` shows names containing Alice or Tan. |
+| Find by name | `find KEYWORD [MORE_KEYWORDS]...` | `find Alice Tan` shows names containing Alice or Tan. |
 | Find by email | `findemail KEYWORD [MORE_KEYWORDS]...` | `findemail @example.com` shows emails containing that fragment. |
 | Filter by tag | `filter t/TAG` | `filter t/committee` narrows the displayed members. |
 | Tag a group | `tagall t/TAG` | `tagall t/committee` adds the tag to every displayed member. |
@@ -680,3 +696,9 @@ in memory.
 
 `INDEX` always refers to the currently displayed list. Check the member details before using `edit` or `delete`.
 See [Commands](#commands) for parameter rules and expected results.
+
+## Diagnostic logs
+
+TrackCall writes operation diagnostics to `trackcall.log.*` beside the JAR. Routine command,
+result, and model-initialization logs omit member contact values. Older logs from previous versions
+may still contain contact data; check them before sharing diagnostic files.

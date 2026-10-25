@@ -22,6 +22,11 @@ Requires **Java 25**. TrackCall works with local files and includes offline help
 [![CI Status](https://github.com/AY2627S1-CS2103T-W12-1/tp/workflows/Java%20CI/badge.svg)](https://github.com/AY2627S1-CS2103T-W12-1/tp/actions)
 [![codecov](https://codecov.io/gh/AY2627S1-CS2103T-W12-1/tp/branch/master/graph/badge.svg)](https://app.codecov.io/gh/AY2627S1-CS2103T-W12-1/tp)
 
+This website describes the **v1.5 preparation build (unreleased)**. Its single-instance protection,
+address clearing, backup preservation, import-save guidance, and diagnostic logging improvements are
+not in the v1.4 download. Use the [v1.4 User Guide](https://github.com/AY2627S1-CS2103T-W12-1/tp/blob/v1.4/docs/UserGuide.md)
+with that release.
+
 ## Interface
 
 ![TrackCall showing a compact roster and one selected member's details](images/Ui.png)
@@ -30,7 +35,7 @@ Type a command, read the result, then select a member to view and copy their con
 Names and tags stay in the roster; the details panel appears when you select a member.
 See [Read the interface](UserGuide.html#read-the-interface) for keyboard shortcuts and a tour of the workspace.
 
-## Features in v1.4 {id="features-in-v14-alpha"}
+## Available features {id="features-in-v14-alpha"}
 
 The complete feature set includes all **nineteen commands** below. TrackCall retains and adapts
 AB3's core `add`, `edit`, `delete`, `clear`, `list`, `find`, `help`, and `exit` commands alongside

@@ -27,7 +27,7 @@ In an IntelliJ Application run configuration, add `-ea` to the VM options.
 
 ## Types of tests
 
-This project has three types of tests:
+The automated suite includes these types of tests:
 
 1. *Unit tests* target the lowest-level methods and classes.<br>
    For example: `seedu.address.commons.util.StringUtilTest`
@@ -35,3 +35,21 @@ This project has three types of tests:
    For example: `seedu.address.storage.StorageManagerTest`
 1. *Hybrid tests* combine unit and integration testing. These tests check both the individual units and how they work together.<br>
    For example: `seedu.address.logic.LogicManagerTest`
+
+1. *UI tests* exercise JavaFX controls and their interaction with logic and storage.<br>
+   For example: `seedu.address.ui.MainWindowTest` checks command feedback, selection, and persisted changes.
+
+## Release verification
+
+Run `./gradlew check shadowJar` with Java 25 to check code style, run the automated suite, and build
+`build/libs/trackcall.jar`. Run `npm ci` and `npm run build` from `docs/` to verify the production website.
+Tests and the documentation build passing are necessary checks; also exercise the packaged JAR and rendered guides.
+
+Use the [manual test instructions](DeveloperGuide.html#appendix-instructions-for-manual-testing) for the
+complete membership workflows, invalid inputs, persistence, and recovery scenarios. Start with a temporary,
+writable folder and synthetic members so destructive commands cannot remove real data. Check the User Guide's
+examples against the same JAR intended for release, including filtered member numbers and CSV round trips.
+
+Record the source revision, Java version, operating system, JAR checksum, and completed scenarios with the release.
+Repeat the relevant regression checks after a fix and the full release checks after integration.
+The website's navigation, images, tables, and section links should also be inspected at desktop and phone widths.
