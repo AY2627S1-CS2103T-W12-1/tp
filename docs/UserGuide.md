@@ -111,14 +111,14 @@ Use the [command summary](#command-summary) for a compact reference.
 
 ### Browse and find members {id="browse-members"}
 
-Find the right people, narrow the displayed roster, or change its order.
+Find the right members, narrow the displayed roster, or change its order.
 
 #### Show all members: `list`
 
 `list` clears name searches, email searches, tag filters, and `show` selections. It also turns off name sorting
 and shows the full roster in stored order. It does not change or save records.
 
-The result is `Showing 1 member.`, `Showing N members.`, or `No members in the address book.`
+The result is `Showing 1 member.`, `Showing N members.`, or `No members in the roster.`
 Extra arguments produce `Invalid command format. Usage: list` without changing the current view.
 
 #### Show selected members: `show`
@@ -155,6 +155,10 @@ are green. The boxes appear left to right in the order applied. With an unchange
 does not change who matches:
 `filter t/committee` then `find Alice` gives the same final members as `find Alice` then
 `filter t/committee`. Select a box's **X** to remove only that condition, or use `list` to show everyone again.
+Long filter labels are shortened with an ellipsis; hover over a label to read the complete condition.
+When many conditions are active, scroll within the filter area to reach the remaining boxes.
+You can also press Tab or Shift+Tab to move between their removal buttons; the focused box scrolls into view.
+Removing a focused box moves focus to another remaining box, or back to the command field when none remain.
 Searching does not save the data file.
 
 #### Find members by email: `findemail`
@@ -248,7 +252,7 @@ URLs, numeric slashes such as `12/3`, and slashes embedded in words remain addre
 **Email rules:**
 
 * The local part contains ASCII letters or digits, optionally separated by single `+`, `_`, `.`, or `-` characters.
-* Domain labels contain ASCII letters or digits, with hyphens allowed internally.
+* Domain labels contain ASCII letters or digits, optionally separated by single hyphens.
 * The final domain label needs at least two characters.
 
 For example:
@@ -391,14 +395,17 @@ Export a complete roster or bring existing member records into TrackCall.
 
 `export [FILEPATH]` writes every member to a UTF-8 CSV file, including members hidden by a search.
 The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
-Tags for each member are sorted alphabetically and joined with semicolons.
+Tags for each member are sorted in case-sensitive ASCII order (digits, uppercase letters, then lowercase letters)
+and joined with semicolons.
 
 * Without `FILEPATH`, the file is written to `addressbook.csv` beside the JAR. During development,
   it is written to the working directory.
 * Packaged builds resolve relative paths from the JAR folder and accept absolute paths only inside
   that folder. The parent directory must already exist and be writable.
 * An existing destination file is overwritten.
-  The active roster file, preferences file, application lock, and running JAR cannot be used as export destinations.
+  The active roster file, preferences file, their backups and recovery copies, application lock, and running JAR
+  cannot be used as export destinations. These reserved paths are case-insensitive, including directory names,
+  even before the files exist.
   If exporting fails, an existing destination file is left unchanged.
 * Export leaves the roster, current search, and automatic JSON data file unchanged.
 * An empty roster produces a file containing only the column headers.
@@ -491,15 +498,15 @@ It saves the empty roster and resets the search after a successful save.
 
 | Situation | Feedback after saving |
 | --- | --- |
-| One member removed | `Cleared 1 member. The address book is now empty.` |
-| Multiple members removed | `Cleared N members. The address book is now empty.` |
-| Roster already empty | `The address book is already empty. No changes were made.` |
+| One member removed | `Cleared 1 member. The roster is now empty.` |
+| Multiple members removed | `Cleared N members. The roster is now empty.` |
+| Roster already empty | `The roster is already empty. No changes were made.` |
 
 The count includes hidden members.
 Extra arguments produce `Invalid command format. Usage: clear. This command removes all members.`
 
 If saving fails, TrackCall restores the roster and previous view. It reports:
-`Unable to clear the address book because the changes could not be saved. No members were removed.`
+`Unable to clear the roster because the changes could not be saved. No members were removed.`
 See [Correcting errors](#correcting-errors) for recovery steps.
 
 ### Help and session {id="help-and-session"}

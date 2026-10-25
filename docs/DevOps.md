@@ -28,6 +28,19 @@ The following commands perform common Gradle tasks.
   * `./gradlew test`: Runs all tests.
   * `./gradlew clean test`: Cleans the project before running all tests
 
+### Local runs and release verification
+
+Use Java 25 for build tasks and application runs. On Apple Silicon, Gradle selects the ARM JavaFX
+libraries for `run` and `test`. The portable `shadowJar` bundles both macOS architectures in separate
+folders, and `Main` selects the matching native libraries at startup. Windows and Linux use their
+bundled JavaFX libraries.
+
+A passing local Gradle run does not verify the packaged release. Build with `./gradlew shadowJar`,
+copy `build/libs/trackcall.jar` into an empty writable folder, and run `java -jar trackcall.jar` using
+Java 25. Repeat the release smoke test on Windows, Linux, and macOS, including startup, commands,
+saving, and restart. Use synthetic contacts and follow the
+[manual testing instructions](DeveloperGuide.html#appendix-instructions-for-manual-testing).
+
 ## Continuous integration (CI)
 
 This project uses GitHub Actions for CI. The necessary workflow configuration files are in `.github/workflows`. No further setup is required.

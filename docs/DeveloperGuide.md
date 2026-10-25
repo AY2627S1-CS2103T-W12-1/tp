@@ -253,12 +253,15 @@ It depends on model classes because it saves and restores model objects.
 `CsvAddressBookCsv` holds the CSV header and format shared by the importer and exporter.
 
 CSV export is implemented as a separate `CsvAddressBookExporter` in the `storage` package. `ExportCommand` supplies the
-complete address book person list and the destination path; the exporter writes a UTF-8 CSV file with a header row and
-one row per person. Apache Commons CSV handles RFC 4180 quoting and escaping. This export is a user-requested copy and
+complete roster and the destination path; the exporter writes a UTF-8 CSV file with a header row and
+one row per member. Apache Commons CSV handles RFC 4180 quoting and escaping. This export is a user-requested copy and
 does not replace or modify the JSON file used for automatic persistence.
 
 `LogicManager` supplies the active roster and preferences paths to `ExportCommand`, which rejects destinations
-matching those files, the running JAR, or `.trackcall.lock`, including existing file aliases. `CsvAddressBookExporter` writes and closes
+matching those files, their backups and recovery copies, the running JAR, or `.trackcall.lock`, including
+existing file aliases. Reserved path spellings are compared without case on every platform, including
+parent directories and files that do not exist yet. This intentionally also reserves case variants on
+case-sensitive filesystems, giving exports the same portable safety rule. `CsvAddressBookExporter` writes and closes
 a sibling temporary file before `FileUtil#writeAtomically` replaces the destination. A failed export preserves the
 previous destination and removes its temporary file; the destination's parent directory must already exist.
 
@@ -335,21 +338,21 @@ These messages follow the list and clear feature specifications:
 
 | Case | Feedback |
 | --- | --- |
-| List zero members | `No members in the address book.` |
+| List zero members | `No members in the roster.` |
 | List one member | `Showing 1 member.` |
 | List multiple members | `Showing N members.` |
 | Invalid list arguments | `Invalid command format. Usage: list` |
-| Clear zero members | `The address book is already empty. No changes were made.` |
-| Clear one member | `Cleared 1 member. The address book is now empty.` |
-| Clear multiple members | `Cleared N members. The address book is now empty.` |
+| Clear zero members | `The roster is already empty. No changes were made.` |
+| Clear one member | `Cleared 1 member. The roster is now empty.` |
+| Clear multiple members | `Cleared N members. The roster is now empty.` |
 | Invalid clear arguments | `Invalid command format. Usage: clear. This command removes all members.` |
-| Failed clear save | `Unable to clear the address book because the changes could not be saved. No members were removed.` |
+| Failed clear save | `Unable to clear the roster because the changes could not be saved. No members were removed.` |
 
 #### Test coverage {id="test-coverage-1"}
 
 Regression coverage is in `ListClearIntegrationTest`, the two command tests, parser tests, and
 `FileUtilTest`. `PersonCardTest` lays out compact roster cards off-screen and verifies names,
-alphabetical tag order, hidden empty tag rows, and wrapping at narrow widths. Linux CI supplies a
+case-sensitive ASCII tag order, hidden empty tag rows, and wrapping at narrow widths. Linux CI supplies a
 virtual display with `xvfb-run` for JavaFX. UI integration tests use synthetic members and temporary
 storage; they never open the user's roster.
 Command tests cover:
@@ -859,7 +862,7 @@ The original 32 rows and existing story IDs are retained. Overlapping source sto
 | US35 | `***` | club secretary | have exact duplicate records rejected during data entry | avoid recording the same contact details twice |
 | US37 | `**` | club secretary | find members by a full email address or domain fragment | retrieve contacts or select an email-domain group |
 | US38 | `***` | club secretary | choose a startup recovery action when the roster cannot be read | recover usable records while keeping a copy of the damaged file |
-| US39 | `**` | club secretary | remove one active search, tag filter or show selection | broaden the displayed results while keeping other conditions |
+| US39 | `**` | club secretary | remove one active search or tag filter, or all show selections | broaden the displayed results while keeping other conditions |
 | US40 | `**` | club secretary | show a subset using current displayed member numbers | focus on selected records before applying a group command |
 
 US24 is implemented by `tag INDEX t/TAG`; US28 is implemented by `untag INDEX t/TAG`. Each
@@ -973,7 +976,7 @@ name/phone/email/address/tag order, then duplicate identity.
 | --- | --- |
 | Name | ASCII letters, digits, and spaces, with at least one letter or digit. Preserve internal spaces and case. |
 | Phone | At least three ASCII digits, without signs, punctuation, or internal whitespace. This does not verify reachability. |
-| Email | Exactly one `@` and no whitespace. The local part allows ASCII letters, digits, and the punctuation listed below. Domain labels are separated by dots; each starts and ends with a letter or digit, with hyphens allowed internally. Syntax validation does not verify mailbox existence. |
+| Email | Exactly one `@` and no whitespace. The local part contains non-empty runs of ASCII letters or digits, optionally separated by a single punctuation character listed below. Domain labels are separated by dots; each contains non-empty runs of ASCII letters or digits, optionally separated by single hyphens. The final label has at least two characters. Syntax validation does not verify mailbox existence. |
 | Address | Optional for `add`; omission stores an empty value, while an explicitly blank `a/` is rejected. In `edit`, omission preserves the value and a bare `a/` clears it. Non-empty addresses must be single-line text after trimming surrounding spaces or tabs. Preserve internal spaces, tabs, and case. |
 | Tags | Rule 3 applies. A member can have zero or more tags. Repeated identical tags collapse into one assignment. An empty tag is invalid except for the lone `t/` edit operation in rule 7. |
 
@@ -1211,7 +1214,7 @@ guidance; the deletion remains in memory, but the previous saved file is preserv
   leaves the saved file unchanged. It reports that no members were removed. The secretary can
   resolve the storage problem and retry step 1.
 
-There is no confirmation or undo. Recovery after a successful clear requires a pre-existing backup.
+There is no confirmation or undo. Recovery after a successful clear requires a usable backup, such as the automatic previous-version backup.
 
 #### UC06: Look up a command
 
@@ -1489,8 +1492,8 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    but remain stored. Run `list` to verify. Try `tag 0 t/year1`,
    `untag 999 t/year1`, `tag 1 t/`, and `untag 1 t/a t/b`; each must fail without changing the roster.
 10. With two stored records and a search showing only one, run `clear`. After saving, expect
-   `Cleared 2 members. The address book is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
-   `The address book is already empty. No changes were made.`
+   `Cleared 2 members. The roster is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
+   `The roster is already empty. No changes were made.`
 
 ### Email search
 
@@ -1599,6 +1602,15 @@ the release commit; passing unit tests alone does not establish release readines
 * `edit INDEX a/` clears the optional address. Add still rejects a supplied blank address.
 * Import save errors retain the existing batch and now include the same unsaved-change warning and
   recovery instructions as other data-changing commands.
+* The active-filter area has a bounded, vertically scrollable viewport. Long labels use ellipsis and
+  full-text tooltips, while removal buttons keep their width. Keyboard focus scrolls the corresponding
+  box into view and moves to another box after removal, or to the command field when no boxes remain.
+* Details-panel tags wrap within the available width so every valid 30-character tag remains readable.
+* Export reserves application and recovery paths without regard to case, including absent files and
+  parent-directory spelling. Directory destinations produce a handled error.
+* Email validation messages and offline add/edit help explain the existing ASCII and single-separator
+  rules. Tag validation and tag feedback share the model constraint and formatter. Search commands
+  use the same whitespace splitting, and duplicate-prefix errors have a stable field order.
 * Routine command/result/model logs omit member contact values. Save-failure diagnostics record
   the command and error type without raw exception messages or cause chains, which can contain
   stored JSON. Existing logs are not rewritten.
@@ -1611,5 +1623,9 @@ the release commit; passing unit tests alone does not establish release readines
 3. Clear an address using `edit INDEX a/`, restart, and confirm the address remains absent.
 4. Make the save folder unwritable and import a valid CSV. Verify the imported members remain in
    memory, the error warns that exiting loses them, and retrying after restoring permissions saves them.
-5. Use only synthetic contact values and inspect new routine command/result logs for accidental
+5. Resize the window to 853 by 480 logical pixels. Apply a long name query and verify its full label
+   is available in a tooltip and its removal button is visible. Add at least 22 distinct name filters;
+   the roster, feedback, and footer must remain within the window. Tab through filter removal buttons,
+   checking that each focused box scrolls into view, and remove boxes using the keyboard.
+6. Use only synthetic contact values and inspect new routine command/result logs for accidental
    inclusion of those values. Existing logs from earlier releases can still contain contacts.
