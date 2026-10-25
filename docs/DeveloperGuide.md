@@ -21,7 +21,6 @@ The secretary can:
 
 The **v1.4 alpha** supports individual member management, name and email search, tag filtering, bulk tag
 editing, offline command help, local saving, CSV import/export, and name sorting.
-The current source build adds a selected-member privacy panel after that release.
 See [Limitations](#limitations) for constraints in the current release.
 
 ## Acknowledgements
