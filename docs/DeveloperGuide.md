@@ -19,7 +19,7 @@ The secretary can:
 * Save valid changes automatically to a local file.
 * Complete the core workflow without an internet connection or a separate save command.
 
-The **v1.4 alpha** supports individual member management, name and email search, tag filtering, bulk tag
+This guide describes the **v1.5 release candidate**, which has not yet been published. It supports individual member management, name and email search, tag filtering, bulk tag
 editing, offline command help, local saving, CSV import/export, and name sorting.
 See [Limitations](#limitations) for constraints in the current release.
 
@@ -73,7 +73,8 @@ The architecture diagram shows the main components and their dependencies.
 [`Main`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/Main.java)
 and [`MainApp`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/MainApp.java).
 
-* At startup, it initialises the components in order and connects them.
+* At startup, it acquires the application-instance lock, initialises preferences and components,
+  then loads or recovers the roster before opening the main window.
 * At shutdown, it stops the components and runs their cleanup methods.
 
 | Component | Responsibility |
@@ -105,7 +106,7 @@ This reduces their dependence on each other's implementation details, as shown b
 
 ![Structure of the UI component](images/UiClassDiagram.png)
 
-The diagram shows the current source build, including
+The diagram includes
 `MemberDetailsPanel` beside `PersonListPanel`.
 
 `MainWindow` contains `CommandBox`, `ResultDisplay`, `PersonListPanel`, `MemberDetailsPanel`,
@@ -132,14 +133,12 @@ The UI component:
 
 <img src="images/LogicClassDiagram.png" width="550" alt="Main classes in the Logic component">
 
-The following sequence diagram illustrates `execute("delete 1")` followed by `execute("y")`.
+The following sequence diagram illustrates parsing and executing `delete 1` to request confirmation.
 
-![Logic interactions for the delete 1 command and its confirmation](images/DeleteSequenceDiagram.png)
+![Logic interactions for the delete 1 confirmation prompt](images/DeleteSequenceDiagram.png)
 
-<box type="info">
-:information_source: **Note:** PlantUML extends the `DeleteCommandParser` lifeline beyond its destroy marker (X).
-The lifeline should end at that marker.
-</box>
+The sequence shows a valid index. Temporary parser objects are left to Java garbage collection,
+not explicitly destroyed. Result construction and other small internal operations are abbreviated.
 
 #### Command execution
 
@@ -152,6 +151,11 @@ The diagram groups model interactions into one step for clarity.
 An implementation may need several calls to complete that step.
 
 #### Deletion confirmation
+
+![Confirmed deletion followed by automatic saving](images/ConfirmDeleteSequenceDiagram.png)
+
+This trace shows the next input `y` and a successful save. Cancellation and failures follow the
+policies below.
 
 `delete INDEX` deletes only after the user confirms it with the next input:
 
@@ -186,7 +190,8 @@ Alternatives considered:
 For example, `AddCommandParser` uses the helper classes to create an `AddCommand`.
 `AddressBookParser` returns the result as a `Command`.
 `AddCommandParser` and `EditCommandParser` use `PrefixValidator` to reject unsupported field prefixes.
-`TagAllCommandParser`, `UntagAllCommandParser`, and `RenameTagCommandParser` use `BulkTagArgumentParser`
+`TagCommandParser`, `UntagCommandParser`, `TagAllCommandParser`, `UntagAllCommandParser`, and
+`RenameTagCommandParser` use `BulkTagArgumentParser`
 to check tag values.
 
 Command-specific parsers implement the shared `Parser` interface.
@@ -196,7 +201,12 @@ This allows common handling where appropriate, including in tests.
 
 **API:** [`Model.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
 
-<img src="images/ModelClassDiagram.png" width="717" alt="Member records, active filters, selections, preferences, and displayed list views">
+<img src="images/ModelClassDiagram.png" width="717" alt="Member records, contact values, and preferences">
+
+`Person` holds references to immutable contact values and tags. Edits can reuse those objects, so
+the diagram uses associations rather than exclusive composition for these fields.
+
+![Live display views and removable conditions](images/ModelViewDiagram.png)
 
 The Model component stores:
 
@@ -204,7 +214,7 @@ The Model component stores:
 * **Displayed data:** a filtered list, such as name-search results or an index selection.
   A `SortedList` wraps it for optional name sorting while the stored roster keeps its original order.
   An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
-* **Removable filters (current source build):** `ModelManager` keeps `ActiveFilter` objects for
+* **Removable filters:** `ModelManager` keeps `ActiveFilter` objects for
   name, email and tag conditions. The UI uses these to show and remove individual filter boxes.
   Filters retain application order; `list` and a successful `import` or `clear` remove them.
   `show` selections use `PersonSelectionPredicate` objects retained separately.
@@ -248,7 +258,7 @@ one row per person. Apache Commons CSV handles RFC 4180 quoting and escaping. Th
 does not replace or modify the JSON file used for automatic persistence.
 
 `LogicManager` supplies the active roster and preferences paths to `ExportCommand`, which rejects destinations
-matching those files or the running JAR, including existing file aliases. `CsvAddressBookExporter` writes and closes
+matching those files, the running JAR, or `.trackcall.lock`, including existing file aliases. `CsvAddressBookExporter` writes and closes
 a sibling temporary file before `FileUtil#writeAtomically` replaces the destination. A failed export preserves the
 previous destination and removes its temporary file; the destination's parent directory must already exist.
 
@@ -259,9 +269,8 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 ## Implementation
 
-This section describes the v1.4 alpha. The v1.1 iteration was limited to documentation;
-these functional changes are not a published v1.1 release. The requirements appendix records the
-full intended product, including behaviour still to be implemented.
+This section describes the implemented v1.5 candidate. The requirements appendix distinguishes
+delivered features from considered extensions. Release acceptance checks remain necessary before publication.
 
 ### Offline command help
 
@@ -355,8 +364,9 @@ Command tests cover:
 #### Member rows and results
 
 `Messages#format(Person)` formats names, phone numbers, email addresses, addresses, and sorted tags
-as labelled lines for command results. In the current source build, `MainWindow` removes contact-field
-lines from successful add, edit, and delete feedback before showing it. The roster's `PersonCard` displays
+as labelled lines for command results. `MainWindow` removes contact-field
+lines from successful add, edit, and delete feedback before showing it. `UntagCommand` formats
+its result directly as the member's name and sorted remaining tags, omitting contact fields. The roster's `PersonCard` displays
 only the member number, name, and tags. `MemberDetailsPanel` reveals one selected member's contact fields
 and provides copy buttons. Running any command clears the selection before the roster can change;
 F2 focuses the list and Escape hides the details. `ResultDisplay` wraps and scrolls text, and the split
@@ -406,7 +416,7 @@ partial overwrite. An existing saved file remains intact on failure; temporary-f
 If saving fails, `LogicManager` reports a `SaveFailureException`, a `CommandException` subtype that
 also records whether the change remains applied.
 
-For `add`, `edit`, `tag`, `untag`, `delete`, `tagall`, `untagall`, and `renametag`, the model change
+For `add`, `edit`, `tag`, `untag`, confirmed `delete`, `tagall`, `untagall`, `renametag`, and `import`, the model change
 remains in memory. `CommandBox` clears the already-applied input so pressing Enter cannot accidentally
 repeat an indexed edit or deletion. The result explains that the previous saved roster is unchanged.
 
@@ -423,6 +433,13 @@ Exiting never retries a save. Application preferences are stored separately at s
 
 #### Startup and validation
 
+`MainApp#init()` acquires `AppInstanceLock` before reading preferences or roster data. The lock is
+held on `.trackcall.lock` in the application folder for the complete session, including shutdown
+preference saving. A second instance is rejected with an already-running explanation. The lock
+is released on initialization failure or normal shutdown; the operating system also releases it
+when the process terminates. The lock file remains on disk and must not be deleted to start another session.
+The overload accepting explicit preferences/roster paths supports isolated startup tests.
+
 Startup loads a valid roster in file order.
 A missing file produces sample members; a loading error requires recovery before the editable roster opens.
 A JSON `null` root, null person, and null tag are rejected through the normal loading-error path.
@@ -431,8 +448,10 @@ The startup dialog offers a validated backup, an explicit empty roster, or closi
 Preservation failure prevents startup. Recovery verifies that the original still matches its preserved copy
 and replaces the roster atomically without rotating the existing backup.
 
-Normal saves validate the current roster before atomically copying it to the sibling `.bak` file;
+Normal saves validate the current roster. If its member list differs from the requested save,
+they atomically copy the previous roster to the sibling `.bak` file;
 backup failure prevents replacement, and an invalid existing roster blocks normal saves until recovery.
+An unchanged save still attempts to write the current roster but retains the previous distinct backup.
 Export protects both backup and recovery filenames. Null or invalid preferences fall back to defaults, which are saved
 through the usual preferences setup.
 
@@ -472,14 +491,15 @@ but still contribute to reported row numbers.
 `ImportCommand` compares each valid candidate with the complete stored roster and earlier accepted rows
 using `Person#isSamePerson`. It appends only unique members in source order, then clears search, filter,
 and sort state. `LogicManager` performs the normal automatic save even for a header-only or duplicate-only
-import. If saving fails, the imported batch remains in memory and an import-specific save error is shown.
+import. If saving fails, the imported batch remains in memory. The import-specific save error is followed
+by the shared warning about unsaved changes, loss on exit, and retrying after storage access is restored.
 The source CSV is read-only throughout the workflow.
 
 #### Import sequence
 
 ![CSV import validation, duplicate checking, and automatic saving](images/CsvImportSequenceDiagram.png)
 
-The sequence starts after command parsing. The importer validates the complete file before the command
+The sequence shows a valid file after command parsing. The importer validates the complete file before the command
 changes the model, so a read or validation failure cannot import a partial batch. Duplicate selection
 uses the complete roster, including hidden members, and earlier accepted CSV rows. The logic layer
 returns success only after saving, including when every row is skipped or the file contains only a header.
@@ -489,7 +509,7 @@ An import-save failure leaves the imported batch in memory and preserves the pre
 
 ![CSV export of the complete roster through an atomic file write](images/CsvExportSequenceDiagram.png)
 
-The sequence starts after command parsing. `LogicManager` supplies the active roster and preferences
+The sequence shows a successful export after command parsing. `LogicManager` supplies the active roster and preferences
 paths to `ExportCommand`, which checks the destination against protected application files before
 calling `CsvAddressBookExporter`. Path resolution also applies the shared file-location restrictions.
 The exporter writes every stored member, including those hidden by filters, in stored order.
@@ -499,6 +519,24 @@ Apache Commons CSV handles quoting and escaping; the writer closes before atomic
 A write or replacement failure preserves the previous destination and attempts temporary-file cleanup.
 On success, `isReadOnly()` prevents the logic layer from saving the automatic JSON roster.
 Neither successful nor failed export changes the displayed filters or sorting.
+
+### Selecting members and sorting
+
+`show INDEX [MORE_INDEXES]...` validates every index against the current displayed list before
+changing the view. `ShowCommand` stores the corresponding members in a `PersonSelectionPredicate`;
+repeated indexes collapse to one member, and argument order does not reorder the list. Each `show`
+adds another selection condition, so it can only narrow the current view. `ModelManager#setPerson`
+updates these predicates after an edit or tag change to keep the selection attached to the member.
+Removing the **Show: active** box removes all selection predicates while retaining name, email, and tag filters.
+`list`, successful `add`, successful `clear`, `findemail`, and valid `import` clear the selections.
+
+`SortCommand` enables a comparator on `ModelManager`'s `SortedList`. It compares names ignoring case
+and repeated internal spaces, without modifying the stored names or roster order. Equal names retain
+their stored relative order. Filters and record edits preserve sorting; `list` and valid `import`
+disable it. Both `show` and `sort` are read-only and never save the roster.
+
+`ShowCommandParserTest`, `ShowCommandTest`, `AddressBookParserTest`, and `LogicManagerTest` cover validation,
+selection narrowing, record replacement, ordering, and read-only execution.
 
 ### Find members by email
 
@@ -680,9 +718,9 @@ These are constraints of the current implementation:
   numbers in text fields as text. Comments and trailing commas are rejected.
 * Deletion asks for confirmation but cannot be undone once confirmed. Clearing takes effect without a
   confirmation step or undo. After an accidental clear,
-  stop making changes and close TrackCall before restoring. Each successful save replaces the one
-  previous saved roster in `data/addressbook.json.bak`; another `clear` can replace the useful backup
-  with an empty roster. Follow the [User Guide's manual recovery steps](UserGuide.html#automatic-backup-and-recovery).
+  stop making changes and close TrackCall before restoring. The backup at `data/addressbook.json.bak`
+  retains the previous distinct saved roster. An unchanged save preserves it, but a later save with
+  different data replaces it. Follow the [User Guide's manual recovery steps](UserGuide.html#automatic-backup-and-recovery).
 
 
 ## Development workflow {id="documentation-logging-testing-dev-ops"}
@@ -695,9 +733,8 @@ These are constraints of the current implementation:
 
 ## Appendix: Requirements {id="appendix-requirements"}
 
-These requirements describe the intended product, including features beyond the v1.4 alpha.
+These requirements describe the v1.5 candidate and explicitly identified future ideas.
 See [Limitations](#limitations) for constraints of the current release.
-The v1.1 iteration documented requirements; functional changes belong to v1.2 or later.
 
 The requirements were reviewed on **29 September 2026** against two sources:
 
@@ -733,7 +770,7 @@ The MVP includes these commands:
 
 * **Help and session:** `help`, `exit`.
 * **Individual records:** `add`, `edit`, `delete`.
-* **Roster and search:** `list`, `find`, `findemail`, `clear`, `filter`.
+* **Roster and search:** `list`, `show`, `find`, `findemail`, `clear`, `filter`.
 * **Individual and group tags:** `tag`, `untag`, `tagall`, `untagall`, `renametag`.
 * **CSV files:** `export`, `import`.
 * **Display order:** `sort`.
@@ -747,8 +784,8 @@ The broader narrative must be read with these MVP decisions:
 
 * Groups are tag assignments, not separate group objects. A label such as "Batch 2026" must be
   represented by a valid tag such as `Batch2026`; spaces are not allowed inside tags.
-* Bulk selection means everyone in the displayed list after searching or filtering. There is
-  no arbitrary multi-selection or direct edit/delete-by-name command. Individual edits and
+* Bulk selection means everyone in the displayed list after searching, filtering, or selecting
+  displayed indexes with `show`. There is no direct edit/delete-by-name command. Individual edits and
   deletions use the current displayed index, which the secretary must check first.
 * `find` matches complete or partial name words. `findemail` matches literal email substrings.
   Phone-number search is a considered idea, not current MVP search behaviour.
@@ -775,7 +812,7 @@ Priorities describe importance to the target user: `***` = essential, `**` = use
 `*` = convenience. The current-release table contains implemented stories. The separate backlog
 retains unimplemented and excluded ideas without presenting them as current features.
 
-The [planning workbook][planning-workbook] contains **41 story rows**: **36 covered by v1.4**
+The [planning workbook][planning-workbook] contains **41 story rows**: **36 covered by the current feature set**
 and **5 future stories**. Its coverage column identifies the command or workflow for every row.
 The original 32 rows and existing story IDs are retained. Overlapping source stories are consolidated:
 
@@ -786,7 +823,7 @@ The original 32 rows and existing story IDs are retained. Overlapping source sto
 * Added rows 33–41 cover exit, clearing, saving, recovery, privacy, manual file editing,
   removing active conditions, showing a subset, and email lookup.
 
-#### Stories implemented in v1.4 {id="stories-selected-for-the-mvp"}
+#### Stories implemented in the v1.5 candidate {id="stories-selected-for-the-mvp"}
 
 | ID | Priority | As a... | I want to... | So that I can... |
 | --- | --- | --- | --- | --- |
@@ -861,8 +898,9 @@ These rules describe the selected MVP and apply to the use cases below.
 
 1. Command keywords and prefixes are lowercase. Trim surrounding spaces and tabs from values.
    Reject invalid input before changing records, the displayed list, filters, or the saved file.
-   Supplied field values use the same validation in `add` and `edit`. Manual data loading also accepts
-   an empty address value to represent an address that was not supplied.
+   Supplied non-empty field values use the same validation in `add` and `edit`. A bare `a/` in
+   `edit` clears the optional address; a bare `a/` in `add` is rejected. Manual data loading also
+   accepts an empty address value to represent an address that was not supplied.
 2. Two records are duplicates only when their trimmed name, phone, email, and address all match
    exactly, including case and internal spacing. Tags do not affect identity. Different people
    may share a name when another contact field differs. An edit excludes its own record from
@@ -883,7 +921,7 @@ These rules describe the selected MVP and apply to the use cases below.
    are accepted; signs, decimals, and internal whitespace are not. It refers to the list when
    the command is submitted. Commands preserve roster order and renumber the displayed records.
 7. `edit INDEX ...` changes only supplied fields. At least one field must be supplied.
-   Supplied tags replace the full existing tag set. A lone `t/` clears all tags and cannot be
+   A lone `a/` clears the address. Supplied tags replace the full existing tag set. A lone `t/` clears all tags and cannot be
    combined with a non-empty tag. Reapply the active search and filters after an edit; an edited
    member can disappear from the view while remaining stored.
    `tag INDEX t/TAG` adds one tag to a displayed member; `untag INDEX t/TAG` removes one tag.
@@ -926,7 +964,8 @@ These rules describe the selected MVP and apply to the use cases below.
 
 `add` requires `n/NAME p/PHONE_NUMBER e/EMAIL` and accepts optional `a/ADDRESS` and repeated `t/TAG`
 parameters. Prefixes begin separate tokens and fields may appear in any order. `edit` uses the
-same field rules for supplied values. Both commands reject unsupported single-letter prefixes.
+same field rules for non-empty values and additionally allows `a/` to clear an address. Both commands
+reject unsupported single-letter prefixes.
 Repeated `n/`, `p/`, `e/`, or `a/` prefixes are rejected. Check command structure, then values in
 name/phone/email/address/tag order, then duplicate identity.
 
@@ -935,7 +974,7 @@ name/phone/email/address/tag order, then duplicate identity.
 | Name | ASCII letters, digits, and spaces, with at least one letter or digit. Preserve internal spaces and case. |
 | Phone | At least three ASCII digits, without signs, punctuation, or internal whitespace. This does not verify reachability. |
 | Email | Exactly one `@` and no whitespace. The local part allows ASCII letters, digits, and the punctuation listed below. Domain labels are separated by dots; each starts and ends with a letter or digit, with hyphens allowed internally. Syntax validation does not verify mailbox existence. |
-| Address | Optional for `add`; omission stores an empty value. When supplied, it must be non-empty single-line text after trimming surrounding spaces or tabs. Preserve internal spaces, tabs, and case. |
+| Address | Optional for `add`; omission stores an empty value, while an explicitly blank `a/` is rejected. In `edit`, omission preserves the value and a bare `a/` clears it. Non-empty addresses must be single-line text after trimming surrounding spaces or tabs. Preserve internal spaces, tabs, and case. |
 | Tags | Rule 3 applies. A member can have zero or more tags. Repeated identical tags collapse into one assignment. An empty tag is invalid except for the lone `t/` edit operation in rule 7. |
 
 Allowed email local-part punctuation:
@@ -996,7 +1035,7 @@ Tags: committee, year1
 **Primary actor:** the membership secretary.
 **MSS:** main success scenario.
  The app is open unless a use case states otherwise.
-These are representative user workflows for the planned product, not implementation instructions.
+These are representative user workflows for the implemented candidate. Internal method calls are described above.
 
 #### UC01: Register a member
 
@@ -1009,7 +1048,8 @@ These are representative user workflows for the planned product, not implementat
 1. The secretary submits the member's required contact details and optional tags.
 2. TrackCall validates the details and checks for an exact duplicate record.
 3. TrackCall adds the member, saves the roster, and restores the complete member list.
-4. TrackCall reports the added member's details in the readable field format above. The use case ends.
+4. TrackCall reports the added member's name and tags. The secretary can select the member to check
+   contact details in the details panel. The use case ends.
 
 **Extensions**
 
@@ -1034,7 +1074,8 @@ These are representative user workflows for the planned product, not implementat
    adjust one tag while retaining the rest.
 4. TrackCall validates the request, updates the record, saves the roster, and reapplies the search
    and filters.
-5. TrackCall reports the updated details. The use case ends.
+5. TrackCall reports the update with the member's name and tags. The secretary can select the member
+   to check contact details in the details panel. The use case ends.
 
 **Extensions**
 
@@ -1144,8 +1185,7 @@ displayed list; leading zeroes are accepted. Signs, decimals, letters, whitespac
 extra arguments, and out-of-range indices are rejected.
 
 After the updated roster is saved,
-successful deletion reports `Deleted member` followed by the readable member fields specified
-above. A save failure reports `Could not save data due to the following error: [DETAILS]` with retry
+successful deletion reports `Deleted member` followed by the member's name and tags. A save failure reports `Could not save data due to the following error: [DETAILS]` with retry
 guidance; the deletion remains in memory, but the previous saved file is preserved.
 
 #### UC05: Reset the whole roster
@@ -1157,8 +1197,9 @@ guidance; the deletion remains in memory, but the previous saved file is preserv
 **MSS**
 
 1. The secretary decides to remove all records and requests clearing the roster.
-2. TrackCall validates the request, removes every member, and resets the search and filters.
-3. TrackCall saves the empty roster and reports the number removed. The use case ends.
+2. TrackCall validates the request and removes every member.
+3. TrackCall saves the empty roster, clears the search, tag, and selection filters, and reports the
+   number removed. The use case ends.
 
 **Extensions**
 
@@ -1350,7 +1391,7 @@ such as incremental delivery, are also not product NFRs.
 
 ## Appendix: Instructions for Manual Testing {id="appendix-instructions-for-manual-testing"}
 
-These checks cover the v1.4 alpha. They are test instructions, not a claim that every
+These checks cover the v1.5 candidate. They are test instructions, not a claim that every
 platform or release package has been verified. Use a disposable folder and synthetic contacts.
 
 ### Launch and shutdown
@@ -1370,11 +1411,11 @@ platform or release package has been verified. Use a disposable folder and synth
 
 ### Offline help and readable feedback {id="offline-help-and-readable-feedback-1"}
 
-In the current source build, verify that the roster initially shows only names and tags.
+Verify that the roster initially shows only names and tags.
 Press F2, select a member with the arrow keys, and check that only that member's contact details
 appear in the panel. Copy a field, then press Escape and check that the details disappear and
 focus returns to the command box. Select a member again, then run `edit` and check that the
-panel clears and the result area omits phone, email, and address. Repeat for `add` and `delete`.
+panel clears and the result area omits phone, email, and address. Repeat for `add`, `untag`, and confirmed `delete`.
 
 1. Disable networking. Run `help`: verify four category cards containing all nineteen command names,
    descriptions, and examples. F1 and the Help menu must open the same overview. Check two-column
@@ -1388,8 +1429,9 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
 4. Add a synthetic member with long name, email, address, and multiple tags. Verify labelled,
    wrapped member rows and separate feedback lines; no value should be permanently truncated.
    Resize the result area using its divider and check both feedback and roster scrolling.
-5. Check `add`, `edit`, and `delete` results have the correct action, complete affected member,
-   sorted tags, and `(none)` when no tags exist.
+5. Check `add`, `edit`, and confirmed `delete` results have the correct action, affected member's name,
+   sorted tags, and `(none)` when no tags exist. Phone, email, and address must be absent from this
+   feedback; select a remaining member to check their complete contact details separately.
 
 ### Commands and displayed indices
 
@@ -1409,7 +1451,8 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
 5. Try an add with a missing required field, a repeated `n/`, an invalid phone, and an invalid email.
    Expect errors and no new member.
    Add a member without `a/` and verify the address displays as `(none)` and persists after a restart.
-   Supplying an empty `a/` must fail. Add a second record with Bob's exact name but different contact
+   Supplying an empty `a/` to `add` must fail. Run `edit 1 a/` on a member with an address and verify
+   that the address is cleared, then restart to check persistence. Add a second record with Bob's exact name but different contact
    details. It must succeed.
    Add another record matching the original Bob's name, phone, email, and address exactly.
    It must be rejected with the duplicate contact details message and suggest `edit`.
@@ -1517,7 +1560,7 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
    default preferences. The normal preferences setup may replace that file with valid defaults.
 5. In a disposable folder, start with a valid roster, then make the data directory unwritable or replace
    the data file with a directory while the app is open.
-   Test `add`, `edit`, `tag`, `untag`, `delete` (confirmed with `y`), `tagall`, and `untagall` separately:
+   Test `add`, `edit`, `tag`, `untag`, `delete` (confirmed with `y`), `tagall`, `untagall`, `renametag`, and `import` separately:
    * Expect a save error and recovery guidance instead of success.
    * Check that the change remains visible and the command box clears the already-applied input.
    * Press Enter again. It must not repeat the edit or deletion.
@@ -1543,3 +1586,30 @@ required screen resolutions/scales. Run every UG example and compare the actual 
 CSV import, and bulk tag editing, test empty groups or files, overlapping filters, hidden members,
 changed/skipped counts, invalid input, save failures, and restart persistence. Record results against
 the release commit; passing unit tests alone does not establish release readiness.
+
+## v1.5 release candidate changes
+
+* `AppInstanceLock` obtains a nonblocking OS file lock before production startup reads preferences or
+  the roster. A second launch from the same JAR folder fails with an already-running explanation.
+  `MainApp` retains the lock through preference saving and releases it on exit or failed initialization.
+  The persistent lock file is never deleted; the OS releases its lock if the process terminates.
+* `JsonAddressBookStorage` rotates the backup only when the existing valid roster differs from the
+  requested member list. It still attempts the actual save for unchanged commands, preserving retry
+  behavior while keeping the previous distinct version recoverable.
+* `edit INDEX a/` clears the optional address. Add still rejects a supplied blank address.
+* Import save errors retain the existing batch and now include the same unsaved-change warning and
+  recovery instructions as other data-changing commands.
+* Routine command/result/model logs omit member contact values. Save-failure diagnostics record
+  the command and error type without raw exception messages or cause chains, which can contain
+  stored JSON. Existing logs are not rewritten.
+
+### Additional release checks
+
+1. Launch the same JAR twice; confirm the second launch is rejected before it can read/write data.
+   Close the first process and confirm a new launch works without deleting `.trackcall.lock`.
+2. Save a member, clear, and clear again. Verify `.bak` still contains the removed member.
+3. Clear an address using `edit INDEX a/`, restart, and confirm the address remains absent.
+4. Make the save folder unwritable and import a valid CSV. Verify the imported members remain in
+   memory, the error warns that exiting loses them, and retrying after restoring permissions saves them.
+5. Use only synthetic contact values and inspect new routine command/result logs for accidental
+   inclusion of those values. Existing logs from earlier releases can still contain contacts.
