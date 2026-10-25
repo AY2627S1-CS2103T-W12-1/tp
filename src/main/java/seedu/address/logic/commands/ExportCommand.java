@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
 import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -69,11 +68,14 @@ public class ExportCommand extends Command {
                 checkDestination(targetPath, protectedFile);
                 checkDestination(targetPath, JsonAddressBookStorage.getBackupFilePath(protectedFile));
                 Path protectedPath = FileUtil.resolvePath(protectedFile).toAbsolutePath().normalize();
-                if (Objects.equals(targetPath.getParent(), protectedPath.getParent())
+                if (hasSamePathIgnoringCase(targetPath.getParent(), protectedPath.getParent())
                         && targetPath.getFileName().toString().toLowerCase(Locale.ROOT)
                                 .startsWith((protectedPath.getFileName() + ".corrupt-").toLowerCase(Locale.ROOT))) {
                     throw new IOException(MESSAGE_PROTECTED_DESTINATION);
                 }
+            }
+            if (Files.isDirectory(targetPath)) {
+                throw new IOException("The export destination must be a file.");
             }
             CsvAddressBookExporter.export(people, targetPath);
         } catch (IOException e) {
@@ -83,13 +85,23 @@ public class ExportCommand extends Command {
                 people.size(), targetPath));
     }
 
-    /** Rejects both equivalent path spellings and existing file aliases such as hard links. */
+    /**
+     * Reserves application paths without regard to case, including before the files exist.
+     * The same reservation on every platform prevents exports that become unsafe on a case-insensitive file system.
+     * Existing aliases such as hard links are still rejected independently of their names.
+     */
     private void checkDestination(Path target, Path protectedFile) throws IOException {
         Path protectedPath = FileUtil.resolvePath(protectedFile).toAbsolutePath().normalize();
-        if (target.equals(protectedPath) || (Files.exists(target) && Files.exists(protectedPath)
+        if (hasSamePathIgnoringCase(target, protectedPath)
+                || (Files.exists(target) && Files.exists(protectedPath)
                 && Files.isSameFile(target, protectedPath))) {
             throw new IOException(MESSAGE_PROTECTED_DESTINATION);
         }
+    }
+
+    /** Compares reserved path spellings, allowing root paths to have no parent. */
+    private boolean hasSamePathIgnoringCase(Path first, Path second) {
+        return first != null && second != null && first.toString().equalsIgnoreCase(second.toString());
     }
 
     @Override
