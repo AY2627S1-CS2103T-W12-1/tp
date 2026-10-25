@@ -3,7 +3,6 @@ package seedu.address.logic;
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
@@ -101,7 +100,8 @@ public class LogicManager implements Logic {
         try {
             storage.saveAddressBook(model.getAddressBook());
         } catch (IOException ioe) {
-            logger.log(Level.WARNING, "Could not save roster after " + command.getClass().getSimpleName(), ioe);
+            logger.warning("Could not save roster after " + command.getClass().getSimpleName()
+                    + " (" + ioe.getClass().getSimpleName() + ")");
             if (beforeClear != null) {
                 // Clear changes only the records, so restoring them also restores the prior filtered view.
                 model.setAddressBook(beforeClear);

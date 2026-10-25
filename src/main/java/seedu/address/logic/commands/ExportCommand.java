@@ -83,7 +83,7 @@ public class ExportCommand extends Command {
             }
             CsvAddressBookExporter.export(people, targetPath);
         } catch (IOException e) {
-            logger.warning("CSV export failed: " + e.getMessage());
+            logger.warning("CSV export failed (" + e.getClass().getSimpleName() + ")");
             throw new CommandException(String.format(MESSAGE_FAILURE, targetPath, e.getMessage()), e);
         }
         logger.info(String.format("CSV export completed: %d member(s) written", people.size()));
