@@ -7,6 +7,7 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.layout.FlowPane?>
@@ -40,16 +41,21 @@
             <Insets top="5" right="10" bottom="5" left="10" />
           </padding>
           <StackPane fx:id="commandBoxPlaceholder" />
-          <FlowPane fx:id="activeFiltersPane" hgap="8" vgap="6" visible="false" managed="false" />
+          <ScrollPane fx:id="activeFiltersScroll" fitToWidth="true" hbarPolicy="NEVER" prefHeight="80" maxHeight="80"
+                      minHeight="35" visible="false" managed="false" focusTraversable="true"
+                      accessibleText="Active view conditions"
+                      styleClass="active-filters-scroll">
+            <FlowPane fx:id="activeFiltersPane" hgap="8" vgap="6" minWidth="0" />
+          </ScrollPane>
         </VBox>
 
         <SplitPane fx:id="mainSplit" orientation="VERTICAL" dividerPositions="0.22" VBox.vgrow="ALWAYS">
-          <StackPane fx:id="resultDisplayPlaceholder" styleClass="pane-with-border" minHeight="100">
+          <StackPane fx:id="resultDisplayPlaceholder" styleClass="pane-with-border" minHeight="80">
             <padding>
               <Insets top="8" right="12" bottom="8" left="12" />
             </padding>
           </StackPane>
-          <SplitPane orientation="HORIZONTAL" dividerPositions="0.43" minHeight="180">
+          <SplitPane orientation="HORIZONTAL" dividerPositions="0.43" minHeight="140">
             <VBox fx:id="personList" styleClass="pane-with-border" minWidth="145" minHeight="0">
               <padding><Insets top="10" right="8" bottom="10" left="10" /></padding>
               <Label fx:id="rosterHeading" text="ROSTER" styleClass="panel-heading" />

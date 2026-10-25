@@ -8,6 +8,8 @@ import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,8 +17,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javafx.animation.AnimationTimer;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -341,6 +346,168 @@ public class MainWindowTest {
             enter("list");
             assertFalse(chips.isVisible());
         });
+    }
+
+    @Test
+    public void activeFilterChips_longCondition_keepsRemovalVisibleWithFullTooltip() throws Exception {
+        resizeWindow(853, 480);
+        onJavaFxThread(() -> {
+            String condition = "Alice Benjamin Charlotte Danielle Elizabeth Francesca Gabriella Harrison Isabella "
+                    + "Jonathan Katherine Leonardo Madeleine Nathaniel Olivia Penelope Quentin Rebecca "
+                    + "Sebastian Theodore";
+            enter("find " + condition);
+            layoutWindow();
+            ScrollPane scroll = (ScrollPane) window.getPrimaryStage().getScene().lookup("#activeFiltersScroll");
+            FlowPane chips = (FlowPane) scroll.getContent();
+            HBox chip = (HBox) chips.getChildren().getFirst();
+            Label label = (Label) chip.getChildren().getFirst();
+            Button removeButton = (Button) chip.getChildren().get(1);
+            assertEquals("Name: " + condition, label.getText());
+            assertEquals(label.getText(), label.getTooltip().getText());
+            assertTrue(label.getWidth() < label.prefWidth(-1), "The long label should be ellipsized");
+            assertInside(removeButton, scroll.lookup(".viewport"));
+            assertInScene(removeButton);
+            removeButton.fire();
+            assertDisplayedNames("Alice Tan", "Bob Lee");
+            assertFalse(scroll.isManaged());
+        });
+        assertFalse(Files.exists(temporaryFolder.resolve("members.json")));
+    }
+
+    @Test
+    public void activeFilterChips_manyConditions_keepRosterVisibleAndScrollForKeyboardFocus() throws Exception {
+        resizeWindow(853, 480);
+        onJavaFxThread(() -> {
+            for (int index = 0; index < 22; index++) {
+                enter("find Alice Group" + index);
+            }
+            layoutWindow();
+        });
+        onJavaFxThread(() -> {
+            layoutWindow();
+            Stage stage = window.getPrimaryStage();
+            ScrollPane scroll = (ScrollPane) stage.getScene().lookup("#activeFiltersScroll");
+            FlowPane chips = (FlowPane) scroll.getContent();
+            assertEquals(22, chips.getChildren().size());
+            assertTrue(chips.getHeight() > scroll.getViewportBounds().getHeight());
+            assertTrue(scroll.getHeight() <= 80);
+            assertInScene(stage.getScene().lookup("#mainSplit"));
+            assertInScene(stage.getScene().lookup("#statusbarPlaceholder"));
+            assertTrue(stage.getScene().lookup("#personListPanelPlaceholder").getLayoutBounds().getHeight() >= 90);
+            assertInside(chips.getChildren().getLast(), scroll.lookup(".viewport"));
+            assertDisplayedNames("Alice Tan");
+
+            scroll.setVvalue(0);
+            Button lastRemove = (Button) ((HBox) chips.getChildren().getLast()).getChildren().get(1);
+            lastRemove.requestFocus();
+            layoutWindow();
+            assertInside(lastRemove, scroll.lookup(".viewport"));
+            assertTrue(scroll.getVvalue() > 0);
+
+            Button firstRemove = (Button) ((HBox) chips.getChildren().getFirst()).getChildren().get(1);
+            firstRemove.requestFocus();
+            layoutWindow();
+            assertInside(firstRemove, scroll.lookup(".viewport"));
+            assertEquals(0, scroll.getVvalue(), 0.01);
+            scroll.requestFocus();
+            Event.fireEvent(scroll, key(KeyCode.DOWN));
+            assertTrue(scroll.getVvalue() > 0, "The filter area must support keyboard scrolling");
+            firstRemove.requestFocus();
+            for (int index = 1; index < 22; index++) {
+                Event.fireEvent(stage.getScene().getFocusOwner(), key(KeyCode.TAB));
+            }
+            layoutWindow();
+            assertEquals(lastRemove, stage.getScene().getFocusOwner());
+            assertInside(lastRemove, scroll.lookup(".viewport"));
+
+            firstRemove.requestFocus();
+            firstRemove.fire();
+            layoutWindow();
+            assertEquals(21, chips.getChildren().size());
+            assertEquals(((HBox) chips.getChildren().getFirst()).getChildren().get(1),
+                    stage.getScene().getFocusOwner());
+            assertDisplayedNames("Alice Tan");
+        });
+    }
+
+    @Test
+    public void activeFilterChips_removeLastCondition_keepsFocusedSuccessorVisibleAfterLayout() throws Exception {
+        resizeWindow(450, 450);
+        onJavaFxThread(() -> {
+            for (int index = 0; index < 30; index++) {
+                enter("find Alice Group" + index);
+            }
+            layoutWindow();
+            ScrollPane scroll = (ScrollPane) window.getPrimaryStage().getScene().lookup("#activeFiltersScroll");
+            FlowPane chips = (FlowPane) scroll.getContent();
+            Button lastRemove = (Button) ((HBox) chips.getChildren().getLast()).getChildren().get(1);
+            lastRemove.requestFocus();
+            lastRemove.fire();
+        });
+        awaitLayoutPulses();
+        onJavaFxThread(() -> {
+            ScrollPane scroll = (ScrollPane) window.getPrimaryStage().getScene().lookup("#activeFiltersScroll");
+            FlowPane chips = (FlowPane) scroll.getContent();
+            assertEquals(29, chips.getChildren().size());
+            Node focused = window.getPrimaryStage().getScene().getFocusOwner();
+            assertEquals(((HBox) chips.getChildren().getLast()).getChildren().get(1), focused);
+            assertInside(focused, scroll.lookup(".viewport"));
+            assertDisplayedNames("Alice Tan");
+        });
+    }
+
+    /** Resizes on a separate JavaFX turn so the native window can update its scene dimensions. */
+    private void resizeWindow(double width, double height) throws Exception {
+        onJavaFxThread(() -> {
+            window.getPrimaryStage().setWidth(width);
+            window.getPrimaryStage().setHeight(height);
+            window.getPrimaryStage().requestFocus();
+        });
+        awaitLayoutPulses();
+    }
+
+    /** Waits for native scene changes and responsive layouts to reach the next rendered frame. */
+    private void awaitLayoutPulses() throws Exception {
+        CountDownLatch layoutReady = new CountDownLatch(1);
+        onJavaFxThread(() -> {
+            new AnimationTimer() {
+                private int pulses;
+
+                @Override
+                public void handle(long now) {
+                    if (++pulses >= 2) {
+                        stop();
+                        layoutReady.countDown();
+                    }
+                }
+            }.start();
+        });
+        assertTrue(layoutReady.await(5, TimeUnit.SECONDS), "The resized window did not receive a layout pulse");
+    }
+
+    /** Applies styles and layout before checking the visible positions of controls. */
+    private void layoutWindow() {
+        window.getPrimaryStage().getScene().getRoot().applyCss();
+        window.getPrimaryStage().getScene().getRoot().layout();
+    }
+
+    /** Checks against the window viewport, including when children extend the root's bounds. */
+    private void assertInScene(Node control) {
+        Bounds bounds = control.localToScene(control.getBoundsInLocal());
+        assertTrue(bounds.getMinX() >= -1, bounds.toString());
+        assertTrue(bounds.getMinY() >= -1, bounds.toString());
+        assertTrue(bounds.getMaxX() <= control.getScene().getWidth() + 1, bounds.toString());
+        assertTrue(bounds.getMaxY() <= control.getScene().getHeight() + 1, bounds.toString());
+    }
+
+    /** Checks that the entire control is reachable within the supplied visible region. */
+    private void assertInside(Node control, Node region) {
+        Bounds controlBounds = control.localToScene(control.getBoundsInLocal());
+        Bounds regionBounds = region.localToScene(region.getBoundsInLocal());
+        assertTrue(controlBounds.getMinX() >= regionBounds.getMinX() - 1, controlBounds + " inside " + regionBounds);
+        assertTrue(controlBounds.getMaxX() <= regionBounds.getMaxX() + 1, controlBounds + " inside " + regionBounds);
+        assertTrue(controlBounds.getMinY() >= regionBounds.getMinY() - 1, controlBounds + " inside " + regionBounds);
+        assertTrue(controlBounds.getMaxY() <= regionBounds.getMaxY() + 1, controlBounds + " inside " + regionBounds);
     }
 
     @Test
