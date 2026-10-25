@@ -15,6 +15,7 @@ import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
+import seedu.address.storage.AppInstanceLock;
 import seedu.address.storage.CsvAddressBookExporter;
 import seedu.address.storage.JsonAddressBookStorage;
 
@@ -69,6 +70,7 @@ public class ExportCommand extends Command {
         try {
             targetPath = FileUtil.resolvePath(filePath).toAbsolutePath().normalize();
             checkDestination(targetPath, FileUtil.getApplicationLocation());
+            checkDestination(targetPath, FileUtil.getHomeFolder().resolve(AppInstanceLock.FILE_NAME));
             for (Path protectedFile : protectedFiles) {
                 checkDestination(targetPath, protectedFile);
                 checkDestination(targetPath, JsonAddressBookStorage.getBackupFilePath(protectedFile));

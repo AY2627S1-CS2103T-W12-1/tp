@@ -21,6 +21,7 @@ import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.util.SampleDataUtil;
+import seedu.address.storage.AppInstanceLock;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.Storage;
@@ -46,9 +47,19 @@ public class MainApp extends Application {
     protected Storage storage;
     protected Model model;
 
+    /** Held for the whole production session so another launch cannot save a stale roster. */
+    private AppInstanceLock instanceLock;
+
     @Override
     public void init() throws Exception {
-        init(USER_PREFS_FILE_PATH, ADDRESS_BOOK_FILE_PATH);
+        instanceLock = AppInstanceLock.acquire(FileUtil.getHomeFolder().resolve(AppInstanceLock.FILE_NAME));
+        try {
+            init(USER_PREFS_FILE_PATH, ADDRESS_BOOK_FILE_PATH);
+        } catch (Exception exception) {
+            instanceLock.close();
+            instanceLock = null;
+            throw exception;
+        }
     }
 
     /** Initializes components using explicit files, allowing isolated startup checks. */
@@ -165,6 +176,14 @@ public class MainApp extends Application {
             storage.saveUserPrefs(model.getUserPrefs());
         } catch (IOException e) {
             logger.severe("Failed to save preferences " + StringUtil.getDetails(e));
+        } finally {
+            if (instanceLock != null) {
+                try {
+                    instanceLock.close();
+                } catch (IOException exception) {
+                    logger.warning("Could not release the application lock: " + exception.getMessage());
+                }
+            }
         }
     }
 }
