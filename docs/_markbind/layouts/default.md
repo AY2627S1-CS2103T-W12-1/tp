@@ -78,6 +78,8 @@
   <scroll-top-button></scroll-top-button>
 </div>
 
+<script src="{{baseUrl}}/javascripts/navigation-accessibility.js" defer></script>
+
 <footer>
   <!-- Support MarkBind by including a link to us on your landing page! -->
   <div class="text-center">

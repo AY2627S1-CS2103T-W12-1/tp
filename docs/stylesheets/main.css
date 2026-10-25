@@ -404,3 +404,12 @@ footer {
 .skip-link { position: fixed; top: -100px; left: 12px; z-index: 1100; padding: 8px 12px; background: white; }
 .skip-link:focus { top: 8px; }
 .legacy-anchor { scroll-margin-top: calc(var(--sticky-header-height, 64px) + 16px); }
+
+/* Make the generated navigation's keyboard focus visible. */
+.toggle-site-nav-button:focus-visible,
+.toggle-page-nav-button:focus-visible,
+.site-nav-dropdown-btn-icon:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
