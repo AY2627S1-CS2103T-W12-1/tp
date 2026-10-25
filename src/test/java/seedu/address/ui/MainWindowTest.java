@@ -502,6 +502,44 @@ public class MainWindowTest {
         }
     }
 
+    @Test
+    public void activeFilterChips_decoratedMinimumViewport_keepsPanelsInsideScene() throws Exception {
+        Path largerFontStylesheet = temporaryFolder.resolve("decorated-minimum-filter-font.css");
+        Files.writeString(largerFontStylesheet, ".filter-chip-remove { -fx-font-size: 40px; }");
+        onJavaFxThread(() -> {
+            Stage stage = window.getPrimaryStage();
+            stage.getScene().getStylesheets().add(largerFontStylesheet.toUri().toString());
+            // Exercise the 434 x 411 content area of the decorated 450 x 450 Windows CI stage.
+            double frameWidth = stage.getWidth() - stage.getScene().getWidth();
+            double frameHeight = stage.getHeight() - stage.getScene().getHeight();
+            stage.setMinWidth(0);
+            stage.setMinHeight(0);
+            stage.setWidth(434 + frameWidth);
+            stage.setHeight(411 + frameHeight);
+        });
+        awaitLayoutPulses();
+        onJavaFxThread(() -> {
+            assertEquals(434, window.getPrimaryStage().getScene().getWidth(), 1);
+            assertEquals(411, window.getPrimaryStage().getScene().getHeight(), 1);
+            for (int index = 0; index < 22; index++) {
+                enter("find Alice Group" + index);
+            }
+            layoutWindow();
+        });
+        awaitLayoutPulses();
+        onJavaFxThread(() -> {
+            Stage stage = window.getPrimaryStage();
+            ScrollPane scroll = (ScrollPane) stage.getScene().lookup("#activeFiltersScroll");
+            FlowPane chips = (FlowPane) scroll.getContent();
+            assertInside(chips.getChildren().getLast(), scroll.lookup(".viewport"));
+            assertInScene(stage.getScene().lookup("#mainSplit"));
+            assertInScene(stage.getScene().lookup("#statusbarPlaceholder"));
+            assertTrue(feedback.getHeight() >= 40, "Feedback must retain space for readable text");
+            assertTrue(stage.getScene().lookup("#personListView").getLayoutBounds().getHeight() >= 60,
+                    "The roster must retain space for a member row");
+        });
+    }
+
     /** Resizes on a separate JavaFX turn so the native window can update its scene dimensions. */
     private void resizeWindow(double width, double height) throws Exception {
         onJavaFxThread(() -> {

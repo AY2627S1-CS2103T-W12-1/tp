@@ -50,12 +50,12 @@
         </VBox>
 
         <SplitPane fx:id="mainSplit" orientation="VERTICAL" dividerPositions="0.22" VBox.vgrow="ALWAYS">
-          <StackPane fx:id="resultDisplayPlaceholder" styleClass="pane-with-border" minHeight="80">
+          <StackPane fx:id="resultDisplayPlaceholder" styleClass="pane-with-border" minHeight="60">
             <padding>
               <Insets top="8" right="12" bottom="8" left="12" />
             </padding>
           </StackPane>
-          <SplitPane orientation="HORIZONTAL" dividerPositions="0.43" minHeight="140">
+          <SplitPane orientation="HORIZONTAL" dividerPositions="0.43" minHeight="120">
             <VBox fx:id="personList" styleClass="pane-with-border" minWidth="145" minHeight="0">
               <padding><Insets top="10" right="8" bottom="10" left="10" /></padding>
               <Label fx:id="rosterHeading" text="ROSTER" styleClass="panel-heading" />
