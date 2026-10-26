@@ -50,11 +50,10 @@ Its CSV expectations are written independently of the exporter, and its feedback
 production message constants. A failure against a documented promise must be investigated as a possible bug;
 do not weaken an expectation just to make the test pass.
 
-The cross-check against team master `6a04ef41` exposes differences between the updated preparation-build
-User Guide and the implementation: clearing an address with `edit INDEX a/` is rejected, unchanged saves
-and repeated clears overwrite the previous distinct backup, and import-save errors omit the promised
-unsaved-change warning and retry guidance. Acceptance tests retain these expectations and currently fail.
-The recovery-cycle test also checks that an unchanged save preserves the previous distinct backup.
+The initial cross-check against team master `6a04ef41` exposed missing address clearing, overwritten
+distinct backups after unchanged saves or repeated clears, and missing import-save recovery guidance.
+PR #212, merged in `58b44653`, addresses these differences. The acceptance tests retain the documented
+expectations as regression coverage, including unchanged-save backup preservation across recovery cycles.
 
 The larger generated datasets are additional robustness checks. Their sizes are test inputs, not new product limits
 or performance guarantees. CSV syntax and UTF-8 validity also determine whether an input should be rejected.
