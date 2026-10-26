@@ -1,6 +1,7 @@
 package seedu.address.commons.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -37,6 +38,18 @@ public class JsonUtilTest {
         assertEquals(serializableTestClass.getName(), SerializableTestClass.getNameTestValue());
         assertEquals(serializableTestClass.getListOfLocalDateTimes(), SerializableTestClass.getListTestValues());
         assertEquals(serializableTestClass.getMapOfIntegerToString(), SerializableTestClass.getHashMapTestValues());
+    }
+
+    @Test
+    public void fromJsonString_excessiveArrayNesting_throwsIoException() {
+        String json = "[".repeat(1200) + "0" + "]".repeat(1200);
+        assertThrows(IOException.class, () -> JsonUtil.fromJsonString(json, Object.class));
+    }
+
+    @Test
+    public void fromJsonString_excessiveObjectNesting_throwsIoException() {
+        String json = "{\"value\":".repeat(1200) + "0" + "}".repeat(1200);
+        assertThrows(IOException.class, () -> JsonUtil.fromJsonString(json, Object.class));
     }
 
     //TODO: @Test jsonUtil_readJsonStringToObjectInstance_correctObject()

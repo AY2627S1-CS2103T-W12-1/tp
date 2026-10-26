@@ -10,40 +10,44 @@ skinparam ActivityStartColor #382E25
 skinparam ActivityEndColor #382E25
 
 start
-:User submits a command;
-if () then ([input is invalid or
-command fails])
+:Parse and execute user input;
+if (Parsing and execution succeeded?) then (no)
     :Show error;
     note right: Roster and saved file\nare unchanged
     stop
-else ([command succeeds])
+else (yes)
 endif
 
-if () then ([help, list, show, sort, find,
-findemail, filter, export, exit,
-delete prompt or cancelled deletion])
+if (Read-only command or cancelled deletion?) then (yes)
     :Show result without saving;
     stop
-else ([add, edit, tag, untag, confirmed delete,
-tagall, untagall, renametag, clear or import])
+else (no)
 endif
 
-:Write the roster to a temporary file,
-then replace the data file atomically;
-note right: A failed save leaves the\nprevious data file unchanged
-if () then ([save succeeds])
+:Attempt to save the complete roster;
+note right
+Validate the existing roster and rotate its backup
+only when the member data differs. Write to a
+sibling temporary file, then replace atomically.
+end note
+if (Save succeeded?) then (yes)
     :Show result;
     stop
-else ([save fails])
+else (no)
 endif
 
-if () then ([clear])
+if (Was the command clear?) then (yes)
     :Restore the previous roster and view;
     :Show clear save error;
-else ([other data-changing command])
+else (no)
     :Keep the change in memory only;
-    :Show save error;
-    note right: Import reports its own error; other\ncommands also show recovery guidance
+    :Show save error with unsaved-change
+warning and retry instructions;
+    note right
+The previous saved roster is unchanged.
+Exiting loses unsaved changes; restore access
+and use a valid no-op to retry saving.
+end note
 endif
 stop
 @enduml

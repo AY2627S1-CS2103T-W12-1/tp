@@ -1,55 +1,151 @@
-# TrackCall v1.3: first MVP release
+# v1.3 - TrackCall
 
-**Updated on 15 October 2026 to include Eron’s filter-feedback change ([#137](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/137)). If you downloaded v1.3 earlier today, download `trackcall.jar` again to get this update.**
+The executable includes the 15 October 2026 filter-feedback update ([#137](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/137)). If you downloaded an earlier v1.3 build, download `trackcall.jar` again.
 
-TrackCall helps club membership secretaries maintain contact details and organise overlapping groups using typed commands. This first product release builds on AddressBook Level 3 (AB3) with group operations, CSV exchange, name sorting, offline help, and safer local storage.
+TrackCall's first MVP helps club membership secretaries maintain contact details and organise overlapping groups using typed commands.
 
-## What's new compared with AB3
+## What's New Compared with AB3
 
-- **A club-focused interface.** TrackCall has a redesigned light interface, labelled contact fields, visible group tags, a first-launch welcome message, and clearer success/error feedback.
-- **Filter groups with `filter t/TAG`.** Narrow the displayed members by an exact, case-sensitive tag. Apply successive filters to find members belonging to several groups, or filter name-search results. Feedback now lists every distinct active tag in the order applied, so successive filters clearly show the complete intersection. Repeating a tag does not duplicate it in the message. `list` shows everyone again and resets the active filters.
-- **Update a group's tags with `tagall` and `untagall`.** Add or remove one tag across every currently displayed member while preserving other tags and leaving hidden members unchanged. Feedback reports changed and skipped members. Tags support 1–30 ASCII letters or digits.
-- **Sort names with `sort`.** Display the current results in case-insensitive A–Z order. Sorting remains active through searches and member changes; `list`, a successful import, or restarting returns to stored order. Sorting does not rewrite the saved roster order.
-- **Exchange rosters through CSV.** `export [FILEPATH]` exports the complete roster, including hidden members. `import p/FILE_PATH` validates the entire UTF-8 CSV before appending unique members, reports skipped duplicates, and then shows the full roster. Exported files use the same five-column format accepted by import: `name,phone,email,address,tags`.
-- **Read help offline.** `help`, `help COMMAND`, and F1 open the built-in command guide with examples, syntax, expected results, and common errors for all fourteen commands. Escape closes help.
-- **Keep the current view after editing.** Editing preserves active name searches, tag filters, and sorting. A member who no longer matches disappears from the view but remains in the roster.
-- **Use more precise duplicate checks and feedback.** Duplicate detection compares the trimmed name, phone, email, and address; different people may share a name. Tags do not determine identity. Member indices and list/find/clear feedback have stronger validation and clearer counts.
-- **Protect local files.** Packaged builds keep application files and CSV operations within the JAR folder. Export protects the active roster, preferences, running JAR, backup, and recovery filenames. Failed exports preserve an existing destination file. CSV import rejects malformed quoting and invalid UTF-8 without partially adding records.
-- **Recover from an unreadable roster.** Before replacing a valid roster, TrackCall keeps its previous saved contents in `data/addressbook.json.bak`. Startup preserves an unreadable roster in a uniquely named recovery copy, then offers a valid backup, an explicit empty roster, or closing without replacement. A failed `clear` save restores the previous roster and view.
+* **Keep a club roster easy to read.** A redesigned light interface adds labelled contact fields, visible group tags, first-launch guidance, and clearer feedback.
+* **Find overlapping groups.** `filter t/TAG` narrows the displayed members by an exact, case-sensitive tag. Successive filters find the intersection and name every active tag; `list` restores everyone.
+* **Update a whole group's tags.** `tagall` and `untagall` change one tag for every displayed member, preserve their other tags, leave hidden members unchanged, and report changed and skipped counts.
+* **Put names in order.** `sort` displays the current results in case-insensitive A–Z order without rewriting the saved roster order. It stays active through searches and member changes.
+* **Exchange rosters through CSV.** Export every member, including hidden records, or import a validated UTF-8 CSV and append unique members. Both commands share the `name,phone,email,address,tags` format.
+* **Get help without internet access.** `help`, `help COMMAND`, and F1 open examples, syntax, expected results, and common errors for all fourteen commands. Escape closes help.
+* **Edit without losing your place.** Editing preserves name searches, tag filters, and sorting. Duplicate checks compare trimmed name, phone, email, and address, allowing different people to share a name.
+* **Correct mistakes with clearer feedback.** Stronger member-index and field validation, clearer list/find/clear counts, and atomic CSV validation help prevent unintended changes.
+* **Protect and recover local data.** CSV operations stay within the JAR folder and protect application, roster, backup, and recovery files. Failed exports preserve existing files; automatic backups and explicit startup recovery protect an unreadable roster. A failed `clear` save restores the previous roster and view.
 
-The familiar `add`, `edit`, `delete`, `find`, `list`, `clear`, and `exit` commands remain available. Together with the additions above, v1.3 provides fourteen commands for the membership workflow.
+The familiar `add`, `edit`, `delete`, `find`, `list`, `clear`, and `exit` commands remain available. Download **[trackcall.jar](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/trackcall.jar)** and use **Java 25** to get started.
 
-## Product screenshots
+## Complete feature set
 
-The filter screenshots below are Eron’s original captures supplied for this release. The interface, bulk-tagging, and validation screenshots were captured directly from the rebuilt release JAR on macOS. All five images are uploaded unchanged and use sample data. The data-file path depends on the launch location. `VALIDATION.txt` records their provenance and the commands checked against the updated JAR.
+This release includes **fourteen commands**. Alongside the additions above, TrackCall retains and adapts
+AB3's core `add`, `edit`, `delete`, `clear`, `list`, `find`, `help`, and `exit` commands.
 
-### Redesigned interface and first-launch guidance
+| Task | Commands | Available in v1.3 |
+| --- | --- | --- |
+| Maintain member records | `add`, `edit` | Record a name, phone, email, required address, and optional tags; update contact details or replace a member's tags. |
+| Browse and find members | `list`, `find`, `filter`, `sort` | Show the full roster, search complete name words, narrow by tags, and sort displayed names from A to Z. |
+| Update a displayed group's tags | `tagall`, `untagall` | Add or remove one tag for every displayed member while preserving other tags and hidden records. |
+| Exchange rosters | `export`, `import` | Export every member to CSV or validate a CSV and append unique member records. |
+| Remove records | `delete`, `clear` | Delete one displayed member or clear the whole roster. Both are immediate, with no confirmation or undo. |
+| Get help and finish working | `help`, `exit` | Read built-in help and command examples offline, then close the application. |
 
-![TrackCall’s command box, welcome message, sample member cards, group tags and data-file status bar](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/interface.jpg)
+Member records retain their contact fields and tag assignments. Successful data changes are saved locally;
+automatic backups keep the previous saved roster, and startup recovery offers choices when a roster is unreadable.
+See the installation and limitations below for file locations and save-error guidance.
 
-### Filter a single group
+## TrackCall in Action
 
-`filter t/committee` lists Bob and Daniel and names the active tag in the feedback.
+All thirteen screenshots use a consistent centered frame, white margins, and soft shadow. Windows are scaled proportionally, and dialogs keep their natural proportions. The original captures remain available in the release assets; `VALIDATION.txt` records their provenance. Sample data is shown, and the status-bar path depends on the launch folder.
 
-![Eron’s screenshot of two committee members and single-tag filter feedback](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/filter-single.jpg)
+### 1. A clearer membership workspace
 
-### Show every active filter — new in PR #137
+First launch shows the command box, welcome message, member cards, group tags, and data-file status bar.
 
-Applying `filter t/year2` after `filter t/committee` leaves Bob and reports both active tags: `1 member(s) listed with tags "committee", "year2".`
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-interface.png"><img width="960" alt="TrackCall v1.3 first-launch interface with sample member records and group tags" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-interface.png"></a>
+</p>
 
-![Eron’s screenshot of Bob matching committee and year2, with both active filters named](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/filter-multiple.jpg)
+### 2. Filter a single group
 
-### Bulk tagging a displayed group
+`filter t/committee` shows Bob and Daniel and names the active tag in the feedback.
 
-After `filter t/friends` and `tagall t/event2026`, Alex and Bernice retain their existing tags and gain `event2026`.
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-filter-single.png"><img width="960" alt="TrackCall v1.3 showing committee members and single-tag filter feedback" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-filter-single.png"></a>
+</p>
 
-![The rebuilt TrackCall JAR reports adding event2026 to two displayed members](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/tag-group.jpg)
+### 3. See every active tag filter
 
-### Correcting invalid input
+After `filter t/committee`, run `filter t/year2` to keep members in both groups. The feedback names both active tags.
 
-An invalid phone number produces feedback and leaves the member unchanged.
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-filter-multiple.png"><img width="960" alt="TrackCall v1.3 showing the intersection of committee and year2 with both active tags named" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-filter-multiple.png"></a>
+</p>
 
-![The rebuilt TrackCall JAR rejects edit 1 p/abc and explains the phone-number rule](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/validation.jpg)
+### 4. Add a tag to a displayed group
+
+`filter t/friends` followed by `tagall t/event2026` adds the event tag to Alex and Bernice while keeping their existing tags.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-tag-group.png"><img width="960" alt="TrackCall v1.3 adding event2026 to two displayed members" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-tag-group.png"></a>
+</p>
+
+### 5. Remove a tag from a displayed group
+
+`untagall t/event2026` removes the event tag from the two displayed friends while retaining their other tags. Members outside the current view are unchanged.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-bulk-untag.png"><img width="960" alt="TrackCall v1.3 reporting a bulk tag removal while retaining other member tags" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-bulk-untag.png"></a>
+</p>
+
+### 6. Sort names from A to Z
+
+`sort` puts the displayed members in alphabetical order. Use `list` to restore the complete roster in stored order.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-sort-names.png"><img width="960" alt="TrackCall v1.3 showing members sorted alphabetically by name" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-sort-names.png"></a>
+</p>
+
+### 7. Export a complete roster
+
+`export members.csv` writes every member to a UTF-8 CSV, including members hidden by the current view. The result reports the resolved destination.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-csv-export.png"><img width="960" alt="TrackCall v1.3 reporting a successful complete-roster CSV export" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-csv-export.png"></a>
+</p>
+
+### 8. Import validated member records
+
+`import p/import-demo.csv` validates the whole CSV before appending unique members, then reports imported and skipped duplicate counts.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-csv-import.png"><img width="960" alt="TrackCall v1.3 reporting imported and skipped member counts after CSV validation" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-csv-import.png"></a>
+</p>
+
+### 9. Read command help offline
+
+`help import` opens the import syntax, example, expected result, and common errors. Select All commands to return to the fourteen-command catalogue.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-offline-help.png"><img width="960" alt="TrackCall v1.3 built-in offline help showing CSV import instructions" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-offline-help.png"></a>
+</p>
+
+### 10. Keep the filtered view after editing
+
+Use `filter t/friends`, then `edit 1 p/98765432` to update Alex while keeping the two displayed friends.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-edit-filtered-view.png"><img width="960" alt="TrackCall v1.3 retaining its displayed group after a member edit" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-edit-filtered-view.png"></a>
+</p>
+
+### 11. Reject invalid input
+
+`edit 1 p/abc` explains the phone-number rule and leaves the member unchanged.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-validation.png"><img width="960" alt="TrackCall v1.3 rejecting an invalid phone number with corrective feedback" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-validation.png"></a>
+</p>
+
+### 12. Protect the active roster from CSV export
+
+`export data/addressbook.json` is rejected because CSV export cannot overwrite the active roster file.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-protected-export.png"><img width="960" alt="TrackCall v1.3 rejecting a CSV export to the protected roster file" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-protected-export.png"></a>
+</p>
+
+### 13. Recover from an unreadable roster
+
+If a roster cannot be loaded, TrackCall preserves its damaged contents and offers recovery choices before opening an editable roster.
+
+<p align="center">
+  <a href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-backup-recovery.png"><img width="960" alt="TrackCall v1.3 startup recovery dialog for an unreadable roster" src="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/download/v1.3/framed-backup-recovery.png"></a>
+</p>
+
+<details>
+<summary>Installation, validation and known limitations</summary>
 
 ## Download and run
 
@@ -63,7 +159,7 @@ An invalid phone number produces feedback and leaves the member unchanged.
 
 4. Try `help`, `list`, and `sort`. Your first launch displays sample members. Successful changes are saved automatically to `data/addressbook.json` beside the JAR.
 
-The executable is 13,893,874 bytes (about 13.9 MB). `SHA256SUMS.txt` is attached so downloads can be checked. This release also includes downloadable copies of the five screenshots.
+The executable is 13,893,874 bytes (about 13.9 MB). `SHA256SUMS.txt` is attached so downloads can be checked. This release also includes downloadable screenshot assets.
 
 - [User Guide for v1.3](https://github.com/AY2627S1-CS2103T-W12-1/tp/blob/v1.3/docs/UserGuide.md)
 - [Developer Guide for v1.3](https://github.com/AY2627S1-CS2103T-W12-1/tp/blob/v1.3/docs/DeveloperGuide.md)
@@ -92,3 +188,5 @@ Built without source modifications from team commit [`e3872268dd2bdd8967ab2778c1
 - Coverage across all historical PRs is not claimed to be 100%: the published report for merged PR #134 is **98.97959% patch coverage** (one partially covered changed line). Passing tests or CI does not establish 100% patch coverage.
 
 Release tracking: #135. Milestone: [v1.3](https://github.com/AY2627S1-CS2103T-W12-1/tp/milestone/3).
+
+</details>

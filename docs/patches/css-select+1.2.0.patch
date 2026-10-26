@@ -1,0 +1,13 @@
+diff --git a/node_modules/css-select/lib/pseudos.js b/node_modules/css-select/lib/pseudos.js
+index f6774ec..fdc6426 100644
+--- a/node_modules/css-select/lib/pseudos.js
++++ b/node_modules/css-select/lib/pseudos.js
+@@ -20,7 +20,7 @@ var DomUtils    = require("domutils"),
+     hasAttrib   = DomUtils.hasAttrib,
+     getName     = DomUtils.getName,
+     getAttribute= DomUtils.getAttributeValue,
+-    getNCheck   = require("nth-check"),
++    getNCheck   = require("nth-check").default,
+     checkAttrib = require("./attributes.js").rules.equals,
+     BaseFuncs   = require("boolbase"),
+     trueFunc    = BaseFuncs.trueFunc,
