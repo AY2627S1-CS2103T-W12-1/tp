@@ -3,60 +3,39 @@
 skinparam arrowThickness 1.1
 skinparam arrowColor MODEL_COLOR_T4
 skinparam classBackgroundColor MODEL_COLOR
+skinparam nodesep 30
+skinparam ranksep 40
 
-Package Model as ModelPackage <<Rectangle>>{
-Class "<<interface>>\nReadOnlyAddressBook" as ReadOnlyAddressBook
-Class "<<interface>>\nReadOnlyUserPrefs" as ReadOnlyUserPrefs
-Class "<<interface>>\nModel" as Model
-Class AddressBook
-Class ModelManager
-Class UserPrefs
-Class ActiveFilter
-Class PersonSelectionPredicate
-
-Class UniquePersonList
-Class Person
-Class Address
-Class Email
-Class Name
-Class Phone
-Class Tag
-
+package Model as ModelPackage <<Rectangle>> {
+class "<<interface>>\nModel" as Model
+class "<<interface>>\nReadOnlyAddressBook" as ReadOnlyAddressBook
+class "<<interface>>\nReadOnlyUserPrefs" as ReadOnlyUserPrefs
+class ModelManager
+class AddressBook
+class UserPrefs
+class UniquePersonList
+class Person
+class Name
+class Phone
+class Email
+class Address
+class Tag
 }
 
-Class "FilteredList<Person>" as FilteredPersonList <<JavaFX>>
-Class "SortedList<Person>" as SortedPersonList <<JavaFX>>
-
-
-AddressBook .up.|> ReadOnlyAddressBook
-
 ModelManager .up.|> Model
-Model .right.> ReadOnlyUserPrefs
-Model .left.> ReadOnlyAddressBook
+AddressBook .up.|> ReadOnlyAddressBook
+UserPrefs .up.|> ReadOnlyUserPrefs
 ModelManager -left-> "1" AddressBook
 ModelManager -right-> "1" UserPrefs
-ModelManager --> "0..*" ActiveFilter : activeFilters
-ModelManager --> "0..*" PersonSelectionPredicate : show selections
-UserPrefs .up.|> ReadOnlyUserPrefs
-
-AddressBook *--> "1" UniquePersonList
-UniquePersonList --> Person : all [*]
-Person *--> Name
-Person *--> Phone
-Person *--> Email
-Person *--> Address
-Person *--> "*" Tag
-PersonSelectionPredicate --> "*" Person : selected
-
-
+AddressBook *-down-> "1" UniquePersonList
+UniquePersonList -down-> "*" Person
+Person -down-> "1" Name
+Person -down-> "1" Phone
+Person -down-> "1" Email
+Person -down-> "1" Address
+Person -down-> "*" Tag
 Name -[hidden]right-> Phone
-Phone -[hidden]right-> Address
-Address -[hidden]right-> Email
-
-ModelManager --> "1" FilteredPersonList : filteredPersons
-ModelManager --> "1" SortedPersonList : sortedPersons
-SortedPersonList --> "1" FilteredPersonList : source
-FilteredPersonList --> Person : filtered [*]
-SortedPersonList --> Person : displayed [*]
-ActiveFilter --> "0..1" Tag : tag
+Phone -[hidden]right-> Email
+Email -[hidden]right-> Address
+Address -[hidden]right-> Tag
 @enduml

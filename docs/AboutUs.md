@@ -1,7 +1,7 @@
 ---
 layout: default.md
 title: About Us
-pageNav: 3
+pageNav: 6
 ---
 
 # About Us
@@ -9,6 +9,10 @@ pageNav: 3
 We are a team based in the [School of Computing, National University of Singapore](https://www.comp.nus.edu.sg).
 
 ## Project team
+
+<div class="team-grid">
+
+<section class="team-member">
 
 ### Calvin Yoel Pandiangan
 
@@ -19,6 +23,10 @@ We are a team based in the [School of Computing, National University of Singapor
 * Role: Testing & Code Quality Lead
 * Responsibilities: Exit, delete, and find commands.
 
+</section>
+
+<section class="team-member">
+
 ### Eron Dathan
 
 <img src="images/rondth.png" width="200" alt="Eron Dathan">
@@ -27,6 +35,10 @@ We are a team based in the [School of Computing, National University of Singapor
 
 * Role: Integration Lead
 * Responsibilities: Automatic saving and tag filtering (`filter`).
+
+</section>
+
+<section class="team-member">
 
 ### Glory Charity Lion
 
@@ -37,6 +49,10 @@ We are a team based in the [School of Computing, National University of Singapor
 * Role: Documentation Lead
 * Responsibilities: Manual data-file editing and bulk tag editing (`tagall`, `untagall`).
 
+</section>
+
+<section class="team-member">
+
 ### Ian Abiel Wangsa
 
 <img src="images/manutd1234.png" width="200" alt="Ian Abiel Wangsa">
@@ -46,6 +62,10 @@ We are a team based in the [School of Computing, National University of Singapor
 * Role: Team Lead
 * Responsibilities: List members (`list`) and clear the roster (`clear`).
 
+</section>
+
+<section class="team-member">
+
 ### Noah
 
 <img src="images/asdao.png" width="200" alt="Noah">
@@ -54,3 +74,6 @@ We are a team based in the [School of Computing, National University of Singapor
 
 * Role: Developer Lead
 * Responsibilities: CLI workflows for adding and editing member records, and command help.
+
+</section>
+</div>

@@ -98,6 +98,18 @@ public class JsonUtilTest {
         assertEquals(serializableTestClass.getMapOfIntegerToString(), SerializableTestClass.getHashMapTestValues());
     }
 
+    @Test
+    public void fromJsonString_excessiveArrayNesting_throwsIoException() {
+        String json = "[".repeat(1200) + "0" + "]".repeat(1200);
+        assertThrows(IOException.class, () -> JsonUtil.fromJsonString(json, Object.class));
+    }
+
+    @Test
+    public void fromJsonString_excessiveObjectNesting_throwsIoException() {
+        String json = "{\"value\":".repeat(1200) + "0" + "}".repeat(1200);
+        assertThrows(IOException.class, () -> JsonUtil.fromJsonString(json, Object.class));
+    }
+
     //TODO: @Test jsonUtil_readJsonStringToObjectInstance_correctObject()
 
     //TODO: @Test jsonUtil_writeThenReadObjectToJson_correctObject()

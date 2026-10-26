@@ -1,12 +1,10 @@
 ---
 layout: default.md
 title: Setting up and getting started
-pageNav: 3
+pageNav: 6
 ---
 
 # Setting up and getting started
-
---------------------------------------------------------------------------------------------------------------------
 
 ## Setting up the project on your computer
 
@@ -25,8 +23,6 @@ If you plan to use IntelliJ IDEA (highly recommended):
    1. Run `seedu.address.Main` and try a few commands.
    1. [Run the tests](Testing.html) to ensure they all pass.
 
---------------------------------------------------------------------------------------------------------------------
-
 ## Before writing code
 
 1. **Configure the coding style**
@@ -40,7 +36,7 @@ If you plan to use IntelliJ IDEA (highly recommended):
 
 1. **Set up CI**
 
-   This project includes GitHub Actions configuration files in `.github/workflows`. GitHub runs CI automatically for every push and pull request. No setup is required.
+   This project includes GitHub Actions configuration files in `.github/workflows`. GitHub runs Java CI for pull requests, pushes to `master`, and tags. Documentation changes also run the website build. No workflow setup is required.
 
 1. **Learn the design**
 

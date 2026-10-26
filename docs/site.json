@@ -34,25 +34,66 @@
     },
     {
       "src": "releases/v1.3/RELEASE_NOTES.md",
-      "title": "v1.3 release notes",
+      "title": "v1.3",
       "frontmatter": {
         "legacyAnchors": {
-          "trackcall-v1-3-first-mvp-release": "trackcall-v13-first-mvp-release",
-          "what-s-new-compared-with-ab3": "whats-new-compared-with-ab3",
-          "show-every-active-filter-new-in-pr-137": "show-every-active-filter--new-in-pr-137"
+          "v1-3-trackcall": [
+            "trackcall-v1-3-first-mvp-release",
+            "trackcall-v13-first-mvp-release"
+          ],
+          "trackcall-in-action": [
+            "product-screenshots"
+          ],
+          "1-a-clearer-membership-workspace": [
+            "redesigned-interface-and-first-launch-guidance"
+          ],
+          "2-filter-a-single-group": [
+            "filter-a-single-group"
+          ],
+          "3-see-every-active-tag-filter": [
+            "show-every-active-filter-new-in-pr-137",
+            "show-every-active-filter--new-in-pr-137"
+          ],
+          "4-add-a-tag-to-a-displayed-group": [
+            "bulk-tagging-a-displayed-group"
+          ],
+          "11-reject-invalid-input": [
+            "correcting-invalid-input"
+          ],
+          "what-s-new-compared-with-ab3": [
+            "whats-new-compared-with-ab3"
+          ]
         },
-        "pageNav": 3
+        "pageNav": 6
       }
     },
     {
       "src": "releases/v1.4/RELEASE_NOTES.md",
-      "title": "v1.4 release notes",
+      "title": "v1.4",
       "frontmatter": {
         "legacyAnchors": {
-          "trackcall-v1-4-alpha": "trackcall-v14-alpha",
-          "changes-since-v1-3": "changes-since-v13"
+          "v1-4-trackcall": [
+            "trackcall-v1-4-alpha",
+            "trackcall-v14-alpha"
+          ],
+          "what-s-new-in-v1-4": [
+            "changes-since-v1-3",
+            "changes-since-v13"
+          ],
+          "trackcall-in-action": [
+            "product-screenshots"
+          ],
+          "1-a-compact-membership-roster": [
+            "compact-roster"
+          ],
+          "2-see-and-remove-active-conditions": [
+            "active-search-and-tag-conditions"
+          ],
+          "3-select-a-member-to-read-and-copy-details": [
+            "selected-member-details"
+          ]
         },
-        "pageNav": 3
+        "pageNav": 6
       }
     }
   ],
