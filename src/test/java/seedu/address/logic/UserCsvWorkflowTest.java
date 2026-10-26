@@ -211,10 +211,10 @@ public class UserCsvWorkflowTest {
     @Test
     public void import_saveFails_retriesUnsavedBatchUsingHeaderOnlyOrDuplicateOnlyFile() throws Exception {
         // UG: retain an unsaved batch in memory; even zero-import files retry saving after repair.
-        for (boolean duplicateOnly : List.of(false, true)) {
+        for (boolean isDuplicateOnly : List.of(false, true)) {
             Path csv = directory.resolve("retry.csv");
             String row = "Carol,999,carol@example.com,,new\n";
-            String name = duplicateOnly ? "Dora" : "Carol";
+            String name = isDuplicateOnly ? "Dora" : "Carol";
             row = row.replace("Carol", name).replace("carol", name.toLowerCase(Locale.ROOT));
             Files.writeString(csv, HEADER + row);
             Path backup = JsonAddressBookStorage.getBackupFilePath(rosterFile);
@@ -232,7 +232,7 @@ public class UserCsvWorkflowTest {
                     .anyMatch(p -> p.getName().fullName.equals(name)));
             Files.delete(blocker);
             Files.delete(backup);
-            Files.writeString(csv, HEADER + (duplicateOnly ? row : ""));
+            Files.writeString(csv, HEADER + (isDuplicateOnly ? row : ""));
 
             CommandResult retried = logic.execute("import p/" + csv);
 

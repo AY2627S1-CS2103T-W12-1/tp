@@ -90,12 +90,12 @@ public class CommandSequenceOracleTest {
             tags = Set.copyOf(tags);
         }
 
-        private String email() {
+        private String getEmail() {
             return "member" + id + "@group" + id % 3 + ".example.com";
         }
 
-        private String snapshot() {
-            return (100000 + id) + "|" + name + "|" + email() + "||"
+        private String formatSnapshot() {
+            return (100000 + id) + "|" + name + "|" + getEmail() + "||"
                     + String.join(",", tags.stream().sorted().toList());
         }
     }
@@ -112,7 +112,7 @@ public class CommandSequenceOracleTest {
         private final List<String> history = new ArrayList<>();
         private ModelManager model;
         private LogicManager logic;
-        private boolean sorted;
+        private boolean isNameSortingEnabled;
         private int nextId;
 
         private Session(Path folder, int seed) throws Exception {
@@ -131,16 +131,20 @@ public class CommandSequenceOracleTest {
                     new UserPrefs());
             logic = new LogicManager(model, new StorageManager(storage,
                     new JsonUserPrefsStorage(folder.resolve("preferences.json"))));
+            resetFilters();
+            isNameSortingEnabled = false;
+        }
+
+        private void resetFilters() {
             restrictions.clear();
             filterKeys.clear();
             selections.clear();
-            sorted = false;
         }
 
-        private List<Member> visible() {
+        private List<Member> getVisibleMembers() {
             var stream = roster.stream().filter(member -> restrictions.stream().allMatch(p -> p.test(member))
                     && selections.stream().allMatch(ids -> ids.contains(member.id())));
-            if (sorted) {
+            if (isNameSortingEnabled) {
                 stream = stream.sorted(Comparator.comparing(member -> member.name().toLowerCase(Locale.ROOT)));
             }
             return stream.toList();
@@ -151,182 +155,265 @@ public class CommandSequenceOracleTest {
             logic.execute(text);
         }
 
+        private enum Change { NONE, APPLIED }
+
+        private record StepInput(List<Member> displayed, int index, Member target,
+                String tag, byte[] savedBefore, int step) {}
+
         private void step(int step) throws Exception {
-            List<Member> displayed = visible();
             int operation = random.nextInt(20);
-            boolean changesData = false;
+            StepInput input = createStepInput(step);
+            Change change = performOperation(operation, input);
+            assertState(input, change);
+        }
+
+        private StepInput createStepInput(int step) throws Exception {
+            List<Member> displayed = getVisibleMembers();
             byte[] before = Files.readAllBytes(rosterFile);
             String tag = "Group" + random.nextInt(4);
             int index = displayed.isEmpty() ? -1 : random.nextInt(displayed.size());
             Member target = index < 0 ? null : displayed.get(index);
-            switch (operation) {
-                case 0, 1, 2 -> {
-                    int id = nextId++;
-                    Member member = new Member(id, "Team" + (char) ('A' + random.nextInt(4)) + " Member" + id,
-                            Set.of(tag));
-                    command("add n/" + member.name() + " p/" + (100000 + id) + " e/" + member.email() + " t/" + tag);
-                    roster.add(member);
-                    restrictions.clear();
-                    filterKeys.clear();
-                    selections.clear();
-                    changesData = true;
-                }
-                case 3 -> {
-                    command("list");
-                    restrictions.clear();
-                    filterKeys.clear();
-                    selections.clear();
-                    sorted = false;
-                }
-                case 4 -> {
-                    command("sort");
-                    sorted = true;
-                }
-                case 5 -> {
-                    String query = "Team" + (char) ('A' + random.nextInt(4));
-                    command("find " + query);
-                    filterKeys.add("name:" + query);
-                    restrictions.add(member -> member.name().toLowerCase(Locale.ROOT)
-                            .contains(query.toLowerCase(Locale.ROOT)));
-                }
-                case 6 -> {
-                    String query = "@group" + random.nextInt(3);
-                    command("findemail " + query);
-                    restrictions.clear();
-                    filterKeys.clear();
-                    selections.clear();
-                    filterKeys.add("email:" + query);
-                    restrictions.add(member -> member.email().contains(query));
-                }
-                case 7 -> {
-                    command("filter t/" + tag);
-                    if (!filterKeys.contains("tag:" + tag)) {
-                        filterKeys.add("tag:" + tag);
-                        restrictions.add(member -> member.tags().contains(tag));
-                    }
-                }
-                case 8 -> {
-                    if (target != null) {
-                        Member second = displayed.get(random.nextInt(displayed.size()));
-                        command("show " + (index + 1) + " " + (displayed.indexOf(second) + 1));
-                        Set<Integer> ids = new HashSet<>(List.of(target.id(), second.id()));
-                        selections.add(ids);
-                    }
-                }
-                case 9 -> {
-                    if (target != null) {
-                        String name = "Team" + (char) ('A' + random.nextInt(4)) + " Edited" + target.id();
-                        command("edit " + (index + 1) + " n/" + name);
-                        replace(new Member(target.id(), name, target.tags()));
-                        changesData = true;
-                    }
-                }
-                case 10 -> {
-                    if (target != null) {
-                        command("tag " + (index + 1) + " t/" + tag);
-                        changeTag(target, tag, true);
-                        changesData = true;
-                    }
-                }
-                case 11 -> {
-                    if (target != null) {
-                        boolean add = random.nextBoolean();
-                        command((add ? "tagall" : "untagall") + " t/" + tag);
-                        for (Member member : displayed) {
-                            changeTag(member, tag, add);
-                        }
-                        changesData = true;
-                    }
-                }
-                case 12 -> {
-                    if (target != null) {
-                        command("delete " + (index + 1));
-                        boolean confirm = random.nextBoolean();
-                        command(confirm ? "y" : "add n/Cancelled p/123 e/cancelled@example.com");
-                        if (confirm) {
-                            roster.remove(target);
-                            changesData = true;
-                        }
-                    }
-                }
-                case 13 -> {
-                    Path csv = folder.resolve("round trip.csv");
-                    command("export " + csv);
-                    assertArrayEquals(before, Files.readAllBytes(rosterFile), context(step));
-                    command("import p/\"" + csv + "\"");
-                    restrictions.clear();
-                    filterKeys.clear();
-                    selections.clear();
-                    sorted = false;
-                    changesData = true;
-                }
-                case 14 -> {
-                    history.add("restart");
-                    restart();
-                }
-                case 15 -> {
-                    history.add("invalid: edit 0 p/123");
-                    assertThrows(ParseException.class, () -> logic.execute("edit 0 p/123"), context(step));
-                }
-                case 16 -> {
-                    String renamed = "Group" + (Integer.parseInt(tag.substring(5)) + 1) % 4;
-                    List<Member> targets = roster.stream().filter(member -> member.tags().contains(tag)).toList();
-                    if (targets.isEmpty()) {
-                        assertThrows(CommandException.class, () ->
-                                logic.execute("renametag t/" + tag + " t/" + renamed));
-                    } else {
-                        command("renametag t/" + tag + " t/" + renamed);
-                        for (Member member : targets) {
-                            Set<String> tags = new HashSet<>(member.tags());
-                            tags.remove(tag);
-                            tags.add(renamed);
-                            replace(new Member(member.id(), member.name(), tags));
-                        }
-                        changesData = true;
-                    }
-                }
-                case 17 -> {
-                    if (random.nextInt(5) == 0) {
-                        command("clear");
-                        roster.clear();
-                        restrictions.clear();
-                        filterKeys.clear();
-                        selections.clear();
-                        changesData = true;
-                    }
-                }
-                case 18 -> {
-                    if (target != null) {
-                        command("edit " + (index + 1) + " t/");
-                        replace(new Member(target.id(), target.name(), Set.of()));
-                        changesData = true;
-                    }
-                }
-                case 19 -> {
-                    if (random.nextBoolean()) {
-                        history.add("click: remove all show selections");
-                        logic.clearShowSelections();
-                        selections.clear();
-                    } else if (!restrictions.isEmpty()) {
-                        int removed = random.nextInt(restrictions.size());
-                        history.add("click: remove filter " + removed);
-                        model.removeActiveFilter(model.getActiveFilters().get(removed));
-                        restrictions.remove(removed);
-                        filterKeys.remove(removed);
-                    }
-                }
+            return new StepInput(displayed, index, target, tag, before, step);
+        }
+
+        private Change performOperation(int operation, StepInput input) throws Exception {
+            return switch (operation) {
+                case 0, 1, 2 -> addMember(input);
+                case 3 -> listMembers();
+                case 4 -> sortMembers();
+                case 5 -> findByName();
+                case 6 -> findByEmail();
+                case 7 -> filterByTag(input);
+                case 8 -> showMembers(input);
+                case 9 -> editName(input);
+                case 10 -> tagMember(input);
+                case 11 -> updateDisplayedTags(input);
+                case 12 -> answerDeletion(input);
+                case 13 -> roundTripCsv(input);
+                case 14 -> restartSession();
+                case 15 -> rejectInvalidIndex(input);
+                case 16 -> renameTag(input);
+                case 17 -> clearRoster();
+                case 18 -> clearMemberTags(input);
+                case 19 -> removeRestriction();
                 default -> throw new AssertionError("Unknown generated operation");
+            };
+        }
+
+        private Change addMember(StepInput input) throws Exception {
+            String tag = input.tag();
+            int id = nextId++;
+            Member member = new Member(id, "Team" + (char) ('A' + random.nextInt(4)) + " Member" + id,
+                    Set.of(tag));
+            command("add n/" + member.name() + " p/" + (100000 + id) + " e/" + member.getEmail() + " t/" + tag);
+            roster.add(member);
+            resetFilters();
+            return Change.APPLIED;
+        }
+
+        private Change listMembers() throws Exception {
+            command("list");
+            resetFilters();
+            isNameSortingEnabled = false;
+            return Change.NONE;
+        }
+
+        private Change sortMembers() throws Exception {
+            command("sort");
+            isNameSortingEnabled = true;
+            return Change.NONE;
+        }
+
+        private Change findByName() throws Exception {
+            String query = "Team" + (char) ('A' + random.nextInt(4));
+            command("find " + query);
+            filterKeys.add("name:" + query);
+            restrictions.add(member -> member.name().toLowerCase(Locale.ROOT)
+                    .contains(query.toLowerCase(Locale.ROOT)));
+            return Change.NONE;
+        }
+
+        private Change findByEmail() throws Exception {
+            String query = "@group" + random.nextInt(3);
+            command("findemail " + query);
+            resetFilters();
+            filterKeys.add("email:" + query);
+            restrictions.add(member -> member.getEmail().contains(query));
+            return Change.NONE;
+        }
+
+        private Change filterByTag(StepInput input) throws Exception {
+            String tag = input.tag();
+            command("filter t/" + tag);
+            if (!filterKeys.contains("tag:" + tag)) {
+                filterKeys.add("tag:" + tag);
+                restrictions.add(member -> member.tags().contains(tag));
             }
-            String context = context(step);
+            return Change.NONE;
+        }
+
+        private Change showMembers(StepInput input) throws Exception {
+            List<Member> displayed = input.displayed();
+            int index = input.index();
+            Member target = input.target();
+            if (target != null) {
+                Member second = displayed.get(random.nextInt(displayed.size()));
+                command("show " + (index + 1) + " " + (displayed.indexOf(second) + 1));
+                Set<Integer> ids = new HashSet<>(List.of(target.id(), second.id()));
+                selections.add(ids);
+            }
+            return Change.NONE;
+        }
+
+        private Change editName(StepInput input) throws Exception {
+            int index = input.index();
+            Member target = input.target();
+            if (target != null) {
+                String name = "Team" + (char) ('A' + random.nextInt(4)) + " Edited" + target.id();
+                command("edit " + (index + 1) + " n/" + name);
+                replace(new Member(target.id(), name, target.tags()));
+                return Change.APPLIED;
+            }
+            return Change.NONE;
+        }
+
+        private Change tagMember(StepInput input) throws Exception {
+            String tag = input.tag();
+            int index = input.index();
+            Member target = input.target();
+            if (target != null) {
+                command("tag " + (index + 1) + " t/" + tag);
+                changeTag(target, tag, true);
+                return Change.APPLIED;
+            }
+            return Change.NONE;
+        }
+
+        private Change updateDisplayedTags(StepInput input) throws Exception {
+            List<Member> displayed = input.displayed();
+            String tag = input.tag();
+            Member target = input.target();
+            if (target != null) {
+                boolean shouldAddTag = random.nextBoolean();
+                command((shouldAddTag ? "tagall" : "untagall") + " t/" + tag);
+                for (Member member : displayed) {
+                    changeTag(member, tag, shouldAddTag);
+                }
+                return Change.APPLIED;
+            }
+            return Change.NONE;
+        }
+
+        private Change answerDeletion(StepInput input) throws Exception {
+            int index = input.index();
+            Member target = input.target();
+            if (target != null) {
+                command("delete " + (index + 1));
+                boolean shouldConfirmDeletion = random.nextBoolean();
+                command(shouldConfirmDeletion ? "y" : "add n/Cancelled p/123 e/cancelled@example.com");
+                if (shouldConfirmDeletion) {
+                    roster.remove(target);
+                    return Change.APPLIED;
+                }
+            }
+            return Change.NONE;
+        }
+
+        private Change roundTripCsv(StepInput input) throws Exception {
+            int step = input.step();
+            byte[] before = input.savedBefore();
+            Path csv = folder.resolve("round trip.csv");
+            command("export " + csv);
+            assertArrayEquals(before, Files.readAllBytes(rosterFile), describeStep(step));
+            command("import p/\"" + csv + "\"");
+            resetFilters();
+            isNameSortingEnabled = false;
+            return Change.APPLIED;
+        }
+
+        private Change restartSession() throws Exception {
+            history.add("restart");
+            restart();
+            return Change.NONE;
+        }
+
+        private Change rejectInvalidIndex(StepInput input) throws Exception {
+            int step = input.step();
+            history.add("invalid: edit 0 p/123");
+            assertThrows(ParseException.class, () -> logic.execute("edit 0 p/123"), describeStep(step));
+            return Change.NONE;
+        }
+
+        private Change renameTag(StepInput input) throws Exception {
+            String tag = input.tag();
+            String renamed = "Group" + (Integer.parseInt(tag.substring(5)) + 1) % 4;
+            List<Member> targets = roster.stream().filter(member -> member.tags().contains(tag)).toList();
+            if (targets.isEmpty()) {
+                assertThrows(CommandException.class, () ->
+                        logic.execute("renametag t/" + tag + " t/" + renamed));
+            } else {
+                command("renametag t/" + tag + " t/" + renamed);
+                for (Member member : targets) {
+                    Set<String> tags = new HashSet<>(member.tags());
+                    tags.remove(tag);
+                    tags.add(renamed);
+                    replace(new Member(member.id(), member.name(), tags));
+                }
+                return Change.APPLIED;
+            }
+            return Change.NONE;
+        }
+
+        private Change clearRoster() throws Exception {
+            if (random.nextInt(5) == 0) {
+                command("clear");
+                roster.clear();
+                resetFilters();
+                return Change.APPLIED;
+            }
+            return Change.NONE;
+        }
+
+        private Change clearMemberTags(StepInput input) throws Exception {
+            int index = input.index();
+            Member target = input.target();
+            if (target != null) {
+                command("edit " + (index + 1) + " t/");
+                replace(new Member(target.id(), target.name(), Set.of()));
+                return Change.APPLIED;
+            }
+            return Change.NONE;
+        }
+
+        private Change removeRestriction() throws Exception {
+            if (random.nextBoolean()) {
+                history.add("click: remove all show selections");
+                logic.clearShowSelections();
+                selections.clear();
+            } else if (!restrictions.isEmpty()) {
+                int removed = random.nextInt(restrictions.size());
+                history.add("click: remove filter " + removed);
+                model.removeActiveFilter(model.getActiveFilters().get(removed));
+                restrictions.remove(removed);
+                filterKeys.remove(removed);
+            }
+            return Change.NONE;
+        }
+
+        private void assertState(StepInput input, Change change) throws Exception {
+            int step = input.step();
+            byte[] before = input.savedBefore();
+            String context = describeStep(step);
             assertEquals(filterKeys.size(), model.getActiveFilters().size(), context);
             assertEquals(selections.size(), model.getActiveShowSelectionCount(), context);
-            assertEquals(roster.stream().map(Member::snapshot).toList(),
-                    model.getAddressBook().getPersonList().stream().map(Session::snapshot).toList(), context);
-            assertEquals(visible().stream().map(Member::snapshot).toList(),
-                    model.getFilteredPersonList().stream().map(Session::snapshot).toList(), context);
-            assertEquals(roster.stream().map(Member::snapshot).toList(), new JsonAddressBookStorage(rosterFile)
-                    .readAddressBook().orElseThrow().getPersonList().stream().map(Session::snapshot).toList(), context);
-            if (!changesData) {
+            assertEquals(roster.stream().map(Member::formatSnapshot).toList(),
+                    model.getAddressBook().getPersonList().stream().map(Session::formatSnapshot).toList(), context);
+            assertEquals(getVisibleMembers().stream().map(Member::formatSnapshot).toList(),
+                    model.getFilteredPersonList().stream().map(Session::formatSnapshot).toList(), context);
+            assertEquals(roster.stream().map(Member::formatSnapshot).toList(), new JsonAddressBookStorage(rosterFile)
+                    .readAddressBook().orElseThrow().getPersonList().stream()
+                    .map(Session::formatSnapshot).toList(), context);
+            if (change == Change.NONE) {
                 assertArrayEquals(before, Files.readAllBytes(rosterFile), context);
             }
         }
@@ -341,9 +428,9 @@ public class CommandSequenceOracleTest {
             throw new AssertionError("Reference roster member missing");
         }
 
-        private void changeTag(Member member, String tag, boolean add) {
+        private void changeTag(Member member, String tag, boolean shouldAddTag) {
             Set<String> tags = new HashSet<>(member.tags());
-            if (add) {
+            if (shouldAddTag) {
                 tags.add(tag);
             } else {
                 tags.remove(tag);
@@ -351,12 +438,12 @@ public class CommandSequenceOracleTest {
             replace(new Member(member.id(), member.name(), tags));
         }
 
-        private String context(int step) {
+        private String describeStep(int step) {
             return "seed=" + seed + ", step=" + step + ", recent commands="
                     + history.subList(Math.max(0, history.size() - 20), history.size());
         }
 
-        private static String snapshot(Person person) {
+        private static String formatSnapshot(Person person) {
             return person.getPhone().value + "|" + person.getName().fullName + "|" + person.getEmail().value + "|"
                     + person.getAddress().value + "|"
                     + String.join(",", person.getTags().stream().map(tag -> tag.tagName).sorted().toList());
