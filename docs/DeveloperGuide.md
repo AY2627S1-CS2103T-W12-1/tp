@@ -634,13 +634,16 @@ invalid arguments fail before saving. A save failure after an actual change foll
 #### Parsing {id="parsing-1"}
 
 `TagAllCommandParser` and `UntagAllCommandParser` both delegate to `BulkTagArgumentParser#parse`, so the two
-commands share one grammar and one set of error messages. It tokenizes only `t/` and accepts exactly one tag of
-1 to 30 ASCII letters or digits. Surrounding spaces are ignored.
+commands share one grammar and one set of error messages. It accepts exactly one tag of
+1 to 30 ASCII letters or digits. Surrounding spaces are ignored. `tag` and `untag` use the same method for
+their tag argument.
 
-* Text before `t/`, or a missing `t/`, reports invalid command format with the calling command's usage.
+* Text before `t/`, a missing `t/`, or any `n/`, `p/`, `e/`, or `a/` prefix reports invalid command format
+  with the calling command's usage. These prefixes are tokenized only so that they are not read as part of
+  the tag.
 * An empty tag reports `Tag cannot be empty.`
 * More than one `t/` reports `Only one tag can be applied per command.`
-* Other invalid tags, including internal spaces and other prefixes after the tag, report the tag-format message.
+* Other invalid tags, including internal spaces and unknown prefixes such as `x/`, report the tag-format message.
 
 #### Execution {id="execution-1"}
 
@@ -685,8 +688,9 @@ memory and the previous saved file is unchanged.
 
 `renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for every member who has it.
 
-`RenameTagCommandParser` tokenizes only `t/` and requires exactly two values. A different count, or text
-before the first `t/`, reports invalid command format with the `renametag` usage. Each value is validated by
+`RenameTagCommandParser` reads the `t/` values with `BulkTagArgumentParser#parseTagValues` and requires
+exactly two. A different count, text before the first `t/`, or an `n/`, `p/`, `e/`, or `a/` prefix reports
+invalid command format with the `renametag` usage. Each value is validated by
 `BulkTagArgumentParser#parseTagName`, so empty and invalid tags report the same messages as `tagall` and
 `untagall`. Identical tags report `The new tag must be different from the current tag.`
 
