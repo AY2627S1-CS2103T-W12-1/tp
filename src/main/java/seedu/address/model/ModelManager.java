@@ -127,13 +127,20 @@ public class ModelManager implements Model {
         return sortedPersons;
     }
 
+    /** Orders names without changing the stored relative order of members whose normalized names match. */
     @Override
     public void setNameSorting(boolean enabled) {
         sortedPersons.setComparator(enabled
                 ? (first, second) -> {
                     String firstName = first.getName().fullName.trim().replaceAll(" +", " ");
                     String secondName = second.getName().fullName.trim().replaceAll(" +", " ");
-                    return firstName.compareToIgnoreCase(secondName);
+                    int nameComparison = firstName.compareToIgnoreCase(secondName);
+                    if (nameComparison != 0) {
+                        return nameComparison;
+                    }
+                    // SortedList reinserts replacements; an explicit tie-breaker keeps their displayed numbers stable.
+                    List<Person> storedPersons = addressBook.getPersonList();
+                    return Integer.compare(storedPersons.indexOf(first), storedPersons.indexOf(second));
                 }
                 : null);
     }
