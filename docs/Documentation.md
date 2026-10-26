@@ -1,6 +1,6 @@
 ---
 title: Documentation guide
-pageNav: 3
+pageNav: 6
 ---
 
 # Documentation guide
@@ -27,8 +27,9 @@ If a shared layout or site configuration change does not appear, restart the pre
 
 `npm run build` starts from a clean output directory and verifies every documentation page,
 local link, and section target. A missing page or broken internal link fails the build.
-Published release-note Markdown files keep their original checksums; legacy heading aliases
-for those files are configured in `site.json` and added by `_markbind/plugins/legacyAnchors.js`.
+When updating published release notes or screenshots, refresh the matching release assets and SHA-256 manifest
+while preserving the executable and its original validation history. Legacy heading aliases for release notes
+are configured in `site.json` and added by `_markbind/plugins/legacyAnchors.js`.
 For other pages, preserve explicit heading IDs when editing headings so existing bookmarks keep working.
 
 Before submitting changes, run this command from `docs/`:
@@ -59,6 +60,17 @@ Keep `package.json` and `package-lock.json` together when updating dependencies.
 * Preview the User Guide, Developer Guide, and navigation at both desktop and phone widths after layout changes.
 * IntelliJ users can enable [soft wrapping for Markdown files](https://se-education.org/guides/tutorials/intellijUsefulSettings.html#enabling-soft-wrapping)
   to make long paragraphs easier to edit.
+
+### Application screenshots
+
+Use a **1600 × 1200** white canvas for application screenshots, with a centered window, proportional
+scaling, and the same soft shadow. Keep the complete title bar and status bar visible; do not stretch
+the application window to fill the canvas. Keep original captures alongside their framed presentations.
+
+The framing recipe is in `docs/scripts/release-gallery-frames.json` and
+`docs/scripts/release-gallery-frames.html`. Save rendered assets as PNG files, check their dimensions,
+and update the release checksum manifest whenever a published asset changes. The website's release
+archive and the corresponding GitHub release must contain matching files.
 
 ## Publishing the site
 

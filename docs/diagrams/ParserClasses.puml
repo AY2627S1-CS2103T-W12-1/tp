@@ -32,7 +32,6 @@ ArgumentTokenizer .left.> ArgumentMultimap
 XYZCommandParser ..> CliSyntax
 CliSyntax ..> Prefix
 XYZCommandParser ..> ParserUtil
-ParserUtil .down.> Prefix
 ArgumentTokenizer .down.> Prefix
 XYZCommand -up-|> Command
 XYZCommandParser ..> PrefixValidator
@@ -41,13 +40,4 @@ PrefixValidator ..> CliSyntax
 BulkTagArgumentParser ..> ArgumentTokenizer
 BulkTagArgumentParser ..> ArgumentMultimap
 
-note bottom of PrefixValidator
-Used by AddCommandParser
-and EditCommandParser.
-end note
-note bottom of BulkTagArgumentParser
-Used by TagAllCommandParser,
-UntagAllCommandParser and
-RenameTagCommandParser.
-end note
 @enduml

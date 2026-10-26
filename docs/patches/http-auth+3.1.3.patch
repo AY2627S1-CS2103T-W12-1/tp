@@ -1,0 +1,8 @@
+diff --git a/node_modules/http-auth/src/auth/digest.js b/node_modules/http-auth/src/auth/digest.js
+index f06b252..922cc69 100644
+--- a/node_modules/http-auth/src/auth/digest.js
++++ b/node_modules/http-auth/src/auth/digest.js
+@@ -9,2 +9,2 @@
+ // Unique id.
+-const uuid = require('uuid');
++const { v4: uuid } = require('uuid');

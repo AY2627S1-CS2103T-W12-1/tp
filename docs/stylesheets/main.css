@@ -43,23 +43,44 @@ mark {
   border-radius: 20px;
 }
 
-/* Layout containers */
+/* Shared documentation layout: a readable article with compact chapter navigation. */
+:root {
+  --documentation-width: 1680px;
+  --documentation-border: #e2e8f0;
+  --documentation-muted: #64748b;
+}
+
+header .navbar {
+  max-width: var(--documentation-width);
+  margin-inline: auto;
+}
+
+header {
+  background: #212529;
+}
 
 #flex-body {
-  display: flex;
-  flex: 1;
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr) 300px;
   align-items: start;
+  column-gap: 32px;
+  width: 100%;
+  max-width: var(--documentation-width);
+  margin-inline: auto;
+  padding: 24px;
+}
+
+#flex-body:not(:has(#mb-page-nav)) {
+  grid-template-columns: 248px minmax(0, 1fr);
 }
 
 #content-wrapper {
-  flex: 1;
-  margin: 0 auto;
   min-width: 0;
+  width: 100%;
   max-width: 1000px;
-  overflow-x: auto;
-  padding: 0.8rem 20px 0 20px;
-  transition: 0.4s;
-  -webkit-transition: 0.4s;
+  padding: 0 0 48px;
+  color: #263244;
+  line-height: 1.7;
 }
 
 #site-nav,
@@ -67,78 +88,73 @@ mark {
   display: flex;
   flex-direction: column;
   position: sticky;
-  top: var(--sticky-header-height);
-  flex: 0 0 auto;
-  max-width: 300px;
-  max-height: calc(100vh - var(--sticky-header-height));
-  width: 300px;
+  top: calc(var(--sticky-header-height, 64px) + 24px);
+  min-height: 0;
+  max-height: calc(100vh - var(--sticky-header-height, 64px) - 48px);
+  width: 100%;
+  font-size: 0.875rem;
 }
 
 #site-nav {
-  border-right: 1px solid lightgrey;
-  padding-bottom: 20px;
-  z-index: 999;
+  padding-right: 12px;
+  border-right: 1px solid var(--documentation-border);
 }
 
 .site-nav-top {
-  margin: 0.8rem 0;
-  padding: 0 12px 12px 12px;
+  margin: 0 0 12px;
+  padding: 0 12px;
+}
+
+.navigation-label {
+  color: var(--documentation-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .nav-component {
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 
+/* Retain the original full, indented page outline and its scrollable desktop panel. */
 #page-nav {
+  top: var(--sticky-header-height, 64px);
+  max-height: calc(100vh - var(--sticky-header-height, 64px));
+  padding: 0;
   border-left: 1px solid lightgrey;
+  font-size: 1rem;
 }
 
-.compact-site-nav {
-  display: none;
-  padding: 0.5rem 20px;
-}
-
-.compact-site-nav summary, #page-nav summary {
-  cursor: pointer;
-  font-weight: bold;
-}
-
-#page-nav summary {
+#page-nav:not(:has(#mb-page-nav)) {
   display: none;
 }
 
-/* Native details adds an inner wrapper, so constrain the panel that actually scrolls. */
-@media screen and (min-width: 1300px) {
-  #page-nav .nav-component {
-    max-height: calc(100vh - var(--sticky-header-height));
-  }
-}
-
+/* Preserve the full outline in MarkBind's mobile navigation menu. */
 @media screen and (max-width: 1299.98px) {
   #flex-body {
-    flex-wrap: wrap;
+    grid-template-columns: 224px minmax(0, 1fr);
+    column-gap: 24px;
   }
 
   #page-nav {
-    position: static;
-    order: -1;
-    flex-basis: 100%;
-    max-width: none;
-    max-height: none;
-    width: 100%;
-    border-left: 0;
-    padding: 0.5rem 20px;
-  }
-
-  #page-nav summary {
-    display: list-item;
+    display: none;
   }
 }
 
-/* Bootstrap medium(md) responsive breakpoint */
 @media screen and (max-width: 991.98px) {
-  .compact-site-nav {
+  /* The mobile Site map already contains these links. Keep the header to brand and search. */
+  header .navbar .navbar-default {
+    display: none;
+  }
+
+  #flex-body,
+  #flex-body:not(:has(#mb-page-nav)) {
     display: block;
+    padding: 24px;
   }
 
   #site-nav {
@@ -146,28 +162,206 @@ mark {
   }
 }
 
-/* Bootstrap small(sm) responsive breakpoint */
-@media (max-width: 767.98px) {
+@media screen and (max-width: 575.98px) {
+  header .navbar .navbar-form .form-control {
+    width: min(200px, 45vw);
+  }
+
+  #flex-body,
+  #flex-body:not(:has(#mb-page-nav)) {
+    padding: 20px 16px;
+  }
+
   .indented {
     padding-left: 10px;
   }
+}
 
-  #content-wrapper {
-    padding: 0 10px;
+/* Keep spacing, tables and code consistent across product and development pages. */
+#content-wrapper h1 {
+  margin: 0 0 20px;
+  color: #172033;
+  font-size: 2.1rem;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+#content-wrapper h2 {
+  margin: 44px 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--documentation-border);
+  font-size: 1.5rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+#content-wrapper h3 {
+  margin: 30px 0 14px;
+  font-size: 1.2rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+#content-wrapper h4 {
+  margin: 24px 0 12px;
+  font-size: 1.05rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+#content-wrapper h2,
+#content-wrapper h3,
+#content-wrapper h4,
+#content-wrapper h5,
+#content-wrapper h6 {
+  color: #9a4a10;
+}
+
+#content-wrapper p,
+#content-wrapper ul,
+#content-wrapper ol {
+  margin-bottom: 16px;
+}
+
+#content-wrapper li + li {
+  margin-top: 5px;
+}
+
+#content-wrapper .table-responsive {
+  margin: 20px 0 28px;
+}
+
+#content-wrapper table {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+#content-wrapper th,
+#content-wrapper td {
+  padding: 12px 14px;
+  border-color: var(--documentation-border);
+  vertical-align: top;
+}
+
+#content-wrapper th {
+  background: #f8fafc;
+  color: #263244;
+  font-weight: 650;
+}
+
+#content-wrapper :not(pre) > code {
+  overflow-wrap: anywhere;
+}
+
+#content-wrapper pre {
+  max-width: 100%;
+  padding: 16px 20px;
+  border: 1px solid var(--documentation-border);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+#content-wrapper pre > code.hljs {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+#content-wrapper details {
+  margin: 24px 0;
+  padding: 16px 20px;
+  border: 1px solid var(--documentation-border);
+  border-radius: 8px;
+}
+
+#content-wrapper details summary {
+  cursor: pointer;
+  color: #334155;
+  font-weight: 600;
+}
+
+#content-wrapper details[open] summary {
+  margin-bottom: 18px;
+}
+
+#content-wrapper img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Reserve each screenshot's canvas while it loads, keeping section links in place. */
+#content-wrapper img[src$="images/Ui.png"],
+#content-wrapper img[src$="images/user-guide/interface.png"],
+#content-wrapper img[src$="images/user-guide/validation.png"],
+#content-wrapper img[src*="/framed-"] {
+  width: 100%;
+  max-width: 960px;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+}
+
+#content-wrapper p:has(> a > img),
+#content-wrapper p:has(> img) {
+  margin-block: 24px;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.team-member {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--documentation-border);
+  border-radius: 10px;
+}
+
+#content-wrapper .team-member h3 {
+  margin-top: 0;
+}
+
+#content-wrapper .team-member img {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+@media screen and (max-width: 575.98px) {
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  #content-wrapper h1 {
+    font-size: 1.8rem;
   }
 }
 
-/* Bootstrap extra small(xs) responsive breakpoint */
-@media screen and (max-width: 575.98px) {
-  #site-nav {
-    display: none;
-  }
+footer {
+  padding: 24px;
+  border-top: 1px solid var(--documentation-border);
+  color: var(--documentation-muted);
+  font-size: 0.8rem;
 }
 
 /* Hide site navigation when printing */
 @media print {
-  .compact-site-nav {
-    display: none;
+  #flex-body,
+  #flex-body:not(:has(#mb-page-nav)) {
+    display: block;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  #content-wrapper {
+    max-width: none;
+    padding: 0;
   }
 
   #site-nav {
@@ -201,20 +395,21 @@ mark {
       font-size: 0.65rem !important;
   }
   img {
-      zoom: 0.8;  /* might not work on some browsers */
+      max-width: 100%;
+      height: auto;
   }
 }
 
-h2,
-h3,
-h4,
-h5,
-h6 {
-  color: #e46c0a;
-}
-
-/* Keep existing diagrams responsive and retain keyboard access without changing the starter design. */
-#content-wrapper img { max-width: 100%; height: auto; }
+/* Keep keyboard navigation and existing section bookmarks accessible. */
 .skip-link { position: fixed; top: -100px; left: 12px; z-index: 1100; padding: 8px 12px; background: white; }
 .skip-link:focus { top: 8px; }
 .legacy-anchor { scroll-margin-top: calc(var(--sticky-header-height, 64px) + 16px); }
+
+/* Make the generated navigation's keyboard focus visible. */
+.toggle-site-nav-button:focus-visible,
+.toggle-page-nav-button:focus-visible,
+.site-nav-dropdown-btn-icon:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 4px;
+  border-radius: 2px;
+}
