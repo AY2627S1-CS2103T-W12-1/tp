@@ -7,92 +7,49 @@ participant ":LogicManager" as LogicManager LOGIC_COLOR
 participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
 participant ":DeleteCommandParser" as DeleteCommandParser LOGIC_COLOR
 participant "d:DeleteCommand" as DeleteCommand LOGIC_COLOR
-participant "c:ConfirmDeleteCommand" as ConfirmDeleteCommand LOGIC_COLOR
-participant "r:CommandResult" as CommandResult LOGIC_COLOR
 end box
-
 box Model MODEL_COLOR_T1
 participant "m:Model" as Model MODEL_COLOR
 end box
 
 [-> LogicManager : execute("delete 1")
 activate LogicManager
-
 LogicManager -> AddressBookParser : parseCommand("delete 1")
 activate AddressBookParser
-
 create DeleteCommandParser
-AddressBookParser -> DeleteCommandParser
+AddressBookParser -> DeleteCommandParser : DeleteCommandParser()
 activate DeleteCommandParser
-
 DeleteCommandParser --> AddressBookParser
 deactivate DeleteCommandParser
-
 AddressBookParser -> DeleteCommandParser : parse("1")
 activate DeleteCommandParser
-
 create DeleteCommand
-DeleteCommandParser -> DeleteCommand
+DeleteCommandParser -> DeleteCommand : DeleteCommand(index)
 activate DeleteCommand
-
-DeleteCommand --> DeleteCommandParser :
+DeleteCommand --> DeleteCommandParser
 deactivate DeleteCommand
-
 DeleteCommandParser --> AddressBookParser : d
 deactivate DeleteCommandParser
-'Hidden arrow to position the destroy marker below the end of the activation bar.
-DeleteCommandParser -[hidden]-> AddressBookParser
-destroy DeleteCommandParser
-
 AddressBookParser --> LogicManager : d
 deactivate AddressBookParser
-
 LogicManager -> DeleteCommand : execute(m)
 activate DeleteCommand
-
 DeleteCommand -> Model : getFilteredPersonList()
 activate Model
-
-Model --> DeleteCommand : personToDelete
+Model --> DeleteCommand : displayed members
 deactivate Model
-
-create ConfirmDeleteCommand
-DeleteCommand -> ConfirmDeleteCommand : personToDelete
-activate ConfirmDeleteCommand
-
-ConfirmDeleteCommand --> DeleteCommand : c
-deactivate ConfirmDeleteCommand
-
-create CommandResult
-DeleteCommand -> CommandResult : prompt, c
-activate CommandResult
-
-CommandResult --> DeleteCommand
-deactivate CommandResult
-
-DeleteCommand --> LogicManager : r
+note over DeleteCommand
+Validate index; create c:ConfirmDeleteCommand
+for the selected member.
+end note
+DeleteCommand --> LogicManager : CommandResult(prompt, c)
 deactivate DeleteCommand
-
-LogicManager -> LogicManager : store c as pending deletion
-
-[<--LogicManager : r
+LogicManager -> DeleteCommand : isReadOnly()
+activate DeleteCommand
+DeleteCommand --> LogicManager : true
+deactivate DeleteCommand
+note over LogicManager: Store c as pending deletion.
+[<-- LogicManager : CommandResult(prompt, c)
 deactivate LogicManager
 
-[-> LogicManager : execute("y")
-activate LogicManager
-
-LogicManager -> ConfirmDeleteCommand : execute(m)
-activate ConfirmDeleteCommand
-
-ConfirmDeleteCommand -> Model : deletePerson(personToDelete)
-activate Model
-
-Model --> ConfirmDeleteCommand
-deactivate Model
-
-ConfirmDeleteCommand --> LogicManager : result
-deactivate ConfirmDeleteCommand
-
-[<--LogicManager
-deactivate LogicManager
 @enduml

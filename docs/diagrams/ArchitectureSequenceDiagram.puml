@@ -17,7 +17,7 @@ activate logic LOGIC_COLOR
 logic -[LOGIC_COLOR_T4]> model : getFilteredPersonList()
 activate model MODEL_COLOR
 
-model -[MODEL_COLOR_T4]-> logic
+model --[MODEL_COLOR_T4]> logic
 deactivate model
 
 logic --[LOGIC_COLOR_T4]> ui : confirmation prompt
@@ -35,7 +35,12 @@ activate logic LOGIC_COLOR
 logic -[LOGIC_COLOR_T4]> model : deletePerson(p)
 activate model MODEL_COLOR
 
-model -[MODEL_COLOR_T4]-> logic
+model --[MODEL_COLOR_T4]> logic
+deactivate model
+
+logic -[LOGIC_COLOR_T4]> model : getAddressBook()
+activate model MODEL_COLOR
+model --[MODEL_COLOR_T4]> logic : addressBook
 deactivate model
 
 logic -[LOGIC_COLOR_T4]> storage : saveAddressBook(addressBook)

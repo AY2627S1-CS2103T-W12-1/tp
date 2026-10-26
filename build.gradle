@@ -63,7 +63,7 @@ task coverage(type: JacocoReport) {
 
 // Keep development natives separate from the cross-platform release dependencies. Intel and ARM
 // macOS libraries have identical names and cannot simply be merged into the same fat JAR.
-String javaFxVersion = '17.0.7'
+String javaFxVersion = '17.0.21'
 boolean isMacArm64 = System.getProperty('os.name').toLowerCase().contains('mac')
         && (System.getProperty('os.arch') in ['aarch64', 'arm64'])
 
@@ -95,8 +95,9 @@ dependencies {
         }
     }
 
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.7.0'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.4'
+    implementation platform('com.fasterxml.jackson:jackson-bom:2.22.4')
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'org.apache.commons:commons-csv:1.14.1'
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:${jUnitVersion}"

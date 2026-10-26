@@ -40,7 +40,8 @@ public class UntagCommandTest {
         assertEquals(List.of(ALICE, DANIEL), model.getFilteredPersonList());
         assertTrue(model.getAddressBook().getPersonList().contains(updatedBenson));
         assertSame(hidden, model.getAddressBook().getPersonList().get(2));
-        assertEquals(String.format(UntagCommand.MESSAGE_SUCCESS, "friends", 2, Messages.format(updatedBenson)),
+        assertEquals(String.format(UntagCommand.MESSAGE_SUCCESS, "friends", 2,
+                "Name: " + updatedBenson.getName() + "\nTags: owesMoney"),
                 feedback);
     }
 

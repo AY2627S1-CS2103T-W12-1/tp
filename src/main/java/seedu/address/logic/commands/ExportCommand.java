@@ -8,7 +8,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -31,6 +33,8 @@ public class ExportCommand extends Command {
     public static final String MESSAGE_FAILURE = "Could not export members to %1$s: %2$s";
     public static final String MESSAGE_PROTECTED_DESTINATION =
             "The export destination is used by TrackCall. Choose a different file.";
+
+    private static final Logger logger = LogsCenter.getLogger(ExportCommand.class);
 
     private final Path filePath;
 
@@ -78,8 +82,10 @@ public class ExportCommand extends Command {
             }
             CsvAddressBookExporter.export(people, targetPath);
         } catch (IOException e) {
+            logger.warning("CSV export failed: " + e.getMessage());
             throw new CommandException(String.format(MESSAGE_FAILURE, targetPath, e.getMessage()), e);
         }
+        logger.info(String.format("CSV export completed: %d member(s) written", people.size()));
         return new CommandResult(people.size() == 1 ? String.format(MESSAGE_SINGLE, targetPath)
                 : String.format(MESSAGE_SUCCESS, people.size(), targetPath));
     }
