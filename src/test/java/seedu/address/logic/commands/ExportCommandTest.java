@@ -25,6 +25,7 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.person.Person;
+import seedu.address.storage.AppInstanceLock;
 import seedu.address.testutil.PersonBuilder;
 
 public class ExportCommandTest {
@@ -109,6 +110,14 @@ public class ExportCommandTest {
 
         assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
         assertFalse(Files.exists(roster));
+    }
+
+    @Test
+    public void execute_applicationLock_rejectedWithoutReplacingLockFile() {
+        Path destination = FileUtil.getHomeFolder().resolve(AppInstanceLock.FILE_NAME);
+        CommandException failure = assertThrows(CommandException.class, () ->
+                new ExportCommand(destination).execute(new ModelManager()));
+        assertTrue(failure.getMessage().contains(ExportCommand.MESSAGE_PROTECTED_DESTINATION));
     }
 
     @Test

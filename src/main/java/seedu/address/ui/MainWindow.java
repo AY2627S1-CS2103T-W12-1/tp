@@ -323,7 +323,7 @@ public class MainWindow extends UiPart<Stage> {
         personListPanel.clearSelection();
         try {
             CommandResult commandResult = logic.execute(commandText);
-            logger.info("Result: " + commandResult.getFeedbackToUser());
+            logger.info("Command completed successfully");
             resultDisplay.setFeedbackToUser(hideContactDetails(commandResult.getFeedbackToUser()));
             if (logic.isAwaitingConfirmation()) {
                 pendingDeletionPrompt = commandResult.getFeedbackToUser();
@@ -339,7 +339,7 @@ public class MainWindow extends UiPart<Stage> {
 
             return commandResult;
         } catch (CommandException | ParseException e) {
-            logger.info("An error occurred while executing command: " + commandText);
+            logger.info("Command rejected or could not be saved");
             resultDisplay.setFeedbackToUser(e.getMessage());
             throw e;
         } finally {
