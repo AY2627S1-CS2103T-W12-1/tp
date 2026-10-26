@@ -17,12 +17,14 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.person.Person;
+import seedu.address.storage.AppInstanceLock;
 import seedu.address.testutil.PersonBuilder;
 
 public class ExportCommandTest {
@@ -31,6 +33,14 @@ public class ExportCommandTest {
     public Path tempDir;
 
     private final AddressBookParser parser = new AddressBookParser();
+
+    @Test
+    public void execute_applicationLock_rejectedWithoutReplacingLockFile() {
+        Path destination = FileUtil.getHomeFolder().resolve(AppInstanceLock.FILE_NAME);
+        CommandException failure = assertThrows(CommandException.class, () ->
+                new ExportCommand(destination).execute(new ModelManager()));
+        assertTrue(failure.getMessage().contains(ExportCommand.MESSAGE_PROTECTED_DESTINATION));
+    }
 
     @Test
     public void execute_filteredList_exportsAllPeopleAndPreservesModel() throws Exception {

@@ -8,7 +8,7 @@ import java.util.Optional;
 public enum CommandHelp {
     LIST("Browse members", "list", "Show the full roster", "list", "list",
             "Displays every member and their current list number.",
-            "The complete roster is shown, including members hidden by a previous find, findemail or filter.",
+            "Shows the complete roster in stored order, clearing searches, tag filters, show selections and sorting.",
             "Use list before choosing a member by number. List numbers can change after an edit or deletion.",
             "Use the lowercase command list with no extra arguments."),
     SHOW("Browse members", "show", "Show only selected members", "show INDEX [MORE_INDEXES]...", "show 1 3",
@@ -71,7 +71,8 @@ public enum CommandHelp {
             "Updates the member at a displayed list number. Fields you leave out stay unchanged.",
             "Changes member 1's phone and replaces their tags with committee and year1, "
                     + "keeping the active search and tag filters.",
-            "Give the full tag set you want to keep. Use edit 1 t/ to remove all tags from member 1.",
+            "Give the full tag set you want to keep. Use edit 1 t/ to remove all tags, "
+                    + "or edit 1 a/ to clear the address.",
             "Use a current positive list number and supply at least one field. Invalid values or duplicate contact "
                     + "details are rejected. If saving fails, the edit remains in this session and the command box "
                     + "clears; follow the recovery guidance before exiting."),
@@ -105,7 +106,7 @@ public enum CommandHelp {
                     + "recovery guidance before exiting."),
     UNTAG("Manage members", "untag", "Untag one member", "untag INDEX t/TAG", "untag 1 t/friends",
             "Removes one tag from the member at a displayed list number while retaining their other tags.",
-            "Removes friends from member 1 and shows their updated details after saving.",
+            "Removes friends from member 1 and shows their name and updated tags after saving.",
             "Check the current list number first. Other tags, searches, filters and sorting remain in place. "
                     + "Removing a tag used by an active filter may hide the member from the current list.",
             "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
@@ -131,21 +132,25 @@ public enum CommandHelp {
                     + "overwritten. Tags are sorted and joined with semicolons. The roster and current search "
                     + "stay unchanged.",
             "Use a valid output path whose parent directory exists and is writable. "
-                    + "The active roster, preferences, and running JAR cannot be export destinations. "
+                    + "The active roster, preferences, application lock, and running JAR "
+                    + "cannot be export destinations. "
                     + "An invalid path or a failed write reports an error and preserves any previous export."),
     IMPORT("Manage members", "import", "Import members from CSV", "import p/FILE_PATH",
             "import p/\"data/member list.csv\"",
             "Validates a UTF-8 CSV file and appends member records without overwriting existing members.",
             "Imports valid new members, skips exact contact-detail duplicates and restores the complete roster.",
-            "The header must be name,phone,email,address,tags. Quote paths containing whitespace. "
-                    + "Packaged builds read files only inside the JAR folder. Tags in the final column are "
+            "The header must contain name, phone, email, address and tags exactly once, in any order. "
+                    + "Quote paths containing whitespace. "
+                    + "Packaged builds read files only inside the JAR folder. Values in the tags column are "
                     + "separated with semicolons.",
             "Supply one readable .csv path after p/. Invalid files do not change the roster. If saving fails, the "
-                    + "imported batch remains in this session and can be saved by a later data-changing command."),
+                    + "imported batch remains unsaved in this session. Fix storage, then reapply an existing "
+                    + "field with edit "
+                    + "to save it; use clear for an empty roster. Exiting before a successful retry loses the batch."),
     DELETE("Remove records", "delete", "Delete one member", "delete INDEX", "delete 2",
             "Permanently removes the member at a displayed list number after you confirm the deletion.",
             "Asks you to confirm deleting the second member in the current list. Typing y deletes them and shows "
-                    + "their details after saving.",
+                    + "their name and tags after saving.",
             "Search first if needed, then check the number and contact details. The confirmation names the member; "
                     + "any input other than y cancels without running that input. There is no undo after confirming.",
             "Supply one positive number shown in the current list. Zero, negative numbers and missing members "
