@@ -1,0 +1,10 @@
+diff --git a/node_modules/cheerio/lib/api/css.js b/node_modules/cheerio/lib/api/css.js
+index 3e0ee82..1287280 100644
+--- a/node_modules/cheerio/lib/api/css.js
++++ b/node_modules/cheerio/lib/api/css.js
+@@ -1,4 +1,4 @@
+ var domEach = require('../utils').domEach,
+     _ = {
+-      pick: require('lodash.pick'),
++      pick: require('lodash.pick').pick,
+     };

@@ -22,6 +22,7 @@
         "devops-guide": "DevOps guide",
         "build-automation": "Build automation",
         "continuous-integration-ci": "Continuous integration (CI)",
+        "documentation-dependencies": "Documentation dependencies",
         "code-coverage": "Code coverage",
         "repository-wide-checks": "Repository-wide checks",
         "making-a-release": "Making a release"
