@@ -441,6 +441,35 @@ public class MainWindowTest {
     }
 
     @Test
+    public void copyAddressButton_onlyEnabledWhenSelectedMemberHasAddress() throws Exception {
+        onJavaFxThread(() -> {
+            ListView<?> list = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+            Label address = (Label) window.getPrimaryStage().getScene().lookup("#address");
+            Button copyAddress = (Button) window.getPrimaryStage().getScene().lookup("#copyAddressButton");
+            Button copyPhone = (Button) window.getPrimaryStage().getScene().lookup("#copyPhoneButton");
+
+            assertTrue(copyAddress.isDisabled());
+            enter("add n/Carol Wong p/90000002 e/carol@example.com");
+            list.getSelectionModel().select(2);
+            assertEquals("(none)", address.getText());
+            assertTrue(copyAddress.isDisabled());
+
+            copyPhone.fire();
+            String previousClipboardText = Clipboard.getSystemClipboard().getString();
+            assertEquals("90000002", previousClipboardText);
+            copyAddress.fire();
+            assertEquals(previousClipboardText, Clipboard.getSystemClipboard().getString());
+
+            enter("edit 3 a/123 Test Road");
+            list.getSelectionModel().select(2);
+            assertEquals("123 Test Road", address.getText());
+            assertFalse(copyAddress.isDisabled());
+            copyAddress.fire();
+            assertEquals("123 Test Road", Clipboard.getSystemClipboard().getString());
+        });
+    }
+
+    @Test
     public void enter_tagWithDetailsHidden_reportsOnlyNameAndTagsAndSavesMember() throws Exception {
         Person original = new PersonBuilder().withName("Alice Tan").withPhone("90000123")
                 .withEmail("alice@example.com").withAddress("12 Test Road").withTags("zebra", "friends").build();
