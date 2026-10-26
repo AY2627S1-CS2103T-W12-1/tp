@@ -1,7 +1,7 @@
 ---
 layout: default.md
 title: "v1.3 release records"
-pageNav: 3
+pageNav: 6
 ---
 
 # v1.3 release records
@@ -28,9 +28,17 @@ The release was published and updated on 15 October 2026.
 | [filter-multiple.jpg](filter-multiple.jpg) | Eron’s supplied screenshot showing every active filter. |
 | [tag-group.jpg](tag-group.jpg) | Fresh capture of bulk tagging in the rebuilt app. |
 | [validation.jpg](validation.jpg) | Fresh capture of invalid phone-number feedback in the rebuilt app. |
+| [backup-recovery.png](backup-recovery.png) | Startup recovery choices for an unreadable sample roster. |
+| [bulk-untag.png](bulk-untag.png) | Removing a tag from the displayed group. |
+| [csv-export.png](csv-export.png) | Exporting the complete roster as CSV. |
+| [csv-import.png](csv-import.png) | Import results after validating a CSV file. |
+| [edit-filtered-view.png](edit-filtered-view.png) | Updating a member while retaining the filtered view. |
+| [offline-help.png](offline-help.png) | Built-in CSV import instructions. |
+| [protected-export.png](protected-export.png) | Preventing CSV export from overwriting the roster. |
+| [sort-names.png](sort-names.png) | Alphabetical sorting of displayed members. |
 
-These eight files are byte-for-byte copies of the published release assets.
-The wording and screenshot pixels are unchanged. The notes retain their public
+The original captures, notes, validation record and checksum manifest mirror the published release assets. The gallery also includes thirteen consistently framed PNG presentations added on 23 October 2026.
+All thirteen original captures and the executable are unchanged. The notes and checksum manifest include the complete feature catalogue and the framed screenshot gallery; the validation record distinguishes the original captures from their presentation derivatives. The notes retain their public
 release-image URLs; the table above links to the copies stored in Git.
 
 The executable is distributed through GitHub Releases. Its source is commit
@@ -38,15 +46,33 @@ The executable is distributed through GitHub Releases. Its source is commit
 This documentation archive was added after publication and does not change the
 release tag or executable.
 
+## Framed gallery images
+
+All thirteen gallery images use a common white canvas, centered windows, proportional scaling, and soft shadows. The originals in the table above remain available.
+
+* [framed-interface.png](framed-interface.png)
+* [framed-filter-single.png](framed-filter-single.png)
+* [framed-filter-multiple.png](framed-filter-multiple.png)
+* [framed-tag-group.png](framed-tag-group.png)
+* [framed-bulk-untag.png](framed-bulk-untag.png)
+* [framed-sort-names.png](framed-sort-names.png)
+* [framed-csv-export.png](framed-csv-export.png)
+* [framed-csv-import.png](framed-csv-import.png)
+* [framed-offline-help.png](framed-offline-help.png)
+* [framed-edit-filtered-view.png](framed-edit-filtered-view.png)
+* [framed-validation.png](framed-validation.png)
+* [framed-protected-export.png](framed-protected-export.png)
+* [framed-backup-recovery.png](framed-backup-recovery.png)
+
 ## Verify the published downloads
 
-Download all nine release assets into a new directory, then run from that directory:
+Download all thirty release assets into a new directory, then run from that directory:
 
 ```sh
 shasum -a 256 -c SHA256SUMS.txt
 ```
 
-The manifest covers the other eight assets and does not include itself. The JAR
+The manifest covers the other twenty-nine assets and does not include itself. The JAR
 must be downloaded alongside the files to check the complete manifest. The
 archive-only README is not a published asset and is not part of the manifest.
 

@@ -1,7 +1,7 @@
 ---
 layout: default.md
 title: Logging guide
-pageNav: 3
+pageNav: 6
 ---
 
 # Logging guide
