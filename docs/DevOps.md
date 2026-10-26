@@ -36,6 +36,18 @@ The following commands perform common Gradle tasks.
 
 ## Continuous integration (CI)
 
+### Documentation dependencies
+
+In `docs`, run `npm ci`, `npm test`, and `npm run build` to install the locked dependencies,
+check compatibility, and verify the generated site. `npm audit` checks the installed dependency tree.
+
+MarkBind 7.2.1 still requests older libraries with known vulnerabilities. `package.json` overrides
+select patched releases, and `patch-package` applies the small API adaptations in `docs/patches`
+during installation. These retain MarkBind's existing Cheerio and HTML parser behavior. The
+`lodash.pick` dependency is an alias for maintained Lodash; the Cheerio patch selects its `pick` function.
+Keep the overrides and patches together, and review them when upgrading MarkBind. Do not skip install
+scripts: the unpatched APIs are incompatible. CI runs the compatibility tests and builds every page.
+
 This project uses GitHub Actions for CI. The necessary workflow configuration files are in `.github/workflows`. No further setup is required.
 
 ### Code coverage
