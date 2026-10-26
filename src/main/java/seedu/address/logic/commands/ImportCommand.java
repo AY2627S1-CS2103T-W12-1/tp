@@ -8,7 +8,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -29,6 +31,8 @@ public class ImportCommand extends Command {
     public static final String MESSAGE_INVALID_FILE = "Could not import CSV: %s No members were imported.";
     public static final String MESSAGE_SAVE_FAILURE = "Could not save data to file: %s";
 
+    private static final Logger logger = LogsCenter.getLogger(ImportCommand.class);
+
     private final Path filePath;
 
     public ImportCommand(Path filePath) {
@@ -45,8 +49,10 @@ public class ImportCommand extends Command {
             resolvedPath = FileUtil.resolvePath(filePath).toAbsolutePath().normalize();
             candidates = CsvAddressBookImporter.read(resolvedPath);
         } catch (CsvImportException e) {
+            logger.warning("CSV import rejected: invalid file");
             throw new CommandException(String.format(MESSAGE_INVALID_FILE, ensureSentence(e.getMessage())), e);
         } catch (IOException e) {
+            logger.warning("CSV import failed due to an I/O error");
             throw new CommandException(String.format(MESSAGE_FAILURE, getErrorDetails(e)), e);
         }
 
@@ -65,6 +71,8 @@ public class ImportCommand extends Command {
         peopleToAdd.forEach(model::addPerson);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
         model.setNameSorting(false);
+        logger.info(String.format("CSV import processed: %d member(s) added, %d duplicate(s) skipped",
+                peopleToAdd.size(), duplicateCount));
         return new CommandResult(String.format(MESSAGE_SUCCESS, peopleToAdd.size(),
                 resolvedPath, duplicateCount));
     }

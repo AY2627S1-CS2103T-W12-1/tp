@@ -50,3 +50,45 @@ Limits
 - Postmortem notes originated in PR #144 and docs/iterations/v1.4.md. On 22 October the release
   coordinator confirmed that the team had discussed and agreed those conclusions. This is the team's
   confirmation, not a result inferred from the build. Tutor confirmation and dashboard refresh remain external.
+
+Release presentation update: 23 October 2026 (Asia/Singapore)
+- Release titles and feature summaries reformatted; numbered screenshot galleries expanded.
+- The original release tag, publication date, application source and executable are unchanged.
+- Build and test results above record the original validation; no application rebuild or full test rerun was needed for this documentation update.
+- Additional screenshots were captured from the exact published JAR with sample data on macOS ARM64 using Java 25.0.4 and a temporary jpackage launcher named TrackCallCapture.
+- The JAR inside the temporary launcher matched the published SHA-256 above. No application source, UI code or screenshot pixels were changed.
+- The temporary launcher/data path is visible in the captures. These captures do not claim manual Windows/Linux acceptance.
+- Additional screenshot assets:
+  delete-confirmation.png
+  email-search.png
+  offline-help.png
+  optional-address.png
+  partial-name.png
+  prefix-validation.png
+  rename-tag.png
+  show-selection.png
+  tag-member.png
+  untag-member.png
+
+Feature catalogue and screenshot framing update: 23 October 2026 (Asia/Singapore)
+- Added a Complete feature set section covering inherited/adapted AB3 commands alongside TrackCall additions. The What's New section still describes version-specific changes.
+- The gallery now uses thirteen framed PNG presentations on a common 1600x1200 white canvas, with proportional window scaling, centered placement and a consistent CSS shadow.
+- Original capture files are retained byte-for-byte, including the existing screenshot provenance above.
+- Framed files are presentation derivatives rendered from the original captures using HTML/CSS. Only surrounding backdrop/shadow was trimmed where necessary; application text, fields, states, title bars and status bars were retained. No application UI was generated or retouched.
+- Raw capture provenance and image-pixel statements above apply to the original filenames. The framed derivatives include the layout scaling and framing described here.
+- Framing recipe: docs/scripts/release-gallery-frames.json and release-gallery-frames.html. The manifest records original SHA-256 values and conservative window bounds.
+- The release executable, source tag, publication date and original build/test evidence remain unchanged.
+- Framed screenshot assets:
+  framed-roster-overview.png <- roster-overview.png
+  framed-active-filters.png <- active-filters.png
+  framed-selected-member.png <- selected-member.png
+  framed-partial-name.png <- partial-name.png
+  framed-email-search.png <- email-search.png
+  framed-show-selection.png <- show-selection.png
+  framed-tag-member.png <- tag-member.png
+  framed-untag-member.png <- untag-member.png
+  framed-rename-tag.png <- rename-tag.png
+  framed-optional-address.png <- optional-address.png
+  framed-delete-confirmation.png <- delete-confirmation.png
+  framed-prefix-validation.png <- prefix-validation.png
+  framed-offline-help.png <- offline-help.png

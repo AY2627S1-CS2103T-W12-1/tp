@@ -1,20 +1,16 @@
 ---
 layout: default.md
 title: DevOps guide
-pageNav: 3
+pageNav: 6
 ---
 
 # DevOps guide
-
---------------------------------------------------------------------------------------------------------------------
 
 ## Build automation
 
 This project uses Gradle for **build automation and dependency management**. **We recommend reading [this Gradle tutorial from se-edu/guides](https://se-education.org/guides/tutorials/gradle.html).**
 
-
 The following commands perform common Gradle tasks.
-
 
 * **`clean`**: Deletes the files created during the previous build tasks (e.g. files in the `build` folder).<br>
   For example: `./gradlew clean`
@@ -32,7 +28,18 @@ The following commands perform common Gradle tasks.
   * `./gradlew test`: Runs all tests.
   * `./gradlew clean test`: Cleans the project before running all tests
 
---------------------------------------------------------------------------------------------------------------------
+### Local runs and release verification
+
+Use Java 25 for build tasks and application runs. On Apple Silicon, Gradle selects the ARM JavaFX
+libraries for `run` and `test`. The portable `shadowJar` bundles both macOS architectures in separate
+folders, and `Main` selects the matching native libraries at startup. Windows and Linux use their
+bundled JavaFX libraries.
+
+A passing local Gradle run does not verify the packaged release. Build with `./gradlew shadowJar`,
+copy `build/libs/trackcall.jar` into an empty writable folder, and run `java -jar trackcall.jar` using
+Java 25. Repeat the release smoke test on Windows, Linux, and macOS, including startup, commands,
+saving, and restart. Use synthetic contacts and follow the
+[manual testing instructions](DeveloperGuide.html#appendix-instructions-for-manual-testing).
 
 ## Continuous integration (CI)
 
@@ -78,8 +85,6 @@ Any warnings or errors will be printed out to the console.
   * LINE is the line of the file where the error occurred and MESSAGE is the message explaining the error.
 
 * Check scripts must exit with a non-zero exit code if any errors occur.
-
---------------------------------------------------------------------------------------------------------------------
 
 ## Making a release
 

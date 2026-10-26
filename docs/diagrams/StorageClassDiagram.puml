@@ -8,6 +8,7 @@ package Storage as StoragePackage {
 
 Class "<<interface>>\nStorage" as Storage
 Class StorageManager
+Class AppInstanceLock
 
 package "UserPrefs Storage" #F5EFE5{
 Class JsonUserPrefsStorage
@@ -29,12 +30,17 @@ Class CsvImportException
 
 }
 
+package Main {
+Class MainApp #E8E0D5
+}
+
 package Logic {
 Class ImportCommand LOGIC_COLOR
 Class ExportCommand LOGIC_COLOR
 }
 
 
+MainApp --> "0..1" AppInstanceLock : session lock
 StorageManager .up.|> Storage
 StorageManager -down-> "1" JsonUserPrefsStorage
 StorageManager -down-> "1" JsonAddressBookStorage
