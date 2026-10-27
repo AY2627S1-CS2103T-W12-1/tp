@@ -1,7 +1,7 @@
 ---
 layout: default.md
 title: Developer Guide
-pageNav: 3
+pageNav: 6
 ---
 
 <style>
@@ -749,7 +749,8 @@ A roster-wide rename avoids splitting one group between old and new names.
 
 ## Appendix: Requirements {id="appendix-requirements"}
 
-These requirements cover the implemented feature set. Command syntax is in the [User Guide](UserGuide.html).
+These requirements distinguish implemented features from [future user stories](#considered-stories-and-extensions-to-the-selected-mvp).
+Command syntax for current features is in the [User Guide](UserGuide.html).
 Acceptance targets are listed separately under [non-functional requirements](#non-functional-requirements).
 
 ### Product scope
@@ -781,8 +782,8 @@ See the [Feature Map](#feature-map) for all nineteen command names.
 
 ### User stories
 
-Priorities: `***` essential, `**` useful, `*` convenience. Only stories supported by current features
-are included. Story IDs are retained for traceability with the use cases.
+Priorities: `***` essential, `**` useful, `*` convenience. Implemented and future stories are listed separately.
+Story IDs are retained for traceability with the use cases and earlier requirements.
 
 #### Implemented user stories {id="stories-selected-for-the-mvp"}
 
@@ -825,6 +826,20 @@ are included. Story IDs are retained for traceability with the use cases.
 
 `tag` and `untag` change one assignment while preserving other tags. `edit` replaces the supplied tag set.
 Import review consists of result counts and inspecting the roster; there is no staged review screen.
+
+#### Future user stories {id="considered-stories-and-extensions-to-the-selected-mvp"}
+
+These requirements are **not implemented in the current version**. They are retained for future planning,
+not promised releases, in line with the
+[course's Developer Guide guidance](https://nus-cs2103-ay2627-s1.github.io/website/admin/tp-deliverables.html#deliverable-developer-guide-dg).
+
+| ID | Priority | As a... | I want to... | So that I can... | Current limitation |
+| --- | --- | --- | --- | --- | --- |
+| US27 | `**` | club secretary | search by phone number | identify a member when I only have their number | Considered; the MVP searches names and emails only. |
+| US30 | `**` | club secretary | update a non-tag field for a group in one operation | handle repeated renewal changes efficiently | Considered; bulk changes in the MVP affect tags only. |
+| US31 | `**` | long-time secretary | archive an inactive member | reduce clutter while keeping their history | Considered; deletion in the MVP does not retain history. |
+| US32 | `*` | long-time secretary | archive an unused group tag | keep old groups out of my active work without losing their history | Considered; no tag archive or separate tag catalogue in the MVP. |
+| US33 | `*` | club secretary | sort members by class | review members in the order relevant to my task | Considered; no class field or class sorting is implemented. |
 
 ### Shared behaviour rules
 
