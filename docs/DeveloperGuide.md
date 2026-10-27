@@ -475,6 +475,8 @@ single ASCII letters followed by `/` before tokenising.
 Only `n/`, `p/`, `e/`, `a/`, and `t/` are supported. Unknown letters and uppercase prefixes
 report the corresponding command's usage message before field validation. The standalone `c/o` abbreviation
 (case-insensitive) is exempt; URLs, numeric slashes, and slashes embedded in words are literal text.
+While inside an `a/` field, `A/` followed by an ASCII digit is exempt too, preserving `Block A/12`.
+Supported lowercase prefixes end that address context; other unsupported prefixes still fail.
 Other commands retain their own parsing rules.
 
 ### CSV import
@@ -974,8 +976,8 @@ name/phone/email/address/tag order, then duplicate identity.
 
 | Field | Requirement |
 | --- | --- |
-| Name | ASCII letters, digits, and spaces, with at least one letter or digit. Preserve internal spaces and case. |
-| Phone | At least three ASCII digits, without signs, punctuation, or internal whitespace. This does not verify reachability. |
+| Name | Start with a Unicode letter or ASCII digit; accept Unicode letters, combining marks, ASCII digits, spaces, hyphens, and straight or curly apostrophes. Preserve spelling, combining accents, internal spaces, and case. |
+| Phone | At least three ASCII digits, an optional leading `+`, and internal ASCII spaces. Begin and end with a digit after the optional `+`. Preserve formatting without inferring country codes or normalizing identity. Reject hyphens, parentheses, and internal tabs. This does not verify reachability. |
 | Email | Exactly one `@` and no whitespace. The local part contains non-empty runs of ASCII letters or digits, optionally separated by a single punctuation character listed below. Domain labels are separated by dots; each contains non-empty runs of ASCII letters or digits, optionally separated by single hyphens. The final label has at least two characters. Syntax validation does not verify mailbox existence. |
 | Address | Optional for `add`; omission stores an empty value, while an explicitly blank `a/` is rejected. In `edit`, omission preserves the value and a bare `a/` clears it. Non-empty addresses must be single-line text after trimming surrounding spaces or tabs. Preserve internal spaces, tabs, and case. |
 | Tags | Rule 3 applies. A member can have zero or more tags. Repeated identical tags collapse into one assignment. An empty tag is invalid except for the lone `t/` edit operation in rule 7. |
@@ -983,8 +985,13 @@ name/phone/email/address/tag order, then duplicate identity.
 Allowed email local-part punctuation:
 
 ```text
-+ _ . -
++ _ . ' -
 ```
+
+`CommonContactFormatsWorkflowTest` verifies accepted names, formatted phones, apostrophe emails,
+and address unit labels through add/edit, JSON reload, CSV export, and CSV import. It also checks that
+unsupported address prefixes are rejected without changing saved bytes. `NameTest`, `PhoneTest`,
+and `EmailTest` cover invalid boundary values and the preserved formatting contract.
 
 ### Offline help and readable feedback {id="offline-help-and-readable-feedback"}
 
@@ -1411,6 +1418,11 @@ platform or release package has been verified. Use a disposable folder and synth
    valid saved position and size are retained. Close the app, disconnect the display it occupied,
    and restart: the window must appear within an available display. Also check recovery from
    oversized or invalid saved bounds. Recovery is performed at startup.
+
+`CommonContactFormatsWorkflowTest` verifies accepted names, formatted phones, apostrophe emails,
+and address unit labels through add/edit, JSON reload, CSV export, and CSV import. It also checks that
+unsupported address prefixes are rejected without changing saved bytes. `NameTest`, `PhoneTest`,
+and `EmailTest` cover invalid boundary values and the preserved formatting contract.
 
 ### Offline help and readable feedback {id="offline-help-and-readable-feedback-1"}
 

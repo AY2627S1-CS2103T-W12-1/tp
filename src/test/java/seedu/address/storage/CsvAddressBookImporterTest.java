@@ -130,7 +130,7 @@ public class CsvAddressBookImporterTest {
         CsvImportException error = assertThrows(CsvImportException.class, () ->
                 CsvAddressBookImporter.read(file));
 
-        assertEquals("row 3: Phone numbers should only contain digits, and should be at least 3 digits long",
+        assertEquals("row 3: " + Phone.MESSAGE_CONSTRAINTS,
                 error.getMessage());
     }
 
@@ -199,7 +199,7 @@ public class CsvAddressBookImporterTest {
 
         CsvImportException error = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
 
-        assertEquals("row 2: Phone numbers should only contain digits, and should be at least 3 digits long",
+        assertEquals("row 2: " + Phone.MESSAGE_CONSTRAINTS,
                 error.getMessage());
     }
 

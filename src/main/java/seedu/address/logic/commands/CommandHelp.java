@@ -206,6 +206,8 @@ public enum CommandHelp {
      */
     private static String memberFieldRules() {
         return Name.MESSAGE_CONSTRAINTS + ".\n" + Phone.MESSAGE_CONSTRAINTS + ".\n"
+                + "Phone formatting is preserved; country codes are not inferred.\n"
+                + "Within an address, A/ followed by a digit stays literal, as in a/Block A/12.\n"
                 + Email.MESSAGE_CONSTRAINTS + "\n" + Tag.MESSAGE_CONSTRAINTS + ".";
     }
 
