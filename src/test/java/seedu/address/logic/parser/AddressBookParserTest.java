@@ -107,6 +107,32 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_searchWhitespace_isConsistentAcrossBoundaries() throws Exception {
+        for (String separator : List.of(" ", "\t", "\n", "\u2003", "\u3000")) {
+            assertEquals(new FindCommand(new NameContainsKeywordsPredicate(List.of("Alice", "Bob"))),
+                    parser.parseCommand(separator + "find" + separator + "Alice" + separator + "Bob" + separator));
+            assertEquals(new FindEmailCommand(new EmailContainsKeywordsPredicate(List.of("alice", "bob"))),
+                    parser.parseCommand(separator + "findemail" + separator + "alice" + separator + "bob" + separator));
+        }
+    }
+
+    @Test
+    public void parseCommand_unicodeBoundary_preservesIndexAndPrefixCommands() throws Exception {
+        Person member = new PersonBuilder().build();
+        String add = PersonUtil.getAddCommand(member);
+        String fields = add.substring(AddCommand.COMMAND_WORD.length()).stripLeading();
+        for (String separator : List.of("\t", "\n", "\u2003", "\u3000")) {
+            assertEquals(new AddCommand(member), parser.parseCommand("add" + separator + fields));
+            assertEquals(new DeleteCommand(INDEX_FIRST_PERSON), parser.parseCommand("delete" + separator + "1"));
+            assertEquals(new TagCommand(INDEX_FIRST_PERSON, new Tag("committee")),
+                    parser.parseCommand("tag" + separator + "1 t/committee"));
+            assertEquals(new FilterCommand(new Tag("committee")), parser.parseCommand("filter" + separator
+                    + "t/committee"));
+            assertEquals(new HelpCommand("add"), parser.parseCommand("help" + separator + "add"));
+        }
+    }
+
+    @Test
     public void parseCommand_filter_returnsFilterCommand() throws Exception {
         assertEquals(new FilterCommand(new Tag("committee")), parser.parseCommand("filter t/committee"));
     }

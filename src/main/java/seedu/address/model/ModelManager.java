@@ -5,6 +5,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -237,6 +238,12 @@ public class ModelManager implements Model {
         return addressBook.equals(otherModelManager.addressBook)
                 && userPrefs.equals(otherModelManager.userPrefs)
                 && sortedPersons.equals(otherModelManager.sortedPersons);
+    }
+
+    /** Hashes the current state used by equality; mutable model state is never cached. */
+    @Override
+    public int hashCode() {
+        return Objects.hash(addressBook, userPrefs, sortedPersons);
     }
 
 }

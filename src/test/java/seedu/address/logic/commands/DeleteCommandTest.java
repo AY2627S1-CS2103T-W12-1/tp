@@ -10,6 +10,9 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
@@ -82,6 +85,16 @@ public class DeleteCommandTest {
         DeleteCommand deleteCommand = new DeleteCommand(outOfBoundIndex);
 
         assertCommandFailure(deleteCommand, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+    }
+
+    @Test
+    public void hashCode_equalDisplayedIndices_matchInHashSet() {
+        Set<DeleteCommand> commands = new HashSet<>();
+        commands.add(new DeleteCommand(Index.fromOneBased(2)));
+        assertTrue(commands.contains(new DeleteCommand(Index.fromZeroBased(1))));
+        assertFalse(commands.add(new DeleteCommand(Index.fromOneBased(2))));
+        assertTrue(commands.remove(new DeleteCommand(Index.fromZeroBased(1))));
+        assertTrue(commands.isEmpty());
     }
 
     @Test

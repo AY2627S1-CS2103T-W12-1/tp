@@ -413,7 +413,7 @@ public class MainWindowTest {
             assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");
             enter("edit 1 p/90000004");
             enter("export " + exported);
-            assertTrue(feedback.getText().startsWith("Exported 3 people to "));
+            assertTrue(feedback.getText().startsWith("Exported 3 members to "));
             enter("delete 2");
             enter("y");
             assertDisplayedNames("Zara Tan", "Alice Tan");
@@ -428,9 +428,9 @@ public class MainWindowTest {
                     .noneMatch(tag -> tag.tagName.equals("committee")));
             enter("find Alice");
             enter("clear");
-            assertEquals("Cleared 3 members. The address book is now empty.", feedback.getText());
+            assertEquals("Cleared 3 members. The roster is now empty.", feedback.getText());
             enter("list");
-            assertEquals("No members in the address book.", feedback.getText());
+            assertEquals("No members in the roster.", feedback.getText());
             enter("exit");
             assertFalse(window.getPrimaryStage().isShowing());
         });
