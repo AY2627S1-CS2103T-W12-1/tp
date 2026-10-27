@@ -215,6 +215,7 @@ An implementation may need several calls to complete that step.
 - **Value conversion:** `ParserUtil` validates and converts indexes and member fields.
 - **Prefix checks:** add/edit parsers use `PrefixValidator` to reject unsupported field prefixes.
 - **Tag checks:** tag, untag, bulk-tag and rename parsers share `BulkTagArgumentParser`.
+  It recognizes `n/`, `p/`, `e/` and `a/` only to reject them with command-usage guidance.
 
 ### Model component
 
@@ -438,6 +439,7 @@ after individual and bulk updates. `AddressBookParserTest` checks command routin
 
 - `PersonCard`: show index, name and sorted tags.
 - `MemberDetailsPanel`: show and copy the selected member's phone, email and address.
+  Disable address copying when the selected member has no address.
 - `Messages#format(Person)`: produce labelled contact lines and sorted tags for command results.
 - `MainWindow`: hide contact lines from successful add/edit/delete feedback.
 - `UntagCommand`: return name and remaining tags directly, without contact fields.
@@ -515,6 +517,8 @@ privacy and restored bounds. Manual tests check long values and real display sca
 
 - Hold the instance lock through shutdown. A second instance is rejected; do not delete the lock file.
 - Reject null roots, null members, null tags and invalid or duplicate member values.
+- JSON loading retains `Person#isSamePerson`: compare all four trimmed contact fields exactly and ignore tags.
+  Older name variants remain loadable; normalization applies to new contact input, not stored names.
 - Preservation failure prevents an editable roster from opening.
 - Normal saves validate the existing roster and rotate `.bak` only when member data differs.
 - An unchanged save still retries the write but retains the previous distinct backup.
@@ -531,14 +535,17 @@ See [manual recovery tests](#persistence-and-invalid-files) for packaged accepta
 
 1. `AddressBookParser` reads a case-sensitive keyword and selects its parser.
 2. Command-specific parsers check argument structure, indexes and field values.
-3. Add/edit use tokenized prefixes and `PrefixValidator`; tag commands share `BulkTagArgumentParser`.
+3. Add/edit use tokenized prefixes and `PrefixValidator`. Tag commands use `BulkTagArgumentParser`
+   to validate tag values and reject other member-field prefixes.
 4. A successful parse returns a `Command`; failures return usage or field guidance.
 
 **Rules**
 
 - Add/edit accept fields in any order and reject repeated non-tag prefixes.
 - Reject unsupported standalone single-letter prefixes in add/edit, including wrong-case prefixes.
-- Preserve the `c/o` address abbreviation, URLs, numeric slashes and slashes embedded within words.
+- Preserve the `c/o` address abbreviation, URLs, numeric slashes and slashes embedded within words in add/edit.
+- `tag`, `untag`, `tagall`, `untagall` and `renametag` reject standalone `n/`, `p/`, `e/` and `a/`
+  with a format error. Unknown prefixes such as `x/` still fail tag-value validation.
 - `list`, `sort`, `clear` and `exit` take no arguments. Each other command enforces its own grammar.
 
 **Tests:** parser-specific suites and `AddressBookParserTest` cover valid input, boundaries and rejection.
@@ -579,8 +586,9 @@ See [manual recovery tests](#persistence-and-invalid-files) for packaged accepta
 - Read or validation errors leave records, the view and saved data unchanged. Never modify the source CSV.
 - Save failures keep the imported batch in memory and report retry guidance.
 
-**Design:** whole-file validation prevents partial imports. `Person#isSamePerson` provides the same
-identity rule as manual entry. Commons CSV handles quoting instead of manual string splitting.
+**Design:** whole-file validation prevents partial imports. `Person#isDuplicateContactOf` provides the same
+normalized-name duplicate check as new add/edit input; phone, email and address still compare exactly after trimming.
+Commons CSV handles quoting instead of manual string splitting.
 
 **Tests:** importer/parser suites and `LogicManagerTest` cover malformed files, duplicates, view resets and save failures.
 
@@ -611,7 +619,9 @@ identity rule as manual entry. Commons CSV handles quoting instead of manual str
 
 - Write UTF-8 with a header row. Sort each member's tags and join them with semicolons.
 - Use Commons CSV for quoting and escaping. An empty roster produces a header-only file.
-- Require an existing parent folder; apply packaged file-location restrictions.
+- `ExportCommandParser` requires a `.csv` extension, ignoring letter case.
+- Require an existing parent directory and reject a directory as the destination; apply packaged file-location restrictions.
+- Report missing/non-directory parents and write failures with actionable messages instead of temporary-file paths.
 - Close the CSV writer before atomic replacement. Attempt temporary-file cleanup on failure.
 - Preserve an existing export if writing fails. Keep roster data, filters and sorting unchanged.
 - Reject aliases of protected files by checking existing file identity as well as normalized paths.
@@ -646,6 +656,7 @@ selection narrowing, replacements and read-only execution.
 
 **Input:** `FilterCommandParser` accepts exactly one `t/TAG`, trims surrounding whitespace and
 checks the shared 1–30 ASCII-alphanumeric constraint before constructing `Tag`.
+A second `t/` reports that only one filter tag is allowed and suggests a separate command.
 
 <span id="execution"></span>
 
@@ -683,6 +694,7 @@ cover validation, intersections, hidden records and live edits.
 - Retain searches, filters, sorting and `show` selections. Removing a required tag can hide the record.
 - An existing addition or absent removal is a valid no-op and still saves.
 - Invalid indexes or arguments fail before saving. Applied-but-unsaved changes remain in memory.
+- The shared tag parser rejects member-field prefixes (`n/`, `p/`, `e/`, `a/`) with command usage.
 
 <span id="individual-tag-test-coverage"></span>
 
@@ -696,7 +708,11 @@ cover validation, intersections, hidden records and live edits.
 <span id="parsing-1"></span>
 
 **Input:** `TagAllCommandParser` and `UntagAllCommandParser` share `BulkTagArgumentParser`.
-Require exactly one valid `t/TAG`; reject preambles, missing/empty values and repeated tags.
+Require exactly one valid `t/TAG`.
+
+- Missing `t/`, preambles, or `n/`, `p/`, `e/`, `a/` report invalid format with command usage.
+- Empty tags report `Tag cannot be empty.`; multiple tags report `Only one tag can be applied per command.`
+- Other invalid values, including internal spaces or `x/`, report the tag-format constraint.
 
 <span id="execution-1"></span>
 
@@ -724,7 +740,8 @@ hidden records and removal of the tag that defines the current view.
 
 **Renaming across the roster**
 
-1. Parse exactly two valid tags; reject identical names.
+1. `RenameTagCommandParser` uses `BulkTagArgumentParser#parseTagValues` to require exactly two tags.
+   Reject preambles and other member-field prefixes, then validate values and reject identical names.
 2. Snapshot every stored member with the old tag, including hidden records.
 3. Reject an unused old tag. Otherwise replace it with the new tag on every target.
 4. Merge an already-present new tag into one assignment; report changed and merged counts.
@@ -850,8 +867,10 @@ not promised releases, in line with the
    - Reject invalid input before changing records, view state or the saved file.
    - Add/edit share validation for non-empty fields. Only edit accepts bare `a/` to clear an address.
 2. **Duplicate identity**
-   - Compare trimmed name, phone, email and address exactly, including case and internal spaces.
-   - Ignore tags. An edit excludes the record being edited.
+   - For new add/edit/import input, collapse name whitespace and lowercase with `Locale.ROOT`.
+     Compare trimmed phone, email and address exactly. Ignore tags and exclude the edited record itself.
+   - Preserve stored names, accents and punctuation. JSON loading keeps the legacy exact-contact rule.
+     Tag-only and unchanged-contact edits remain available on legacy name variants.
    - Equal names are allowed when another contact field differs. This is not real-world identity verification.
 3. **Tags**
    - Accept 1–30 ASCII letters or digits. Matching is case-sensitive; internal spaces are invalid.
@@ -907,6 +926,7 @@ not promised releases, in line with the
 - Edit requires at least one field. Omitted fields remain unchanged.
 - Reject repeated `n/`, `p/`, `e/` and `a/` prefixes. Validate structure, fields, then duplicates.
 - Unsupported single-letter prefixes are rejected by add/edit.
+- Tag commands reject `n/`, `p/`, `e/` and `a/` as unsupported member fields; `t/` remains their tag prefix.
 
 | Field | Accepted values |
 | --- | --- |
@@ -958,7 +978,7 @@ These workflows describe implemented features. See Implementation for internal m
 **MSS**
 
 1. The secretary submits the member's required contact details and optional tags.
-2. TrackCall validates the details and checks for an exact duplicate record.
+2. TrackCall validates the details and checks for a duplicate under shared rule 2.
 3. TrackCall adds the member, saves the roster, and restores the complete member list.
 4. TrackCall reports the added member's name and tags. The secretary can select the member to check
    contact details in the details panel. The use case ends.
@@ -1250,7 +1270,7 @@ Validation, duplicates and filters are functional rules. Development-process rul
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
 | Partial-word matching | Matching any contiguous part of a name word, ignoring case. For example, `John`, `Jo`, and `oh` all match `John Tan`. |
 | Bulk tag update | Adding or removing one tag for the fixed set of members displayed when the command is submitted. |
-| Duplicate record | A record whose trimmed name, phone, email, and address all exactly match another record, including case and internal spacing. Tags are ignored. |
+| Duplicate record | New input whose normalized name and trimmed phone, email and address match another record. Name case and repeated whitespace are ignored; tags are ignored. JSON loading retains the legacy exact-contact identity rule. |
 | No-op | A valid operation that leaves record values unchanged. A valid data-changing no-op can still retry saving; a bulk command with no targets is an error. |
 | In-memory data | The working roster held by the running app. After a save failure it can differ from the file and may be lost on exit. |
 | Persisted data | The roster successfully written to the local data file and available for a later session. |
@@ -1304,7 +1324,8 @@ Use `list` and check the displayed indices before any indexed command. Back up t
    Use Tab, arrow keys, Page Up/Down, Home/End, and Escape. **Expect:** reachable content and visible focus.
 3. Try `help ADD`, `help unknown`, and `help add edit`. **Expect:** useful errors without record or view changes.
 4. Press F2 and select a member with arrow keys. **Expect:** that member's complete contact details.
-   Copy a field, then press Escape. **Expect:** hidden details and focus in the command box.
+   Copy a field, then select Bob. **Expect:** the absent-address copy control is disabled and the clipboard is unchanged.
+   Press Escape. **Expect:** hidden details and focus in the command box.
 5. Edit a selected member. **Expect:** the details panel clears; feedback contains the name and sorted tags,
    but no phone, email, or address. Repeat for add, untag, and confirmed delete.
 6. Add long synthetic values and several 30-character tags. Resize the main and help windows.
@@ -1325,8 +1346,9 @@ Reset the fixture within a subsection only when a step explicitly asks you to do
 3. Run `edit 1 t/committee t/year1`, then `edit 1 t/`. **Expect:** replaced tags, then no tags.
 4. Try a missing required field, repeated `n/`, invalid phone/email, empty `add ... a/`, and `edit 1`.
    **Expect:** rejection without changes. Test each invalid input separately.
-5. Add Alice's exact name, phone, email, and address with different tags. **Expect:** duplicate rejection.
-   Change the phone and retry. **Expect:** a separate record; names alone do not identify duplicates.
+5. Add Alice's contact details with different tags. Repeat using `alice tan` and `Alice  Tan`.
+   **Expect:** duplicate rejection in each case. Change the phone and retry.
+   **Expect:** a separate record; names alone do not identify duplicates.
 6. Use tab separators before valid prefixes. **Expect:** the same parsing as spaces.
    Append `x/extra` or `T/committee`. **Expect:** rejection without record or view changes.
 
@@ -1352,7 +1374,8 @@ Reset the fixture within a subsection only when a step explicitly asks you to do
 5. Restore the fixture. Run `filter t/committee`, then `untag 1 t/committee`.
    **Expect:** Bob disappears from the view but remains in the roster.
 6. Try invalid indices, empty tags, two tags for `tagall`, and identical old/new tags for `renametag`.
-   **Expect:** errors without changes. A bulk update on an empty view must also fail.
+   Add `n/extra`, `p/123`, `e/a@example.com` or `a/Home` to each tag command in separate checks.
+   **Expect:** format/usage errors for those field prefixes without changes. A bulk update on an empty view must also fail.
 7. Restart after successful updates. **Expect:** all changes persist.
 
 #### Delete and clear
@@ -1401,11 +1424,15 @@ Reset the fixture within a subsection only when a step explicitly asks you to do
 7. Import a header-only CSV and export an empty roster. **Expect:** valid zero-record operations.
 8. Export to a missing directory, a protected application file, and a path outside the application folder.
    **Expect:** handled errors without replacing protected data. Repeat with symbolic-link paths.
+   Try `export members.txt` and a destination that is a directory named `folder.csv`.
+   **Expect:** extension guidance and folder-destination guidance respectively, with no file replacement.
 9. In a separate disposable roster, add two members with the same name and distinct phone/email fields.
    Run `sort`, `tagall t/year1`, then `renametag t/year1 t/year2`.
    **Expect:** tied names retain their stored roster order after each update.
    Repeat with four tied members and a phone-only `edit` or individual `tag`.
    Also test names differing only in case or repeated spaces.
+10. Restore the fixture and import Alice's contact details with a lowercase or repeated-space name.
+    **Expect:** a skipped duplicate, no merged tags, and unchanged stored name formatting.
 
 ### Persistence and invalid files
 
@@ -1419,6 +1446,8 @@ Use a fresh fixture and backup for each failure scenario. Restore access before 
    **Expect:** Close preserves the invalid file; recovery preserves the damaged copy and existing backup.
    If no recovery copy can be written, startup must stop before exposing an editable roster.
 4. Test null preferences and null `guiSettings`. **Expect:** usable defaults at startup.
+   In a separate valid JSON roster, keep two names differing only in case with identical other contact fields.
+   **Expect:** both legacy variants load; tag-only and unchanged-contact edits remain possible.
 5. While the app is open, block writing to its test data file. Test each data-changing command independently:
    `add`, `edit`, `tag`, `untag`, confirmed `delete`, `tagall`, `untagall`, `renametag`, and `import`.
    - **Expect:** a save error with retry guidance; the change remains in memory.

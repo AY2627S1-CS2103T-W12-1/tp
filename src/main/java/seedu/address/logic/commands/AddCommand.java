@@ -34,7 +34,8 @@ public class AddCommand extends Command {
 
     public static final String MESSAGE_SUCCESS = "Added member\n%1$s";
     public static final String MESSAGE_DUPLICATE_PERSON =
-            "A member with these contact details already exists. Use edit to update that member.";
+            "A member with these contact details already exists (name case and repeated spaces are ignored). "
+            + "Use find to locate the member and edit to update it.";
 
     private final Person toAdd;
 
@@ -50,7 +51,8 @@ public class AddCommand extends Command {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
 
-        if (model.hasPerson(toAdd)) {
+        if (model.hasPerson(toAdd)
+                || model.getAddressBook().getPersonList().stream().anyMatch(toAdd::isDuplicateContactOf)) {
             throw new CommandException(MESSAGE_DUPLICATE_PERSON);
         }
 

@@ -42,6 +42,20 @@ public class ExportCommandParserTest {
     }
 
     @Test
+    public void parse_nonCsvPath_rejected() {
+        for (String path : new String[] {"members.txt", "members", "members.csv extra", "members.csv.bak"}) {
+            ParseException error = assertThrows(ParseException.class, () -> parser.parse(path));
+            assertEquals(ExportCommandParser.MESSAGE_NON_CSV_FILE, error.getMessage());
+        }
+    }
+
+    @Test
+    public void parse_mixedCaseCsvExtension_accepted() {
+        String path = "backups/member contacts.CsV";
+        assertParseSuccess(parser, path, new ExportCommand(Path.of(path)));
+    }
+
+    @Test
     public void parse_invalidPath_reportsUsageAndCause() {
         ParseException error = assertThrows(ParseException.class, () -> parser.parse("invalid\u0000path.csv"));
         assertEquals(String.format(MESSAGE_INVALID_COMMAND_FORMAT, ExportCommand.MESSAGE_USAGE), error.getMessage());

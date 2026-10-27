@@ -60,7 +60,7 @@ public class ImportCommand extends Command {
         List<Person> peopleToAdd = new ArrayList<>();
         int duplicateCount = 0;
         for (Person candidate : candidates) {
-            if (knownPeople.stream().anyMatch(candidate::isSamePerson)) {
+            if (knownPeople.stream().anyMatch(candidate::isDuplicateContactOf)) {
                 duplicateCount++;
             } else {
                 knownPeople.add(candidate);

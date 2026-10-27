@@ -22,7 +22,7 @@ Command -> Model : getAddressBook()
 Model --> Command : complete roster
 note over Command
 Compare against stored members and
-previously accepted rows using isSamePerson().
+previously accepted rows using isDuplicateContactOf().
 end note
 loop each unique candidate
 Command -> Model : addPerson(candidate)

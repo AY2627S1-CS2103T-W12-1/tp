@@ -21,6 +21,7 @@ note over Command
 Also reject reserved recovery-file names
 beside the protected roster/preferences file,
 and destinations that are existing directories.
+Require the parent to exist and be a directory.
 Any IOException becomes a CommandException;
 no CSV write starts on failure.
 end note
