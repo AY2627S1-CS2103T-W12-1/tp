@@ -13,6 +13,7 @@ import seedu.address.commons.util.ToStringBuilder;
 public class NameContainsKeywordsPredicate implements Predicate<Person> {
     private final List<String> keywords;
 
+    /** Creates a name predicate with an immutable copy of the search keywords. */
     public NameContainsKeywordsPredicate(List<String> keywords) {
         this.keywords = List.copyOf(keywords);
     }
@@ -40,6 +41,11 @@ public class NameContainsKeywordsPredicate implements Predicate<Person> {
         }
 
         return keywords.equals(otherNameContainsKeywordsPredicate.keywords);
+    }
+
+    @Override
+    public int hashCode() {
+        return keywords.hashCode();
     }
 
     @Override

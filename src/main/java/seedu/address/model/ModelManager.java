@@ -5,6 +5,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -41,7 +42,7 @@ public class ModelManager implements Model {
     public ModelManager(ReadOnlyAddressBook addressBook, ReadOnlyUserPrefs userPrefs) {
         requireAllNonNull(addressBook, userPrefs);
 
-        logger.fine("Initializing with address book: " + addressBook + " and user prefs " + userPrefs);
+        logger.fine("Initializing model with " + addressBook.getPersonList().size() + " member(s)");
 
         this.addressBook = new AddressBook(addressBook);
         this.userPrefs = new UserPrefs(userPrefs);
@@ -127,13 +128,20 @@ public class ModelManager implements Model {
         return sortedPersons;
     }
 
+    /** Orders names without changing the stored relative order of members whose normalized names match. */
     @Override
     public void setNameSorting(boolean enabled) {
         sortedPersons.setComparator(enabled
                 ? (first, second) -> {
                     String firstName = first.getName().fullName.trim().replaceAll(" +", " ");
                     String secondName = second.getName().fullName.trim().replaceAll(" +", " ");
-                    return firstName.compareToIgnoreCase(secondName);
+                    int nameComparison = firstName.compareToIgnoreCase(secondName);
+                    if (nameComparison != 0) {
+                        return nameComparison;
+                    }
+                    // SortedList reinserts replacements; an explicit tie-breaker keeps their displayed numbers stable.
+                    List<Person> storedPersons = addressBook.getPersonList();
+                    return Integer.compare(storedPersons.indexOf(first), storedPersons.indexOf(second));
                 }
                 : null);
     }
@@ -237,6 +245,12 @@ public class ModelManager implements Model {
         return addressBook.equals(otherModelManager.addressBook)
                 && userPrefs.equals(otherModelManager.userPrefs)
                 && sortedPersons.equals(otherModelManager.sortedPersons);
+    }
+
+    /** Hashes the current state used by equality; mutable model state is never cached. */
+    @Override
+    public int hashCode() {
+        return Objects.hash(addressBook, userPrefs, sortedPersons);
     }
 
 }

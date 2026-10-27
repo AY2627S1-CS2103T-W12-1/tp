@@ -1,6 +1,5 @@
 package seedu.address.logic;
 
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -20,19 +19,18 @@ public class Messages {
                 "Multiple values specified for the following single-valued field(s): ";
 
     /**
-     * Returns an error message indicating the duplicate prefixes.
+     * Returns an error message listing each duplicate prefix once, in the supplied order.
      */
     public static String getErrorMessageForDuplicatePrefixes(Prefix... duplicatePrefixes) {
         assert duplicatePrefixes.length > 0;
 
-        Set<String> duplicateFields =
-                Stream.of(duplicatePrefixes).map(Prefix::toString).collect(Collectors.toSet());
-
-        return MESSAGE_DUPLICATE_FIELDS + String.join(" ", duplicateFields);
+        String duplicateFields = Stream.of(duplicatePrefixes).map(Prefix::toString).distinct()
+                .collect(Collectors.joining(" "));
+        return MESSAGE_DUPLICATE_FIELDS + duplicateFields;
     }
 
     /**
-     * Formats member details as labelled rows, with tags in a stable alphabetical order.
+     * Formats member details as labelled rows, with tags in a case-sensitive ASCII order.
      */
     public static String format(Person person) {
         return "Name: " + person.getName()
@@ -43,7 +41,7 @@ public class Messages {
     }
 
     /**
-     * Formats a member's tags in a stable alphabetical order, or {@code (none)} if they have no tags.
+     * Formats a member's tags in a case-sensitive ASCII order, or {@code (none)} if they have no tags.
      */
     public static String formatTags(Person person) {
         String tags = person.getTags().stream()

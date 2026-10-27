@@ -132,7 +132,8 @@ public class JsonAddressBookStorage {
         Path target = FileUtil.resolvePath(filePath);
         // Validate before rotating the backup: a damaged roster must never replace the last good copy.
         try {
-            if (readAddressBook(target).isPresent()) {
+            Optional<ReadOnlyAddressBook> saved = readAddressBook(target);
+            if (saved.isPresent() && !saved.get().getPersonList().equals(addressBook.getPersonList())) {
                 Path backup = FileUtil.resolvePath(getBackupFilePath(target));
                 FileUtil.writeAtomically(backup,
                         temporary -> Files.copy(target, temporary, StandardCopyOption.REPLACE_EXISTING));

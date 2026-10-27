@@ -23,6 +23,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -85,6 +89,34 @@ public class LogicManagerTest {
     public void execute_invalidCommandFormat_throwsParseException() {
         String invalidCommand = "uicfhmowqewca";
         assertParseException(invalidCommand, MESSAGE_UNKNOWN_COMMAND);
+    }
+
+    @Test
+    public void execute_saveFailure_logsOperationAndTypeWithoutPrivateExceptionContents() {
+        useFailingStorage(new IOException("private.member@example.com", new IOException("Private Road")));
+        StringBuilder records = new StringBuilder();
+        Handler capture = new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                records.append(new SimpleFormatter().format(record));
+            }
+
+            @Override
+            public void flush() {}
+
+            @Override
+            public void close() {}
+        };
+        Logger logger = Logger.getLogger("ab3");
+        logger.addHandler(capture);
+        try {
+            assertThrows(SaveFailureException.class, () -> logic.execute(PersonUtil.getAddCommand(AMY)));
+            assertTrue(records.toString().contains("Could not save roster after AddCommand (IOException)"));
+            assertFalse(records.toString().contains("private.member@example.com"));
+            assertFalse(records.toString().contains("Private Road"));
+        } finally {
+            logger.removeHandler(capture);
+        }
     }
 
     @Test
@@ -359,7 +391,7 @@ public class LogicManagerTest {
 
         assertTrue(Files.isRegularFile(csvFile));
         assertTrue(Files.isDirectory(rosterFile));
-        assertTrue(result.getFeedbackToUser().startsWith("Exported 1 people to "));
+        assertTrue(result.getFeedbackToUser().startsWith("Exported 1 member to "));
         assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
         assertTrue(model.getFilteredPersonList().isEmpty());
     }
@@ -445,7 +477,8 @@ public class LogicManagerTest {
         SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
                 SaveFailureException.class, () -> logic.execute("import p/" + csvFile));
 
-        assertEquals(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, DUMMY_IO_EXCEPTION.getMessage()),
+        assertEquals(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, DUMMY_IO_EXCEPTION.getMessage())
+                + LogicManager.UNSAVED_CHANGE_GUIDANCE,
                 failure.getMessage());
         assertTrue(failure.isChangeApplied());
         assertEquals(1, model.getAddressBook().getPersonList().size());
@@ -463,7 +496,8 @@ public class LogicManagerTest {
         SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
                 SaveFailureException.class, () -> logic.execute("import p/" + csvFile));
 
-        assertEquals(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, failureWithoutMessage), failure.getMessage());
+        assertEquals(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, failureWithoutMessage)
+                + LogicManager.UNSAVED_CHANGE_GUIDANCE, failure.getMessage());
         assertTrue(failure.isChangeApplied());
         assertEquals(1, model.getAddressBook().getPersonList().size());
     }

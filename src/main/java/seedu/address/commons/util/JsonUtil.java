@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -66,7 +67,7 @@ public class JsonUtil {
                 throw new IOException("The JSON file must contain an object, not null.");
             }
         } catch (IOException e) {
-            logger.warning("Error reading from jsonFile file " + filePath + ": " + e);
+            logger.warning("Could not read JSON file " + filePath + " (" + e.getClass().getSimpleName() + ")");
             throw new DataLoadingException(e);
         }
 
@@ -103,6 +104,14 @@ public class JsonUtil {
                 throw new IOException("The JSON file must contain exactly one root value.");
             }
             return value;
+        } catch (JsonProcessingException exception) {
+            // Jackson's message and cause can embed the input document or an invalid contact value.
+            // Keep the error type and position, but never propagate those private payloads to diagnostics.
+            JsonLocation location = exception.getLocation();
+            String position = location == null ? "" : " at line " + location.getLineNr()
+                    + ", column " + location.getColumnNr();
+            throw new IOException("Invalid JSON data" + position + " ("
+                    + exception.getClass().getSimpleName() + ").");
         }
     }
 
