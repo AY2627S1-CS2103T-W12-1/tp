@@ -1,26 +1,30 @@
 @startuml
+!pragma layout smetana
 !include style.puml
 skinparam arrowThickness 1.1
 skinparam arrowColor MODEL_COLOR_T4
 skinparam classBackgroundColor MODEL_COLOR
-skinparam nodesep 45
-skinparam ranksep 45
-title Live display state
+skinparam nodesep 35
+skinparam ranksep 35
 
 class ModelManager
 class ActiveFilter
+interface "Predicate<Person>" as Predicate
 class PersonSelectionPredicate
 class "SortedList<Person>" as Sorted <<JavaFX>>
 class "FilteredList<Person>" as Filtered <<JavaFX>>
-class "ObservableList<Person>" as Records <<JavaFX>>
+interface "ObservableList<Person>" as Records <<JavaFX>>
 
-ModelManager -left-> "*" ActiveFilter : activeFilters
-ModelManager -right-> "*" PersonSelectionPredicate : additionalFilters\n(selection predicates)
-ModelManager -down-> "1" Sorted : sortedPersons
-ModelManager -down-> "1" Filtered : filteredPersons
-Sorted -right-> "1" Filtered : source
-Filtered -down-> "1" Records : source
-note bottom of Records: Unmodifiable live member list\nfrom AddressBook.getPersonList().
-note bottom of ActiveFilter: Name, email and tag conditions.
-note bottom of PersonSelectionPredicate: Selected Person references are\nupdated after record replacement.
+ModelManager --> "0..*" ActiveFilter : activeFilters
+ModelManager --> "0..*" Predicate : additionalFilters
+PersonSelectionPredicate ..|> Predicate
+ActiveFilter --> "1" Predicate : predicate
+ModelManager --> "1" Sorted : sortedPersons
+ModelManager --> "1" Filtered : filteredPersons
+Sorted --> "1" Filtered : source
+Filtered --> "1" Records : source
+note bottom of Records: Live, unmodifiable roster list from\nAddressBook.getPersonList(). Stored order is unchanged.
+note top of Sorted: Exposed by getFilteredPersonList().\nComparator set by sort; cleared by list/import.
+note top of ActiveFilter: Name, email and tag conditions.\nrefreshFilteredPersons() combines all conditions with AND.
+note bottom of PersonSelectionPredicate: One type of additional predicate.\nSelected references follow record replacements.
 @enduml

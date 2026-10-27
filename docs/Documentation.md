@@ -109,6 +109,20 @@ See the [SE-EDU PlantUML guide](https://se-education.org/guides/tutorials/plantU
 Use Java 25 when running Java-based diagram tools or application build tasks.
 On macOS, select the project's Java version with `sdk use java 25.0.3.fx-zulu` if needed.
 Keep diagram sources and their exported images together so the diagrams can be updated later.
+The view, help, clear and email-search diagrams use PlantUML 1.2026.1. Their SVG exports are linked
+from the Developer Guide so readers can open full-size, scalable diagrams; PNG exports are kept for
+other document formats. The view diagram uses the built-in Smetana layout engine and does not need Graphviz.
+
+From the project root, regenerate a changed diagram in both formats (replace the tool path and filename):
+
+```bash
+java -jar /path/to/plantuml-1.2026.1.jar -tsvg -o ../images docs/diagrams/ClearSequenceDiagram.puml
+java -jar /path/to/plantuml-1.2026.1.jar -tpng -o ../images docs/diagrams/ClearSequenceDiagram.puml
+```
+
+Check the rendered image as well as the source. Verify class relationships against field declarations,
+and sequence calls, returns and failure branches against the implementation. State any omitted parsing
+or object construction beside the diagram. Do not present pending PR behavior as already implemented.
 
 ## Converting documentation to PDF
 

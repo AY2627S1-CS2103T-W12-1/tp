@@ -1,52 +1,47 @@
 ---
 layout: default.md
 title: Developer Guide
-pageNav: 6
+pageNav: 3
 ---
 
 # Developer Guide
 
 ## Value proposition
 
-TrackCall helps a membership secretary keep a club roster accurate using short typed commands.
-The intended MVP supports overlapping groups without repetitive edits to each record.
+TrackCall is a local membership roster for club secretaries. Its main workflow is to find a group,
+update its records or tags, and save valid changes without a separate save command.
 
-The secretary can:
+This guide describes the **unreleased v1.5 candidate**. Use the [User Guide](UserGuide.html)
+for command syntax and the sections below for implementation decisions and failure handling.
 
-* Find members by name or email and narrow the displayed group by tag.
-* Add or remove a tag for the whole displayed group in one operation.
-* Keep unrelated tags and hidden members unchanged.
-* Save valid changes automatically to a local file.
-* Complete the core workflow without an internet connection or a separate save command.
+### Feature map
 
-This guide describes the **v1.5 release candidate**, which has not yet been published. It supports individual member management, name and email search, tag filtering, bulk tag
-editing, offline command help, local saving, CSV import/export, and name sorting.
-See [Limitations](#limitations) for constraints in the current release.
+| Task | Commands | Implementation |
+| --- | --- | --- |
+| Restore or reset the roster | `list`, `clear` | [View reset and save rollback](#list-and-clear-commands) |
+| Order the displayed members | `sort` | [Name sorting](#name-sorting) |
+| Find members | `find`, `findemail` | [Model views](#model-component), [email search](#find-members-by-email) |
+| Select and narrow a group | `show`, `filter` | [Selections](#selecting-members-and-sorting), [tag filters](#filter-members-by-tag) |
+| Maintain records | `add`, `edit`, `delete` | [Parsing](#command-parsing), [deletion confirmation](#deletion-confirmation) |
+| Manage tags | `tag`, `untag`, `tagall`, `untagall`, `renametag` | [Individual](#individual-tag-editing) and [bulk tag editing](#bulk-tag-editing) |
+| Exchange records | `import`, `export` | [CSV import](#csv-import), [CSV export](#csv-export) |
+| Get help or finish | `help`, `exit` | [Offline help](#offline-command-help), [UI](#ui-component) |
+| Persist and protect data | Automatic | [Saving and recovery](#automatic-data-saving-and-load-recovery) |
 
-## Acknowledgements
+### Candidate integration status
 
-* TrackCall builds on [AddressBook Level 3](https://se-education.org/addressbook-level3/) by the
-  [SE-EDU initiative](https://se-education.org/). The starter supplies the architecture, source code, tests,
-  and original diagrams.
-* The application uses [JavaFX](https://openjfx.io/) for its interface and
-  [Jackson](https://github.com/FasterXML/jackson) for JSON storage.
-* [Apache Commons CSV](https://commons.apache.org/proper/commons-csv/) handles CSV import/export parsing and quoting.
-  Its use was [approved by the teaching team](https://github.com/NUS-CS2103-AY2627-S1/forum/issues/627).
-* The documentation website uses [MarkBind](https://markbind.org/) and adapts the
-  [CS2103T starter layout](https://github.com/NUS-CS2103-AY2627-S1/tp/tree/switch-docs-to-markbind)
-  with TrackCall's name, repository links, and guide sections.
-* The feature grouping and release-note presentation were inspired by the
-  [W12-3 team's User Guide](https://ay2627s1-cs2103t-w12-3.github.io/tp/UserGuide.html) and
-  [CoordiMate releases](https://github.com/AY2627S1-CS2103T-W12-3/tp/releases).
-  The adaptation concerns documentation layout and presentation; TrackCall retains its own feature descriptions,
-  examples, screenshots, and application behaviour.
-* The previous Jekyll website adapted the
-  [W13-1 team's layout](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/docs/stylesheets/main.css),
-  including its sidebar widths, reading width, and responsive breakpoints, under its
-  [MIT licence](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/LICENSE).
-* [JUnit](https://junit.org/junit5/), [Gradle](https://gradle.org/),
-  [Checkstyle](https://checkstyle.org/), and [JaCoCo](https://www.jacoco.org/jacoco/) support testing and builds.
+Some requirements and acceptance examples describe the intended release behavior. These fixes still
+need to be integrated before those expectations can be treated as delivered:
 
+| Pending change | Review |
+| --- | --- |
+| Consistent roster wording and validation guidance | [#218](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/218) |
+| Case-insensitive protection of absent export destinations | [#219](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/219) |
+| Narrow-window filter controls and tag wrapping | [#220](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/220) |
+| Stable equal-name sort order after record replacement | [#222](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/222) |
+
+Update this table when the changes merge. [Release acceptance](#release-acceptance-checks-still-required)
+checks the final JAR; passing isolated tests does not establish release readiness.
 
 ## Getting started {id="setting-up-getting-started"}
 
@@ -206,7 +201,9 @@ This allows common handling where appropriate, including in tests.
 `Person` holds references to immutable contact values and tags. Edits can reuse those objects, so
 the diagram uses associations rather than exclusive composition for these fields.
 
-![Live display views and removable conditions](images/ModelViewDiagram.png)
+[![Stored records, filtered view, sorted display, and predicate collections](images/ModelViewDiagram.svg)](images/ModelViewDiagram.svg)
+
+[Open diagram at full size](images/ModelViewDiagram.svg).
 
 The Model component stores:
 
@@ -228,17 +225,14 @@ Model does not depend on UI, Logic, or Storage.
 Its data entities can be used independently of those components.
 
 `ModelManager#getFilteredPersonList()` exposes the `SortedList` backed by the `FilteredList`.
+`additionalFilters` accepts any `Predicate<Person>`; `PersonSelectionPredicate` is one implementation,
+not the declared type of every entry. `refreshFilteredPersons()` ANDs the additional predicates and
+active conditions into the filter. These collections hold view state, not copies of the stored roster.
 `show` resolves indexes against the current sorted view and adds a selection predicate to narrow it.
 `list` clears the search, tag, and selection predicates and disables sorting, restoring every member in stored order.
 
-<box type="info">
-
-**Alternative design:** `AddressBook` could keep one shared `Tag` object for each unique tag.
-Each `Person` would reference those shared objects instead of holding its own copies.
-
-<img src="images/BetterModelClassDiagram.png" width="450" alt="Alternative model with a shared list of unique tags">
-
-</box>
+A shared tag registry is a possible alternative, but the current design keeps immutable tag values
+on each member. No shared `UniqueTagList` is implemented.
 
 ### Storage component
 
@@ -272,81 +266,86 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 
 ## Implementation
 
-This section describes the implemented v1.5 candidate. The requirements appendix distinguishes
-delivered features from considered extensions. Release acceptance checks remain necessary before publication.
+Start with the feature map above, then follow a command from Logic to Model and Storage.
+The examples describe successful execution unless a failure branch is shown. Pending fixes are marked
+in [Candidate integration status](#candidate-integration-status).
 
 ### Offline command help
 
 #### Catalogue and command flow
 
-`CommandHelp` stores the nineteen implemented commands in one local catalogue.
-Each entry contains its purpose, syntax, example, expected result, and common errors.
-Only executable commands appear, so planned commands are never shown as available.
+`CommandHelp` is the local catalogue for all nineteen commands. Each entry supplies a purpose,
+syntax, example, expected result, and common errors. `HelpCommandParser` accepts an optional,
+lowercase command topic and rejects unknown or multiple topics before opening a window.
 
-1. `HelpCommandParser` accepts zero or one lowercase topic. It rejects unknown or multiple topics.
-2. `HelpCommand` returns the topic through `CommandResult`.
-3. `MainWindow` passes the topic to `HelpWindow`.
+[![Offline help routing from LogicManager to HelpWindow](images/HelpSequenceDiagram.svg)](images/HelpSequenceDiagram.svg)
+
+[Open diagram at full size](images/HelpSequenceDiagram.svg).
+
+The trace starts after parsing `help sort`. `HelpCommand` returns a `CommandResult` carrying the topic;
+`MainWindow` interprets that result and calls `HelpWindow#show(topic)`. The command does not open UI
+objects itself. It is read-only, so no roster save occurs. F1 and the Help menu call `show()` directly.
+
+This keeps command logic testable without a browser and makes help available without a network.
+The trade-off is maintaining the catalogue alongside command behavior; `CommandHelpTest` checks
+that every implemented command has an entry and its examples execute.
 
 #### Help navigation
 
-The overview groups commands into four category cards.
-Each command shows a purpose, runnable example, and button for its details.
-The layout uses two columns in a wide window and one in a narrow window.
-
-* `help COMMAND` opens the same detail card as its overview button.
-* **All commands** returns to the overview.
-* **F1** and the Help menu open the overview.
-* Arrow and page keys scroll. **Home/End** move to the ends, and **Escape** closes help.
+The overview uses four category cards, with two columns in wide windows and one in narrow windows.
+Selecting a topic or entering `help COMMAND` opens the same details. **All commands** returns to the
+catalogue. Arrow/Page keys scroll, **Home/End** move to its ends, and **Escape** closes the window.
 
 #### Test coverage {id="test-coverage"}
 
-* `CommandHelpTest` checks catalogue completeness and executable examples.
-* `HelpWindowTest` checks the overview, detail pages, responsive columns, navigation, and keyboard scrolling.
-* `MainWindowTest` exercises `help add`, F1, Escape, exit, rejected `/help`, and failed-save recovery.
-  It uses the real command box with temporary storage.
+`CommandHelpTest` checks content and examples; `HelpWindowTest` covers topic navigation, reflow and
+keyboard scrolling. `MainWindowTest` checks command routing, F1, Escape, and exit through the real UI.
 
 ### List and clear commands
 
 #### List behaviour
 
-`ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, disables name sorting,
-and reports the complete count using singular, plural, or empty-roster wording. `LogicManager`
-returns its result without invoking storage. Extra arguments are rejected by `AddressBookParser`
-before either the view or data changes.
-
-Compact roster cards show member numbers, names, and tags. The details panel reveals contact fields
-for only the selected member.
-`LightTheme.css` provides the beige main-list palette. See [Offline command help](#offline-command-help) for the bundled guide.
+`ListCommand` calls `updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS)` and then
+`setNameSorting(false)`. The first call removes active and additional predicates; the second restores
+stored order. It reports the full member count and is read-only. Extra arguments are rejected before
+execution. Clearing the displayed filters does not change member records or the JSON file.
 
 #### Clear and save recovery
 
-Before executing `ClearCommand`, `LogicManager` snapshots the roster. The command counts and
-removes all records while retaining the old predicate temporarily. After saving succeeds, the
-logic layer resets the predicate to show all and returns the success message. On an `IOException`,
-it restores the snapshot; retaining the original predicate restores the previous displayed view,
-including an empty search result. Settings are never changed. An already-empty clear still saves.
+`clear` removes **all stored members**, including hidden records, without a confirmation prompt.
+It differs from `list`: clear changes data and must save before reporting success.
 
-To meet clear's previous-file preservation requirement, `FileUtil#writeToFile` writes UTF-8 to a
-sibling temporary file and atomically replaces the destination. `JsonAddressBookStorage` no longer
-pre-creates an empty destination. Unsupported atomic replacement produces a handled failure;
-there is no unsafe partial-write fallback. This shared storage helper also benefits existing
-callers; their command policies and load validation are described below.
+[![Clear succeeds only after saving; a failed save restores the prior roster](images/ClearSequenceDiagram.svg)](images/ClearSequenceDiagram.svg)
 
-#### Exact feedback
+[Open diagram at full size](images/ClearSequenceDiagram.svg).
 
-These messages follow the list and clear feature specifications:
+The sequence starts after parsing; `SHOW_ALL` abbreviates `PREDICATE_SHOW_ALL_PERSONS`.
+`LogicManager` snapshots the roster, then `ClearCommand` replaces
+its contents with an empty `AddressBook`. It deliberately retains the current predicates and sorting
+until the save outcome is known:
 
-| Case | Feedback |
-| --- | --- |
-| List zero members | `No members in the roster.` |
-| List one member | `Showing 1 member.` |
-| List multiple members | `Showing N members.` |
-| Invalid list arguments | `Invalid command format. Usage: list` |
-| Clear zero members | `The roster is already empty. No changes were made.` |
-| Clear one member | `Cleared 1 member. The roster is now empty.` |
-| Clear multiple members | `Cleared N members. The roster is now empty.` |
-| Invalid clear arguments | `Invalid command format. Usage: clear. This command removes all members.` |
-| Failed clear save | `Unable to clear the roster because the changes could not be saved. No members were removed.` |
+| Save outcome | Model and view | Result |
+| --- | --- | --- |
+| Success | Empty roster; search, tag and selection predicates cleared. The sorting setting is retained. | Return the clear count. |
+| `IOException` | Restore the snapshot. Existing predicates and sorting reconstruct the previous view. | Throw `SaveFailureException` with `changeApplied=false`; keep the input for retry. |
+
+Even an already-empty clear attempts a save, allowing recovery after an earlier unsaved deletion.
+Preferences are unaffected. Atomic replacement protects the previous roster file against a partial write;
+backup rotation is a separate step with the [failure limitation below](#startup-and-validation).
+
+The snapshot belongs in `LogicManager` because that layer knows whether persistence succeeded.
+Resetting the view inside `ClearCommand` would lose the predicates needed for rollback.
+
+#### Feedback {id="exact-feedback"}
+
+Both commands choose empty, singular or plural feedback from their command constants. Parser errors
+use `MESSAGE_USAGE`; failed clear uses `ClearCommand.MESSAGE_SAVE_FAILURE` and explicitly states
+that no members were removed. `SaveFailureException#isChangeApplied()` tells the command box whether
+to retain the input for retry.
+
+See the [User Guide](UserGuide.html#remove-records) for user-facing examples. The terminology changes
+in [#218](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/218) align the remaining “address book”
+messages with the guide's “roster” wording; they do not change the save or rollback policy.
 
 #### Test coverage {id="test-coverage-1"}
 
@@ -361,6 +360,55 @@ Command tests cover:
 * Hidden members, no-match views, order, repetition, and rejected arguments.
 * Read-only listing, persisted empty data, settings, and predicate reset.
 * Failed-save rollback, retry, and temporary-file cleanup.
+
+### Name sorting
+
+`SortCommand` calls `ModelManager#setNameSorting(true)`. A JavaFX `SortedList` wraps the filtered
+view; changing its comparator reorders only the display, leaving the stored roster and exported order intact.
+The comparator trims names and collapses repeated ASCII spaces for comparison, then uses
+`compareToIgnoreCase`. Stored names are unchanged.
+
+See the [view diagram](#model-component) for the data path. Commands that take an index read this
+sorted view, so `edit 1` and `delete 1` address the first **displayed** member.
+
+| Operation | Sort setting | Other view state |
+| --- | --- | --- |
+| `sort` | Enable A–Z | Retain all current conditions. |
+| `list` or valid `import` | Disable | Clear all conditions. |
+| `findemail` | Retain | Replace conditions with the email query. |
+| `find`, `filter`, `show` | Retain | Narrow the current view. |
+| Record edit or tag change | Retain | Re-evaluate conditions against updated records. |
+
+A sorted view avoids rewriting member order whenever a user changes presentation.
+There is no descending or multi-field sort. Equal-name order after record replacement is a known
+edge case addressed by [#222](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/222); that fix compares
+stored positions only when normalized names tie.
+
+`ModelManagerTest` covers ordering and reset behavior; `AddressBookParserTest` covers command routing. `LogicManagerTest`
+checks that view commands do not save. The pending tie-order regressions belong to #222.
+
+### Find members by email
+
+`findemail KEYWORD [MORE_KEYWORDS]...` starts a new search across the **full roster**. It accepts a
+whole address or fragments such as `alice@` and `@school.edu`. Keywords are combined with OR;
+matching uses literal substrings after `Locale.ROOT` lowercasing. Names and phone numbers are ignored.
+
+[![Email search replaces the current conditions and retains display sorting](images/EmailSearchSequenceDiagram.svg)](images/EmailSearchSequenceDiagram.svg)
+
+[Open diagram at full size](images/EmailSearchSequenceDiagram.svg).
+
+The trace starts after parsing a nonblank query. `FindEmailCommand` calls
+`updateFilteredPersonList(predicate)`, which clears prior name, email, tag and `show` conditions,
+stores one email `ActiveFilter`, and re-evaluates the live view. The comparator is untouched.
+This is deliberately different from `find`, which narrows the current view.
+
+Later `filter` or `find` commands narrow the email results. Removing the Email box removes only
+that query, retaining later conditions. Editing an address re-evaluates membership, so a record can
+leave the displayed results. Blank input is rejected without changing the view. No search saves data.
+
+`EmailContainsKeywordsPredicateTest` covers literal matching, case and locale independence.
+`FindEmailCommandTest`, `FindEmailCommandParserTest`, and `LogicManagerTest` check resets, invalid input,
+updated emails, displayed indexes and unchanged saved data.
 
 ### Readable member details and feedback
 
@@ -454,6 +502,10 @@ and replaces the roster atomically without rotating the existing backup.
 Normal saves validate the current roster. If its member list differs from the requested save,
 they atomically copy the previous roster to the sibling `.bak` file;
 backup failure prevents replacement, and an invalid existing roster blocks normal saves until recovery.
+The roster replacement and backup rotation are not one transaction: if the final roster write fails
+after rotation, the older backup can already have been replaced. This tracked failure case is
+[issue #242](https://github.com/AY2627S1-CS2103T-W12-1/tp/issues/242); do not infer backup rollback from
+atomic replacement of either individual file.
 An unchanged save still attempts to write the current roster but retains the previous distinct backup.
 Export protects both backup and recovery filenames. Null or invalid preferences fall back to defaults, which are saved
 through the usual preferences setup.
@@ -523,7 +575,7 @@ A write or replacement failure preserves the previous destination and attempts t
 On success, `isReadOnly()` prevents the logic layer from saving the automatic JSON roster.
 Neither successful nor failed export changes the displayed filters or sorting.
 
-### Selecting members and sorting
+### Selecting displayed members {id="selecting-members-and-sorting"}
 
 `show INDEX [MORE_INDEXES]...` validates every index against the current displayed list before
 changing the view. `ShowCommand` stores the corresponding members in a `PersonSelectionPredicate`;
@@ -533,28 +585,8 @@ updates these predicates after an edit or tag change to keep the selection attac
 Removing the **Show: active** box removes all selection predicates while retaining name, email, and tag filters.
 `list`, successful `add`, successful `clear`, `findemail`, and valid `import` clear the selections.
 
-`SortCommand` enables a comparator on `ModelManager`'s `SortedList`. It compares names ignoring case
-and repeated internal spaces, without modifying the stored names or roster order. Equal names retain
-their stored relative order. Filters and record edits preserve sorting; `list` and valid `import`
-disable it. Both `show` and `sort` are read-only and never save the roster.
-
-`ShowCommandParserTest`, `ShowCommandTest`, `AddressBookParserTest`, and `LogicManagerTest` cover validation,
-selection narrowing, record replacement, ordering, and read-only execution.
-
-### Find members by email
-
-`findemail KEYWORD [MORE_KEYWORDS]...` searches the full roster for email addresses containing any
-whitespace-separated keyword. It accepts a full address or a fragment such as `@example.com`.
-Matching lowercases the email and keywords with `Locale.ROOT` and uses literal substring matching,
-not regular expressions. Names and phone numbers are not searched. Blank input is rejected.
-
-`FindEmailCommand` replaces the model's current search predicate, clearing earlier name searches,
-email searches, tag filters, and `show` selections while preserving active name sorting. The observable list re-evaluates
-the email predicate after edits; a member whose email no longer matches disappears from the view.
-`filter` can narrow these results, and `list` restores the full roster in stored order.
-The command is read-only and does not save the roster. Edit and delete continue to use current displayed indices.
-The email predicate is stored as a removable `ActiveFilter`, so the filter row shows the active query.
-Removing that chip clears only the email condition and preserves any subsequent name or tag conditions.
+`ShowCommandParserTest` and `ShowCommandTest` cover index validation and selection narrowing.
+`LogicManagerTest` covers record replacement and read-only execution.
 
 ### Filter members by tag
 
@@ -732,6 +764,31 @@ These are constraints of the current implementation:
 * [Testing guide](Testing.html)
 * [Logging guide](Logging.html)
 * [DevOps guide](DevOps.html)
+
+
+## Acknowledgements
+
+* TrackCall builds on [AddressBook Level 3](https://se-education.org/addressbook-level3/) by the
+  [SE-EDU initiative](https://se-education.org/). The starter supplies the architecture, source code, tests,
+  and original diagrams.
+* The application uses [JavaFX](https://openjfx.io/) for its interface and
+  [Jackson](https://github.com/FasterXML/jackson) for JSON storage.
+* [Apache Commons CSV](https://commons.apache.org/proper/commons-csv/) handles CSV import/export parsing and quoting.
+  Its use was [approved by the teaching team](https://github.com/NUS-CS2103-AY2627-S1/forum/issues/627).
+* The documentation website uses [MarkBind](https://markbind.org/) and adapts the
+  [CS2103T starter layout](https://github.com/NUS-CS2103-AY2627-S1/tp/tree/switch-docs-to-markbind)
+  with TrackCall's name, repository links, and guide sections.
+* The feature grouping and release-note presentation were inspired by the
+  [W12-3 team's User Guide](https://ay2627s1-cs2103t-w12-3.github.io/tp/UserGuide.html) and
+  [CoordiMate releases](https://github.com/AY2627S1-CS2103T-W12-3/tp/releases).
+  The adaptation concerns documentation layout and presentation; TrackCall retains its own feature descriptions,
+  examples, screenshots, and application behaviour.
+* The previous Jekyll website adapted the
+  [W13-1 team's layout](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/docs/stylesheets/main.css),
+  including its sidebar widths, reading width, and responsive breakpoints, under its
+  [MIT licence](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/LICENSE).
+* [JUnit](https://junit.org/junit5/), [Gradle](https://gradle.org/),
+  [Checkstyle](https://checkstyle.org/), and [JaCoCo](https://www.jacoco.org/jacoco/) support testing and builds.
 
 
 ## Appendix: Requirements {id="appendix-requirements"}
@@ -1591,6 +1648,9 @@ changed/skipped counts, invalid input, save failures, and restart persistence. R
 the release commit; passing unit tests alone does not establish release readiness.
 
 ## v1.5 release candidate changes
+
+This is the target release checklist. The [integration status](#candidate-integration-status) above
+identifies changes still awaiting merge; this list alone is not evidence that they are delivered.
 
 * `AppInstanceLock` obtains a nonblocking OS file lock before production startup reads preferences or
   the roster. A second launch from the same JAR folder fails with an already-running explanation.

@@ -1,7 +1,7 @@
 ---
 layout: default.md
 title: ""
-pageNav: 6
+pageNav: 2
 ---
 
 # TrackCall
@@ -37,57 +37,49 @@ See [Read the interface](UserGuide.html#read-the-interface) for keyboard shortcu
 
 ## Available features {id="features-in-v14-alpha"}
 
-The complete feature set includes all **nineteen commands** below. TrackCall retains and adapts
-AB3's core `add`, `edit`, `delete`, `clear`, `list`, `find`, `help`, and `exit` commands alongside
-its membership features. The [release notes](#releases) identify what changed in each version.
+TrackCall has **nineteen commands**. Start with a task below; the
+[User Guide command summary](UserGuide.html#command-summary) contains the full syntax.
 
 ### Browse and find members
 
-* [**List all members: `list`**](UserGuide.html#show-all-members-list) — restore the complete roster and reset searches and filters.
-* [**Select a subset: `show`**](UserGuide.html#show-selected-members-show) — keep only selected members from the displayed list.
-* [**Search names: `find`**](UserGuide.html#find-members-find) — match partial name words, ignoring letter case.
-* [**Search email addresses: `findemail`**](UserGuide.html#find-members-by-email-findemail) — find a full address or an email fragment across the roster.
-* [**Filter by tag: `filter`**](UserGuide.html#filter-displayed-members-by-tag-filter) — narrow the displayed members; combine successive filters to find overlapping groups.
-* [**Sort by name: `sort`**](UserGuide.html#sort-members-by-name-sort) — show the current results in case-insensitive A–Z order.
+Use `list` to restore the whole roster, `show` to select displayed members, `find` or `findemail`
+to search, `filter` to narrow by tag, and `sort` for A–Z order.
+[Browse commands →](UserGuide.html#browse-members)
 
 ### Add and update members
 
-* [**Add a member: `add`**](UserGuide.html#add-a-member-add) — record a name, phone, email, optional address, and any group tags.
-* [**Edit a member: `edit`**](UserGuide.html#update-a-member-edit) — update supplied contact fields or replace the member's tags while keeping other fields unchanged.
-
-Select a member to view and copy their contact details. The roster keeps names and tags visible,
-with [keyboard shortcuts](UserGuide.html#read-the-interface) for selecting members and returning to the command box.
+Use `add` and `edit` to maintain contact details. Select one member to view and copy their details.
+[Member commands →](UserGuide.html#manage-members)
 
 ### Organise member groups
 
-* [**Add one member's tag: `tag`**](UserGuide.html#add-or-remove-one-tag-tag-untag) — add a group assignment while preserving their other tags.
-* [**Remove one member's tag: `untag`**](UserGuide.html#add-or-remove-one-tag-tag-untag) — remove one assignment without replacing the rest.
-* [**Tag a displayed group: `tagall`**](UserGuide.html#tag-or-untag-a-group-tagall-untagall) — add a tag to every displayed member.
-* [**Untag a displayed group: `untagall`**](UserGuide.html#tag-or-untag-a-group-tagall-untagall) — remove a tag from every displayed member.
-* [**Rename a tag: `renametag`**](UserGuide.html#rename-a-tag-renametag) — replace a tag across the entire roster, including hidden members.
+Use `tag` and `untag` for one member, `tagall` and `untagall` for the displayed group,
+and `renametag` to update a tag throughout the roster.
+[Group commands →](UserGuide.html#manage-tags)
 
 ### Exchange rosters with CSV
 
-* [**Export a roster: `export`**](UserGuide.html#export-members-to-csv-export) — write every member, including hidden members, to a CSV file.
-* [**Import member records: `import`**](UserGuide.html#import-members-from-csv-import) — validate a complete CSV file, append unique members, and report skipped duplicates.
+Use `import` to validate and append unique records, or `export` to copy the entire roster,
+including hidden members.
+[CSV commands →](UserGuide.html#csv-files)
 
 ### Remove member records
 
-* [**Delete one member: `delete`**](UserGuide.html#delete-a-member-delete) — review a confirmation prompt before removing the selected record.
-* [**Clear the roster: `clear`**](UserGuide.html#clear-all-members-clear) — remove all members, including hidden records. Clearing is immediate and has no confirmation or undo.
+Use `delete` to remove one member after confirmation. `clear` removes the entire roster immediately,
+including hidden members, with no confirmation or undo.
+[Removal commands →](UserGuide.html#remove-records)
 
 ### Help and session
 
-* [**Read help offline: `help`**](UserGuide.html#offline-help-help) — browse all commands or open one command's syntax, examples, and common errors.
-* [**Finish your session: `exit`**](UserGuide.html#finish-your-session-exit) — close TrackCall after resolving any save errors.
+Use `help` or `help COMMAND` for offline instructions, and `exit` to close TrackCall.
+[Help and session commands →](UserGuide.html#help-and-session)
 
 ### Local data and recovery
 
-* [**Automatic local saving**](UserGuide.html#your-data) — keep member records and tags between sessions, building on AB3's local storage.
-* [**Backups and recovery**](UserGuide.html#automatic-backup-and-recovery) — keep the previous saved roster and choose a recovery action if the current file cannot be read.
-
-Read-only commands leave the roster file unchanged. The performance target is **500 members**;
-this is not a hard record limit.
+Valid changes save locally. Read-only commands leave the roster file unchanged.
+A backup and recovery dialog help recover from an unreadable roster.
+The performance target is **500 members**, not a hard record limit.
+[Saving and recovery →](UserGuide.html#your-data)
 
 ## Releases
 

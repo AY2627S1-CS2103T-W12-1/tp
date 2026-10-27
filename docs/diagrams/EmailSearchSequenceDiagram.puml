@@ -1,0 +1,37 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+participant ":LogicManager" as logic LOGIC_COLOR
+participant "command:FindEmailCommand" as command LOGIC_COLOR
+participant ":ModelManager" as model MODEL_COLOR
+participant "filteredPersons:\nFilteredList<Person>" as view MODEL_COLOR
+
+[-> logic : execute("findemail @example.com")
+activate logic
+note over logic, command: Parsing supplies EmailContainsKeywordsPredicate;\nparser calls omitted.
+logic -> command : execute(model)
+activate command
+command -> model : updateFilteredPersonList(predicate)
+activate model
+note over model: Clear additionalFilters and activeFilters.\nAdd one email ActiveFilter; retain the comparator.
+model -> model : refreshFilteredPersons()
+activate model
+model -> view : setPredicate(combinedPredicate)
+activate view
+view --> model
+deactivate view
+model --> model
+deactivate model
+model --> command
+deactivate model
+command -> model : getFilteredPersonList()
+activate model
+model --> command : sortedPersons
+note left of command: Count the displayed members.
+deactivate model
+command --> logic : CommandResult with count
+deactivate command
+note over logic: isReadOnly() is true; no roster save.
+logic -->[ : result
+deactivate logic
+@enduml

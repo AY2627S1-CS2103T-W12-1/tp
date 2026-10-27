@@ -1,0 +1,29 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+participant ":MainWindow" as ui UI_COLOR
+participant ":LogicManager" as logic LOGIC_COLOR
+participant "command:HelpCommand" as command LOGIC_COLOR
+participant ":HelpWindow" as help UI_COLOR
+
+ui -> logic : execute("help sort")
+activate ui
+activate logic
+note over logic, command: Parsing creates HelpCommand("sort");\nparser calls omitted.
+logic -> command : execute(model)
+activate command
+command --> logic : result {showHelp=true, helpTopic="sort"}
+deactivate command
+logic -> command : isReadOnly()
+activate command
+command --> logic : true
+deactivate command
+logic --> ui : result
+deactivate logic
+ui -> help : show("sort")
+activate help
+note right of help: Read local CommandHelp entry\nand display the topic card.
+help --> ui
+deactivate help
+deactivate ui
+@enduml

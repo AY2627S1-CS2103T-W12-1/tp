@@ -60,7 +60,8 @@ We are a team based in the [School of Computing, National University of Singapor
 [[GitHub](https://github.com/Manutd1234)]
 
 * Role: Team Lead
-* Responsibilities: List members (`list`) and clear the roster (`clear`).
+* Contributions: `list`, `clear`, name sorting, email search, offline-help implementation, and storage/privacy safeguards.
+* [Implementation and contribution details](team/manutd1234.html)
 
 </section>
 
