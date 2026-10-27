@@ -9,7 +9,9 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.CARL;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
@@ -25,6 +27,33 @@ import seedu.address.testutil.PersonBuilder;
 public class ModelManagerTest {
 
     private ModelManager modelManager = new ModelManager();
+
+    @Test
+    public void hashCode_equalModelsWithDifferentFilterImplementations_retrieveTheSameMapEntry() {
+        AddressBook roster = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build();
+        ModelManager first = new ModelManager(roster, new UserPrefs());
+        ModelManager second = new ModelManager(roster, new UserPrefs());
+        first.filterFilteredPersonListByName(new NameContainsKeywordsPredicate(List.of("Alice")));
+        second.updateFilteredPersonList(person -> person.equals(ALICE));
+        assertEquals(first, second);
+        Map<ModelManager, String> models = new HashMap<>();
+        models.put(first, "filtered");
+        assertEquals("filtered", models.get(second));
+        assertEquals("filtered", models.put(second, "replaced"));
+        assertEquals(1, models.size());
+    }
+
+    @Test
+    public void hashCode_changedBeforeInsertion_usesCurrentModelState() {
+        ModelManager changed = new ModelManager();
+        changed.hashCode();
+        changed.addPerson(ALICE);
+        changed.setGuiSettings(new GuiSettings(900, 600, 30, 40));
+        ModelManager equal = new ModelManager(changed.getAddressBook(), changed.getUserPrefs());
+        Map<ModelManager, String> models = new HashMap<>();
+        models.put(changed, "updated");
+        assertEquals("updated", models.get(equal));
+    }
 
     @Test
     public void constructor() {

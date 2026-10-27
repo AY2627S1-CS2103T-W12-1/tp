@@ -12,6 +12,10 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.Email;
+import seedu.address.model.person.Name;
+import seedu.address.model.person.Phone;
+import seedu.address.model.tag.Tag;
 
 /**
  * Prevents the offline guide from omitting a supported command or publishing an invalid example.
@@ -43,6 +47,16 @@ public class CommandHelpTest {
             assertFalse(entry.getPurpose().isBlank());
             assertFalse(entry.getExpectedResult().isBlank());
             assertFalse(entry.getErrors().isBlank());
+        }
+    }
+
+    @Test
+    public void addAndEdit_fieldRules_includeCurrentModelConstraints() {
+        for (CommandHelp entry : new CommandHelp[] {CommandHelp.ADD, CommandHelp.EDIT}) {
+            for (String rule : new String[] {Name.MESSAGE_CONSTRAINTS, Phone.MESSAGE_CONSTRAINTS,
+                Email.MESSAGE_CONSTRAINTS, Tag.MESSAGE_CONSTRAINTS}) {
+                assertTrue(entry.getNotes().contains(rule), entry.getKeyword() + ": " + rule);
+            }
         }
     }
 

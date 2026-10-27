@@ -398,9 +398,11 @@ no-op saves, rollback, retry, stored order and temporary-file cleanup.
 - Indexed commands read the sorted display, not the stored list.
 - Export still uses stored order. No descending or multi-field sorting is provided.
 - A view comparator avoids rewriting records for presentation changes.
-- Equal-name order after record replacement is tracked in [#222](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/222).
+- Break ties using stored roster order, including after member or tag updates. Names that differ only
+  in case or repeated spaces compare equally.
 
-**Tests:** `ModelManagerTest` covers ordering and resets; `AddressBookParserTest` checks command routing.
+**Tests:** `ModelManagerTest` covers ordering and resets; `SortOrderIntegrationTest` checks tied names
+after individual and bulk updates. `AddressBookParserTest` checks command routing.
 `LogicManagerTest` checks read-only execution.
 
 ### 4. Email search {id="find-members-by-email"}
@@ -612,7 +614,7 @@ identity rule as manual entry. Commons CSV handles quoting instead of manual str
 - Require an existing parent folder; apply packaged file-location restrictions.
 - Close the CSV writer before atomic replacement. Attempt temporary-file cleanup on failure.
 - Preserve an existing export if writing fails. Keep roster data, filters and sorting unchanged.
-- Reserved-path alias handling is tracked separately in [#219](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/219).
+- Reject aliases of protected files by checking existing file identity as well as normalized paths.
 
 **Tests:** `ExportCommandTest`, `ExportCommandParserTest` and `LogicManagerTest` cover destinations,
 protected files, full-roster export and read-only behavior.
@@ -1398,6 +1400,11 @@ Run each scenario from the baseline fixture.
 7. Import a header-only CSV and export an empty roster. **Expect:** valid zero-record operations.
 8. Export to a missing directory, a protected application file, and a path outside the application folder.
    **Expect:** handled errors without replacing protected data. Repeat with symbolic-link paths.
+9. In a separate disposable roster, add two members with the same name and distinct phone/email fields.
+   Run `sort`, `tagall t/year1`, then `renametag t/year1 t/year2`.
+   **Expect:** tied names retain their stored roster order after each update.
+   Repeat with four tied members and a phone-only `edit` or individual `tag`.
+   Also test names differing only in case or repeated spaces.
 
 ### Persistence and invalid files
 
