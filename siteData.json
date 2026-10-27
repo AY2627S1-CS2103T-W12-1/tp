@@ -121,6 +121,7 @@
         "testing-guide": "Testing guide",
         "running-tests": "Running tests",
         "types-of-tests": "Types of tests",
+        "randomised-csv-and-recovery-checks": "Randomised CSV and recovery checks",
         "release-verification": "Release verification"
       },
       "headingKeywords": {}
