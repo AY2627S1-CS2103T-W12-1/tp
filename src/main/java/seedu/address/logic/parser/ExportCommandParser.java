@@ -4,6 +4,7 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.Locale;
 
 import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -12,6 +13,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
  * Parses arguments for the {@code export} command.
  */
 public class ExportCommandParser implements Parser<ExportCommand> {
+
+    public static final String MESSAGE_NON_CSV_FILE = "File must have a .csv extension.";
 
     /**
      * Parses an optional destination path, preserving spaces within the path.
@@ -29,7 +32,11 @@ public class ExportCommandParser implements Parser<ExportCommand> {
         }
 
         try {
-            return new ExportCommand(Path.of(filePath));
+            Path destination = Path.of(filePath);
+            if (!filePath.toLowerCase(Locale.ROOT).endsWith(".csv")) {
+                throw new ParseException(MESSAGE_NON_CSV_FILE);
+            }
+            return new ExportCommand(destination);
         } catch (InvalidPathException e) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, ExportCommand.MESSAGE_USAGE), e);
         }

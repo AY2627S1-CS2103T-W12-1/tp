@@ -37,6 +37,7 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ConfirmDeleteCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditCommand;
+import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FindEmailCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
@@ -404,7 +405,9 @@ public class LogicManagerTest {
                 "addressBook.json.corrupt-123.json", "ADDRESSBOOK.JSON.CORRUPT-456.JSON")) {
             Path target = temporaryFolder.resolve(filename);
             Files.writeString(target, "Keep the existing application file");
-            assertThrows(CommandException.class, () -> logic.execute("export " + target));
+            assertThrows(ParseException.class, () -> logic.execute("export " + target));
+            assertThrows(CommandException.class, () -> new ExportCommand(target).execute(model,
+                    temporaryFolder.resolve("addressBook.json"), temporaryFolder.resolve("userPrefs.json")));
             assertEquals("Keep the existing application file", Files.readString(target));
             assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
             assertTrue(model.getFilteredPersonList().isEmpty());
@@ -414,7 +417,9 @@ public class LogicManagerTest {
     @Test
     public void execute_exportToNormalisedStoragePath_rejectsBeforeCreatingFile() throws Exception {
         Path target = temporaryFolder.resolve("nested/../addressBook.json");
-        assertThrows(CommandException.class, () -> logic.execute("export " + target));
+        assertThrows(ParseException.class, () -> logic.execute("export " + target));
+        assertThrows(CommandException.class, () -> new ExportCommand(target).execute(model,
+                temporaryFolder.resolve("addressBook.json"), temporaryFolder.resolve("userPrefs.json")));
         assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
         assertFalse(Files.exists(temporaryFolder.resolve("nested")));
     }

@@ -404,11 +404,15 @@ and joined with semicolons.
   it is written to the working directory.
 * Packaged builds resolve relative paths from the JAR folder and accept absolute paths only inside
   that folder. The parent directory must already exist and be writable.
+* The destination must end in `.csv` (ignoring letter case). Other extensions and missing extensions are rejected
+  with `File must have a .csv extension.` Filenames may contain spaces.
 * An existing destination file is overwritten.
   The active roster file, preferences file, their backups and recovery copies, application lock, and running JAR
   cannot be used as export destinations. These reserved paths are case-insensitive, including directory names,
   even before the files exist.
   If exporting fails, an existing destination file is left unchanged.
+* A missing parent folder or a destination that is a folder produces an error explaining what to change.
+  Create the parent folder first and choose a CSV filename. For write failures, check permissions and free disk space.
 * Export leaves the roster, current search, and automatic JSON data file unchanged.
 * An empty roster produces a file containing only the column headers.
 

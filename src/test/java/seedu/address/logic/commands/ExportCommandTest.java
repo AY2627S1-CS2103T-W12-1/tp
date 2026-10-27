@@ -6,10 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -148,7 +151,8 @@ public class ExportCommandTest {
                 new ExportCommand(tempDir).execute(model));
 
         assertInstanceOf(IOException.class, error.getCause());
-        assertEquals(String.format(ExportCommand.MESSAGE_FAILURE, tempDir, error.getCause().getMessage()),
+        assertEquals(String.format(ExportCommand.MESSAGE_FAILURE, tempDir,
+                ExportCommand.MESSAGE_DIRECTORY_DESTINATION),
                 error.getMessage());
         assertEquals(List.of(person), model.getAddressBook().getPersonList());
         assertEquals(List.of(person), model.getFilteredPersonList());
@@ -215,10 +219,75 @@ public class ExportCommandTest {
                 new ExportCommand(destination).execute(model));
 
         assertInstanceOf(IOException.class, error.getCause());
-        assertEquals(String.format(ExportCommand.MESSAGE_FAILURE, destination, error.getCause().getMessage()),
+        assertEquals(String.format(ExportCommand.MESSAGE_FAILURE, destination,
+                ExportCommand.MESSAGE_MISSING_PARENT),
                 error.getMessage());
         assertEquals(List.of(person), model.getAddressBook().getPersonList());
         assertTrue(model.getFilteredPersonList().isEmpty());
+    }
+
+    @Test
+    public void execute_csvNamedDirectory_rejectedAndPreserved() throws Exception {
+        Path destination = Files.createDirectory(tempDir.resolve("folder.csv"));
+        Path sentinel = destination.resolve("keep.txt");
+        Files.writeString(sentinel, "Keep this data");
+
+        CommandException error = assertThrows(CommandException.class, () ->
+                parser.parseCommand("export " + destination).execute(new ModelManager()));
+
+        assertEquals(String.format(ExportCommand.MESSAGE_FAILURE, destination,
+                ExportCommand.MESSAGE_DIRECTORY_DESTINATION), error.getMessage());
+        assertEquals("Keep this data", Files.readString(sentinel));
+        assertFalse(error.getMessage().contains(".trackcall-"));
+    }
+
+    @Test
+    public void execute_parentIsFile_reportsActionableError() throws Exception {
+        Path parent = tempDir.resolve("not-a-folder");
+        Files.writeString(parent, "Keep this data");
+        Path destination = parent.resolve("members.csv");
+
+        CommandException error = assertThrows(CommandException.class, () ->
+                new ExportCommand(destination).execute(new ModelManager()));
+
+        assertEquals(String.format(ExportCommand.MESSAGE_FAILURE, destination,
+                ExportCommand.MESSAGE_INVALID_PARENT), error.getMessage());
+        assertEquals("Keep this data", Files.readString(parent));
+        assertFalse(error.getMessage().contains(".trackcall-"));
+    }
+
+    @Test
+    public void parseCommand_nonCsvDestination_rejectedWithoutCreatingFile() {
+        Path destination = tempDir.resolve("members.txt");
+
+        ParseException error = assertThrows(ParseException.class, () ->
+                parser.parseCommand("export " + destination).execute(new ModelManager()));
+
+        assertEquals("File must have a .csv extension.", error.getMessage());
+        assertFalse(Files.exists(destination));
+    }
+
+    @Test
+    public void execute_unwritableParent_reportsPermissionsWithoutTemporaryPath() throws Exception {
+        assumeTrue(Files.getFileAttributeView(tempDir, PosixFileAttributeView.class) != null);
+        Path parent = Files.createDirectory(tempDir.resolve("read-only"));
+        Path destination = parent.resolve("members.csv");
+        Files.writeString(destination, "Previous export");
+        var permissions = Files.getPosixFilePermissions(parent);
+        try {
+            Files.setPosixFilePermissions(parent, PosixFilePermissions.fromString("r-x------"));
+            assumeTrue(!Files.isWritable(parent));
+
+            CommandException error = assertThrows(CommandException.class, () ->
+                    new ExportCommand(destination).execute(new ModelManager()));
+
+            assertEquals(String.format(ExportCommand.MESSAGE_FAILURE, destination,
+                    ExportCommand.MESSAGE_WRITE_DENIED), error.getMessage());
+            assertFalse(error.getMessage().contains(".trackcall-"));
+            assertEquals("Previous export", Files.readString(destination));
+        } finally {
+            Files.setPosixFilePermissions(parent, permissions);
+        }
     }
 
     @Test
