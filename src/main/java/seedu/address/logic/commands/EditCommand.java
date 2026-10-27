@@ -50,7 +50,7 @@ public class EditCommand extends Command {
     public static final String MESSAGE_EDIT_PERSON_SUCCESS = "Updated member\n%1$s";
     public static final String MESSAGE_NOT_EDITED = "At least one field to edit must be provided.";
     public static final String MESSAGE_DUPLICATE_PERSON =
-            "A member with these contact details already exists. Use edit to update that member.";
+            AddCommand.MESSAGE_DUPLICATE_PERSON;
 
     private final Index index;
     private final EditPersonDescriptor editPersonDescriptor;
@@ -79,7 +79,9 @@ public class EditCommand extends Command {
         Person personToEdit = lastShownList.get(index.getZeroBased());
         Person editedPerson = createEditedPerson(personToEdit, editPersonDescriptor);
 
-        if (!personToEdit.isSamePerson(editedPerson) && model.hasPerson(editedPerson)) {
+        if (!personToEdit.isSamePerson(editedPerson)
+                && (model.hasPerson(editedPerson) || model.getAddressBook().getPersonList().stream()
+                        .filter(person -> !person.equals(personToEdit)).anyMatch(editedPerson::isDuplicateContactOf))) {
             throw new CommandException(MESSAGE_DUPLICATE_PERSON);
         }
 

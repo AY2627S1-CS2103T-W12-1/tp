@@ -62,7 +62,9 @@ public enum CommandHelp {
             "Fields can appear in any order. Use one t/ prefix per tag; tag names contain letters and digits.",
             "Include name, phone and email once. Omit a/ if the address is unknown; a/ needs a value when used. "
                     + "Phone numbers need at least three digits. "
-                    + "An existing member with the same four contact fields is rejected. If saving fails, the member "
+                    + "Duplicates ignore name case and repeated spaces when phone, email and address match. "
+                    + "Names keep their formatting. Use find and edit for an existing member. "
+                    + "If saving fails, the member "
                     + "remains in this session and the command box clears; follow the recovery guidance before "
                     + "exiting."),
     EDIT("Manage members", "edit", "Update a member",
@@ -74,7 +76,9 @@ public enum CommandHelp {
             "Give the full tag set you want to keep. Use edit 1 t/ to remove all tags, "
                     + "or edit 1 a/ to clear the address.",
             "Use a current positive list number and supply at least one field. Invalid values or duplicate contact "
-                    + "details are rejected. If saving fails, the edit remains in this session and the command box "
+                    + "details are rejected, ignoring name case and repeated spaces when other contact fields match. "
+                    + "Your own record is excluded. If saving fails, the edit remains in this session "
+                    + "and the command box "
                     + "clears; follow the recovery guidance before exiting."),
     TAG("Manage members", "tag", "Tag one member", "tag INDEX t/TAG", "tag 1 t/committee",
             "Adds one tag to the member at a displayed list number while retaining their other tags.",
@@ -138,8 +142,11 @@ public enum CommandHelp {
     IMPORT("Manage members", "import", "Import members from CSV", "import p/FILE_PATH",
             "import p/\"data/member list.csv\"",
             "Validates a UTF-8 CSV file and appends member records without overwriting existing members.",
-            "Imports valid new members, skips exact contact-detail duplicates and restores the complete roster.",
+            "Imports valid new members, skips duplicate contacts and restores the complete roster.",
             "The header must contain name, phone, email, address and tags exactly once, in any order. "
+                    + "Duplicate names ignore case and repeated spaces when other contact fields match; "
+                    + "tags are not merged. "
+                    + "Names keep their formatting. Use edit to update a skipped contact. "
                     + "Quote paths containing whitespace. "
                     + "Packaged builds read files only inside the JAR folder. Values in the tags column are "
                     + "separated with semicolons.",
