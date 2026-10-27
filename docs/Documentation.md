@@ -120,6 +120,9 @@ java -jar /path/to/plantuml-1.2026.1.jar -tsvg -o ../images docs/diagrams/ClearS
 java -jar /path/to/plantuml-1.2026.1.jar -tpng -o ../images docs/diagrams/ClearSequenceDiagram.puml
 ```
 
+PlantUML may omit the final newline in SVG exports. Add a newline before committing, then run
+`./run-checks.sh` from the `.github` directory to enforce the repository text conventions.
+
 Check the rendered image as well as the source. Verify class relationships against field declarations,
 and sequence calls, returns and failure branches against the implementation. State any omitted parsing
 or object construction beside the diagram. Do not present pending PR behavior as already implemented.
