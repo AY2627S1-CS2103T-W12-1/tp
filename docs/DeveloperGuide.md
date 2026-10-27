@@ -1315,7 +1315,8 @@ Use `list` and check the displayed indices before any indexed command. Back up t
 
 ### Commands and displayed indices
 
-Run each scenario from the baseline fixture.
+Start each subsection below from the baseline fixture and run its numbered steps in order.
+Reset the fixture within a subsection only when a step explicitly asks you to do so.
 
 #### Add, edit and validation
 
