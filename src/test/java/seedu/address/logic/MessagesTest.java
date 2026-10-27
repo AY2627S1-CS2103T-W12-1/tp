@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.parser.Prefix;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
@@ -11,6 +12,13 @@ import seedu.address.testutil.PersonBuilder;
  * Checks that command feedback preserves complete member details in readable rows.
  */
 public class MessagesTest {
+
+    @Test
+    public void duplicatePrefixes_multipleFields_preservesSuppliedOrderWithoutRepeatingFields() {
+        assertEquals(Messages.MESSAGE_DUPLICATE_FIELDS + "n/ p/ e/ a/",
+                Messages.getErrorMessageForDuplicatePrefixes(new Prefix("n/"), new Prefix("p/"),
+                        new Prefix("e/"), new Prefix("a/"), new Prefix("n/")));
+    }
 
     @Test
     public void format_multipleTags_displaysLabelledRowsInStableOrder() {

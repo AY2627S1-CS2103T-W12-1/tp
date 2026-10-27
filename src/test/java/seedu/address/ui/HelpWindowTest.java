@@ -102,6 +102,25 @@ public class HelpWindowTest {
     }
 
     @Test
+    public void details_fieldRulesAtMinimumWidth_wrapWithoutTruncating() throws Exception {
+        onJavaFxThread(() -> {
+            for (CommandHelp entry : new CommandHelp[] {CommandHelp.ADD, CommandHelp.EDIT}) {
+                help.show(entry.getKeyword());
+                Parent root = layout(560, 440);
+                Label notes = root.lookupAll(".command-notes").stream().map(node -> (Label) node)
+                        .filter(label -> label.getText().equals(entry.getNotes())).findFirst().orElseThrow();
+                ScrollPane pane = (ScrollPane) root.lookup("#commandScrollPane");
+                assertTrue(notes.isWrapText());
+                assertTrue(notes.getWidth() <= pane.getViewportBounds().getWidth());
+                assertTrue(notes.getHeight() + 1 >= notes.prefHeight(notes.getWidth()));
+                assertTrue(pane.getContent().getBoundsInLocal().getHeight() > pane.getViewportBounds().getHeight());
+                press(KeyCode.END);
+                assertEquals(1, pane.getVvalue());
+            }
+        });
+    }
+
+    @Test
     public void keyboard_navigationScrollsAndEscapeClosesOnlyGuide() throws Exception {
         onJavaFxThread(() -> {
             help.show("add");

@@ -2,6 +2,11 @@ package seedu.address.logic.commands;
 
 import java.util.Optional;
 
+import seedu.address.model.person.Email;
+import seedu.address.model.person.Name;
+import seedu.address.model.person.Phone;
+import seedu.address.model.tag.Tag;
+
 /**
  * Offline help for the commands implemented by TrackCall. Planned commands do not belong in this catalogue.
  */
@@ -59,9 +64,8 @@ public enum CommandHelp {
             "add n/Alice Tan p/91234567 e/alice@example.com a/12 Orchard Road t/committee",
             "Creates a member with a name, phone and email. Address and tags are optional.",
             "Adds Alice Tan and shows the complete roster after the record is saved.",
-            "Fields can appear in any order. Use one t/ prefix per tag; tag names contain letters and digits.",
+            "Fields can appear in any order. Use one t/ prefix per tag. " + memberFieldRules(),
             "Include name, phone and email once. Omit a/ if the address is unknown; a/ needs a value when used. "
-                    + "Phone numbers need at least three digits. "
                     + "An existing member with the same four contact fields is rejected. If saving fails, the member "
                     + "remains in this session and the command box clears; follow the recovery guidance before "
                     + "exiting."),
@@ -72,7 +76,7 @@ public enum CommandHelp {
             "Changes member 1's phone and replaces their tags with committee and year1, "
                     + "keeping the active search and tag filters.",
             "Give the full tag set you want to keep. Use edit 1 t/ to remove all tags, "
-                    + "or edit 1 a/ to clear the address.",
+                    + "or edit 1 a/ to clear the address. " + memberFieldRules(),
             "Use a current positive list number and supply at least one field. Invalid values or duplicate contact "
                     + "details are rejected. If saving fails, the edit remains in this session and the command box "
                     + "clears; follow the recovery guidance before exiting."),
@@ -195,6 +199,14 @@ public enum CommandHelp {
         this.expectedResult = expectedResult;
         this.notes = notes;
         this.errors = errors;
+    }
+
+    /**
+     * Reuses the field constraints so add and edit explain the same accepted values as validation errors.
+     */
+    private static String memberFieldRules() {
+        return Name.MESSAGE_CONSTRAINTS + ".\n" + Phone.MESSAGE_CONSTRAINTS + ".\n"
+                + Email.MESSAGE_CONSTRAINTS + "\n" + Tag.MESSAGE_CONSTRAINTS + ".";
     }
 
     /**

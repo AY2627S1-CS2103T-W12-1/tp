@@ -11,9 +11,13 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 
 public class EditPersonDescriptorTest {
@@ -55,6 +59,27 @@ public class EditPersonDescriptorTest {
         // different tags -> returns false
         editedAmy = new EditPersonDescriptorBuilder(DESC_AMY).withTags(VALID_TAG_HUSBAND).build();
         assertFalse(DESC_AMY.equals(editedAmy));
+    }
+
+    @Test
+    public void hashCode_emptyAndPopulatedDescriptors_matchInHashSet() {
+        Set<EditPersonDescriptor> descriptors = new HashSet<>();
+        descriptors.add(new EditPersonDescriptor());
+        descriptors.add(new EditPersonDescriptor(DESC_AMY));
+        assertTrue(descriptors.contains(new EditPersonDescriptor()));
+        assertFalse(descriptors.add(new EditPersonDescriptor(DESC_AMY)));
+        assertEquals(2, descriptors.size());
+    }
+
+    @Test
+    public void hashCode_changedBeforeInsertion_usesCurrentFields() {
+        EditPersonDescriptor changed = new EditPersonDescriptor(DESC_AMY);
+        changed.hashCode();
+        changed.setTags(Set.of(new Tag("changed")));
+        Set<EditPersonDescriptor> descriptors = new HashSet<>();
+        descriptors.add(changed);
+        assertTrue(descriptors.contains(new EditPersonDescriptor(changed)));
+        assertFalse(descriptors.contains(new EditPersonDescriptor(DESC_AMY)));
     }
 
     @Test

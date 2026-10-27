@@ -9,6 +9,8 @@ src/main/resources/docs/
 /*.iml
 
 # Storage/log files
+/.javafx-cache/
+/.trackcall.lock
 /data/
 /preferences.json
 /*.log.*
