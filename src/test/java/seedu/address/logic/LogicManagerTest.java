@@ -862,9 +862,10 @@ public class LogicManagerTest {
             AddressBook original = new AddressBook(model.getAddressBook());
             useFailingStorage(error);
             logic.execute("find Amy");
+            logic.execute("clear");
 
             SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
-                    SaveFailureException.class, () -> logic.execute("clear"));
+                    SaveFailureException.class, () -> logic.execute("y"));
 
             assertFalse(failure.isChangeApplied());
             assertEquals(original, model.getAddressBook());

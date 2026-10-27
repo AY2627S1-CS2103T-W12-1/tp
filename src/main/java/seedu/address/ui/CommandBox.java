@@ -42,7 +42,7 @@ public class CommandBox extends UiPart<Region> {
     }
 
     /**
-     * Highlights the command box and changes its hint while the next input confirms or cancels a deletion.
+     * Highlights the command box and changes its hint while the next input confirms or cancels a destructive command.
      */
     public void setAwaitingConfirmation(boolean isAwaitingConfirmation) {
         this.isAwaitingConfirmation = isAwaitingConfirmation;

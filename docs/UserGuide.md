@@ -483,7 +483,7 @@ error identifies the row where applicable. The source CSV is never modified.
 
 ### Remove member records {id="remove-records"}
 
-Remove one member with confirmation, or clear the whole roster.
+Remove one member or the whole roster with confirmation.
 
 #### Delete a member: `delete`
 
@@ -517,7 +517,13 @@ The result identifies the removed member without displaying their phone, email, 
 `clear` removes the entire roster, including members hidden by a search.
 It saves the empty roster and resets the search after a successful save.
 
-**Clearing is immediate, with no confirmation or undo.**
+1. Run `clear`. TrackCall shows the total number of stored members, including anyone hidden by searches or filters.
+2. Type `y` and press Enter to clear and save the entire roster.
+   Any other input cancels without running that input as a command.
+
+The roster, current view, and saved file stay unchanged while the prompt is pending or when you cancel.
+An already-empty roster saves immediately without prompting, so `clear` can still retry an unsaved empty roster.
+**There is no undo after confirmation.** Back up records you may need later.
 
 | Situation | Feedback after saving |
 | --- | --- |
@@ -529,7 +535,7 @@ The count includes hidden members.
 Extra arguments produce `Invalid command format. Usage: clear. This command removes all members.`
 
 If saving fails, TrackCall restores the roster and previous view. It reports:
-`Unable to clear the roster because the changes could not be saved. No members were removed.`
+`Unable to clear the roster because the changes could not be saved. No members were removed. Run clear again to retry.`
 See [Correcting errors](#correcting-errors) for recovery steps.
 
 ### Help and session {id="help-and-session"}
@@ -608,9 +614,10 @@ Exiting before a successful retry loses unsaved changes.
 ### A save fails after clear
 
 TrackCall restores every member and the previous view. It reports `No members were removed.`
-The clear input stays in the command box.
+The submitted input stays in the command box (`y` after confirmation, or `clear` for an already-empty roster).
 
-Fix the storage problem. Retry only if you still want to remove the entire roster.
+Fix the storage problem. Run `clear` again and confirm the new prompt only if you still want to remove the entire roster.
+A second `y` alone cannot repeat the action.
 
 ## Your data
 
@@ -719,7 +726,7 @@ in memory.
 | Untag a group | `untagall t/TAG` | `untagall t/committee` removes the tag from every displayed member. |
 | Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every member. |
 | Delete one member | `delete INDEX`, then `y` | `delete 1`, then `y`, removes the first currently displayed member. |
-| Clear the roster | `clear` | `clear` removes all members, including those hidden by a search. |
+| Clear the roster | `clear` | Run `clear`, then `y` to remove all members, including hidden ones. Any other reply cancels. |
 | Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |
 | Import members | `import p/FILE_PATH` | `import p/members.csv` appends unique valid records. |
 | Close the app | `exit` | `exit` ends the session. |
