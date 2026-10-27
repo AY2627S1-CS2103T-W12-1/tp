@@ -32,6 +32,38 @@ public class CsvAddressBookImporterTest {
     public Path tempDir;
 
     @Test
+    public void read_oversizedFile_rejectsBeforeParsingContents() throws Exception {
+        Path file = tempDir.resolve("oversized.csv");
+        try (java.io.RandomAccessFile output = new java.io.RandomAccessFile(file.toFile(), "rw")) {
+            output.setLength(10 * 1024 * 1024 + 1);
+        }
+        CsvImportException error = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
+        assertEquals("CSV file exceeds the 10 MiB limit. Split it into smaller CSV files.", error.getMessage());
+    }
+
+    @Test
+    public void read_exactByteLimit_acceptsFile() throws Exception {
+        byte[] input = new byte[10 * 1024 * 1024];
+        java.util.Arrays.fill(input, (byte) ' ');
+        byte[] header = "name,phone,email,address,tags\n".getBytes(StandardCharsets.UTF_8);
+        System.arraycopy(header, 0, input, 0, header.length);
+        Path file = tempDir.resolve("limit.csv");
+        Files.write(file, input);
+        assertEquals(List.of(), CsvAddressBookImporter.read(file));
+    }
+
+    @Test
+    public void read_memberRowLimit_acceptsBoundaryAndRejectsOneMore() throws Exception {
+        String header = "name,phone,email,address,tags\n";
+        String row = "Alice,123,alice@example.com,Home,\n";
+        Path file = write(header + row.repeat(10_000));
+        assertEquals(10_000, CsvAddressBookImporter.read(file).size());
+        Files.writeString(file, row, java.nio.file.StandardOpenOption.APPEND);
+        CsvImportException error = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
+        assertEquals("CSV file exceeds the 10,000 member-row limit. Split it into smaller CSV files.",
+                error.getMessage());
+    }
+    @Test
     public void read_unescapedQuoteInUnquotedField_rejectsCsvSyntaxAtTheCorrectRow() throws Exception {
         Path file = write("name,phone,email,address,tags\n"
                 + "Alice,123,a@example.com,Main\" Street,\n");

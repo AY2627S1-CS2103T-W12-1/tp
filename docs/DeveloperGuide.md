@@ -483,7 +483,9 @@ Other commands retain their own parsing rules.
 requires quotes around paths containing whitespace, rejects repeated or unknown prefixes, and accepts the
 `.csv` extension case-insensitively while preserving path case.
 
-`CsvAddressBookImporter` reads the complete source as strict UTF-8, accepts an optional byte-order mark,
+`CsvAddressBookImporter` rejects sources over 10 MiB, bounds the read to detect files that grow,
+and rejects more than 10,000 non-blank member rows before duplicate removal. It reads strict UTF-8,
+accepts an optional byte-order mark,
 checks the exact lowercase five-column header in any column order, and uses the shared Apache Commons CSV
 format for quoting and escaping. It rejects embedded line breaks and trims surrounding whitespace from
 field values and individual tags before validation. Records are parsed and validated in source order,

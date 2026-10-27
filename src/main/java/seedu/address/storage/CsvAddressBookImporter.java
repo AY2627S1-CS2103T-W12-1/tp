@@ -2,7 +2,9 @@ package seedu.address.storage;
 
 import static java.util.Objects.requireNonNull;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -46,6 +48,13 @@ public final class CsvAddressBookImporter {
     public static final String MESSAGE_MULTILINE_FIELD = "line breaks inside fields are not supported.";
     public static final String MESSAGE_WRONG_FIELD_COUNT = "expected 5 fields but found %d.";
 
+    public static final int MAX_FILE_BYTES = 10 * 1024 * 1024;
+    public static final int MAX_MEMBER_ROWS = 10_000;
+    public static final String MESSAGE_FILE_TOO_LARGE =
+            "CSV file exceeds the 10 MiB limit. Split it into smaller CSV files.";
+    public static final String MESSAGE_TOO_MANY_ROWS =
+            "CSV file exceeds the 10,000 member-row limit. Split it into smaller CSV files.";
+
     private static final int FIELD_COUNT = CsvAddressBookCsv.HEADERS.size();
     private static final char BYTE_ORDER_MARK = '\uFEFF';
 
@@ -57,12 +66,23 @@ public final class CsvAddressBookImporter {
      * Reads and validates every record in {@code filePath} without changing the source file.
      *
      * @throws IOException if the file cannot be read.
-     * @throws CsvImportException if the file is not valid UTF-8 CSV or contains an invalid member.
+     * @throws CsvImportException if the file exceeds the byte or row limits, is not valid UTF-8 CSV,
+     *     or contains an invalid member.
      */
     public static List<Person> read(Path filePath) throws IOException, CsvImportException {
         requireNonNull(filePath);
         filePath = FileUtil.resolvePath(filePath);
-        byte[] bytes = Files.readAllBytes(filePath);
+        if (Files.size(filePath) > MAX_FILE_BYTES) {
+            throw new CsvImportException(MESSAGE_FILE_TOO_LARGE);
+        }
+        byte[] bytes;
+        try (InputStream input = Files.newInputStream(filePath)) {
+            // Bound the read too: the file may grow after the size check.
+            bytes = input.readNBytes(MAX_FILE_BYTES + 1);
+        }
+        if (bytes.length > MAX_FILE_BYTES) {
+            throw new CsvImportException(MESSAGE_FILE_TOO_LARGE);
+        }
         String contents = decodeUtf8(bytes);
         if (!contents.isEmpty() && contents.charAt(0) == BYTE_ORDER_MARK) {
             contents = contents.substring(1);
@@ -84,8 +104,8 @@ public final class CsvAddressBookImporter {
 
     /** Keeps raw physical rows available so quote validation does not lose information during CSV decoding. */
     private static List<Person> parseContents(String contents) throws CsvImportException {
-        String[] rawRows = contents.split("\\r?\\n", -1);
-        try (CSVParser parser = CSVParser.parse(new StringReader(contents), CsvAddressBookCsv.FORMAT)) {
+        try (BufferedReader rawRows = new BufferedReader(new StringReader(contents));
+                CSVParser parser = CSVParser.parse(new StringReader(contents), CsvAddressBookCsv.FORMAT)) {
             Iterator<CSVRecord> records = parser.iterator();
             CSVRecord header = nextRecord(parser, records, rawRows);
             if (header == null) {
@@ -99,6 +119,9 @@ public final class CsvAddressBookImporter {
                 if (record.size() == 1 && record.get(0).trim().isEmpty()) {
                     continue;
                 }
+                if (people.size() >= MAX_MEMBER_ROWS) {
+                    throw new CsvImportException(MESSAGE_TOO_MANY_ROWS);
+                }
                 people.add(parsePerson(record, headerIndexes));
             }
             return List.copyOf(people);
@@ -111,8 +134,8 @@ public final class CsvAddressBookImporter {
      * Reads one record, reporting syntax errors at its starting physical row.
      * Multiline fields are rejected before trimming so line breaks cannot disappear during normalisation.
      */
-    private static CSVRecord nextRecord(CSVParser parser, Iterator<CSVRecord> records, String[] rawRows)
-            throws CsvImportException {
+    private static CSVRecord nextRecord(CSVParser parser, Iterator<CSVRecord> records, BufferedReader rawRows)
+            throws CsvImportException, IOException {
         long row = parser.getCurrentLineNumber() + 1;
         CSVRecord record;
         try {
@@ -128,7 +151,7 @@ public final class CsvAddressBookImporter {
                 throw rowError(row, MESSAGE_MULTILINE_FIELD);
             }
         }
-        validateQuotes(rawRows[(int) row - 1], row);
+        validateQuotes(rawRows.readLine(), row);
         return record;
     }
 
