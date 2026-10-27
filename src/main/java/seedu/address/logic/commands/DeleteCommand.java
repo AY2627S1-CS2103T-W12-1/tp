@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.Objects;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
@@ -20,7 +21,7 @@ public class DeleteCommand extends Command {
     public static final String COMMAND_WORD = "delete";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Deletes the person identified by the index number used in the displayed person list "
+            + ": Deletes the member identified by the index number used in the displayed member list "
             + "after you confirm the deletion.\n"
             + "Parameters: INDEX (must be a positive integer)\n"
             + "Example: " + COMMAND_WORD + " 1";
@@ -72,6 +73,11 @@ public class DeleteCommand extends Command {
         }
 
         return targetIndex.equals(otherDeleteCommand.targetIndex);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(targetIndex);
     }
 
     @Override

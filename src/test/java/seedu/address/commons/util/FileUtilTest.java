@@ -3,10 +3,14 @@ package seedu.address.commons.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -86,6 +90,59 @@ public class FileUtilTest {
         }));
 
         assertEquals("Previous complete export", Files.readString(target));
+        assertOnlyEntry(testFolder, target);
+    }
+
+    @Test
+    public void writeAtomically_existingPosixFile_preservesPermissions() throws IOException {
+        assumeTrue(Files.getFileAttributeView(testFolder, PosixFileAttributeView.class) != null);
+        Path target = testFolder.resolve("members.csv");
+        for (String mode : List.of("rw-r--r--", "rw-rw----", "rw-------")) {
+            Files.writeString(target, "Previous export");
+            var permissions = PosixFilePermissions.fromString(mode);
+            Files.setPosixFilePermissions(target, permissions);
+
+            FileUtil.writeAtomically(target, temporary -> Files.writeString(temporary, "New export"));
+
+            assertEquals("New export", Files.readString(target));
+            assertEquals(permissions, Files.getPosixFilePermissions(target));
+            assertOnlyEntry(testFolder, target);
+        }
+    }
+
+    @Test
+    public void writeAtomically_writerCopiesDifferentPermissions_preservesTargetPermissions() throws IOException {
+        assumeTrue(Files.getFileAttributeView(testFolder, PosixFileAttributeView.class) != null);
+        Path source = testFolder.resolve("source.csv");
+        Path target = testFolder.resolve("members.csv");
+        Files.writeString(source, "New export");
+        Files.setPosixFilePermissions(source, PosixFilePermissions.fromString("rw-------"));
+        Files.writeString(target, "Previous export");
+        var permissions = PosixFilePermissions.fromString("rw-r--r--");
+        Files.setPosixFilePermissions(target, permissions);
+
+        FileUtil.writeAtomically(target,
+                temporary -> Files.copy(source, temporary, StandardCopyOption.REPLACE_EXISTING));
+
+        assertEquals("New export", Files.readString(target));
+        assertEquals(permissions, Files.getPosixFilePermissions(target));
+    }
+
+    @Test
+    public void writeAtomically_writerFails_preservesPosixPermissionsAndContents() throws IOException {
+        assumeTrue(Files.getFileAttributeView(testFolder, PosixFileAttributeView.class) != null);
+        Path target = testFolder.resolve("members.csv");
+        Files.writeString(target, "Previous export");
+        var permissions = PosixFilePermissions.fromString("rw-r--r--");
+        Files.setPosixFilePermissions(target, permissions);
+
+        assertThrows(IOException.class, () -> FileUtil.writeAtomically(target, temporary -> {
+            Files.writeString(temporary, "Partial export");
+            throw new IOException("Simulated write failure");
+        }));
+
+        assertEquals("Previous export", Files.readString(target));
+        assertEquals(permissions, Files.getPosixFilePermissions(target));
         assertOnlyEntry(testFolder, target);
     }
 

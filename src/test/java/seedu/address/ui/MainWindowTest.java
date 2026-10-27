@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -20,8 +22,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javafx.animation.AnimationTimer;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -388,6 +393,252 @@ public class MainWindowTest {
     }
 
     @Test
+    public void activeFilterChips_longCondition_keepsRemovalVisibleWithFullTooltip() throws Exception {
+        resizeWindow(853, 480);
+        onJavaFxThread(() -> {
+            String condition = "Alice Benjamin Charlotte Danielle Elizabeth Francesca Gabriella Harrison Isabella "
+                    + "Jonathan Katherine Leonardo Madeleine Nathaniel Olivia Penelope Quentin Rebecca "
+                    + "Sebastian Theodore";
+            enter("find " + condition);
+            layoutWindow();
+            ScrollPane scroll = (ScrollPane) window.getPrimaryStage().getScene().lookup("#activeFiltersScroll");
+            FlowPane chips = (FlowPane) scroll.getContent();
+            HBox chip = (HBox) chips.getChildren().getFirst();
+            Label label = (Label) chip.getChildren().getFirst();
+            Button removeButton = (Button) chip.getChildren().get(1);
+            assertEquals("Name: " + condition, label.getText());
+            assertEquals(label.getText(), label.getTooltip().getText());
+            assertTrue(label.getWidth() < label.prefWidth(-1), "The long label should be ellipsized");
+            assertInside(removeButton, scroll.lookup(".viewport"));
+            assertInScene(removeButton);
+            removeButton.fire();
+            assertDisplayedNames("Alice Tan", "Bob Lee");
+            assertFalse(scroll.isManaged());
+        });
+        assertFalse(Files.exists(temporaryFolder.resolve("members.json")));
+    }
+
+    @Test
+    public void activeFilterChips_manyConditions_keepRosterVisibleAndScrollForKeyboardFocus() throws Exception {
+        resizeWindow(853, 480);
+        onJavaFxThread(() -> {
+            for (int index = 0; index < 22; index++) {
+                enter("find Alice Group" + index);
+            }
+            layoutWindow();
+        });
+        onJavaFxThread(() -> {
+            layoutWindow();
+            Stage stage = window.getPrimaryStage();
+            ScrollPane scroll = (ScrollPane) stage.getScene().lookup("#activeFiltersScroll");
+            FlowPane chips = (FlowPane) scroll.getContent();
+            assertEquals(22, chips.getChildren().size());
+            assertTrue(chips.getHeight() > scroll.getViewportBounds().getHeight());
+            assertTrue(scroll.getHeight() <= 80);
+            assertInScene(stage.getScene().lookup("#mainSplit"));
+            assertInScene(stage.getScene().lookup("#statusbarPlaceholder"));
+            assertTrue(stage.getScene().lookup("#personListPanelPlaceholder").getLayoutBounds().getHeight() >= 90);
+            assertInside(chips.getChildren().getLast(), scroll.lookup(".viewport"));
+            assertDisplayedNames("Alice Tan");
+
+            scroll.setVvalue(0);
+            Button lastRemove = (Button) ((HBox) chips.getChildren().getLast()).getChildren().get(1);
+            lastRemove.requestFocus();
+            layoutWindow();
+            assertInside(lastRemove, scroll.lookup(".viewport"));
+            assertTrue(scroll.getVvalue() > 0);
+
+            Button firstRemove = (Button) ((HBox) chips.getChildren().getFirst()).getChildren().get(1);
+            firstRemove.requestFocus();
+            layoutWindow();
+            assertInside(firstRemove, scroll.lookup(".viewport"));
+            assertEquals(0, scroll.getVvalue(), 0.01);
+            scroll.requestFocus();
+            Event.fireEvent(scroll, key(KeyCode.DOWN));
+            assertTrue(scroll.getVvalue() > 0, "The filter area must support keyboard scrolling");
+            firstRemove.requestFocus();
+            for (int index = 1; index < 22; index++) {
+                Event.fireEvent(stage.getScene().getFocusOwner(), key(KeyCode.TAB));
+            }
+            layoutWindow();
+            assertEquals(lastRemove, stage.getScene().getFocusOwner());
+            assertInside(lastRemove, scroll.lookup(".viewport"));
+
+            firstRemove.requestFocus();
+            firstRemove.fire();
+            layoutWindow();
+            assertEquals(21, chips.getChildren().size());
+            assertEquals(((HBox) chips.getChildren().getFirst()).getChildren().get(1),
+                    stage.getScene().getFocusOwner());
+            assertDisplayedNames("Alice Tan");
+        });
+    }
+
+    @Test
+    public void activeFilterChips_removeLastCondition_keepsFocusedSuccessorVisibleAfterLayout() throws Exception {
+        resizeWindow(450, 450);
+        onJavaFxThread(() -> {
+            for (int index = 0; index < 30; index++) {
+                enter("find Alice Group" + index);
+            }
+            layoutWindow();
+            ScrollPane scroll = (ScrollPane) window.getPrimaryStage().getScene().lookup("#activeFiltersScroll");
+            FlowPane chips = (FlowPane) scroll.getContent();
+            Button lastRemove = (Button) ((HBox) chips.getChildren().getLast()).getChildren().get(1);
+            lastRemove.requestFocus();
+            lastRemove.fire();
+        });
+        awaitLayoutPulses();
+        onJavaFxThread(() -> {
+            ScrollPane scroll = (ScrollPane) window.getPrimaryStage().getScene().lookup("#activeFiltersScroll");
+            FlowPane chips = (FlowPane) scroll.getContent();
+            assertEquals(29, chips.getChildren().size());
+            Node focused = window.getPrimaryStage().getScene().getFocusOwner();
+            assertEquals(((HBox) chips.getChildren().getLast()).getChildren().get(1), focused);
+            assertInside(focused, scroll.lookup(".viewport"));
+            assertDisplayedNames("Alice Tan");
+        });
+    }
+
+    @Test
+    public void activeFilterChips_tallerFontMetrics_keepsWholeRowsAndMainPanelsVisible() throws Exception {
+        Path largerFontStylesheet = temporaryFolder.resolve("larger-filter-font.css");
+        Files.writeString(largerFontStylesheet, ".filter-chip-remove { -fx-font-size: 24px; }");
+        onJavaFxThread(() -> window.getPrimaryStage().getScene().getStylesheets()
+                .add(largerFontStylesheet.toUri().toString()));
+        for (int[] size : new int[][]{{853, 480}, {450, 450}}) {
+            resizeWindow(size[0], size[1]);
+            onJavaFxThread(() -> {
+                enter("list");
+                for (int index = 0; index < 22; index++) {
+                    enter("find Alice Group" + index);
+                }
+                layoutWindow();
+            });
+            awaitLayoutPulses();
+            onJavaFxThread(() -> {
+                Stage stage = window.getPrimaryStage();
+                ScrollPane scroll = (ScrollPane) stage.getScene().lookup("#activeFiltersScroll");
+                FlowPane chips = (FlowPane) scroll.getContent();
+                HBox lastChip = (HBox) chips.getChildren().getLast();
+                assertTrue(lastChip.getHeight() > 35, "Exercise a row taller than the original fixed minimum");
+                assertTrue(scroll.getViewportBounds().getHeight() >= lastChip.getHeight());
+                assertInside(lastChip, scroll.lookup(".viewport"));
+                assertInScene(stage.getScene().lookup("#mainSplit"));
+                assertInScene(stage.getScene().lookup("#statusbarPlaceholder"));
+                Button firstRemove = (Button) ((HBox) chips.getChildren().getFirst()).getChildren().get(1);
+                firstRemove.requestFocus();
+                layoutWindow();
+                assertInside(chips.getChildren().getFirst(), scroll.lookup(".viewport"));
+                Button lastRemove = (Button) lastChip.getChildren().get(1);
+                lastRemove.requestFocus();
+                layoutWindow();
+                assertInside(lastChip, scroll.lookup(".viewport"));
+                lastRemove.fire();
+            });
+            awaitLayoutPulses();
+            onJavaFxThread(() -> {
+                ScrollPane scroll = (ScrollPane) window.getPrimaryStage().getScene().lookup("#activeFiltersScroll");
+                FlowPane chips = (FlowPane) scroll.getContent();
+                assertInside(chips.getChildren().getLast(), scroll.lookup(".viewport"));
+                assertDisplayedNames("Alice Tan");
+            });
+        }
+    }
+
+    @Test
+    public void activeFilterChips_decoratedMinimumViewport_keepsPanelsInsideScene() throws Exception {
+        Path largerFontStylesheet = temporaryFolder.resolve("decorated-minimum-filter-font.css");
+        Files.writeString(largerFontStylesheet, ".filter-chip-remove { -fx-font-size: 40px; }");
+        onJavaFxThread(() -> {
+            Stage stage = window.getPrimaryStage();
+            stage.getScene().getStylesheets().add(largerFontStylesheet.toUri().toString());
+            // Exercise the 434 x 411 content area of the decorated 450 x 450 Windows CI stage.
+            double frameWidth = stage.getWidth() - stage.getScene().getWidth();
+            double frameHeight = stage.getHeight() - stage.getScene().getHeight();
+            stage.setMinWidth(0);
+            stage.setMinHeight(0);
+            stage.setWidth(434 + frameWidth);
+            stage.setHeight(411 + frameHeight);
+        });
+        awaitLayoutPulses();
+        onJavaFxThread(() -> {
+            assertEquals(434, window.getPrimaryStage().getScene().getWidth(), 1);
+            assertEquals(411, window.getPrimaryStage().getScene().getHeight(), 1);
+            for (int index = 0; index < 22; index++) {
+                enter("find Alice Group" + index);
+            }
+            layoutWindow();
+        });
+        awaitLayoutPulses();
+        onJavaFxThread(() -> {
+            Stage stage = window.getPrimaryStage();
+            ScrollPane scroll = (ScrollPane) stage.getScene().lookup("#activeFiltersScroll");
+            FlowPane chips = (FlowPane) scroll.getContent();
+            assertInside(chips.getChildren().getLast(), scroll.lookup(".viewport"));
+            assertInScene(stage.getScene().lookup("#mainSplit"));
+            assertInScene(stage.getScene().lookup("#statusbarPlaceholder"));
+            assertTrue(feedback.getHeight() >= 40, "Feedback must retain space for readable text");
+            assertTrue(stage.getScene().lookup("#personListView").getLayoutBounds().getHeight() >= 60,
+                    "The roster must retain space for a member row");
+        });
+    }
+
+    /** Resizes on a separate JavaFX turn so the native window can update its scene dimensions. */
+    private void resizeWindow(double width, double height) throws Exception {
+        onJavaFxThread(() -> {
+            window.getPrimaryStage().setWidth(width);
+            window.getPrimaryStage().setHeight(height);
+            window.getPrimaryStage().requestFocus();
+        });
+        awaitLayoutPulses();
+    }
+
+    /** Waits for native scene changes and responsive layouts to reach the next rendered frame. */
+    private void awaitLayoutPulses() throws Exception {
+        CountDownLatch layoutReady = new CountDownLatch(1);
+        onJavaFxThread(() -> {
+            new AnimationTimer() {
+                private int pulses;
+
+                @Override
+                public void handle(long now) {
+                    if (++pulses >= 2) {
+                        stop();
+                        layoutReady.countDown();
+                    }
+                }
+            }.start();
+        });
+        assertTrue(layoutReady.await(5, TimeUnit.SECONDS), "The resized window did not receive a layout pulse");
+    }
+
+    /** Applies styles and layout before checking the visible positions of controls. */
+    private void layoutWindow() {
+        window.getPrimaryStage().getScene().getRoot().applyCss();
+        window.getPrimaryStage().getScene().getRoot().layout();
+    }
+
+    /** Checks against the window viewport, including when children extend the root's bounds. */
+    private void assertInScene(Node control) {
+        Bounds bounds = control.localToScene(control.getBoundsInLocal());
+        assertTrue(bounds.getMinX() >= -1, bounds.toString());
+        assertTrue(bounds.getMinY() >= -1, bounds.toString());
+        assertTrue(bounds.getMaxX() <= control.getScene().getWidth() + 1, bounds.toString());
+        assertTrue(bounds.getMaxY() <= control.getScene().getHeight() + 1, bounds.toString());
+    }
+
+    /** Checks that the entire control is reachable within the supplied visible region. */
+    private void assertInside(Node control, Node region) {
+        Bounds controlBounds = control.localToScene(control.getBoundsInLocal());
+        Bounds regionBounds = region.localToScene(region.getBoundsInLocal());
+        assertTrue(controlBounds.getMinX() >= regionBounds.getMinX() - 1, controlBounds + " inside " + regionBounds);
+        assertTrue(controlBounds.getMaxX() <= regionBounds.getMaxX() + 1, controlBounds + " inside " + regionBounds);
+        assertTrue(controlBounds.getMinY() >= regionBounds.getMinY() - 1, controlBounds + " inside " + regionBounds);
+        assertTrue(controlBounds.getMaxY() <= regionBounds.getMaxY() + 1, controlBounds + " inside " + regionBounds);
+    }
+
+    @Test
     public void enter_allCommands_roundTripsGroupChangesThroughRealUiAndStorage() throws Exception {
         Path exported = temporaryFolder.resolve("member copy.csv");
         onJavaFxThread(() -> {
@@ -413,7 +664,7 @@ public class MainWindowTest {
             assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");
             enter("edit 1 p/90000004");
             enter("export " + exported);
-            assertTrue(feedback.getText().startsWith("Exported 3 people to "));
+            assertTrue(feedback.getText().startsWith("Exported 3 members to "));
             enter("delete 2");
             enter("y");
             assertDisplayedNames("Zara Tan", "Alice Tan");
@@ -428,9 +679,9 @@ public class MainWindowTest {
                     .noneMatch(tag -> tag.tagName.equals("committee")));
             enter("find Alice");
             enter("clear");
-            assertEquals("Cleared 3 members. The address book is now empty.", feedback.getText());
+            assertEquals("Cleared 3 members. The roster is now empty.", feedback.getText());
             enter("list");
-            assertEquals("No members in the address book.", feedback.getText());
+            assertEquals("No members in the roster.", feedback.getText());
             enter("exit");
             assertFalse(window.getPrimaryStage().isShowing());
         });

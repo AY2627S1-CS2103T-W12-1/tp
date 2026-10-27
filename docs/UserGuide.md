@@ -220,6 +220,8 @@ For example, `filter t/committee t/year1` is invalid; apply each tag in a separa
 
 `sort` orders the currently displayed members by full name from A to Z, ignoring letter case.
 It preserves the current search restriction and does not change or save the stored roster order.
+Names that compare equally, including differences only in case or repeated spaces, keep their stored
+relative order after tag or contact-detail updates.
 Sorting stays active as members are added, edited, deleted, or searched. Use `list` to restore
 the complete roster in stored order, or restart the app to return to stored order.
 A successful `import` also restores the complete roster in stored order.

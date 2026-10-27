@@ -1555,6 +1555,10 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
    For an import-save failure, temporarily replace the automatic JSON file with a directory: expect the
    imported batch to remain in memory, a save error, and no modification to the source CSV. Restore storage
    access and retry saving with an existing field value before exiting.
+7. In a separate disposable roster, add two members with the same name and distinct phone/email fields.
+   After `sort`, run `tagall t/year1` and `renametag t/year1 t/year2`: their relative displayed order
+   must remain the stored roster order. Repeat with four tied members and a phone-only `edit` or
+   individual `tag`; also test names differing only in case or repeated spaces.
 
 ### Persistence and invalid files
 

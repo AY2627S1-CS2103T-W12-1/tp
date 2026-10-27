@@ -14,7 +14,7 @@ public class FindCommand extends Command {
 
     public static final String COMMAND_WORD = "find";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds displayed persons whose names contain any of "
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Finds displayed members whose names contain any of "
             + "the specified keywords (case-insensitive, partial words allowed) "
             + "and displays them as a list with index numbers.\n"
             + "Parameters: KEYWORD [MORE_KEYWORDS]...\n"
@@ -53,6 +53,11 @@ public class FindCommand extends Command {
         }
 
         return predicate.equals(otherFindCommand.predicate);
+    }
+
+    @Override
+    public int hashCode() {
+        return predicate.hashCode();
     }
 
     @Override
