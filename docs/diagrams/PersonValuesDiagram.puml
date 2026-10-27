@@ -1,0 +1,20 @@
+@startuml
+!pragma layout smetana
+!include style.puml
+skinparam ArrowFontStyle plain
+skinparam classBackgroundColor MODEL_COLOR
+skinparam nodesep 35
+skinparam ranksep 40
+left to right direction
+class Person
+class Name
+class Phone
+class Email
+class Address
+class Tag
+Person --> "1" Name : name
+Person --> "1" Phone : phone
+Person --> "1" Email : email
+Person --> "1" Address : address
+Person --> "0..*" Tag : tags
+@enduml

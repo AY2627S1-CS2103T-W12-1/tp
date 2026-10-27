@@ -1,0 +1,35 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+skinparam DefaultFontSize 15
+mainframe sd WriteCsvAtomically
+participant "<<class>>\nCsvAddressBookExporter" as Exporter STORAGE_COLOR
+participant "<<class>>\nFileUtil" as FileUtil STORAGE_COLOR
+participant "<<class>>\nFiles" as Files STORAGE_COLOR
+[-> Exporter : export(people, targetPath)
+activate Exporter
+Exporter -> FileUtil : writeAtomically(targetPath, writer)
+activate FileUtil
+FileUtil -> Files : createTempFile(targetParent, prefix, suffix)
+Files --> FileUtil : temporary
+FileUtil -> Exporter : writer callback: writeCsv(people, temporary)
+activate Exporter
+note over Exporter
+Write the UTF-8 header and all records.
+Sort tags; use CSV quoting for field values.
+Close the writer before returning.
+end note
+Exporter --> FileUtil : return
+deactivate Exporter
+FileUtil -> Files : move(temporary, target, ATOMIC_MOVE, REPLACE_EXISTING)
+Files --> FileUtil : return
+FileUtil --> Exporter : return
+deactivate FileUtil
+Exporter -->[ : return
+deactivate Exporter
+note over FileUtil,Files
+Success path shown. On write/move failure,
+attempt temporary-file cleanup and rethrow.
+The previous destination is preserved.
+end note
+@enduml

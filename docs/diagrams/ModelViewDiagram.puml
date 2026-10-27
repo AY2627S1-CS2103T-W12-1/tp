@@ -1,30 +1,20 @@
 @startuml
 !pragma layout smetana
 !include style.puml
-skinparam arrowThickness 1.1
-skinparam arrowColor MODEL_COLOR_T4
+skinparam ArrowFontStyle plain
 skinparam classBackgroundColor MODEL_COLOR
 skinparam nodesep 35
-skinparam ranksep 35
-
+skinparam ranksep 40
 class ModelManager
-class ActiveFilter
-interface "Predicate<Person>" as Predicate
-class PersonSelectionPredicate
 class "SortedList<Person>" as Sorted <<JavaFX>>
 class "FilteredList<Person>" as Filtered <<JavaFX>>
 interface "ObservableList<Person>" as Records <<JavaFX>>
-
-ModelManager --> "0..*" ActiveFilter : activeFilters
-ModelManager --> "0..*" Predicate : additionalFilters
-PersonSelectionPredicate ..|> Predicate
-ActiveFilter --> "1" Predicate : predicate
-ModelManager --> "1" Sorted : sortedPersons
-ModelManager --> "1" Filtered : filteredPersons
-Sorted --> "1" Filtered : source
-Filtered --> "1" Records : source
-note bottom of Records: Live, unmodifiable roster list from\nAddressBook.getPersonList(). Stored order is unchanged.
-note top of Sorted: Exposed by getFilteredPersonList().\nComparator set by sort; cleared by list/import.
-note top of ActiveFilter: Name, email and tag conditions.\nrefreshFilteredPersons() combines all conditions with AND.
-note bottom of PersonSelectionPredicate: One type of additional predicate.\nSelected references follow record replacements.
+ModelManager -down-> "1" Sorted : sortedPersons
+ModelManager -right-> "1" Filtered : filteredPersons
+Sorted -down-> "1" Filtered : source
+Filtered -down-> "1" Records : source
+note bottom of Records
+Live roster list from AddressBook.
+Filtering and sorting do not reorder stored records.
+end note
 @enduml

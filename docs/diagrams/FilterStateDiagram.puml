@@ -1,0 +1,20 @@
+@startuml
+!pragma layout smetana
+!include style.puml
+skinparam ArrowFontStyle plain
+skinparam classBackgroundColor MODEL_COLOR
+skinparam nodesep 35
+skinparam ranksep 40
+class ModelManager
+class ActiveFilter
+interface "Predicate<Person>" as Predicate <<interface>>
+class PersonSelectionPredicate
+ModelManager --> "0..*" ActiveFilter : activeFilters
+ModelManager --> "0..*" Predicate : additionalFilters
+ActiveFilter --> "1" Predicate : predicate
+PersonSelectionPredicate ..|> Predicate
+note bottom of ActiveFilter
+Name, email and tag conditions.
+All active conditions are combined with AND.
+end note
+@enduml
