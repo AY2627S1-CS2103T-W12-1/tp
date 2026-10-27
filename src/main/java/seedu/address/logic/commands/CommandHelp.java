@@ -51,7 +51,7 @@ public enum CommandHelp {
     FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
             "Shows currently displayed members with the specified tag without changing saved data.",
             "Shows only members tagged committee, in their current order with new displayed numbers.",
-            "Matching is exact and case-sensitive. Repeated filters narrow the list further, and the result "
+            "Matching ignores letter case. Repeated filters narrow the list further, and the result "
                     + "names all active tags. Boxes appear left to right in command order, not matching priority. "
                     + "Use a filter's X to remove it, or list to show everyone. Find also narrows the current results. "
                     + "Findemail searches email addresses across the whole roster and replaces previous filters. "
@@ -88,7 +88,7 @@ public enum CommandHelp {
             "Adds one tag to the member at a displayed list number while retaining their other tags.",
             "Adds committee to member 1 and shows their name and updated tags after saving.",
             "Check the current list number first. Existing tags, searches, filters and sorting remain in place. "
-                    + "A member who already has the tag is left unchanged.",
+                    + "A member who already has the tag, even with different capitalization, is left unchanged.",
             "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
                     + "Invalid input or a missing member is rejected. If saving fails, the change remains in this "
                     + "session; follow the recovery guidance before exiting."),
@@ -125,10 +125,11 @@ public enum CommandHelp {
             "Replaces one tag with another for every member, including members hidden by a search or filter.",
             "Changes batch2026 to alumni for each member who has it, and reports how many members changed "
                     + "after saving.",
-            "Tags are case-sensitive, so renametag t/committee t/Committee is a valid rename. A member who already "
-                    + "has the new tag keeps one copy. Renaming the tag used by an active filter hides the updated "
+            "Tags match regardless of letter case. Use renametag t/committee t/Committee to standardize "
+                    + "capitalization across the roster. A member with both distinct tags keeps only the "
+                    + "replacement. Renaming the tag used by an active filter hides the updated "
                     + "members; use list to show everyone again.",
-            "Supply exactly two tags of 1 to 30 ASCII letters or digits, each after t/. The two tags must differ. "
+            "Supply exactly two tags of 1 to 30 ASCII letters or digits, each after t/. Their spellings must differ. "
                     + "A current tag that no member has is rejected without changes. If saving fails, the changes "
                     + "remain in this session and the command box clears; follow the recovery guidance before "
                     + "exiting."),
@@ -213,7 +214,8 @@ public enum CommandHelp {
      */
     private static String memberFieldRules() {
         return Name.MESSAGE_CONSTRAINTS + ".\n" + Phone.MESSAGE_CONSTRAINTS + ".\n"
-                + Email.MESSAGE_CONSTRAINTS + "\n" + Tag.MESSAGE_CONSTRAINTS + ".";
+                + Email.MESSAGE_CONSTRAINTS + "\n" + Tag.MESSAGE_CONSTRAINTS
+                + ". Tag matching ignores letter case.";
     }
 
     /**

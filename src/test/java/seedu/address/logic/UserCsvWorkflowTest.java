@@ -153,7 +153,7 @@ public class UserCsvWorkflowTest {
 
     @Test
     public void import_documentedBoundaryValues_acceptsMinimumsAndPreservesMeaningfulWhitespace() throws Exception {
-        // UG: three digits, optional address, 30-character case-sensitive tags, and trimmed CSV values.
+        // UG: three digits, optional address, 30-character case-insensitive tags, and trimmed CSV values.
         Path csv = directory.resolve("boundaries.csv");
         Files.writeString(csv, "\uFEFFtags,address,email,phone,name\r\n"
                 + "\" a ; A ; a ; " + "Z".repeat(30) + " \",\" \tHome\t  Block 1 \t\","
@@ -168,7 +168,7 @@ public class UserCsvWorkflowTest {
         assertEquals("000", alice.getPhone().value);
         assertEquals("a+b@example.co", alice.getEmail().value);
         assertEquals("Home\t  Block 1", alice.getAddress().value);
-        assertEquals(Set.of("a", "A", "Z".repeat(30)), tags(alice));
+        assertEquals(Set.of("a", "Z".repeat(30)), tags(alice));
         assertEquals("", people.get(3).getAddress().value);
         assertTrue(people.get(3).getTags().isEmpty());
         assertEquals(model.getAddressBook(), new JsonAddressBookStorage(rosterFile).readAddressBook().orElseThrow());

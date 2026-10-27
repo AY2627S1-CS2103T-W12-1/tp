@@ -71,6 +71,22 @@ public class CsvAddressBookImporterTest {
     }
 
     @Test
+    public void read_caseVariantTags_keepsOneTagAcrossExportAndImport() throws Exception {
+        Path source = write("name,phone,email,address,tags\n"
+                + "Alice,123,alice@example.com,Home,Student;student;STUDENT\n");
+
+        List<Person> imported = CsvAddressBookImporter.read(source);
+        assertEquals(1, imported.getFirst().getTags().size());
+        assertEquals("Student", imported.getFirst().getTags().iterator().next().tagName);
+        assertEquals(new Tag("student"), imported.getFirst().getTags().iterator().next());
+
+        Path exported = tempDir.resolve("exported.csv");
+        CsvAddressBookExporter.export(imported, exported);
+        assertEquals(imported, CsvAddressBookImporter.read(exported));
+        assertEquals(1, CsvAddressBookImporter.read(exported).getFirst().getTags().size());
+    }
+
+    @Test
     public void read_reorderedColumnsAndPaddedValues_trimsSurroundingWhitespace() throws Exception {
         Person person = new PersonBuilder().withName("Alice").withPhone("123")
                 .withEmail("alice@example.com").withAddress("Main Street, Suite 2")

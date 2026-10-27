@@ -1,7 +1,6 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_EMPTY_TAG;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_INVALID_TAG;
@@ -42,12 +41,13 @@ public class BulkTagArgumentParserTest {
     }
 
     @Test
-    public void parse_tagsDifferingOnlyInCase_remainDistinct() throws Exception {
+    public void parse_tagsDifferingOnlyInCase_match() throws Exception {
         Tag upper = BulkTagArgumentParser.parse(" t/Year1", USAGE);
         Tag lower = BulkTagArgumentParser.parse(" t/year1", USAGE);
         assertEquals(new Tag("Year1"), upper);
         assertEquals(new Tag("year1"), lower);
-        assertNotEquals(upper, lower);
+        assertEquals(upper, lower);
+        assertEquals(upper.hashCode(), lower.hashCode());
     }
 
     @Test
