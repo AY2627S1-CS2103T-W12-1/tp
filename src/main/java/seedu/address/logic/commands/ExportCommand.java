@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
@@ -15,6 +14,7 @@ import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
+import seedu.address.storage.AppInstanceLock;
 import seedu.address.storage.CsvAddressBookExporter;
 import seedu.address.storage.JsonAddressBookStorage;
 
@@ -26,10 +26,11 @@ public class ExportCommand extends Command {
     public static final String COMMAND_WORD = "export";
     public static final String DEFAULT_FILE_NAME = "addressbook.csv";
     public static final String MESSAGE_USAGE = COMMAND_WORD + " [FILEPATH]\n"
-            + "Exports all people to a CSV file. If FILEPATH is omitted, writes " + DEFAULT_FILE_NAME
+            + "Exports all members to a CSV file. If FILEPATH is omitted, writes " + DEFAULT_FILE_NAME
             + " beside the JAR, or in the working directory during development.";
-    public static final String MESSAGE_SUCCESS = "Exported %1$d people to %2$s.";
-    public static final String MESSAGE_FAILURE = "Could not export people to %1$s: %2$s";
+    public static final String MESSAGE_SUCCESS = "Exported %1$d members to %2$s.";
+    public static final String MESSAGE_SINGLE = "Exported 1 member to %1$s.";
+    public static final String MESSAGE_FAILURE = "Could not export members to %1$s: %2$s";
     public static final String MESSAGE_PROTECTED_DESTINATION =
             "The export destination is used by TrackCall. Choose a different file.";
 
@@ -69,33 +70,47 @@ public class ExportCommand extends Command {
         try {
             targetPath = FileUtil.resolvePath(filePath).toAbsolutePath().normalize();
             checkDestination(targetPath, FileUtil.getApplicationLocation());
+            checkDestination(targetPath, FileUtil.getHomeFolder().resolve(AppInstanceLock.FILE_NAME));
             for (Path protectedFile : protectedFiles) {
                 checkDestination(targetPath, protectedFile);
                 checkDestination(targetPath, JsonAddressBookStorage.getBackupFilePath(protectedFile));
                 Path protectedPath = FileUtil.resolvePath(protectedFile).toAbsolutePath().normalize();
-                if (Objects.equals(targetPath.getParent(), protectedPath.getParent())
+                if (hasSamePathIgnoringCase(targetPath.getParent(), protectedPath.getParent())
                         && targetPath.getFileName().toString().toLowerCase(Locale.ROOT)
                                 .startsWith((protectedPath.getFileName() + ".corrupt-").toLowerCase(Locale.ROOT))) {
                     throw new IOException(MESSAGE_PROTECTED_DESTINATION);
                 }
             }
+            if (Files.isDirectory(targetPath)) {
+                throw new IOException("The export destination must be a file.");
+            }
             CsvAddressBookExporter.export(people, targetPath);
         } catch (IOException e) {
-            logger.warning("CSV export failed: " + e.getMessage());
+            logger.warning("CSV export failed (" + e.getClass().getSimpleName() + ")");
             throw new CommandException(String.format(MESSAGE_FAILURE, targetPath, e.getMessage()), e);
         }
         logger.info(String.format("CSV export completed: %d member(s) written", people.size()));
-        return new CommandResult(String.format(MESSAGE_SUCCESS,
-                people.size(), targetPath));
+        return new CommandResult(people.size() == 1 ? String.format(MESSAGE_SINGLE, targetPath)
+                : String.format(MESSAGE_SUCCESS, people.size(), targetPath));
     }
 
-    /** Rejects both equivalent path spellings and existing file aliases such as hard links. */
+    /**
+     * Reserves application paths without regard to case, including before the files exist.
+     * The same reservation on every platform prevents exports that become unsafe on a case-insensitive file system.
+     * Existing aliases such as hard links are still rejected independently of their names.
+     */
     private void checkDestination(Path target, Path protectedFile) throws IOException {
         Path protectedPath = FileUtil.resolvePath(protectedFile).toAbsolutePath().normalize();
-        if (target.equals(protectedPath) || (Files.exists(target) && Files.exists(protectedPath)
+        if (hasSamePathIgnoringCase(target, protectedPath)
+                || (Files.exists(target) && Files.exists(protectedPath)
                 && Files.isSameFile(target, protectedPath))) {
             throw new IOException(MESSAGE_PROTECTED_DESTINATION);
         }
+    }
+
+    /** Compares reserved path spellings, allowing root paths to have no parent. */
+    private boolean hasSamePathIgnoringCase(Path first, Path second) {
+        return first != null && second != null && first.toString().equalsIgnoreCase(second.toString());
     }
 
     @Override

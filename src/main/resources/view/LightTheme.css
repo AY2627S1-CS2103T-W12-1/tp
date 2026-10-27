@@ -299,6 +299,11 @@
     -fx-opacity: 0.55;
 }
 
+.active-filters-scroll {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
 .filter-chip {
     -fx-alignment: center-left;
     -fx-background-color: -tc-sage-soft;

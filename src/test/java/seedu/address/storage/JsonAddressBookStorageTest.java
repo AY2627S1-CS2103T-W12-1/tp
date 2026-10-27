@@ -197,6 +197,23 @@ public class JsonAddressBookStorageTest {
     }
 
     @Test
+    public void save_unchangedEmptyRoster_preservesLastDistinctBackup() throws Exception {
+        Path file = testFolder.resolve("unchanged.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        AddressBook original = getTypicalAddressBook();
+        storage.saveAddressBook(original);
+        storage.saveAddressBook(new AddressBook());
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        byte[] recoveryBytes = Files.readAllBytes(backup);
+
+        storage.saveAddressBook(new AddressBook());
+
+        assertArrayEquals(recoveryBytes, Files.readAllBytes(backup));
+        assertEquals(original, storage.readBackup().orElseThrow());
+        assertEquals(new AddressBook(), storage.readAddressBook().orElseThrow());
+    }
+
+    @Test
     public void save_corruptRoster_blocksReplacementAndPreservesGoodBackup() throws Exception {
         Path file = testFolder.resolve("members.json");
         JsonAddressBookStorage storage = new JsonAddressBookStorage(file);

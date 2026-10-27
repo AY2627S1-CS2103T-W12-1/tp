@@ -4,10 +4,12 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
+import seedu.address.logic.Messages;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
@@ -21,6 +23,21 @@ import seedu.address.model.tag.Tag;
 public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
+
+    /**
+     * Parses one or more search keywords using Java whitespace, including Unicode word separators.
+     *
+     * @param args Search keywords separated by whitespace.
+     * @param usage Guidance to show when no keyword is supplied.
+     * @throws ParseException If the input contains no keywords.
+     */
+    public static List<String> parseKeywords(String args, String usage) throws ParseException {
+        String strippedArgs = requireNonNull(args).strip();
+        if (strippedArgs.isEmpty()) {
+            throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, usage));
+        }
+        return List.of(strippedArgs.split("\\p{javaWhitespace}+"));
+    }
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be

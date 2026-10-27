@@ -13,11 +13,11 @@ public class ClearCommand extends Command {
     public static final String COMMAND_WORD = "clear";
     public static final String MESSAGE_USAGE =
             "Invalid command format. Usage: clear. This command removes all members.";
-    public static final String MESSAGE_SUCCESS = "Cleared %d members. The address book is now empty.";
-    public static final String MESSAGE_SINGLE = "Cleared 1 member. The address book is now empty.";
-    public static final String MESSAGE_EMPTY = "The address book is already empty. No changes were made.";
+    public static final String MESSAGE_SUCCESS = "Cleared %d members. The roster is now empty.";
+    public static final String MESSAGE_SINGLE = "Cleared 1 member. The roster is now empty.";
+    public static final String MESSAGE_EMPTY = "The roster is already empty. No changes were made.";
     public static final String MESSAGE_SAVE_FAILURE =
-            "Unable to clear the address book because the changes could not be saved. No members were removed.";
+            "Unable to clear the roster because the changes could not be saved. No members were removed.";
 
     @Override
     public CommandResult execute(Model model) {
