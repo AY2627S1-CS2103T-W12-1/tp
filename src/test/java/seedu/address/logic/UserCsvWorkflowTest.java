@@ -196,8 +196,8 @@ public class UserCsvWorkflowTest {
             Files.writeString(csv, HEADER + "Valid,999,valid@example.com,,\n" + invalid);
             byte[] source = Files.readAllBytes(csv);
 
-            CommandException error = assertThrows(CommandException.class,
-                    () -> logic.execute("import p/\"" + csv + "\""),
+            CommandException error = assertThrows(
+                    CommandException.class, () -> logic.execute("import p/\"" + csv + "\""),
                     invalid);
 
             assertTrue(error.getMessage().contains("row 3:"), error.getMessage());
@@ -225,8 +225,8 @@ public class UserCsvWorkflowTest {
             Path blocker = backup.resolve("blocked.txt");
             Files.writeString(blocker, "Folder prevents automatic backup");
 
-            CommandException error = assertThrows(CommandException.class,
-                    () -> logic.execute("import p/\"" + csv + "\""));
+            CommandException error = assertThrows(
+                    CommandException.class, () -> logic.execute("import p/\"" + csv + "\""));
 
             assertTrue(error.getMessage().startsWith("Could not save data to file:"));
             assertArrayEquals(saved, Files.readAllBytes(rosterFile));
