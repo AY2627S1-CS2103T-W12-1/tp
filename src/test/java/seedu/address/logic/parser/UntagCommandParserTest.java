@@ -27,7 +27,7 @@ public class UntagCommandParserTest {
     public void parse_invalidIndexOrMissingTag_showsUsage() {
         String usage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, UntagCommand.MESSAGE_USAGE);
         String[] invalid = {"", "1", "0 t/a", "-1 t/a", "1.5 t/a", "2147483648 t/a",
-            "1 2 t/a", "1 a", "t/a"};
+            "1 2 t/a", "1 a", "t/a", "1 t/a p/extra"};
         for (String args : invalid) {
             assertParseFailure(parser, args, usage);
         }
@@ -38,7 +38,6 @@ public class UntagCommandParserTest {
         assertParseFailure(parser, "1 t/", MESSAGE_EMPTY_TAG);
         assertParseFailure(parser, "1 t/two words", MESSAGE_INVALID_TAG);
         assertParseFailure(parser, "1 t/" + "a".repeat(31), MESSAGE_INVALID_TAG);
-        assertParseFailure(parser, "1 t/a p/extra", MESSAGE_INVALID_TAG);
         assertParseFailure(parser, "1 t/a t/b", MESSAGE_MULTIPLE_TAGS);
     }
 }

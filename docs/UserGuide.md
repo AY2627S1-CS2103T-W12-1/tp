@@ -355,8 +355,8 @@ If you remove the tag used by the active filter, the updated members disappear f
 because they no longer match. They are not deleted; run `list` to show everyone.
 
 Supply exactly one tag of 1 to 30 ASCII letters or digits with no internal spaces. Spaces around the tag
-are ignored, and matching is case-sensitive. Missing `t/`, empty tags, invalid tags, and more than one tag
-are rejected without changing any member. If no members are displayed, TrackCall reports
+are ignored, and matching is case-sensitive. Missing `t/`, empty tags, invalid tags, more than one tag, and
+other field prefixes such as `n/` are rejected without changing any member. If no members are displayed, TrackCall reports
 `There are no members in the current list to update.` and changes nothing.
 
 There is no confirmation or undo. A valid command saves the roster, even when every member is skipped.
