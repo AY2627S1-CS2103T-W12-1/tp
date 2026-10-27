@@ -4,6 +4,32 @@ title: Developer Guide
 pageNav: 3
 ---
 
+<style>
+#content-wrapper .dg-diagram {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 900px;
+  margin: 24px auto;
+}
+#content-wrapper .dg-diagram img {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  max-width: 100%;
+  max-height: 680px;
+  padding: 12px;
+  border: 1px solid #000;
+  background: #fffdf8;
+}
+#content-wrapper .dg-diagram:focus-visible {
+  outline: 2px solid #005fcc;
+  outline-offset: 4px;
+}
+</style>
+
 # Developer Guide
 
 <span id="value-proposition"></span>
@@ -70,7 +96,7 @@ See the [PlantUML tutorial](https://se-education.org/guides/tutorials/plantUml.h
 
 ### Architecture
 
-<img src="images/ArchitectureDiagram.png" width="280" alt="TrackCall architecture and component dependencies">
+<a class="dg-diagram" href="images/ArchitectureDiagram.svg" aria-label="Open diagram at full size: TrackCall architecture and component dependencies"><img src="images/ArchitectureDiagram.svg" alt="TrackCall architecture and component dependencies"></a>
 
 The architecture diagram shows the main components and their dependencies.
 
@@ -96,7 +122,7 @@ and [`MainApp`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/mai
 
 The sequence diagram shows how the components handle `delete 1` and the `y` that confirms it.
 
-<img src="images/ArchitectureSequenceDiagram.png" width="574" alt="Component interactions when executing delete 1 and confirming it with y">
+<a class="dg-diagram" href="images/ArchitectureSequenceDiagram.svg" aria-label="Open diagram at full size: Component interactions when executing delete 1 and confirming it with y"><img src="images/ArchitectureSequenceDiagram.svg" alt="Component interactions when executing delete 1 and confirming it with y"></a>
 
 Each of the four main components defines an API through an interface with the component's name.
 A corresponding manager class implements that interface.
@@ -105,13 +131,13 @@ For example, `Logic.java` defines the API and `LogicManager.java` implements it.
 Components communicate through these interfaces.
 This reduces their dependence on each other's implementation details, as shown below.
 
-<img src="images/ComponentManagers.png" width="300" alt="Component interfaces and their manager implementations">
+<a class="dg-diagram" href="images/ComponentManagers.svg" aria-label="Open diagram at full size: Component interfaces and their manager implementations"><img src="images/ComponentManagers.svg" alt="Component interfaces and their manager implementations"></a>
 
 ### UI component
 
 **API:** [`Ui.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/ui/Ui.java)
 
-![Structure of the UI component](images/UiClassDiagram.png)
+<a class="dg-diagram" href="images/UiClassDiagram.svg" aria-label="Open diagram at full size: Structure of the UI component"><img src="images/UiClassDiagram.svg" alt="Structure of the UI component"></a>
 
 **Structure**
 
@@ -131,13 +157,11 @@ This reduces their dependence on each other's implementation details, as shown b
 
 **API:** [`Logic.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/logic/Logic.java)
 
-<a href="images/LogicClassDiagram.png"><img src="images/LogicClassDiagram.png" width="1000" alt="Main classes in the Logic component"></a>
+<a class="dg-diagram" href="images/LogicClassDiagram.svg" aria-label="Open diagram at full size: Main classes in the Logic component"><img src="images/LogicClassDiagram.svg" alt="Main classes in the Logic component"></a>
 
 The following sequence diagram illustrates parsing and executing `delete 1` to request confirmation.
 
-<a href="images/DeleteSequenceDiagram.svg"><img src="images/DeleteSequenceDiagram.svg" width="1200" alt="Parsing delete 1 and requesting confirmation"></a>
-
-[Open deletion diagram at full size](images/DeleteSequenceDiagram.svg).
+<a class="dg-diagram" href="images/DeleteSequenceDiagram.svg" aria-label="Open diagram at full size: Parsing delete 1 and requesting confirmation"><img src="images/DeleteSequenceDiagram.svg" alt="Parsing delete 1 and requesting confirmation"></a>
 
 The sequence shows a valid index. Temporary parser objects are left to Java garbage collection,
 not explicitly destroyed. Result construction and other small internal operations are abbreviated.
@@ -154,7 +178,7 @@ An implementation may need several calls to complete that step.
 
 #### Deletion confirmation
 
-[![Confirmed deletion and automatic saving](images/ConfirmDeleteSequenceDiagram.png)](images/ConfirmDeleteSequenceDiagram.png)
+<a class="dg-diagram" href="images/ConfirmDeleteSequenceDiagram.svg" aria-label="Open diagram at full size: Confirmed deletion and automatic saving"><img src="images/ConfirmDeleteSequenceDiagram.svg" alt="Confirmed deletion and automatic saving"></a>
 
 **Flow**
 
@@ -181,7 +205,7 @@ An implementation may need several calls to complete that step.
 
 #### Parsing classes
 
-[![Command parsers and shared parsing helpers](images/ParserClasses.png)](images/ParserClasses.png)
+<a class="dg-diagram" href="images/ParserClasses.svg" aria-label="Open diagram at full size: Command parsers and shared parsing helpers"><img src="images/ParserClasses.svg" alt="Command parsers and shared parsing helpers"></a>
 
 - **Dispatch:** `AddressBookParser` selects a command-specific parser and returns its `Command`.
 - **Parser contract:** command-specific parsers implement `Parser`. `XYZCommandParser` represents
@@ -200,7 +224,7 @@ The model separates stored records from display state. The diagrams show one res
 
 **1. Stored records and preferences**
 
-[![Model ownership and stored roster structure](images/ModelClassDiagram.svg)](images/ModelClassDiagram.svg)
+<a class="dg-diagram" href="images/ModelClassDiagram.svg" aria-label="Open diagram at full size: Model ownership and stored roster structure"><img src="images/ModelClassDiagram.svg" alt="Model ownership and stored roster structure"></a>
 
 - `ModelManager` holds an `AddressBook` and `UserPrefs`.
 - `AddressBook` owns a `UniquePersonList`. It exposes a live, unmodifiable list of members.
@@ -209,7 +233,7 @@ The model separates stored records from display state. The diagrams show one res
 
 **2. Member values**
 
-[![Person references immutable contact values and tags](images/PersonValuesDiagram.svg)](images/PersonValuesDiagram.svg)
+<a class="dg-diagram" href="images/PersonValuesDiagram.svg" aria-label="Open diagram at full size: Person references immutable contact values and tags"><img src="images/PersonValuesDiagram.svg" alt="Person references immutable contact values and tags"></a>
 
 - A `Person` references a name, phone, email, address and a set of tags.
 - An absent address is an empty `Address` value, not a missing object.
@@ -219,7 +243,7 @@ The model separates stored records from display state. The diagrams show one res
 
 **3. Display pipeline**
 
-[![Stored records feed the filtered view and then the sorted display](images/ModelViewDiagram.svg)](images/ModelViewDiagram.svg)
+<a class="dg-diagram" href="images/ModelViewDiagram.svg" aria-label="Open diagram at full size: Stored records feed the filtered view and then the sorted display"><img src="images/ModelViewDiagram.svg" alt="Stored records feed the filtered view and then the sorted display"></a>
 
 - `FilteredList` applies the current conditions to stored records.
 - `SortedList` optionally orders the filtered results by name.
@@ -228,7 +252,7 @@ The model separates stored records from display state. The diagrams show one res
 
 **4. Filter state**
 
-[![Active conditions and additional predicate relationships](images/FilterStateDiagram.svg)](images/FilterStateDiagram.svg)
+<a class="dg-diagram" href="images/FilterStateDiagram.svg" aria-label="Open diagram at full size: Active conditions and additional predicate relationships"><img src="images/FilterStateDiagram.svg" alt="Active conditions and additional predicate relationships"></a>
 
 - `activeFilters` contains removable name, email and tag conditions in application order.
 - `additionalFilters` contains `Predicate<Person>` objects, including `PersonSelectionPredicate`.
@@ -242,7 +266,7 @@ Open any diagram to inspect it at full size.
 
 **API:** [`Storage.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/blob/master/src/main/java/seedu/address/storage/Storage.java)
 
-[![JSON and CSV storage classes](images/StorageClassDiagram.png)](images/StorageClassDiagram.png)
+<a class="dg-diagram" href="images/StorageClassDiagram.svg" aria-label="Open diagram at full size: JSON and CSV storage classes"><img src="images/StorageClassDiagram.svg" alt="JSON and CSV storage classes"></a>
 
 **Responsibilities**
 
@@ -286,7 +310,7 @@ Detail diagrams may introduce helper lifelines omitted from the overview. Open a
 3. `MainWindow` calls `HelpWindow#show(topic)`.
 4. `HelpWindow` reads the local `CommandHelp` entry and displays the card.
 
-[![Offline help routing](images/HelpSequenceDiagram.svg)](images/HelpSequenceDiagram.svg)
+<a class="dg-diagram" href="images/HelpSequenceDiagram.svg" aria-label="Open diagram at full size: Offline help routing"><img src="images/HelpSequenceDiagram.svg" alt="Offline help routing"></a>
 
 <span id="help-navigation"></span>
 
@@ -325,7 +349,7 @@ Detail diagrams may introduce helper lifelines omitted from the overview. Open a
 3. Retain predicates and sorting until the save outcome is known.
 4. Save the empty roster. Return success only after saving completes.
 
-[![Clear save success and rollback](images/ClearSequenceDiagram.svg)](images/ClearSequenceDiagram.svg)
+<a class="dg-diagram" href="images/ClearSequenceDiagram.svg" aria-label="Open diagram at full size: Clear save success and rollback"><img src="images/ClearSequenceDiagram.svg" alt="Clear save success and rollback"></a>
 
 `SHOW_ALL` in the diagram abbreviates `PREDICATE_SHOW_ALL_PERSONS`.
 
@@ -389,7 +413,7 @@ no-op saves, rollback, retry, stored order and temporary-file cleanup.
 2. Replace prior name, email, tag and `show` conditions with one email `ActiveFilter`.
 3. Re-evaluate the live view and return its count. Retain the current sort comparator.
 
-[![Email search and view replacement](images/EmailSearchSequenceDiagram.svg)](images/EmailSearchSequenceDiagram.svg)
+<a class="dg-diagram" href="images/EmailSearchSequenceDiagram.svg" aria-label="Open diagram at full size: Email search and view replacement"><img src="images/EmailSearchSequenceDiagram.svg" alt="Email search and view replacement"></a>
 
 **Rules and design**
 
@@ -448,7 +472,7 @@ privacy and restored bounds. Manual tests check long values and real display sca
 3. Save the complete roster for valid data-changing commands, including no-ops.
 4. Return success only after saving. Parsing or execution errors do not save.
 
-[![Automatic saving policy](images/AutomaticSavingData.svg)](images/AutomaticSavingData.svg)
+<a class="dg-diagram" href="images/AutomaticSavingData.svg" aria-label="Open diagram at full size: Automatic saving policy"><img src="images/AutomaticSavingData.svg" alt="Automatic saving policy"></a>
 
 <span id="file-writes"></span>
 
@@ -533,15 +557,15 @@ See [manual recovery tests](#persistence-and-invalid-files) for packaged accepta
 
 **Overview — `sd ImportRoster`**
 
-[![Import overview with reference frames](images/CsvImportSequenceDiagram.svg)](images/CsvImportSequenceDiagram.svg)
+<a class="dg-diagram" href="images/CsvImportSequenceDiagram.svg" aria-label="Open diagram at full size: Import overview with reference frames"><img src="images/CsvImportSequenceDiagram.svg" alt="Import overview with reference frames"></a>
 
 **Detail — `sd ValidateAndAppendCsv`**
 
-[![Validate the entire file before adding unique records](images/CsvImportApplyDiagram.svg)](images/CsvImportApplyDiagram.svg)
+<a class="dg-diagram" href="images/CsvImportApplyDiagram.svg" aria-label="Open diagram at full size: Validate the entire file before adding unique records"><img src="images/CsvImportApplyDiagram.svg" alt="Validate the entire file before adding unique records"></a>
 
 **Detail — `sd SaveImportedRoster`**
 
-[![Save imported records and report unsaved changes](images/CsvImportSaveDiagram.svg)](images/CsvImportSaveDiagram.svg)
+<a class="dg-diagram" href="images/CsvImportSaveDiagram.svg" aria-label="Open diagram at full size: Save imported records and report unsaved changes"><img src="images/CsvImportSaveDiagram.svg" alt="Save imported records and report unsaved changes"></a>
 
 **Validation and failure rules**
 
@@ -571,15 +595,15 @@ identity rule as manual entry. Commons CSV handles quoting instead of manual str
 
 **Overview — `sd ExportRoster`**
 
-[![Export overview with reference frames](images/CsvExportSequenceDiagram.svg)](images/CsvExportSequenceDiagram.svg)
+<a class="dg-diagram" href="images/CsvExportSequenceDiagram.svg" aria-label="Open diagram at full size: Export overview with reference frames"><img src="images/CsvExportSequenceDiagram.svg" alt="Export overview with reference frames"></a>
 
 **Detail — `sd CheckExportDestination`**
 
-[![Resolve the path and reject protected application destinations](images/CsvExportDestinationDiagram.svg)](images/CsvExportDestinationDiagram.svg)
+<a class="dg-diagram" href="images/CsvExportDestinationDiagram.svg" aria-label="Open diagram at full size: Resolve the path and reject protected application destinations"><img src="images/CsvExportDestinationDiagram.svg" alt="Resolve the path and reject protected application destinations"></a>
 
 **Detail — `sd WriteCsvAtomically`**
 
-[![Write a complete CSV to a temporary file before replacement](images/CsvExportWriteDiagram.svg)](images/CsvExportWriteDiagram.svg)
+<a class="dg-diagram" href="images/CsvExportWriteDiagram.svg" aria-label="Open diagram at full size: Write a complete CSV to a temporary file before replacement"><img src="images/CsvExportWriteDiagram.svg" alt="Write a complete CSV to a temporary file before replacement"></a>
 
 **Rules and design**
 
