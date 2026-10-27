@@ -7,6 +7,8 @@ import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_INVALID_T
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_MULTIPLE_TAGS;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -64,6 +66,22 @@ public class BulkTagArgumentParserTest {
         for (String input : inputs) {
             assertThrows(ParseException.class, expected, () -> BulkTagArgumentParser.parse(input, USAGE));
         }
+    }
+
+    @Test
+    public void parse_otherFieldPrefix_throwsUsageMessage() {
+        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, USAGE);
+        String[] inputs = {" t/friend n/Bob", " t/friend p/91234567", " t/friend e/bob@example.com",
+            " t/friend a/Clementi", " t/friend\tn/Bob", " t/friend n/", " n/Bob t/friend", " t/a t/b n/Bob"};
+        for (String input : inputs) {
+            assertThrows(ParseException.class, expected, () -> BulkTagArgumentParser.parse(input, USAGE));
+        }
+    }
+
+    @Test
+    public void parseTagValues_tagPrefixesOnly_returnsValuesInOrder() throws Exception {
+        assertEquals(List.of("a", "b"), BulkTagArgumentParser.parseTagValues(" t/a t/ b ", USAGE));
+        assertEquals(List.of(), BulkTagArgumentParser.parseTagValues("", USAGE));
     }
 
     @Test

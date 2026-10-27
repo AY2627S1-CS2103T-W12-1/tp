@@ -37,6 +37,7 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ConfirmDeleteCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditCommand;
+import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FindEmailCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
@@ -404,7 +405,9 @@ public class LogicManagerTest {
                 "addressBook.json.corrupt-123.json", "ADDRESSBOOK.JSON.CORRUPT-456.JSON")) {
             Path target = temporaryFolder.resolve(filename);
             Files.writeString(target, "Keep the existing application file");
-            assertThrows(CommandException.class, () -> logic.execute("export " + target));
+            assertThrows(ParseException.class, () -> logic.execute("export " + target));
+            assertThrows(CommandException.class, () -> new ExportCommand(target).execute(model,
+                    temporaryFolder.resolve("addressBook.json"), temporaryFolder.resolve("userPrefs.json")));
             assertEquals("Keep the existing application file", Files.readString(target));
             assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
             assertTrue(model.getFilteredPersonList().isEmpty());
@@ -414,7 +417,9 @@ public class LogicManagerTest {
     @Test
     public void execute_exportToNormalisedStoragePath_rejectsBeforeCreatingFile() throws Exception {
         Path target = temporaryFolder.resolve("nested/../addressBook.json");
-        assertThrows(CommandException.class, () -> logic.execute("export " + target));
+        assertThrows(ParseException.class, () -> logic.execute("export " + target));
+        assertThrows(CommandException.class, () -> new ExportCommand(target).execute(model,
+                temporaryFolder.resolve("addressBook.json"), temporaryFolder.resolve("userPrefs.json")));
         assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
         assertFalse(Files.exists(temporaryFolder.resolve("nested")));
     }
@@ -780,6 +785,20 @@ public class LogicManagerTest {
         ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
                 temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
         assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+    }
+
+    @Test
+    public void execute_caseOnlyRename_savesRequestedSpelling() throws Exception {
+        model.addPerson(new PersonBuilder().withName("Alice").withTags("student").build());
+        model.addPerson(new PersonBuilder().withName("Bob").withTags("Student").build());
+
+        assertEquals("Renamed tag \"STUDENT\" to \"Student\" for 1 member(s).",
+                logic.execute("renametag t/STUDENT t/Student").getFeedbackToUser());
+
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertTrue(saved.getPersonList().stream().allMatch(person ->
+                person.getTags().stream().anyMatch(tag -> tag.tagName.equals("Student"))));
     }
 
     @Test

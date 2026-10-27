@@ -89,9 +89,25 @@ public class RenameTagCommandTest {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         model.filterFilteredPersonListByTag(friends);
 
-        assertCommandFailure(new RenameTagCommand(friends, new Tag("FRIENDS")), model,
+        assertCommandFailure(new RenameTagCommand(friends, new Tag("friends")), model,
                 RenameTagCommand.MESSAGE_SAME_TAG);
         assertEquals(List.of(friends), model.getActiveTagFilters());
+    }
+
+    @Test
+    public void execute_caseOnlyRename_standardizesSpellingWithoutFalseMergeCount() throws Exception {
+        Model model = new ModelManager();
+        model.addPerson(new PersonBuilder().withName("Alice").withTags("committee").build());
+        model.addPerson(new PersonBuilder().withName("Bob").withTags("Committee").build());
+        model.filterFilteredPersonListByTag(new Tag("COMMITTEE"));
+
+        String feedback = new RenameTagCommand(new Tag("COMMITTEE"), new Tag("Committee"))
+                .execute(model).getFeedbackToUser();
+
+        assertEquals("Renamed tag \"COMMITTEE\" to \"Committee\" for 1 member(s).", feedback);
+        assertEquals(2, model.getFilteredPersonList().size());
+        assertTrue(model.getAddressBook().getPersonList().stream().allMatch(person ->
+                person.getTags().stream().anyMatch(tag -> tag.tagName.equals("Committee"))));
     }
 
     @Test
@@ -135,6 +151,8 @@ public class RenameTagCommandTest {
         assertEquals(command.hashCode(), new RenameTagCommand(new Tag("friends"), new Tag("buddies")).hashCode());
         assertFalse(command.equals(new RenameTagCommand(buddies, friends)));
         assertFalse(command.equals(new RenameTagCommand(friends, owesMoney)));
+        assertFalse(command.equals(new RenameTagCommand(new Tag("Friends"), buddies)));
+        assertFalse(command.equals(new RenameTagCommand(friends, new Tag("Buddies"))));
         assertFalse(command.equals(new TagAllCommand(friends)));
         assertFalse(command.equals(null));
     }
