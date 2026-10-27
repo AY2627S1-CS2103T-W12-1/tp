@@ -6,6 +6,9 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Set;
 
 /**
  * Resolves application paths and reads or writes files.
@@ -120,6 +123,7 @@ public class FileUtil {
     /**
      * Writes a complete replacement beside an existing destination before atomically replacing it.
      * The parent directory must already exist. The writer must close its output before returning.
+     * Existing POSIX permission bits are preserved when supported by the destination filesystem.
      *
      * @param file Destination to replace only after writing succeeds.
      * @param writer Operation that writes the replacement to the supplied temporary file.
@@ -127,9 +131,15 @@ public class FileUtil {
      */
     public static void writeAtomically(Path file, FileWriter writer) throws IOException {
         Path target = resolvePath(file).toAbsolutePath();
+        Set<PosixFilePermission> permissions = Files.exists(target)
+                && Files.getFileAttributeView(target, PosixFileAttributeView.class) != null
+                ? Files.getPosixFilePermissions(target) : null;
         Path temporary = Files.createTempFile(target.getParent(), ".trackcall-", ".tmp");
         try {
             writer.write(temporary);
+            if (permissions != null) {
+                Files.setPosixFilePermissions(temporary, permissions);
+            }
             Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException | RuntimeException e) {
             try {
