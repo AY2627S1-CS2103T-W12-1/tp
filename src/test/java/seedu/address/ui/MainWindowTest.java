@@ -8,7 +8,9 @@ import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
@@ -34,6 +36,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
@@ -732,6 +735,44 @@ public class MainWindowTest {
             enter("y");
             assertTrue(feedback.getText().contains("Deleted member"));
             assertFalse(feedback.getText().contains("90000002"));
+        });
+    }
+
+    @Test
+    public void copyAddressButton_onlyEnabledWhenSelectedMemberHasAddress() throws Exception {
+        onJavaFxThread(() -> {
+            ListView<?> list = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+            Label address = (Label) window.getPrimaryStage().getScene().lookup("#address");
+            Button copyAddress = (Button) window.getPrimaryStage().getScene().lookup("#copyAddressButton");
+            Button copyPhone = (Button) window.getPrimaryStage().getScene().lookup("#copyPhoneButton");
+
+            assertTrue(copyAddress.isDisabled());
+            enter("add n/Carol Wong p/90000002 e/carol@example.com");
+            list.getSelectionModel().select(2);
+            assertEquals("(none)", address.getText());
+            assertTrue(copyAddress.isDisabled());
+
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            Map<DataFormat, Object> originalClipboardContent = new HashMap<>();
+            for (DataFormat format : clipboard.getContentTypes()) {
+                originalClipboardContent.put(format, clipboard.getContent(format));
+            }
+            try {
+                copyPhone.fire();
+                String previousClipboardText = clipboard.getString();
+                assertEquals("90000002", previousClipboardText);
+                copyAddress.fire();
+                assertEquals(previousClipboardText, clipboard.getString());
+
+                enter("edit 3 a/123 Test Road");
+                list.getSelectionModel().select(2);
+                assertEquals("123 Test Road", address.getText());
+                assertFalse(copyAddress.isDisabled());
+                copyAddress.fire();
+                assertEquals("123 Test Road", clipboard.getString());
+            } finally {
+                clipboard.setContent(originalClipboardContent);
+            }
         });
     }
 
