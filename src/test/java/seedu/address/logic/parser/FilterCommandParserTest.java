@@ -32,10 +32,26 @@ public class FilterCommandParserTest {
     public void parse_invalidTag_rejectsCommand() {
         String expected = Tag.MESSAGE_CONSTRAINTS;
         String overlongTag = "t/" + "a".repeat(31);
-        String[] invalidInputs = {"t/", "t/   ", "t/two words", "t/hello!", "t/one t/two", "t/one x/two", overlongTag};
+        String[] invalidInputs = {"t/", "t/   ", "t/two words", "t/hello!", overlongTag};
         for (String input : invalidInputs) {
             assertParseFailure(parser, input, expected);
         }
+    }
+
+    @Test
+    public void parse_extraTag_reportsOneTagPerCommand() {
+        String expected = "Only one t/TAG parameter is allowed per filter command. "
+                + "Apply another tag in a separate command.";
+        for (String input : new String[] {"t/committee t/year1", "t/ t/year1", "t/invalid! t/year1"}) {
+            assertParseFailure(parser, input, expected);
+        }
+    }
+
+    @Test
+    public void parse_otherParameter_reportsCommandFormat() {
+        String expected = String.format(seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT,
+                FilterCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "t/committee n/Bob", expected);
     }
 
     @Test

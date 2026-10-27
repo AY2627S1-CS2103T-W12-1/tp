@@ -599,8 +599,11 @@ public class LogicManagerTest {
     public void execute_invalidFilter_preservesDisplayedList() throws Exception {
         model.setAddressBook(getTypicalAddressBook());
         logic.execute("filter t/friends");
-        assertThrows(ParseException.class, () -> logic.execute("filter t/friends t/committee"));
+        String expectedMessage = "Only one t/TAG parameter is allowed per filter command. "
+                + "Apply another tag in a separate command.";
+        assertThrows(ParseException.class, expectedMessage, () -> logic.execute("filter t/friends t/committee"));
         assertEquals(List.of(ALICE, BENSON, DANIEL), logic.getFilteredPersonList());
+        assertEquals(List.of(new Tag("friends")), model.getActiveTagFilters());
     }
 
     @Test
