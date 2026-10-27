@@ -7,7 +7,9 @@ import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,6 +26,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
@@ -454,18 +457,27 @@ public class MainWindowTest {
             assertEquals("(none)", address.getText());
             assertTrue(copyAddress.isDisabled());
 
-            copyPhone.fire();
-            String previousClipboardText = Clipboard.getSystemClipboard().getString();
-            assertEquals("90000002", previousClipboardText);
-            copyAddress.fire();
-            assertEquals(previousClipboardText, Clipboard.getSystemClipboard().getString());
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            Map<DataFormat, Object> originalClipboardContent = new HashMap<>();
+            for (DataFormat format : clipboard.getContentTypes()) {
+                originalClipboardContent.put(format, clipboard.getContent(format));
+            }
+            try {
+                copyPhone.fire();
+                String previousClipboardText = clipboard.getString();
+                assertEquals("90000002", previousClipboardText);
+                copyAddress.fire();
+                assertEquals(previousClipboardText, clipboard.getString());
 
-            enter("edit 3 a/123 Test Road");
-            list.getSelectionModel().select(2);
-            assertEquals("123 Test Road", address.getText());
-            assertFalse(copyAddress.isDisabled());
-            copyAddress.fire();
-            assertEquals("123 Test Road", Clipboard.getSystemClipboard().getString());
+                enter("edit 3 a/123 Test Road");
+                list.getSelectionModel().select(2);
+                assertEquals("123 Test Road", address.getText());
+                assertFalse(copyAddress.isDisabled());
+                copyAddress.fire();
+                assertEquals("123 Test Road", clipboard.getString());
+            } finally {
+                clipboard.setContent(originalClipboardContent);
+            }
         });
     }
 
