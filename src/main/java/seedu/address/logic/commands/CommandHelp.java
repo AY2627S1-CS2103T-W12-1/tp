@@ -52,14 +52,16 @@ public enum CommandHelp {
                     + "Findemail searches email addresses across the whole roster and replaces previous filters. "
                     + "Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
-            "Supply exactly one tag of 1 to 30 ASCII letters or digits. Empty tags, internal spaces, "
+            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens. "
+                    + "Empty tags, internal spaces, "
                     + "multiple tags, and extra arguments are rejected."),
     ADD("Manage members", "add", "Add a member",
             "add n/NAME p/PHONE e/EMAIL [a/ADDRESS] [t/TAG]...",
             "add n/Alice Tan p/91234567 e/alice@example.com a/12 Orchard Road t/committee",
             "Creates a member with a name, phone and email. Address and tags are optional.",
             "Adds Alice Tan and shows the complete roster after the record is saved.",
-            "Fields can appear in any order. Use one t/ prefix per tag; tag names contain letters and digits.",
+            "Fields can appear in any order. Use one t/ prefix per tag; tags may include internal hyphens.",
             "Include name, phone and email once. Omit a/ if the address is unknown; a/ needs a value when used. "
                     + "Phone numbers need at least three digits. "
                     + "An existing member with the same four contact fields is rejected. If saving fails, the member "
@@ -81,7 +83,8 @@ public enum CommandHelp {
             "Adds committee to member 1 and shows their name and updated tags after saving.",
             "Check the current list number first. Existing tags, searches, filters and sorting remain in place. "
                     + "A member who already has the tag is left unchanged.",
-            "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
+            "Supply one current positive displayed number and one tag of 1 to 30 characters using ASCII "
+                    + "letters or digits with optional internal hyphens. "
                     + "Invalid input or a missing member is rejected. If saving fails, the change remains in this "
                     + "session; follow the recovery guidance before exiting."),
     TAGALL("Manage members", "tagall", "Tag every displayed member", "tagall t/TAG", "tagall t/committee",
@@ -90,7 +93,9 @@ public enum CommandHelp {
                     + "after saving.",
             "Use find or filter first to choose the group, then check the list. The current search, filters and "
                     + "sorting stay applied.",
-            "Supply exactly one tag of 1 to 30 ASCII letters or digits after t/. Empty tags, internal spaces, "
+            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens after t/. "
+                    + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
                     + "recovery guidance before exiting."),
@@ -100,7 +105,9 @@ public enum CommandHelp {
                     + "after saving.",
             "Use find or filter first to choose the group, then check the list. Removing the tag used by an active "
                     + "filter hides the updated members; use list to show everyone again.",
-            "Supply exactly one tag of 1 to 30 ASCII letters or digits after t/. Empty tags, internal spaces, "
+            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens after t/. "
+                    + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
                     + "recovery guidance before exiting."),
@@ -109,7 +116,8 @@ public enum CommandHelp {
             "Removes friends from member 1 and shows their name and updated tags after saving.",
             "Check the current list number first. Other tags, searches, filters and sorting remain in place. "
                     + "Removing a tag used by an active filter may hide the member from the current list.",
-            "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
+            "Supply one current positive displayed number and one tag of 1 to 30 characters using ASCII "
+                    + "letters or digits with optional internal hyphens. "
                     + "Invalid input or a missing member is rejected. If the member lacks the tag, no change is "
                     + "made. If saving fails, follow the recovery guidance before exiting."),
     RENAMETAG("Manage members", "renametag", "Rename a tag for everyone", "renametag t/CURRENT_TAG t/NEW_TAG",
@@ -120,7 +128,8 @@ public enum CommandHelp {
             "Tags are case-sensitive, so renametag t/committee t/Committee is a valid rename. A member who already "
                     + "has the new tag keeps one copy. Renaming the tag used by an active filter hides the updated "
                     + "members; use list to show everyone again.",
-            "Supply exactly two tags of 1 to 30 ASCII letters or digits, each after t/. The two tags must differ. "
+            "Supply exactly two tags of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens, each after t/. The two tags must differ. "
                     + "A current tag that no member has is rejected without changes. If saving fails, the changes "
                     + "remain in this session and the command box clears; follow the recovery guidance before "
                     + "exiting."),

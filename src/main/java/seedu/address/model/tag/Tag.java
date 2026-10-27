@@ -9,8 +9,9 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
  */
 public class Tag {
 
-    public static final String MESSAGE_CONSTRAINTS = "Tag names should contain 1 to 30 ASCII letters or digits";
-    public static final String VALIDATION_REGEX = "[A-Za-z0-9]{1,30}";
+    public static final String MESSAGE_CONSTRAINTS =
+            "Tag names should be 1 to 30 characters long, using ASCII letters or digits with optional internal hyphens";
+    public static final String VALIDATION_REGEX = "(?=.{1,30}$)[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*";
 
     public final String tagName;
 

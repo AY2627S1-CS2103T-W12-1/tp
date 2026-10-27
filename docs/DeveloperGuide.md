@@ -564,8 +564,9 @@ Usage examples are in the [User Guide](UserGuide.html#filter-displayed-members-b
 #### Parsing {id="parsing"}
 
 `FilterCommandParser` accepts one `t/TAG` argument, trims surrounding whitespace, and requires 1 to 30
-ASCII letters or digits. Missing, repeated, or invalid arguments are rejected before the view changes.
-The parser checks the tag before constructing it; the shared `Tag` model enforces the same 1 to 30 character rule.
+characters using ASCII letters or digits with optional internal hyphens. Missing, repeated, or invalid arguments are
+rejected before the view changes.
+The parser uses the shared `Tag` model rule before constructing the tag.
 
 #### Execution {id="execution"}
 
@@ -635,7 +636,7 @@ invalid arguments fail before saving. A save failure after an actual change foll
 
 `TagAllCommandParser` and `UntagAllCommandParser` both delegate to `BulkTagArgumentParser#parse`, so the two
 commands share one grammar and one set of error messages. It tokenizes only `t/` and accepts exactly one tag of
-1 to 30 ASCII letters or digits. Surrounding spaces are ignored.
+1 to 30 characters using ASCII letters or digits with optional internal hyphens. Surrounding spaces are ignored.
 
 * Text before `t/`, or a missing `t/`, reports invalid command format with the calling command's usage.
 * An empty tag reports `Tag cannot be empty.`
@@ -667,8 +668,8 @@ memory and the previous saved file is unchanged.
 #### Design considerations {id="design-considerations-1"}
 
 * **One shared argument parser:** keeps `tagall` and `untagall` input rules and messages identical.
-  The 1 to 30 character limit is enforced in this parser, in `FilterCommandParser`, and in the shared `Tag`
-  model. The same limit applies to `add`, `edit`, and loading saved data.
+  It and `FilterCommandParser` use the shared `Tag` model rule, which also applies to `add`, `edit`,
+  and loading saved data.
 * **Skip instead of reject:** a member who already has (or lacks) the tag is skipped and counted, so one
   overlapping group does not block the rest of the batch (UC03 extension 6b).
 
@@ -908,8 +909,8 @@ These rules describe the selected MVP and apply to the use cases below.
    exactly, including case and internal spacing. Tags do not affect identity. Different people
    may share a name when another contact field differs. An edit excludes its own record from
    this check. Duplicate checking does not establish a person's real-world identity.
-3. A tag contains 1 to 30 ASCII letters or digits and is case-sensitive. It contains no internal
-   whitespace. Store each tag once per member and display tags in ASCII order: digits,
+3. A tag has 1 to 30 characters using ASCII letters or digits with optional internal hyphens, and is case-sensitive.
+   It contains no whitespace. Store each tag once per member and display tags in ASCII order: hyphens, digits,
    uppercase letters, then lowercase letters.
 4. `list` resets all searches and tag filters. `find KEYWORD [MORE_KEYWORDS]` narrows the
    displayed list. It matches complete or partial name words, ignores letter case, and accepts a match on
@@ -1371,7 +1372,7 @@ such as incremental delivery, are also not product NFRs.
 | Roster / address book | The complete collection of member records, including records hidden from the displayed list. The file and starter code use the term address book. |
 | Member record | One member's name, phone number, email address, address, and tag assignments. |
 | Group | A set of members sharing a tag, such as a committee or cohort. Groups are not separate stored objects in the MVP. |
-| Tag | A case-sensitive label containing 1 to 30 ASCII letters or digits, assigned at most once to each member. |
+| Tag | A case-sensitive label of 1 to 30 characters using ASCII letters or digits with optional internal hyphens, assigned at most once to each member. |
 | Displayed list | The records currently visible after the active search, tag filters, and index selections. It is the target set for a bulk tag command. |
 | Active search and filters | The name-search, email-search, tag, and index-selection conditions used to determine which records are displayed. A new `find` adds a condition; `findemail` replaces them, and `list` clears them all. |
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |

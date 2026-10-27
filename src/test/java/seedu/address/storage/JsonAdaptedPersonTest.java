@@ -39,6 +39,14 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_hyphenatedTag_preservesTag() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS,
+                List.of(new JsonAdaptedTag("year-1")));
+
+        assertEquals("year-1", person.toModelType().getTags().iterator().next().tagName);
+    }
+
+    @Test
     public void toModelType_emptyAddress_returnsPersonWithoutAddress() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, "", VALID_TAGS);
         assertEquals(Address.EMPTY_ADDRESS, person.toModelType().getAddress());

@@ -5,7 +5,6 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 
 import java.util.List;
-import java.util.regex.Pattern;
 
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.tag.Tag;
@@ -15,18 +14,15 @@ import seedu.address.model.tag.Tag;
  */
 public class BulkTagArgumentParser {
     public static final String MESSAGE_EMPTY_TAG = "Tag cannot be empty.";
-    public static final String MESSAGE_INVALID_TAG =
-            "Tag names should be alphanumeric, up to 30 characters, with no spaces.";
+    public static final String MESSAGE_INVALID_TAG = Tag.MESSAGE_CONSTRAINTS + ".";
     public static final String MESSAGE_MULTIPLE_TAGS = "Only one tag can be applied per command.";
-
-    private static final Pattern VALID_TAG = Pattern.compile("[A-Za-z0-9]{1,30}");
 
     private BulkTagArgumentParser() {
         // Prevents instantiation of this utility class.
     }
 
     /**
-     * Parses {@code args} into exactly one tag of 1 to 30 ASCII letters or digits.
+     * Parses {@code args} into exactly one tag of 1 to 30 ASCII letters or digits, with optional internal hyphens.
      * Surrounding whitespace around the tag is ignored.
      *
      * @param args Arguments following the command word.
@@ -52,7 +48,8 @@ public class BulkTagArgumentParser {
     }
 
     /**
-     * Parses one trimmed {@code t/} value into a tag of 1 to 30 ASCII letters or digits.
+     * Parses one trimmed {@code t/} value into a tag of 1 to 30 ASCII letters or digits,
+     * with optional internal hyphens.
      *
      * @throws ParseException If {@code tagName} is empty or invalid.
      */
@@ -61,7 +58,7 @@ public class BulkTagArgumentParser {
         if (tagName.isEmpty()) {
             throw new ParseException(MESSAGE_EMPTY_TAG);
         }
-        if (!VALID_TAG.matcher(tagName).matches()) {
+        if (!Tag.isValidTagName(tagName)) {
             throw new ParseException(MESSAGE_INVALID_TAG);
         }
         return new Tag(tagName);

@@ -14,8 +14,8 @@ import seedu.address.model.tag.Tag;
  */
 public class FilterCommandParser implements Parser<FilterCommand> {
     private static final Pattern TAG_ARGUMENT = Pattern.compile("^\\s*t/(.*?)\\s*$", Pattern.DOTALL);
-    private static final Pattern VALID_TAG = Pattern.compile("[A-Za-z0-9]{1,30}");
-    private static final String MESSAGE_INVALID_TAG = "A filter tag must contain 1 to 30 letters or digits.";
+    private static final String MESSAGE_INVALID_TAG = "A filter tag must be 1 to 30 characters long, "
+            + "using ASCII letters or digits with optional internal hyphens.";
 
     /**
      * Parses {@code args} into a filter command with exactly one valid tag.
@@ -28,7 +28,7 @@ public class FilterCommandParser implements Parser<FilterCommand> {
         }
 
         String tagName = matcher.group(1).trim();
-        if (!VALID_TAG.matcher(tagName).matches()) {
+        if (!Tag.isValidTagName(tagName)) {
             throw new ParseException(MESSAGE_INVALID_TAG);
         }
         return new FilterCommand(new Tag(tagName));
