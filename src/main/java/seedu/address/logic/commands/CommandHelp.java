@@ -143,7 +143,8 @@ public enum CommandHelp {
                     + "Quote paths containing whitespace. "
                     + "Packaged builds read files only inside the JAR folder. Values in the tags column are "
                     + "separated with semicolons.",
-            "Supply one readable .csv path after p/. Invalid files do not change the roster. If saving fails, the "
+            "Supply one readable .csv path after p/. A missing file reports its resolved path; check the file name "
+                    + "and location. Invalid files do not change the roster. If saving fails, the "
                     + "imported batch remains unsaved in this session. Fix storage, then reapply an existing "
                     + "field with edit "
                     + "to save it; use clear for an empty roster. Exiting before a successful retry loses the batch."),

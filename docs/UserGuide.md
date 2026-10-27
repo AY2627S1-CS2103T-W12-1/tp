@@ -457,6 +457,8 @@ A header-only or duplicate-only file succeeds with zero imports and still retrie
 
 If a row, header, CSV structure, or UTF-8 encoding is invalid, no records or view state change. The first
 error identifies the row where applicable. The source CSV is never modified.
+A missing file reports its resolved path; check the spelling and location. In a packaged build, keep the file
+inside the JAR folder or one of its subfolders.
 
 ### Remove member records {id="remove-records"}
 
