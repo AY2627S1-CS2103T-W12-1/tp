@@ -254,6 +254,12 @@ public class MainWindow extends UiPart<Stage> {
         return chip;
     }
 
+    /**
+     * Refreshes the filter controls and shows removal feedback with the updated member count.
+     * Repeats the pending deletion prompt when confirmation is still required.
+     *
+     * @param message Description of the removal to include in the feedback.
+     */
     private void showChipRemoval(String message) {
         refreshActiveFilters();
         String feedback = message + " " + logic.getFilteredPersonList().size() + " member(s) listed.";
