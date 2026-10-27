@@ -55,6 +55,7 @@
 * [About Us]({{ baseUrl }}/AboutUs.html)
 * [Releases]({{ baseUrl }}/index.html#releases)
   * [v1.4 - TrackCall]({{ baseUrl }}/releases/v1.4/RELEASE_NOTES.html)
+  * [v1.4 project history]({{ baseUrl }}/iterations/v1.4.html)
   * [v1.3 - TrackCall]({{ baseUrl }}/releases/v1.3/RELEASE_NOTES.html)
   * [v1.3 package guide]({{ baseUrl }}/releases/v1.3/README.html)
 * [Development resources]({{ baseUrl }}/SettingUp.html)
@@ -63,7 +64,6 @@
   * [Documentation]({{ baseUrl }}/Documentation.html)
   * [Logging]({{ baseUrl }}/Logging.html)
   * [DevOps]({{ baseUrl }}/DevOps.html)
-  * [v1.4 iteration]({{ baseUrl }}/iterations/v1.4.html)
       </site-nav>
     </div>
   </nav>
