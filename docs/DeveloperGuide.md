@@ -6,7 +6,7 @@ pageNav: 3
 
 # Developer Guide
 
-## Value proposition
+<span id="value-proposition"></span>
 
 TrackCall is a local membership roster for club secretaries. Its main workflow is to find a group,
 update its records or tags, and save valid changes without a separate save command.
@@ -14,7 +14,32 @@ update its records or tags, and save valid changes without a separate save comma
 This guide describes the **unreleased v1.5 candidate**. Use the [User Guide](UserGuide.html)
 for command syntax and the sections below for implementation decisions and failure handling.
 
-### Feature map
+## Acknowledgements
+
+* TrackCall builds on [AddressBook Level 3](https://se-education.org/addressbook-level3/) by the
+  [SE-EDU initiative](https://se-education.org/). The starter supplies the architecture, source code, tests,
+  and original diagrams.
+* The application uses [JavaFX](https://openjfx.io/) for its interface and
+  [Jackson](https://github.com/FasterXML/jackson) for JSON storage.
+* [Apache Commons CSV](https://commons.apache.org/proper/commons-csv/) handles CSV import/export parsing and quoting.
+  Its use was [approved by the teaching team](https://github.com/NUS-CS2103-AY2627-S1/forum/issues/627).
+* The documentation website uses [MarkBind](https://markbind.org/) and adapts the
+  [CS2103T starter layout](https://github.com/NUS-CS2103-AY2627-S1/tp/tree/switch-docs-to-markbind)
+  with TrackCall's name, repository links, and guide sections.
+* The feature grouping and release-note presentation were inspired by the
+  [W12-3 team's User Guide](https://ay2627s1-cs2103t-w12-3.github.io/tp/UserGuide.html) and
+  [CoordiMate releases](https://github.com/AY2627S1-CS2103T-W12-3/tp/releases).
+  The adaptation concerns documentation layout and presentation; TrackCall retains its own feature descriptions,
+  examples, screenshots, and application behaviour.
+* The previous Jekyll website adapted the
+  [W13-1 team's layout](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/docs/stylesheets/main.css),
+  including its sidebar widths, reading width, and responsive breakpoints, under its
+  [MIT licence](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/LICENSE).
+* [JUnit](https://junit.org/junit5/), [Gradle](https://gradle.org/),
+  [Checkstyle](https://checkstyle.org/), and [JaCoCo](https://www.jacoco.org/jacoco/) support testing and builds.
+
+
+## Feature Map {id="feature-map"}
 
 | Task | Commands | Implementation |
 | --- | --- | --- |
@@ -43,7 +68,7 @@ need to be integrated before those expectations can be treated as delivered:
 Update this table when the changes merge. [Release acceptance](#release-acceptance-checks-still-required)
 checks the final JAR; passing isolated tests does not establish release readiness.
 
-## Getting started {id="setting-up-getting-started"}
+## Setting Up {id="setting-up-getting-started"}
 
 Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
@@ -766,31 +791,6 @@ These are constraints of the current implementation:
 * [DevOps guide](DevOps.html)
 
 
-## Acknowledgements
-
-* TrackCall builds on [AddressBook Level 3](https://se-education.org/addressbook-level3/) by the
-  [SE-EDU initiative](https://se-education.org/). The starter supplies the architecture, source code, tests,
-  and original diagrams.
-* The application uses [JavaFX](https://openjfx.io/) for its interface and
-  [Jackson](https://github.com/FasterXML/jackson) for JSON storage.
-* [Apache Commons CSV](https://commons.apache.org/proper/commons-csv/) handles CSV import/export parsing and quoting.
-  Its use was [approved by the teaching team](https://github.com/NUS-CS2103-AY2627-S1/forum/issues/627).
-* The documentation website uses [MarkBind](https://markbind.org/) and adapts the
-  [CS2103T starter layout](https://github.com/NUS-CS2103-AY2627-S1/tp/tree/switch-docs-to-markbind)
-  with TrackCall's name, repository links, and guide sections.
-* The feature grouping and release-note presentation were inspired by the
-  [W12-3 team's User Guide](https://ay2627s1-cs2103t-w12-3.github.io/tp/UserGuide.html) and
-  [CoordiMate releases](https://github.com/AY2627S1-CS2103T-W12-3/tp/releases).
-  The adaptation concerns documentation layout and presentation; TrackCall retains its own feature descriptions,
-  examples, screenshots, and application behaviour.
-* The previous Jekyll website adapted the
-  [W13-1 team's layout](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/docs/stylesheets/main.css),
-  including its sidebar widths, reading width, and responsive breakpoints, under its
-  [MIT licence](https://github.com/AY2627S1-CS2103T-W13-1/tp/blob/master/LICENSE).
-* [JUnit](https://junit.org/junit5/), [Gradle](https://gradle.org/),
-  [Checkstyle](https://checkstyle.org/), and [JaCoCo](https://www.jacoco.org/jacoco/) support testing and builds.
-
-
 ## Appendix: Requirements {id="appendix-requirements"}
 
 These requirements describe the v1.5 candidate and explicitly identified future ideas.
@@ -1449,7 +1449,7 @@ such as incremental delivery, are also not product NFRs.
 | MVP | Minimum viable product: the core feature set delivered by TrackCall. |
 
 
-## Appendix: Instructions for Manual Testing {id="appendix-instructions-for-manual-testing"}
+## Appendix: Manual Testing {id="appendix-instructions-for-manual-testing"}
 
 These checks cover the v1.5 candidate. They are test instructions, not a claim that every
 platform or release package has been verified. Use a disposable folder and synthetic contacts.
@@ -1647,7 +1647,7 @@ CSV import, and bulk tag editing, test empty groups or files, overlapping filter
 changed/skipped counts, invalid input, save failures, and restart persistence. Record results against
 the release commit; passing unit tests alone does not establish release readiness.
 
-## v1.5 release candidate changes
+### v1.5 release candidate changes
 
 This is the target release checklist. The [integration status](#candidate-integration-status) above
 identifies changes still awaiting merge; this list alone is not evidence that they are delivered.
@@ -1675,7 +1675,7 @@ identifies changes still awaiting merge; this list alone is not evidence that th
   the command and error type without raw exception messages or cause chains, which can contain
   stored JSON. Existing logs are not rewritten.
 
-### Additional release checks
+#### Additional release checks
 
 1. Launch the same JAR twice; confirm the second launch is rejected before it can read/write data.
    Close the first process and confirm a new launch works without deleting `.trackcall.lock`.
