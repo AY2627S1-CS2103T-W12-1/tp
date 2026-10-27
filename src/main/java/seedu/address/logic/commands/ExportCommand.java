@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -28,11 +29,22 @@ public class ExportCommand extends Command {
     public static final String DEFAULT_FILE_NAME = "addressbook.csv";
     public static final String MESSAGE_USAGE = COMMAND_WORD + " [FILEPATH]\n"
             + "Exports all people to a CSV file. If FILEPATH is omitted, writes " + DEFAULT_FILE_NAME
-            + " beside the JAR, or in the working directory during development.";
+            + " beside the JAR, or in the working directory during development. The path must end in .csv.";
     public static final String MESSAGE_SUCCESS = "Exported %1$d people to %2$s.";
     public static final String MESSAGE_FAILURE = "Could not export people to %1$s: %2$s";
     public static final String MESSAGE_PROTECTED_DESTINATION =
             "The export destination is used by TrackCall. Choose a different file.";
+
+    public static final String MESSAGE_DIRECTORY_DESTINATION =
+            "The export destination is a folder. Choose a CSV file instead.";
+    public static final String MESSAGE_MISSING_PARENT =
+            "The parent folder does not exist. Create it first, or export to an existing folder.";
+    public static final String MESSAGE_INVALID_PARENT =
+            "The parent path is not a folder. Export to an existing folder.";
+    public static final String MESSAGE_WRITE_DENIED =
+            "Permission denied. Check that the destination file and folder are writable.";
+    public static final String MESSAGE_WRITE_FAILURE =
+            "Could not write the CSV file. Check the destination, folder permissions and available disk space.";
 
     private static final Logger logger = LogsCenter.getLogger(ExportCommand.class);
 
@@ -81,7 +93,23 @@ public class ExportCommand extends Command {
                     throw new IOException(MESSAGE_PROTECTED_DESTINATION);
                 }
             }
-            CsvAddressBookExporter.export(people, targetPath);
+            if (Files.isDirectory(targetPath)) {
+                throw new IOException(MESSAGE_DIRECTORY_DESTINATION);
+            }
+            Path parent = targetPath.getParent();
+            if (!Files.exists(parent)) {
+                throw new IOException(MESSAGE_MISSING_PARENT);
+            }
+            if (!Files.isDirectory(parent)) {
+                throw new IOException(MESSAGE_INVALID_PARENT);
+            }
+            try {
+                CsvAddressBookExporter.export(people, targetPath);
+            } catch (IOException e) {
+                logger.warning("CSV export failed (" + e.getClass().getSimpleName() + ")");
+                String details = e instanceof AccessDeniedException ? MESSAGE_WRITE_DENIED : MESSAGE_WRITE_FAILURE;
+                throw new CommandException(String.format(MESSAGE_FAILURE, targetPath, details), e);
+            }
         } catch (IOException e) {
             logger.warning("CSV export failed (" + e.getClass().getSimpleName() + ")");
             throw new CommandException(String.format(MESSAGE_FAILURE, targetPath, e.getMessage()), e);

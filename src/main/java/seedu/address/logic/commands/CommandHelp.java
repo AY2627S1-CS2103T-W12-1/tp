@@ -131,7 +131,7 @@ public enum CommandHelp {
                     + "Packaged builds use only paths inside the JAR folder. Existing destination files are "
                     + "overwritten. Tags are sorted and joined with semicolons. The roster and current search "
                     + "stay unchanged.",
-            "Use a valid output path whose parent directory exists and is writable. "
+            "Use an output path ending in .csv (ignoring letter case), with an existing writable parent directory. "
                     + "The active roster, preferences, application lock, and running JAR "
                     + "cannot be export destinations. "
                     + "An invalid path or a failed write reports an error and preserves any previous export."),
