@@ -267,9 +267,16 @@ This adds Bob with two tags, saves the roster, and shows the complete member lis
 Repeated identical tags appear once.
 If you omit `a/`, the address is shown as `(none)` until you add one with `edit`.
 
-A member is a duplicate only when its trimmed name, phone, email, and address all exactly match an
-existing member, including case and internal spaces. Tags do not affect identity. A same-name member
-with different contact details is allowed.
+Duplicate checking ignores name capitalization, repeated whitespace and surrounding whitespace.
+For example, `Alice Tan`, `alice tan` and `Alice  Tan` match when phone, email and address also match.
+Those other fields are trimmed but otherwise compared exactly; tags are ignored.
+Names keep their entered capitalization and spacing in storage and display. Accents and punctuation
+are not removed by duplicate checking, and this rule does not expand the supported name characters.
+A same-name member with different contact details is allowed.
+
+A duplicate add is rejected. Use `find` to locate the existing member and `edit` to update it.
+Older saved rosters containing these name variants still load without merging or deleting records.
+Tag-only and unchanged-contact edits to those existing records remain available.
 
 #### Update a member: `edit`
 
@@ -286,7 +293,8 @@ After saving, TrackCall confirms the member's name and tags and keeps the active
 The details panel stays hidden until you select a member again to inspect the changed contact fields.
 If the updated member no longer matches the search or filters, they disappear from view but remain
 in the roster. Use `list` to show everyone again.
-An edit that would make all four contact fields match another member is rejected.
+An edit that would match another member under the duplicate rule above is rejected.
+Changing only your own name's capitalization or spacing is allowed when it does not match another member.
 
 **Supplied tags replace all existing tags.**
 
@@ -457,8 +465,10 @@ name,phone,email,address,tags
 John Doe,98765432,johnd@example.com,"John Street, Block 123",year1;committee
 ```
 
-The whole file is validated before any member is added. Exact contact-detail duplicates against existing
-members or earlier rows are skipped; tags are not merged. The result reports imported and skipped counts.
+The whole file is validated before any member is added. Duplicates against existing members or earlier rows
+are skipped using the same normalized-name rule as `add` and `edit`; tags are not merged.
+The first accepted record keeps its name formatting. The result reports imported and skipped counts;
+inspect the existing member and use `edit` if a skipped record was intended as an update.
 A header-only or duplicate-only file succeeds with zero imports and still retries automatic saving.
 
 If a row, header, CSV structure, or UTF-8 encoding is invalid, no records or view state change. The first
