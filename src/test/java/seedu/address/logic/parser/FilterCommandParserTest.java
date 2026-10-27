@@ -42,7 +42,9 @@ public class FilterCommandParserTest {
     public void parse_extraTag_reportsOneTagPerCommand() {
         String expected = "Only one t/TAG parameter is allowed per filter command. "
                 + "Apply another tag in a separate command.";
-        for (String input : new String[] {"t/committee t/year1", "t/ t/year1", "t/invalid! t/year1"}) {
+        String[] inputs = {"t/committee t/year1", "t/committee\tt/year1", "t/ t/year1",
+            "t/invalid! t/year1"};
+        for (String input : inputs) {
             assertParseFailure(parser, input, expected);
         }
     }
@@ -51,7 +53,9 @@ public class FilterCommandParserTest {
     public void parse_otherParameter_reportsCommandFormat() {
         String expected = String.format(seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT,
                 FilterCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "t/committee n/Bob", expected);
+        for (String input : new String[] {"t/committee n/Bob", "t/one x/two"}) {
+            assertParseFailure(parser, input, expected);
+        }
     }
 
     @Test
