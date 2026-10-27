@@ -96,7 +96,7 @@ public class UserCsvWorkflowTest {
         Files.createDirectory(backup);
         Files.writeString(backup.resolve("blocked.txt"), "Blocks backup replacement");
 
-        CommandException error = assertThrows(CommandException.class, () -> logic.execute("import p/" + csv));
+        CommandException error = assertThrows(CommandException.class, () -> logic.execute("import p/\"" + csv + "\""));
 
         String feedback = error.getMessage().toLowerCase(Locale.ROOT);
         assertTrue(feedback.startsWith("could not save data to file:"));
@@ -139,7 +139,7 @@ public class UserCsvWorkflowTest {
                 + "Bob,789,bob@example.com,,first\nBob,789,bob@example.com,,second\n"
                 + "Zulu,00123,zulu@example.com,,another\n");
 
-        CommandResult result = logic.execute("import p/" + csv);
+        CommandResult result = logic.execute("import p/\"" + csv + "\"");
 
         assertTrue(result.getFeedbackToUser().startsWith("Imported 1 member(s)"));
         assertTrue(result.getFeedbackToUser().endsWith("Skipped 3 duplicate record(s)."));
@@ -160,7 +160,7 @@ public class UserCsvWorkflowTest {
                 + " a+b@example.co , 000 , Alice  Tan \r\n"
                 + ",,b@example.co,123,B\r\n");
 
-        logic.execute("import p/" + csv);
+        logic.execute("import p/\"" + csv + "\"");
 
         List<Person> people = model.getAddressBook().getPersonList();
         Person alice = people.get(2);
@@ -196,7 +196,8 @@ public class UserCsvWorkflowTest {
             Files.writeString(csv, HEADER + "Valid,999,valid@example.com,,\n" + invalid);
             byte[] source = Files.readAllBytes(csv);
 
-            CommandException error = assertThrows(CommandException.class, () -> logic.execute("import p/" + csv),
+            CommandException error = assertThrows(CommandException.class,
+                    () -> logic.execute("import p/\"" + csv + "\""),
                     invalid);
 
             assertTrue(error.getMessage().contains("row 3:"), error.getMessage());
@@ -224,7 +225,8 @@ public class UserCsvWorkflowTest {
             Path blocker = backup.resolve("blocked.txt");
             Files.writeString(blocker, "Folder prevents automatic backup");
 
-            CommandException error = assertThrows(CommandException.class, () -> logic.execute("import p/" + csv));
+            CommandException error = assertThrows(CommandException.class,
+                    () -> logic.execute("import p/\"" + csv + "\""));
 
             assertTrue(error.getMessage().startsWith("Could not save data to file:"));
             assertArrayEquals(saved, Files.readAllBytes(rosterFile));
@@ -234,7 +236,7 @@ public class UserCsvWorkflowTest {
             Files.delete(backup);
             Files.writeString(csv, HEADER + (isDuplicateOnly ? row : ""));
 
-            CommandResult retried = logic.execute("import p/" + csv);
+            CommandResult retried = logic.execute("import p/\"" + csv + "\"");
 
             assertTrue(retried.getFeedbackToUser().startsWith("Imported 0 member(s)"));
             assertEquals(model.getAddressBook(),
