@@ -558,7 +558,7 @@ Removing that chip clears only the email condition and preserves any subsequent 
 
 ### Filter members by tag
 
-`filter t/TAG` narrows the displayed list to members with one exact, case-sensitive tag without changing member data.
+`filter t/TAG` narrows the displayed list to members with one tag, ignoring letter case, without changing member data.
 Usage examples are in the [User Guide](UserGuide.html#filter-displayed-members-by-tag-filter).
 
 #### Parsing {id="parsing"}
@@ -598,7 +598,7 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
 #### Test coverage {id="test-coverage-2"}
 
 * `FilterCommandParserTest` and `FilterCommandTest` cover argument validation and narrowing an existing view.
-* `LogicManagerTest` covers cumulative filters, case-sensitive matching, empty results, interactions with
+* `LogicManagerTest` covers cumulative filters, case-insensitive matching, empty results, interactions with
   `find`, `list`, and sorting, and execution without saving.
 * `EditCommandTest` checks that edits retain search and tag conditions and hide members who no longer match.
 
@@ -705,11 +705,11 @@ through the standard data-changing path.
 
 * **Whole roster instead of displayed list:** a rename that left the old tag on hidden members would split one
   group into two names. Renaming everywhere keeps each group under one name (US29).
-* **Reject an unused current tag:** reporting `0 member(s)` would hide a likely typo, because tags are
-  case-sensitive. Rejecting it also avoids an unnecessary save.
+* **Reject an unused current tag:** reporting `0 member(s)` would hide a likely typo. Matching ignores
+  letter case, and rejecting an unused tag also avoids an unnecessary save.
 
 `RenameTagCommandTest`, `RenameTagCommandParserTest`, and `LogicManagerTest` cover renaming, merging with an
-existing tag, hidden members, unused and wrong-case tags, wrong tag counts, invalid and identical tags, and
+existing tag, hidden members, unused and differently cased tags, wrong tag counts, invalid and identical tags, and
 whether each case saves.
 
 ### Limitations
@@ -908,8 +908,8 @@ These rules describe the selected MVP and apply to the use cases below.
    exactly, including case and internal spacing. Tags do not affect identity. Different people
    may share a name when another contact field differs. An edit excludes its own record from
    this check. Duplicate checking does not establish a person's real-world identity.
-3. A tag contains 1 to 30 ASCII letters or digits and is case-sensitive. It contains no internal
-   whitespace. Store each tag once per member and display tags in ASCII order: digits,
+3. A tag contains 1 to 30 ASCII letters or digits and matches regardless of letter case. It contains no internal
+   whitespace. Store each tag once per member, retaining its spelling for display, and display tags in ASCII order: digits,
    uppercase letters, then lowercase letters.
 4. `list` resets all searches and tag filters. `find KEYWORD [MORE_KEYWORDS]` narrows the
    displayed list. It matches complete or partial name words, ignores letter case, and accepts a match on
@@ -917,7 +917,7 @@ These rules describe the selected MVP and apply to the use cases below.
    matches and any active tag filters. Repeated keywords do not repeat records.
    `findemail KEYWORD [MORE_KEYWORDS]...` replaces previous searches and filters, but matches
    literal email substrings using any whitespace-separated keyword, ignoring case. Neither search disables sorting.
-5. `filter t/TAG` narrows the currently displayed list using exact, case-sensitive tag matching.
+5. `filter t/TAG` narrows the currently displayed list using case-insensitive tag matching.
    Repeated filters retain the intersection of the tags and active name or email searches. A valid
    zero-match result is successful. Use `list` first to filter the whole roster.
 6. An index is an ASCII-digit integer from 1 through the current displayed count. Leading zeroes
@@ -1371,7 +1371,7 @@ such as incremental delivery, are also not product NFRs.
 | Roster / address book | The complete collection of member records, including records hidden from the displayed list. The file and starter code use the term address book. |
 | Member record | One member's name, phone number, email address, address, and tag assignments. |
 | Group | A set of members sharing a tag, such as a committee or cohort. Groups are not separate stored objects in the MVP. |
-| Tag | A case-sensitive label containing 1 to 30 ASCII letters or digits, assigned at most once to each member. |
+| Tag | A label containing 1 to 30 ASCII letters or digits, matched without regard to case and assigned at most once to each member. |
 | Displayed list | The records currently visible after the active search, tag filters, and index selections. It is the target set for a bulk tag command. |
 | Active search and filters | The name-search, email-search, tag, and index-selection conditions used to determine which records are displayed. A new `find` adds a condition; `findemail` replaces them, and `list` clears them all. |
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
@@ -1474,7 +1474,8 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
    or an internal tab keeps that text. For both `add` and `edit`, append `x/extra` or `T/committee`
    and expect an invalid command format without changing the roster, displayed view, or saved file.
-8. Add two members tagged `committee` and one member without tags. Run `list`, then `filter t/committee`.
+8. Add one member tagged `committee`, one tagged `Committee`, and one without tags. Run `list`, then
+   `filter t/COMMITTEE` and expect both tagged members to appear.
    Run `tagall t/year1` and
    expect only the displayed members to gain `year1`, keeping their other tags. Run it again and expect
    `0 member(s)` changed with all of them skipped. Run `untagall t/committee`: the members disappear
@@ -1483,7 +1484,7 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    Try `tagall`, `tagall t/`, `tagall t/a t/b`, and `tagall committee`. Expect errors and no changes.
    Run `find` for one member tagged `year1`, then `renametag t/year1 t/alumni`. Expect every member with
    `year1` to be renamed, then `list` to show `alumni` on hidden members too. Try `renametag t/year1 t/x`,
-   `renametag t/alumni`, and `renametag t/alumni t/alumni`. Expect errors and no changes.
+   `renametag t/alumni`, and `renametag t/alumni t/Alumni`. Expect errors and no changes.
    Restart and check that the tag changes were saved.
 9. Use a disposable roster with at least two members. Ensure the first member has `committee` and
    `friends`, and the second has `committee`. Run `tag 1 t/year1` and confirm only the first displayed

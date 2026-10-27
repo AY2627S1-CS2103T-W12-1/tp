@@ -198,7 +198,7 @@ clear only the email condition while keeping any later name or tag filters.
 This keeps only committee members in the current view. Their order, including active name sorting,
 stays the same, and their displayed numbers update.
 
-* Matching is exact and case-sensitive: `committee` and `Committee` are different tags.
+* Matching ignores letter case: `committee` and `Committee` identify the same tag.
 * Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
   Applying the same tag again does not add a duplicate condition.
 * A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
@@ -249,7 +249,7 @@ URLs, numeric slashes such as `12/3`, and slashes embedded in words remain addre
 | Phone | At least three ASCII digits. No spaces or punctuation. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text when adding; `edit INDEX a/` clears an existing address. |
-| Tag | 1 to 30 ASCII letters or digits, without spaces. Tags are case-sensitive. |
+| Tag | 1 to 30 ASCII letters or digits, without spaces. Matching ignores letter case. |
 
 **Email rules:**
 
@@ -312,7 +312,8 @@ untag 2 t/friends
 
 Check the displayed number after searching, filtering, showing selected members, or sorting. The
 index identifies the member shown at that number when you submit the command. Hidden members are
-not changed. Tags must contain 1 to 30 ASCII letters or digits; matching is case-sensitive.
+not changed. Tags must contain 1 to 30 ASCII letters or digits; matching ignores letter case.
+Adding `t/student` to a member who already has `Student` does not add a second tag.
 
 If the member already has the tag (for `tag`) or lacks it (for `untag`), TrackCall reports that
 no change was made. A valid no-op still attempts to save. Searches, filters, sorting, and a `show`
@@ -355,7 +356,7 @@ If you remove the tag used by the active filter, the updated members disappear f
 because they no longer match. They are not deleted; run `list` to show everyone.
 
 Supply exactly one tag of 1 to 30 ASCII letters or digits with no internal spaces. Spaces around the tag
-are ignored, and matching is case-sensitive. Missing `t/`, empty tags, invalid tags, and more than one tag
+are ignored, and matching ignores letter case. Missing `t/`, empty tags, invalid tags, and more than one tag
 are rejected without changing any member. If no members are displayed, TrackCall reports
 `There are no members in the current list to update.` and changes nothing.
 
@@ -376,7 +377,8 @@ Every member tagged `batch2026` is now tagged `alumni` instead. The result repor
 * `Renamed tag "year1" to "year2" for 10 member(s). 2 already had "year2".`
 
 A member who already has the new tag keeps a single copy of it.
-Tags are case-sensitive, so `renametag t/committee t/Committee` is a valid rename.
+Tags match regardless of letter case, so `renametag t/committee t/Committee` is rejected as the same tag.
+Use `renametag` to change the tag name itself, not only its capitalization.
 
 The current search, filters, and sorting stay applied after the update.
 If you rename the tag used by the active filter, the renamed members disappear from view
@@ -399,6 +401,8 @@ Export a complete roster or bring existing member records into TrackCall.
 The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
 Tags for each member are sorted in case-sensitive ASCII order (digits, uppercase letters, then lowercase letters)
 and joined with semicolons.
+If an imported file or an existing roster contains case variants of one tag on the same member,
+TrackCall keeps one tag when loading it. The retained spelling is shown in the member list and exports.
 
 * Without `FILEPATH`, the file is written to `addressbook.csv` beside the JAR. During development,
   it is written to the working directory.

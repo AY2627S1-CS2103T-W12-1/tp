@@ -89,7 +89,7 @@ public class RenameTagCommandTest {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         model.filterFilteredPersonListByTag(friends);
 
-        assertCommandFailure(new RenameTagCommand(friends, new Tag("friends")), model,
+        assertCommandFailure(new RenameTagCommand(friends, new Tag("FRIENDS")), model,
                 RenameTagCommand.MESSAGE_SAME_TAG);
         assertEquals(List.of(friends), model.getActiveTagFilters());
     }
@@ -117,11 +117,13 @@ public class RenameTagCommandTest {
     }
 
     @Test
-    public void execute_tagDiffersOnlyInCase_throwsCommandException() {
+    public void execute_tagDiffersOnlyInCase_renamesMatchingMembers() {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        renameTagForAll(expectedModel, "friends", "buddies");
 
-        assertCommandFailure(new RenameTagCommand(new Tag("Friends"), buddies), model,
-                String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "Friends"));
+        assertCommandSuccess(new RenameTagCommand(new Tag("Friends"), buddies), model,
+                "Renamed tag \"Friends\" to \"buddies\" for 3 member(s).", expectedModel);
     }
 
     @Test

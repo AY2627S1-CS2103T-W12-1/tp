@@ -20,8 +20,6 @@ public class RenameTagCommandParserTest {
         RenameTagCommand expected = new RenameTagCommand(new Tag("batch2026"), new Tag("alumni"));
         assertParseSuccess(parser, " t/batch2026 t/alumni", expected);
         assertParseSuccess(parser, "\t t/  batch2026  t/alumni \t", expected);
-        assertParseSuccess(parser, " t/committee t/Committee",
-                new RenameTagCommand(new Tag("committee"), new Tag("Committee")));
     }
 
     @Test
@@ -45,5 +43,6 @@ public class RenameTagCommandParserTest {
     @Test
     public void parse_sameTagTwice_rejectsCommand() {
         assertParseFailure(parser, " t/alumni t/alumni", MESSAGE_SAME_TAG);
+        assertParseFailure(parser, " t/committee t/Committee", MESSAGE_SAME_TAG);
     }
 }
