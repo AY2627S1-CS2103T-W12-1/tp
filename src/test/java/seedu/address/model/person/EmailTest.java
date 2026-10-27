@@ -97,6 +97,22 @@ public class EmailTest {
     }
 
     @Test
+    public void isValidEmail_separatorAndAsciiBoundaries_matchDocumentedRules() {
+        for (String separator : new String[] {"+", "_", ".", "-"}) {
+            assertTrue(Email.isValidEmail("alice" + separator + "tan@example.com"));
+            for (String secondSeparator : new String[] {"+", "_", ".", "-"}) {
+                assertFalse(Email.isValidEmail("alice" + separator + secondSeparator + "tan@example.com"));
+            }
+        }
+        assertTrue(Email.isValidEmail("alice@a-b.co"));
+        assertFalse(Email.isValidEmail("alice@a--b.co"));
+        assertFalse(Email.isValidEmail("alice@a..co"));
+        assertFalse(Email.isValidEmail("álîce@example.com"));
+        assertFalse(Email.isValidEmail("alice@éxample.com"));
+        assertFalse(Email.isValidEmail("alice@１２.com"));
+    }
+
+    @Test
     public void equals() {
         Email email = new Email("valid@email");
 

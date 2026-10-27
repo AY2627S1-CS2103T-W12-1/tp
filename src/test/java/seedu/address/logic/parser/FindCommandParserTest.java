@@ -17,7 +17,9 @@ public class FindCommandParserTest {
 
     @Test
     public void parse_emptyArg_throwsParseException() {
-        assertParseFailure(parser, "     ", String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
+        for (String input : List.of("", "     ", "\t\n\r", "\u2003")) {
+            assertParseFailure(parser, input, String.format(MESSAGE_INVALID_COMMAND_FORMAT, FindCommand.MESSAGE_USAGE));
+        }
     }
 
     @Test
@@ -29,6 +31,7 @@ public class FindCommandParserTest {
 
         // multiple whitespaces between keywords
         assertParseSuccess(parser, " \n Alice \n \t Bob  \t", expectedFindCommand);
+        assertParseSuccess(parser, "\u2003Alice\u2003Bob\u2003", expectedFindCommand);
     }
 
 }

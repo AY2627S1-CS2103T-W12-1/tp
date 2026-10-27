@@ -18,7 +18,10 @@ import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.DANIEL;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -194,6 +197,19 @@ public class EditCommandTest {
                 new EditPersonDescriptorBuilder().withName(VALID_NAME_BOB).build());
 
         assertCommandFailure(editCommand, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+    }
+
+    @Test
+    public void hashCode_equalChanges_retrieveTheSameMapEntryAfterCallerMutatesDescriptor() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptor(DESC_AMY);
+        EditCommand original = new EditCommand(Index.fromOneBased(1), descriptor);
+        EditCommand copy = new EditCommand(Index.fromZeroBased(0), new EditPersonDescriptor(DESC_AMY));
+        Map<EditCommand, String> commands = new HashMap<>();
+        commands.put(original, "pending");
+        descriptor.setTags(Set.of(new Tag("changed")));
+        assertEquals("pending", commands.get(copy));
+        assertEquals("pending", commands.put(copy, "replaced"));
+        assertEquals(1, commands.size());
     }
 
     @Test

@@ -3,8 +3,10 @@ package seedu.address.ui;
 import java.util.Comparator;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.FlowPane;
@@ -33,11 +35,14 @@ public class MemberDetailsPanel extends UiPart<Region> {
     @FXML
     private Label address;
     @FXML
+    private Button copyAddressButton;
+    @FXML
     private FlowPane tags;
 
     /** Starts with all contact details hidden until the user selects a roster row. */
     public MemberDetailsPanel() {
         super(FXML);
+        tags.setMinHeight(Region.USE_PREF_SIZE);
         clear();
     }
 
@@ -48,11 +53,13 @@ public class MemberDetailsPanel extends UiPart<Region> {
         name.setText(person.getName().fullName);
         phone.setText(person.getPhone().value);
         email.setText(person.getEmail().value);
-        address.setText(person.getAddress().value.isEmpty() ? "(none)" : person.getAddress().value);
+        String addressValue = person.getAddress().value;
+        address.setText(addressValue.isEmpty() ? "(none)" : addressValue);
+        copyAddressButton.setDisable(addressValue.isEmpty());
         tags.getChildren().clear();
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))
-                .forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
+                .forEach(tag -> tags.getChildren().add(createTagLabel(tag.tagName)));
         if (tags.getChildren().isEmpty()) {
             tags.getChildren().add(new Label("None"));
         }
@@ -60,6 +67,17 @@ public class MemberDetailsPanel extends UiPart<Region> {
         detailsScroll.setVisible(true);
         detailsScroll.setManaged(true);
         detailsScroll.setVvalue(0);
+    }
+
+    /** Wraps long tag names within the details viewport instead of clipping their suffix. */
+    private Label createTagLabel(String tagName) {
+        Label label = new Label(tagName);
+        label.setWrapText(true);
+        label.setMinWidth(0);
+        label.setMinHeight(Region.USE_PREF_SIZE);
+        label.maxWidthProperty().bind(tags.widthProperty());
+        label.setTooltip(new Tooltip(tagName));
+        return label;
     }
 
     /** Hides the selected member's details after deselection or a command. */
@@ -70,6 +88,7 @@ public class MemberDetailsPanel extends UiPart<Region> {
         phone.setText("");
         email.setText("");
         address.setText("");
+        copyAddressButton.setDisable(true);
         tags.getChildren().clear();
         detailsScroll.setVisible(false);
         detailsScroll.setManaged(false);
