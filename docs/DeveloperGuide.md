@@ -569,7 +569,7 @@ selection narrowing, record replacement, ordering, and read-only execution.
 ### Find members by email
 
 `findemail KEYWORD [MORE_KEYWORDS]...` searches the full roster for email addresses containing any
-whitespace-separated keyword. It accepts a full address or a fragment such as `@example.com`.
+whitespace-separated keyword, including nonbreaking-space separators. It accepts a full address or a fragment such as `@example.com`.
 Matching lowercases the email and keywords with `Locale.ROOT` and uses literal substring matching,
 not regular expressions. Names and phone numbers are not searched. Blank input is rejected.
 
@@ -1563,6 +1563,16 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    Run `clear` again and confirm with `y`. After saving, expect
    `Cleared 2 members. The roster is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
    `The roster is already empty. No changes were made.`
+
+### Pasted Unicode input
+
+* Add or edit a supplied address containing only a nonbreaking space (U+00A0), figure space (U+2007),
+  or narrow nonbreaking space (U+202F). Expect rejection and no changed member.
+* Use an address with visible Unicode text and internal nonbreaking spaces. Expect the text to be preserved.
+  `edit INDEX a/` must still clear the address.
+* With Alice and Bob in the roster, run `list`, then `find Alice Bob` (U+00A0 between the names).
+  Expect the same results as `find Alice Bob`. Repeat after `list` with their two email fragments and `findemail`.
+* A name or email search containing only those separators must report missing keywords.
 
 ### Email search
 
