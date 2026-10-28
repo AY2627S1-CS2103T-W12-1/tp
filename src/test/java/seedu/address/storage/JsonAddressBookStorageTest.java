@@ -130,6 +130,53 @@ public class JsonAddressBookStorageTest {
         assertInvalidDataRejected("\uFEFF\uFEFF{\"persons\":[]}");
     }
 
+    @Test
+    public void saveAddressBook_fileChangedOutsideAfterLoad_refusesOnceThenKeepsOutsideVersionInBackup()
+            throws Exception {
+        Path file = testFolder.resolve("members.json");
+        new JsonAddressBookStorage(file).saveAddressBook(getTypicalAddressBook());
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.readAddressBook();
+        AddressBook outside = getTypicalAddressBook();
+        outside.addPerson(HOON);
+        new JsonAddressBookStorage(file).saveAddressBook(outside);
+        AddressBook session = getTypicalAddressBook();
+        session.addPerson(IDA);
+
+        assertThrows(IOException.class, JsonAddressBookStorage.MESSAGE_CHANGED_OUTSIDE, () ->
+                storage.saveAddressBook(session));
+        assertEquals(outside, storage.readAddressBook(file).orElseThrow());
+
+        storage.saveAddressBook(session);
+        assertEquals(session, storage.readAddressBook(file).orElseThrow());
+        assertEquals(outside, storage.readBackup().orElseThrow());
+    }
+
+    @Test
+    public void saveAddressBook_fileChangedOutsideAfterSave_refusesSave() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(getTypicalAddressBook());
+        new JsonAddressBookStorage(file).saveAddressBook(new AddressBook());
+
+        assertThrows(IOException.class, JsonAddressBookStorage.MESSAGE_CHANGED_OUTSIDE, () ->
+                storage.saveAddressBook(getTypicalAddressBook()));
+        assertEquals(new AddressBook(), storage.readAddressBook(file).orElseThrow());
+    }
+
+    @Test
+    public void saveAddressBook_fileReformattedOutsideWithSameData_saves() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(getTypicalAddressBook());
+        Files.writeString(file, Files.readString(file).replace("\n", "\n\n"));
+        AddressBook session = getTypicalAddressBook();
+        session.addPerson(HOON);
+
+        storage.saveAddressBook(session);
+        assertEquals(session, storage.readAddressBook(file).orElseThrow());
+    }
+
     /** Verifies corrupt data is rejected without changing the file or escaping as an unchecked exception. */
     private void assertInvalidDataRejected(String contents) throws IOException {
         Path file = testFolder.resolve("invalid.json");

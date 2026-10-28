@@ -384,20 +384,21 @@ There is no confirmation or undo. A valid command saves the roster, even when ev
 
 #### Rename a tag: `renametag`
 
-`renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for **every member in the roster**,
-including members hidden by `find` or `filter`. Each member's other tags are kept.
+`renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for **every member in the current list**
+who has it. Members hidden by `find`, `findemail`, `filter`, or `show` keep the current tag.
+Each member's other tags are kept. To rename the tag for everyone, run `list` first.
 
 ```text
 renametag t/batch2026 t/alumni
 ```
 
-Every member tagged `batch2026` is now tagged `alumni` instead. The result reports how many members changed:
+Every displayed member tagged `batch2026` is now tagged `alumni` instead. The result reports how many members changed:
 
 * `Renamed tag "batch2026" to "alumni" for 15 member(s).`
 * `Renamed tag "year1" to "year2" for 10 member(s). 2 already had "year2".`
 
 A member with both distinct tags keeps a single copy of the replacement tag.
-Tags match regardless of letter case. To standardize capitalization across the roster, run
+Tags match regardless of letter case. To standardize capitalization across the roster, run `list`, then
 `renametag t/committee t/Committee`. Members already using `Committee` are skipped and the result
 counts only members whose spelling changed. Supplying identical spellings is rejected.
 
@@ -407,8 +408,9 @@ because they no longer match. They are not deleted; run `list` to show everyone.
 
 Supply exactly two tags, each after `t/`, with 1 to 30 characters using ASCII letters or digits and
 optional internal hyphens.
-The two tags must be different. If no member has the current tag, TrackCall reports
-`No member has the tag "CURRENT_TAG".` and changes nothing. Other invalid input is rejected without
+The two tags must be different. If no member in the current list has the current tag, TrackCall reports
+`No member in the current list has the tag "CURRENT_TAG".` and changes nothing, even if hidden members
+have it. Other invalid input is rejected without
 changing any member.
 
 There is no confirmation or undo. A valid command saves the roster.
@@ -658,7 +660,12 @@ start from the same folder to keep using the same roster.
 
 ### Editing the file manually
 
-Close TrackCall and make a backup first. Keep the existing JSON structure:
+Close TrackCall and make a backup first. If you edit the file while TrackCall is open, the next save is
+refused with a warning so your edits are not silently replaced. To keep your edits, exit and restart
+TrackCall. To replace them with the roster shown in TrackCall, retry the save; your edited version is
+then kept in `data/addressbook.json.bak`.
+
+Keep the existing JSON structure:
 
 * A `persons` array contains the members.
 * Each member has `name`, `phone`, `email`, `address`, and `tags` fields. An empty `address` means none was provided.
@@ -684,7 +691,9 @@ without replacing that backup, including `clear` on an already-empty roster.
 If the backup cannot be written, the roster save fails and the existing roster stays unchanged.
 
 If the roster cannot be loaded, TrackCall first preserves its exact contents in a uniquely named
-`data/addressbook.json.corrupt-....json` file. It then offers:
+`data/addressbook.json.corrupt-....json` file. It then shows why the roster could not be loaded,
+for example `Reason: Tag names should be 1 to 30 characters long, using ASCII letters or digits with optional
+internal hyphens`, and offers:
 
 * **Restore backup**, when the backup is valid: restore the previous saved roster.
 * **Start empty**: explicitly replace the unreadable roster with an empty roster.
@@ -720,7 +729,7 @@ the member's other tags. Use `edit INDEX t/...` only when replacing the full tag
 
 Yes. Use `find` or `filter t/TAG` to display the group, then use `tagall t/TAG` or `untagall t/TAG`.
 Only the displayed members change. See [Tag or untag a group](#tag-or-untag-a-group-tagall-untagall).
-To rename a group's tag for everyone, use `renametag`. See [Rename a tag](#rename-a-tag-renametag).
+To rename a tag for the displayed members, use `renametag`. See [Rename a tag](#rename-a-tag-renametag).
 
 ### What should I do after a save error?
 
@@ -746,7 +755,7 @@ in memory.
 | Filter by tag | `filter t/TAG` | `filter t/committee` narrows the displayed members. |
 | Tag a group | `tagall t/TAG` | `tagall t/committee` adds the tag to every displayed member. |
 | Untag a group | `untagall t/TAG` | `untagall t/committee` removes the tag from every displayed member. |
-| Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every member. |
+| Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every displayed member. |
 | Delete one member | `delete INDEX`, then `y` | `delete 1`, then `y`, removes the first currently displayed member. |
 | Clear the roster | `clear` | Run `clear`, then `y` to remove all members, including hidden ones. Any other reply cancels. |
 | Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |

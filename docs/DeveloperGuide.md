@@ -115,6 +115,7 @@ These classes inherit from `UiPart`, which provides behaviour shared by visible 
 `HelpWindow` builds its command cards from `CommandHelp` in the Logic component.
 `MainWindow` uses `WindowPlacement` to restore the saved window size and position.
 `RosterRecoveryDialog` is a JavaFX `Alert` that `MainApp` shows when the saved roster cannot be loaded.
+It shows the message of the `DataLoadingException` cause, so the user knows what to fix in the file.
 
 The interface uses JavaFX. Matching `.fxml` files in `src/main/resources/view` define the layouts.
 For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/resources/view/MainWindow.fxml)
@@ -463,6 +464,10 @@ Normal saves validate the current roster. If its member list differs from the re
 they atomically copy the previous roster to the sibling `.bak` file;
 backup failure prevents replacement, and an invalid existing roster blocks normal saves until recovery.
 An unchanged save still attempts to write the current roster but retains the previous distinct backup.
+`JsonAddressBookStorage` also remembers the roster it last read from or wrote to the data file. If the file
+now holds a different valid roster, it was changed outside TrackCall, so the first save is refused with a
+storage error and the change stays in memory. The refused save records the outside version, so a retry
+replaces it and keeps it in `.bak` through the normal backup rotation. Formatting-only edits are not refused.
 Export protects both backup and recovery filenames. Null or invalid preferences fall back to defaults, which are saved
 through the usual preferences setup.
 
@@ -704,20 +709,21 @@ memory and the previous saved file is unchanged.
 
 #### Renaming a tag
 
-`renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for every member who has it.
+`renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for every displayed member who has it.
 
 `RenameTagCommandParser` reads the `t/` values with `BulkTagArgumentParser#parseTagValues` and requires
 exactly two. A different count, text before the first `t/`, or an `n/`, `p/`, `e/`, or `a/` prefix reports
 invalid command format with the `renametag` usage. Each value is validated by
 `BulkTagArgumentParser#parseTagName`, so empty and invalid tags report the same messages as `tagall` and
 `untagall`. Identical spellings report `The new tag must be different from the current tag.`
-Case-only changes are allowed so a group can use one capitalization across the roster.
+Case-only changes are allowed so a group can use one capitalization.
 
 `RenameTagCommand#execute`:
 
-1. Collects every member in `Model#getAddressBook()` who has the current tag. Unlike `tagall` and `untagall`,
-   the target set is the **whole roster**, including members hidden by a search or filter.
-2. Rejects an empty target set with `No member has the tag "CURRENT_TAG".` This throws before saving.
+1. Collects every member in `Model#getFilteredPersonList()` who has the current tag. Like `tagall` and
+   `untagall`, the target set is the **displayed list**, so members hidden by a search or filter are not changed.
+2. Rejects an empty target set with `No member in the current list has the tag "CURRENT_TAG".`
+   This throws before saving.
 3. For each target requiring a change, builds a new `Person` whose tag set has the current tag removed
    and the new tag added, then calls `Model#setPerson`. A target that already has a distinct new tag
    keeps one copy and is counted as merged. A case-only rename skips members already using the
@@ -728,15 +734,15 @@ Case-only changes are allowed so a group can use one capitalization across the r
 Like the other bulk commands, it keeps the current search, filters and sorting, and saves the complete roster
 through the standard data-changing path.
 
-* **Whole roster instead of displayed list:** a rename that left the old tag on hidden members would split one
-  group into two names. Renaming everywhere keeps each group under one name (US29).
+* **Displayed list instead of whole roster:** all three bulk tag commands act on what the user can see, so
+  a rename can be limited to part of a group. Running `list` first renames the tag for everyone (US29).
 * **Reject an unused current tag:** reporting `0 member(s)` would hide a likely typo. Matching ignores
   letter case, and rejecting an unused tag also avoids an unnecessary save.
 * **Allow case-only renames:** tag identity ignores case, but the displayed spelling matters. Comparing
   the two spellings exactly allows a bulk capitalization change without creating duplicate tags.
 
 `RenameTagCommandTest`, `RenameTagCommandParserTest`, and `LogicManagerTest` cover renaming, merging with an
-existing tag, hidden members, unused and differently cased tags, wrong tag counts, invalid and identical tags, and
+existing tag, hidden members that keep the current tag, unused and differently cased tags, wrong tag counts, invalid and identical tags, and
 whether each case saves.
 
 ### Limitations
@@ -965,7 +971,7 @@ These rules describe the selected MVP and apply to the use cases below.
    filters after the whole batch. Changed and skipped counts refer to the original target set.
 9. Valid `add`, `edit`, `tag`, `untag`, confirmed `delete`, `clear`, `tagall`, `untagall`, `renametag`, and `import`
    commands save the complete roster, including valid operations that make no change. An empty bulk
-   target, or a `renametag` current tag that no member has, is an error and does not save. `help`,
+   target, or a `renametag` current tag that no displayed member has, is an error and does not save. `help`,
    `list`, `show`, `sort`, `find`, `findemail`, `filter`, `export`, and `exit` do not save. Neither does `delete INDEX`
    while it waits for confirmation, nor a cancelled deletion. A pending or cancelled non-empty `clear` does not save.
 10. Report data-changing command success only after saving succeeds. A failed save preserves
@@ -1325,6 +1331,8 @@ assignment. Unknown member fields are ignored, repeated fields keep their last v
 numbers in text fields are accepted as text. `{"persons": []}` is a valid empty roster.
 
 Do not edit the data file while TrackCall is running. Keep a backup before manual changes.
+If the file is changed while TrackCall is running, the next save is refused with a warning instead
+of silently replacing the outside changes.
 
 #### UC08: Finish a TrackCall session
 
@@ -1529,10 +1537,11 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    from the filtered view, and `list` shows them without `committee`. Run `filter t/missing`, then
    `tagall t/year1`, and expect `There are no members in the current list to update.`
    Try `tagall`, `tagall t/`, `tagall t/a t/b`, and `tagall committee`. Expect errors and no changes.
-   Run `find` for one member tagged `year1`, then `renametag t/year1 t/alumni`. Expect every member with
-   `year1` to be renamed, then `list` to show `alumni` on hidden members too. Try `renametag t/year1 t/x`,
-   `renametag t/alumni`, and `renametag t/alumni t/alumni`. Expect errors and no changes. Then run
-   `renametag t/alumni t/Alumni` and expect the displayed spelling to change across the roster.
+   Run `find` for one member tagged `year1`, then `renametag t/year1 t/alumni`. Expect only that member
+   to be renamed, then `list` to show `year1` still on the hidden members. Run `find` for a member without
+   `year1`, then `renametag t/year1 t/x`, and expect an error and no changes. Run `list`, then try
+   `renametag t/missing t/x`, `renametag t/alumni`, and `renametag t/alumni t/alumni`. Expect errors and
+   no changes. Then run `renametag t/alumni t/Alumni` and expect the displayed spelling to change.
    Restart and check that the tag changes were saved.
 9. Use a disposable roster with at least two members. Ensure the first member has `committee` and
    `friends`, and the second has `committee`. Run `tag 1 t/year1` and confirm only the first displayed
@@ -1610,8 +1619,9 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
 2. Back up the member file. Run `help`, `list`, `find Alice`, `filter t/committee`, and `exit`; verify the member file's
    contents and modification time do not change. Preferences may be saved separately.
 3. With the app closed, test each member-file variant: malformed JSON, a `null` root, a null entry
-   in `persons`, and `[null]` in a member's `tags`. Expect a recovery dialog before the roster opens,
-   an exact-byte recovery copy, and a loading error in the log. Close must preserve the invalid member file.
+   in `persons`, and `[null]` in a member's `tags`. Expect a recovery dialog that states the reason before
+   the roster opens, an exact-byte recovery copy, and a loading error in the log. Close must preserve the
+   invalid member file.
    Test Restore backup with a valid `.bak`, and Start empty with an invalid or absent backup. Both must
    preserve the damaged copy and the existing backup. Repeated restarts must create distinct recovery copies.
 4. Test `preferences.json` containing `null` and then a null `guiSettings`. Expect startup with
