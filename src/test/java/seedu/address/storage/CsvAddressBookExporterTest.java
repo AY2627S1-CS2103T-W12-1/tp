@@ -91,7 +91,7 @@ public class CsvAddressBookExporterTest {
     public void export_validPeople_canBeReadByImporter() throws Exception {
         Path destination = tempDir.resolve("contacts.csv");
         Person alice = new PersonBuilder().withName("Alice").withAddress("Block 1, Main Street")
-                .withTags("friend", "committee").build();
+                .withTags("friend", "year-1").build();
 
         CsvAddressBookExporter.export(List.of(alice), destination);
 

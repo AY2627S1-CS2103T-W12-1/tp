@@ -24,7 +24,7 @@ public interface Logic {
     CommandResult execute(String commandText) throws CommandException, ParseException;
 
     /**
-     * Returns true if the next input confirms or cancels a pending deletion instead of running as a command.
+     * Returns true if the next input confirms or cancels a pending destructive command instead of running as a command.
      */
     boolean isAwaitingConfirmation();
 

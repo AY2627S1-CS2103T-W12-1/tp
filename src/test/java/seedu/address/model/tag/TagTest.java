@@ -43,12 +43,19 @@ public class TagTest {
 
         assertFalse(Tag.isValidTagName(""));
         assertFalse(Tag.isValidTagName("a".repeat(31)));
-        assertFalse(Tag.isValidTagName("committee-member"));
+        assertFalse(Tag.isValidTagName("-committee"));
+        assertFalse(Tag.isValidTagName("committee-"));
+        assertFalse(Tag.isValidTagName("committee--member"));
+        assertFalse(Tag.isValidTagName("committee member"));
+        assertFalse(Tag.isValidTagName("committee/member"));
         assertFalse(Tag.isValidTagName("café"));
 
         assertTrue(Tag.isValidTagName("a"));
         assertTrue(Tag.isValidTagName("Year1"));
+        assertTrue(Tag.isValidTagName("year-1"));
+        assertTrue(Tag.isValidTagName("committee-member"));
         assertTrue(Tag.isValidTagName("a".repeat(30)));
+        assertTrue(Tag.isValidTagName("a".repeat(28) + "-1"));
     }
 
 }

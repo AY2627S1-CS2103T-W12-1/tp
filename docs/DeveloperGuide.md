@@ -172,7 +172,7 @@ policies below.
    Either way, the pending deletion is cleared.
 
 `ConfirmDeleteCommand` stores the member rather than the index. A filter removed while the prompt is
-shown therefore cannot redirect the deletion to a different member. `y` without a pending deletion
+shown therefore cannot redirect the deletion to a different member. `y` without a pending confirmation
 is an unknown command.
 
 Alternatives considered:
@@ -320,7 +320,12 @@ for only the selected member.
 
 #### Clear and save recovery
 
-Before executing `ClearCommand`, `LogicManager` snapshots the roster. The command counts and
+For a non-empty roster, `LogicManager` stores `ClearCommand` as the pending confirmation and
+returns a prompt with the total stored-member count. It does not execute the command or save yet.
+The next input consumes the pending confirmation: stripped lowercase `y` executes it; every other
+input cancels without being parsed as a command. An already-empty roster skips the prompt.
+
+Before executing the confirmed `ClearCommand`, `LogicManager` snapshots the roster. The command counts and
 removes all records while retaining the old predicate temporarily. After saving succeeds, the
 logic layer resets the predicate to show all and returns the success message. On an `IOException`,
 it restores the snapshot; retaining the original predicate restores the previous displayed view,
@@ -342,11 +347,12 @@ These messages follow the list and clear feature specifications:
 | List one member | `Showing 1 member.` |
 | List multiple members | `Showing N members.` |
 | Invalid list arguments | `Invalid command format. Usage: list` |
+| Cancel clearing | `Clear cancelled. No members were removed.` |
 | Clear zero members | `The roster is already empty. No changes were made.` |
 | Clear one member | `Cleared 1 member. The roster is now empty.` |
 | Clear multiple members | `Cleared N members. The roster is now empty.` |
 | Invalid clear arguments | `Invalid command format. Usage: clear. This command removes all members.` |
-| Failed clear save | `Unable to clear the roster because the changes could not be saved. No members were removed.` |
+| Failed clear save | `Unable to clear the roster because the changes could not be saved. No members were removed. Run clear again to retry.` |
 
 #### Test coverage {id="test-coverage-1"}
 
@@ -396,7 +402,8 @@ also recover to usable bounds. This handles monitor changes between sessions.
 
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
 `help`, `list`, `show`, `sort`, `find`, `findemail`, `filter`, `export`, and `exit` return without saving member data.
-`delete INDEX` also returns without saving because it only asks for confirmation.
+`delete INDEX` and a non-empty `clear` return without saving while awaiting confirmation.
+Cancellation also returns without saving.
 Successful `add`, `edit`, `tag`, `untag`, confirmed `delete`, `tagall`, `untagall`, `renametag`, `clear`, and `import` commands
 pass the complete roster, including hidden members,
 to `Storage#saveAddressBook`.
@@ -427,10 +434,11 @@ To retry, the user resolves the storage problem and checks the current list.
 They reapply an existing field value with `edit`, or use `clear` if the roster is empty.
 This saves without changing another record.
 
-Before `clear`, `LogicManager` snapshots the roster. A successful save resets the search predicate.
+Before executing a confirmed `clear`, `LogicManager` snapshots the roster. A successful save resets the search predicate.
 If saving fails, it restores those records while
 retaining the existing search predicate, so the previous displayed list returns. The result says
-`No members were removed.` and `CommandBox` retains the clear input for a deliberate retry. A failed
+`No members were removed.` and `CommandBox` retains the submitted input. The user must run
+`clear` again to start a fresh confirmation; another `y` alone cannot repeat the action. A failed
 clear of an already-empty roster also reports failure rather than the normal empty result.
 Exiting never retries a save. Application preferences are stored separately at startup and shutdown.
 
@@ -480,6 +488,8 @@ single ASCII letters followed by `/` before tokenising.
 Only `n/`, `p/`, `e/`, `a/`, and `t/` are supported. Unknown letters and uppercase prefixes
 report the corresponding command's usage message before field validation. The standalone `c/o` abbreviation
 (case-insensitive) is exempt; URLs, numeric slashes, and slashes embedded in words are literal text.
+While inside an `a/` field, `A/` followed by an ASCII digit is exempt too, preserving `Block A/12`.
+Supported lowercase prefixes end that address context; other unsupported prefixes still fail.
 Other commands retain their own parsing rules.
 
 ### CSV import
@@ -488,7 +498,9 @@ Other commands retain their own parsing rules.
 requires quotes around paths containing whitespace, rejects repeated or unknown prefixes, and accepts the
 `.csv` extension case-insensitively while preserving path case.
 
-`CsvAddressBookImporter` reads the complete source as strict UTF-8, accepts an optional byte-order mark,
+`CsvAddressBookImporter` rejects sources over 10 MiB, bounds the read to detect files that grow,
+and rejects more than 10,000 non-blank member rows before duplicate removal. It reads strict UTF-8,
+accepts an optional byte-order mark,
 checks the exact lowercase five-column header in any column order, and uses the shared Apache Commons CSV
 format for quoting and escaping. It rejects embedded line breaks and trims surrounding whitespace from
 field values and individual tags before validation. Records are parsed and validated in source order,
@@ -569,8 +581,9 @@ Usage examples are in the [User Guide](UserGuide.html#filter-displayed-members-b
 #### Parsing {id="parsing"}
 
 `FilterCommandParser` accepts one `t/TAG` argument, trims surrounding whitespace, and requires 1 to 30
-ASCII letters or digits. Missing, repeated, or invalid arguments are rejected before the view changes.
-The parser checks the tag before constructing it; the shared `Tag` model enforces the same 1 to 30 character rule.
+characters using ASCII letters or digits with optional internal hyphens. Missing, repeated, or invalid arguments are
+rejected before the view changes.
+The parser uses the shared `Tag` model rule before constructing the tag.
 
 #### Execution {id="execution"}
 
@@ -640,7 +653,7 @@ invalid arguments fail before saving. A save failure after an actual change foll
 
 `TagAllCommandParser` and `UntagAllCommandParser` both delegate to `BulkTagArgumentParser#parse`, so the two
 commands share one grammar and one set of error messages. It accepts exactly one tag of
-1 to 30 ASCII letters or digits. Surrounding spaces are ignored. `tag` and `untag` use the same method for
+1 to 30 characters using ASCII letters or digits with optional internal hyphens. Surrounding spaces are ignored. `tag` and `untag` use the same method for
 their tag argument.
 
 * Text before `t/`, a missing `t/`, or any `n/`, `p/`, `e/`, or `a/` prefix reports invalid command format
@@ -675,8 +688,8 @@ memory and the previous saved file is unchanged.
 #### Design considerations {id="design-considerations-1"}
 
 * **One shared argument parser:** keeps `tagall` and `untagall` input rules and messages identical.
-  The 1 to 30 character limit is enforced in this parser, in `FilterCommandParser`, and in the shared `Tag`
-  model. The same limit applies to `add`, `edit`, and loading saved data.
+  It and `FilterCommandParser` use the shared `Tag` model rule, which also applies to `add`, `edit`,
+  and loading saved data.
 * **Skip instead of reject:** a member who already has (or lacks) the tag is skipped and counted, so one
   overlapping group does not block the rest of the batch (UC03 extension 6b).
 
@@ -734,8 +747,8 @@ These are constraints of the current implementation:
 * The saved JSON format uses a `persons` array with a `tags` array for each member. Loading
   ignores unknown member fields, keeps the last value of repeated fields, and accepts JSON
   numbers in text fields as text. Comments and trailing commas are rejected.
-* Deletion asks for confirmation but cannot be undone once confirmed. Clearing takes effect without a
-  confirmation step or undo. After an accidental clear,
+* Deletion and clearing a non-empty roster ask for confirmation. Neither has undo after confirmation.
+  After an accidental confirmed clear,
   stop making changes and close TrackCall before restoring. The backup at `data/addressbook.json.bak`
   retains the previous distinct saved roster. An unchanged save preserves it, but a later save with
   different data replaces it. Follow the [User Guide's manual recovery steps](UserGuide.html#automatic-backup-and-recovery).
@@ -925,9 +938,9 @@ These rules describe the selected MVP and apply to the use cases below.
    Different people may share a name when another contact field differs. An edit excludes its own
    record. Older saved name variants remain loadable; tag-only and unchanged-contact edits remain
    available. Duplicate checking does not establish a person's real-world identity.
-3. A tag contains 1 to 30 ASCII letters or digits and matches regardless of letter case. It contains no internal
-   whitespace. Store each tag once per member, retaining its spelling for display, and display tags in ASCII order:
-   digits, uppercase letters, then lowercase letters.
+3. A tag contains 1 to 30 ASCII letters or digits with optional internal hyphens and matches regardless of letter case.
+   It contains no other whitespace. Store each tag once per member, retaining its spelling for display, and display tags in ASCII order:
+   hyphens, digits, uppercase letters, then lowercase letters.
 4. `list` resets all searches and tag filters. `find KEYWORD [MORE_KEYWORDS]` narrows the
    displayed list. It matches complete or partial name words, ignores letter case, and accepts a match on
    any keyword within one command. Consecutive `find` commands retain the intersection of their
@@ -955,7 +968,7 @@ These rules describe the selected MVP and apply to the use cases below.
    commands save the complete roster, including valid operations that make no change. An empty bulk
    target, or a `renametag` current tag that no displayed member has, is an error and does not save. `help`,
    `list`, `show`, `sort`, `find`, `findemail`, `filter`, `export`, and `exit` do not save. Neither does `delete INDEX`
-   while it waits for confirmation, nor a cancelled deletion.
+   while it waits for confirmation, nor a cancelled deletion. A pending or cancelled non-empty `clear` does not save.
 10. Report data-changing command success only after saving succeeds. A failed save preserves
     the previous saved file and reports a storage error. Except for `clear`, changes remain in
     memory and can be lost on exit. Failed `clear` restores the previous records, displayed
@@ -964,8 +977,9 @@ These rules describe the selected MVP and apply to the use cases below.
 11. `add` restores the full list and appends the record. `delete` names one indexed record and
     removes it only after the next input is `y`; any other input cancels without running it. The
     deletion retains the active search and filters. `clear` removes all records, including hidden ones,
-    resets the view, and preserves application settings. Clearing has no confirmation, and neither
-    deletion nor clearing has undo. `list`, `sort`, `clear`, and `exit` reject extra arguments. `exit` closes the
+    resets the view, and preserves application settings. A non-empty roster requires a `y` confirmation;
+    any other reply cancels without being run. An empty roster skips confirmation. Neither action has undo.
+    `list`, `sort`, `clear`, and `exit` reject extra arguments. `exit` closes the
     app without a final save or another warning about unsaved changes.
 12. Startup reads the local `data/addressbook.json` relative to the JAR folder in packaged builds
     or the working directory in development. A missing file loads sample members and logs that
@@ -991,17 +1005,29 @@ name/phone/email/address/tag order, then duplicate identity.
 
 | Field | Requirement |
 | --- | --- |
-| Name | ASCII letters, digits, and spaces, with at least one letter or digit. Preserve internal spaces and case. |
-| Phone | At least three ASCII digits, without signs, punctuation, or internal whitespace. This does not verify reachability. |
+| Name | Start with a Unicode letter or ASCII digit; accept Unicode letters, combining marks, ASCII digits, spaces, hyphens, and straight or curly apostrophes. Preserve spelling, combining accents, internal spaces, and case. |
+| Phone | At least three ASCII digits, an optional leading `+`, and internal ASCII spaces. Begin and end with a digit after the optional `+`. Preserve formatting without inferring country codes or normalizing identity. Reject hyphens, parentheses, and internal tabs. This does not verify reachability. |
 | Email | Exactly one `@` and no whitespace. The local part contains non-empty runs of ASCII letters or digits, optionally separated by a single punctuation character listed below. Domain labels are separated by dots; each contains non-empty runs of ASCII letters or digits, optionally separated by single hyphens. The final label has at least two characters. Syntax validation does not verify mailbox existence. |
 | Address | Optional for `add`; omission stores an empty value, while an explicitly blank `a/` is rejected. In `edit`, omission preserves the value and a bare `a/` clears it. Non-empty addresses must be single-line text after trimming surrounding spaces or tabs. Preserve internal spaces, tabs, and case. |
 | Tags | Rule 3 applies. A member can have zero or more tags. Repeated identical tags collapse into one assignment. An empty tag is invalid except for the lone `t/` edit operation in rule 7. |
 
+Name validation preserves the entered Unicode representation and permits repeated or trailing name punctuation.
+Duplicate-name comparison ignores case and repeated whitespace, but does not apply Unicode NFC normalization.
+Search also compares the entered representation. Sorting uses Java's case-insensitive string ordering,
+not a locale-specific alphabet; accented names may appear after `Z`.
+Phone identity retains formatting, including repeated internal spaces, so differently formatted numbers can coexist.
+The address-unit exception is deliberately limited to `A/` followed by a digit; other reserved prefixes still fail.
+
 Allowed email local-part punctuation:
 
 ```text
-+ _ . -
++ _ . ' -
 ```
+
+`CommonContactFormatsWorkflowTest` verifies accepted names, formatted phones, apostrophe emails,
+and address unit labels through add/edit, JSON reload, CSV export, and CSV import. It also checks that
+unsupported address prefixes are rejected without changing saved bytes. `NameTest`, `PhoneTest`,
+and `EmailTest` cover invalid boundary values and the preserved formatting contract.
 
 ### Offline help and readable feedback {id="offline-help-and-readable-feedback"}
 
@@ -1217,8 +1243,9 @@ guidance; the deletion remains in memory, but the previous saved file is preserv
 **MSS**
 
 1. The secretary decides to remove all records and requests clearing the roster.
-2. TrackCall validates the request and removes every member.
-3. TrackCall saves the empty roster, clears the search, tag, and selection filters, and reports the
+2. TrackCall validates the request and shows the total stored-member count, including hidden members.
+3. The secretary confirms with `y`. TrackCall removes every member.
+4. TrackCall saves the empty roster, clears the search, tag, and selection filters, and reports the
    number removed. The use case ends.
 
 **Extensions**
@@ -1226,12 +1253,15 @@ guidance; the deletion remains in memory, but the previous saved file is preserv
 * **2a.** The command contains extra arguments. TrackCall rejects it without changing anything.
   The secretary can retry step 1.
 * **2b.** The roster is already empty. TrackCall still attempts to save it and reports that no changes
-  were needed only if saving succeeds. The use case ends. If saving fails, extension 3a applies.
-* **3a.** Saving fails. TrackCall restores the previous records, displayed list, and filters and
+  were needed only if saving succeeds. No confirmation is needed. The use case ends. If saving fails, extension 4a applies.
+* **3a.** Any reply other than `y` cancels without running that input. Records, view, and saved data stay unchanged.
+  The use case ends.
+* **4a.** Saving fails. TrackCall restores the previous records, displayed list, and filters and
   leaves the saved file unchanged. It reports that no members were removed. The secretary can
   resolve the storage problem and retry step 1.
 
-There is no confirmation or undo. Recovery after a successful clear requires a usable backup, such as the automatic previous-version backup.
+There is no undo after confirmation. Recovery after a successful clear requires a usable backup,
+such as the automatic previous-version backup.
 
 #### UC06: Look up a command
 
@@ -1389,7 +1419,7 @@ such as incremental delivery, are also not product NFRs.
 | Roster / address book | The complete collection of member records, including records hidden from the displayed list. The file and starter code use the term address book. |
 | Member record | One member's name, phone number, email address, address, and tag assignments. |
 | Group | A set of members sharing a tag, such as a committee or cohort. Groups are not separate stored objects in the MVP. |
-| Tag | A label containing 1 to 30 ASCII letters or digits, matched without regard to case and assigned at most once to each member. |
+| Tag | A label containing 1 to 30 ASCII letters or digits with optional internal hyphens, matched without regard to case and assigned at most once to each member. |
 | Displayed list | The records currently visible after the active search, tag filters, and index selections. It is the target set for a bulk tag command. |
 | Active search and filters | The name-search, email-search, tag, and index-selection conditions used to determine which records are displayed. A new `find` adds a condition; `findemail` replaces them, and `list` clears them all. |
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
@@ -1401,7 +1431,7 @@ such as incremental delivery, are also not product NFRs.
 | Persisted data | The roster successfully written to the local data file and available for a later session. |
 | Session | One period of use beginning when TrackCall starts and ending when the application closes. |
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
-| Data-changing command | `add`, `edit`, `tag`, `untag`, confirmed `delete`, `clear`, `import`, `tagall`, `untagall`, or `renametag`. A valid invocation attempts to save even if its values do not change. |
+| Data-changing command | `add`, `edit`, `tag`, `untag`, confirmed `delete`, `clear`, `import`, `tagall`, `untagall`, or `renametag`. An executed change attempts to save even if its values do not change; pending or cancelled confirmations do not save. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
 | JSON | The structured text format of the local data file. It uses a `persons` array and each member's `tags` array. |
 | CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; `import p/FILE_PATH` validates and imports it. |
@@ -1456,7 +1486,7 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
 
 ### Commands and displayed indices
 
-1. Run `clear`, then `add n/Alice Tan p/12345678 e/alice@example.com a/Main Street t/committee`.
+1. Run `clear` and confirm with `y` if prompted, then `add n/Alice Tan p/12345678 e/alice@example.com a/Main Street t/committee`.
    Expect one member with those details. Add Bob with a different name, phone, and email.
 2. Run `find Alice`, then `delete 1`. Expect a confirmation naming Alice, a highlighted command box,
    and no change yet. Enter `n`; expect `Deletion cancelled. No member was removed.` with Alice still
@@ -1512,7 +1542,9 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    `filter t/committee`, then run `untag 1 t/committee`; expect that member to disappear from the view
    but remain stored. Run `list` to verify. Try `tag 0 t/year1`,
    `untag 999 t/year1`, `tag 1 t/`, and `untag 1 t/a t/b`; each must fail without changing the roster.
-10. With two stored records and a search showing only one, run `clear`. After saving, expect
+10. With two stored records and a search showing only one, run `clear`.
+   Check that the prompt counts both members and no records change. Reply with `n`; the view and saved file stay unchanged.
+   Run `clear` again and confirm with `y`. After saving, expect
    `Cleared 2 members. The roster is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
    `The roster is already empty. No changes were made.`
 
@@ -1537,7 +1569,7 @@ Use a disposable roster. Add Alice Tan with `alice@example.com` and tag `committ
 
 ### Sorting and CSV workflows
 
-Use a disposable roster. Run `clear`, then enter the following setup commands separately:
+Use a disposable roster. Run `clear` and confirm with `y` if prompted, then enter the following setup commands separately:
 
 ```text
 add n/Zara Tan p/90000001 e/zara@example.com a/Test Road t/committee
@@ -1554,11 +1586,11 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
    including the hidden bob record, in stored order. Check the UTF-8 header and sorted semicolon-separated
    tags, and confirm that automatic JSON storage and the displayed view are unchanged.
 3. Run `import p/members.csv` without clearing. Expect zero imported members and three skipped duplicates.
-   The full roster is restored in stored order. Then run `clear`, followed by `import p/members.csv`.
+   The full roster is restored in stored order. Then run `clear`, confirm with `y`, and run `import p/members.csv`.
    Expect three imports and zero skipped duplicates. Restart and check every field and tag is retained.
 4. Copy `members.csv` to `member list.csv`, then run `import p/"member list.csv"`.
    The quoted path must work and all three duplicates must be skipped. Try `import p/missing.csv`:
-   expect a read error with the roster and view unchanged.
+   expect a file-not-found error that includes the resolved path, with the roster and view unchanged.
 5. Make a separate `invalid.csv` with the valid header, one valid member, and then a row with an invalid
    phone. Import it: expect a row-specific error, no partial import, and no saved-file or view change.
    Repeat with a malformed header, broken CSV quoting, and a quoted field containing a line break.
@@ -1596,10 +1628,11 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
    * Restore write access and check the current list.
    * Reapply an existing field with `edit`, or use `clear` for an empty roster.
    * Restart and verify that the full roster was saved.
-6. Test a failed `clear` while a search hides some members:
+6. Test a failed `clear` while a search hides some members. Confirm the prompt with `y`:
    * Expect `No members were removed.` and restoration of every record and the previous filtered view.
-   * Check that saved bytes are unchanged and the clear input remains available for a deliberate retry.
-   * Restore write access and retry. Success must report the total removed, including hidden members.
+   * Check that saved bytes are unchanged and the submitted `y` remains in the command box.
+   * Restore write access, run `clear` again, and confirm the new prompt.
+     Success must report the total removed, including hidden members.
    * Repeat the failure check with an already-empty roster.
    * Restore the test data afterward.
 
@@ -1644,7 +1677,7 @@ the release commit; passing unit tests alone does not establish release readines
 
 1. Launch the same JAR twice; confirm the second launch is rejected before it can read/write data.
    Close the first process and confirm a new launch works without deleting `.trackcall.lock`.
-2. Save a member, clear, and clear again. Verify `.bak` still contains the removed member.
+2. Save a member, run `clear` and confirm with `y`, then run `clear` again on the empty roster. Verify `.bak` still contains the removed member.
 3. Clear an address using `edit INDEX a/`, restart, and confirm the address remains absent.
 4. Make the save folder unwritable and import a valid CSV. Verify the imported members remain in
    memory, the error warns that exiting loses them, and retrying after restoring permissions saves them.
