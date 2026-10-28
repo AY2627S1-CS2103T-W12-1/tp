@@ -553,7 +553,7 @@ repeated indexes collapse to one member, and argument order does not reorder the
 adds another selection condition, so it can only narrow the current view. `ModelManager#setPerson`
 updates these predicates after an edit or tag change to keep the selection attached to the member.
 Removing the **Show: active** box removes all selection predicates while retaining name, email, and tag filters.
-`list`, successful `add`, successful `clear`, `findemail`, and valid `import` clear the selections.
+`list`, successful `add`, successful `clear`, and valid `import` clear the selections.
 
 `SortCommand` enables a comparator on `ModelManager`'s `SortedList`. It compares names ignoring case
 and repeated internal spaces, without modifying the stored names or roster order. Equal names retain
@@ -565,18 +565,23 @@ selection narrowing, record replacement, ordering, and read-only execution.
 
 ### Find members by email
 
-`findemail KEYWORD [MORE_KEYWORDS]...` searches the full roster for email addresses containing any
-whitespace-separated keyword. It accepts a full address or a fragment such as `@example.com`.
-Matching lowercases the email and keywords with `Locale.ROOT` and uses literal substring matching,
-not regular expressions. Names and phone numbers are not searched. Blank input is rejected.
+`findemail KEYWORD [MORE_KEYWORDS]...` narrows the displayed members by their email addresses.
 
-`FindEmailCommand` replaces the model's current search predicate, clearing earlier name searches,
-email searches, tag filters, and `show` selections while preserving active name sorting. The observable list re-evaluates
-the email predicate after edits; a member whose email no longer matches disappears from the view.
-`filter` can narrow these results, and `list` restores the full roster in stored order.
-The command is read-only and does not save the roster. Edit and delete continue to use current displayed indices.
-The email predicate is stored as a removable `ActiveFilter`, so the filter row shows the active query.
-Removing that chip clears only the email condition and preserves any subsequent name or tag conditions.
+* **Matching:** accept any whitespace-separated keyword within one command. Lowercase the email and
+  keywords with `Locale.ROOT`, then match literal substrings. Full addresses and fragments such as
+  `@example.com` are supported; regular expressions, names, and phone numbers are not searched.
+* **Validation:** reject blank input before changing the view.
+* **Model update:** `FindEmailCommand` calls `ModelManager#filterFilteredPersonListByEmail`.
+  Each call appends a removable `ActiveFilter` and reapplies all active conditions using logical AND.
+* **Retained state:** keep earlier name searches, email searches, tag filters, `show` selections, and name sorting.
+* **Filter boxes:** show one Email box per search, in application order with the other name and tag boxes.
+  Its X removes only that condition. Remaining conditions still determine which members appear.
+* **Edits:** re-evaluate the email predicates when a member changes. A nonmatching member disappears
+  from the view but remains stored. Edit and delete use current displayed indices.
+* **Reset and storage:** `list` restores the full roster in stored order. Email searches are read-only and do not save.
+
+`FindEmailCommandTest`, `LogicManagerTest`, `CommandSequenceOracleTest`, and `MainWindowTest` cover
+cumulative searches, order-independent matching, selections, chip removal, sorting, and unchanged saved data.
 
 ### Filter members by tag
 
@@ -595,8 +600,8 @@ The parser uses the shared `Tag` model rule before constructing the tag.
 `FilterCommand` passes the tag to `ModelManager#filterFilteredPersonListByTag`. The model
 combines it with the active name, email, and tag conditions using logical AND.
 The model keeps removable name, email and tag conditions in application order, which the UI shows left to right.
-`find` adds a name condition, while `list` clears all conditions. `findemail` replaces all conditions
-with an email search. Applying name and tag conditions in a different order gives the same matching
+`find` adds a name condition and `findemail` adds an email condition; `list` clears all conditions.
+Applying name, email, and tag conditions in a different order gives the same matching
 members when the roster is unchanged.
 The observable filtered list updates automatically, and the command reports the resulting member
 count and all active tag names.
@@ -612,8 +617,8 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
 
 * **Preserve earlier conditions:** combining predicates lets users narrow an existing name search, email search, or tag
   filter without restoring hidden members. For example, filtering by `committee` and then `year1` keeps
-  members with both tags. Another `find` also narrows the view; `findemail` replaces the search and
-  filters, while `list` clears all conditions.
+  members with both tags. Another `find` or `findemail` also narrows the view;
+  `list` clears all conditions.
 * **Keep filters active after edits:** the model retains the predicate rather than a fixed set of matching
   members. Replacing an edited member in the observable list re-evaluates that predicate. A member who no
   longer matches disappears from view but remains in the roster, so later commands operate on the updated group.
@@ -950,8 +955,9 @@ These rules describe the selected MVP and apply to the use cases below.
    displayed list. It matches complete or partial name words, ignores letter case, and accepts a match on
    any keyword within one command. Consecutive `find` commands retain the intersection of their
    matches and any active tag filters. Repeated keywords do not repeat records.
-   `findemail KEYWORD [MORE_KEYWORDS]...` replaces previous searches and filters, but matches
-   literal email substrings using any whitespace-separated keyword, ignoring case. Neither search disables sorting.
+   `findemail KEYWORD [MORE_KEYWORDS]...` also narrows the displayed list. It matches literal email
+   substrings using any whitespace-separated keyword, ignoring case. Each email search adds a removable
+   condition; all conditions must match. Neither search clears earlier conditions or disables sorting.
 5. `filter t/TAG` narrows the currently displayed list using case-insensitive tag matching.
    Repeated filters retain the intersection of the tags and active name or email searches. A valid
    zero-match result is successful. Use `list` first to filter the whole roster.
@@ -1156,9 +1162,10 @@ Partial matching uses contiguous text within a name word: `Jo`, `oh`, and `hn` e
 It does not correct spelling or match across spaces. `find oh Tan` matches either keyword, and
 repeated keywords do not duplicate members. Only names are searched; contact details and tags are excluded.
 
-`findemail KEYWORD [MORE_KEYWORDS]...` (US37) searches the full roster and replaces earlier
-name searches, tag filters, and `show` selections.
-It matches literal email substrings rather than complete name words, with case-insensitive OR matching.
+`findemail KEYWORD [MORE_KEYWORDS]...` (US37) narrows the displayed list, retaining earlier
+name searches, email searches, tag filters, and `show` selections.
+It matches literal email substrings with case-insensitive OR matching within each command.
+Successive email searches are combined with AND; each adds its own removable Email box.
 For example, `findemail alice@example.com @school.edu` matches either fragment. It preserves name sorting
 and does not save. Missing keywords report invalid command format and preserve the current view.
 
@@ -1428,7 +1435,7 @@ such as incremental delivery, are also not product NFRs.
 | Group | A set of members sharing a tag, such as a committee or cohort. Groups are not separate stored objects in the MVP. |
 | Tag | A label containing 1 to 30 ASCII letters or digits with optional internal hyphens, matched without regard to case and assigned at most once to each member. |
 | Displayed list | The records currently visible after the active search, tag filters, and index selections. It is the target set for a bulk tag command. |
-| Active search and filters | The name-search, email-search, tag, and index-selection conditions used to determine which records are displayed. A new `find` adds a condition; `findemail` replaces them, and `list` clears them all. |
+| Active search and filters | The name-search, email-search, tag, and index-selection conditions used to determine which records are displayed. Each `find` or `findemail` adds a condition; `list` clears them all. |
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
 | Partial-word matching | Matching any contiguous part of a name word, ignoring case. For example, `John`, `Jo`, and `oh` all match `John Tan`. |
 | Bulk tag update | Adding or removing one tag for the fixed set of members displayed when the command is submitted. |
@@ -1560,19 +1567,26 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
 Use a disposable roster. Add Alice Tan with `alice@example.com` and tag `committee`, Bob Lee with
 `bob@school.edu` and tag `committee`, and Zara Lim with `zara@example.com` and tag `friends`.
 
-1. Run `sort`, `find Nobody`, then `findemail @EXAMPLE.COM`. Expect Alice and Zara in name order,
-   confirming case-insensitive matching, full-roster search, and preserved sorting.
-   Run `filter t/committee`: expect Alice only. Run `findemail @school.edu`: expect Bob,
-   confirming that the new email search replaces the previous search and tag filter.
-2. Run `findemail alice@example.com @school.edu`: expect Alice and Bob. Run `findemail example.com`:
-   expect Alice and Zara. Verify that keywords containing regex syntax are treated literally,
-   and that names and phone numbers are not searched. A nonmatching query shows `0 members listed.`.
-   Run `findemail` without a keyword: expect invalid command format with the prior view unchanged.
-3. Run `findemail @example.com`, check the displayed index for Alice, then change her email to
-   `alice@other.net` with `edit`. Expect Alice to disappear while Zara remains. Run `list` to verify
-   Alice is still stored and all three members reappear in stored order.
-4. Back up the roster file, record its bytes and modification time, and run valid `findemail` searches.
-   Verify that neither the file contents nor its modification time changes.
+Run the following scenarios in order. Use `list` wherever shown to reset the view.
+
+1. **Cumulative conditions:** run `list`, `sort`, `filter t/committee`, then `findemail @EXAMPLE.COM`.
+   Expect Alice only and boxes `Tag: committee`, `Email: @EXAMPLE.COM`.
+   Run `findemail alice`: expect Alice and a third box, `Email: alice`.
+   Remove that box with X: Alice remains. Remove the domain box: Alice and Bob reappear in name order.
+2. **Empty results:** run `find Nobody`, then `findemail @example.com`. Expect an empty list;
+   the email search must not restore hidden members. Run `findemail` without a keyword:
+   expect invalid command format and unchanged boxes and results.
+3. **Alternatives within a search:** run `list`, then `findemail alice@example.com @school.edu`.
+   Expect Alice and Bob. Run `findemail example.com`: expect only Alice.
+   Remove the first Email box: expect Alice and Zara.
+   Run `list` before each independent check of a literal regex fragment, name, or phone number.
+   Those inputs must not match unless they occur literally within an email address.
+4. **Selections and edits:** run `list`, `sort`, `show 1`, then `findemail @example.com`.
+   Expect Alice only and the Show condition still active. Run `list`, then `findemail @example.com`.
+   Edit Alice's displayed record to use `alice@other.net`: Alice disappears and Zara remains.
+   Run `list`: all three members reappear in stored order.
+5. **Read-only execution:** record the roster and backup files' bytes and modification times.
+   Run email searches and remove their boxes. Verify neither file changes.
 
 ### Sorting and CSV workflows
 

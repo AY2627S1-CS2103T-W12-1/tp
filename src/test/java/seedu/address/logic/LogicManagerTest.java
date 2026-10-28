@@ -290,7 +290,7 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_findEmail_resetsSearchAndTagsWithoutChangingSavedFiles() throws Exception {
+    public void execute_findEmail_narrowsSearchAndTagsWithoutChangingSavedFiles() throws Exception {
         model.addPerson(AMY);
         model.addPerson(BOB);
         Path dataFile = temporaryFolder.resolve("addressBook.json");
@@ -305,10 +305,12 @@ public class LogicManagerTest {
         logic.execute("filter t/husband");
         assertEquals(List.of(BOB), model.getFilteredPersonList());
 
-        assertEquals("1 member listed.", logic.execute("findemail AMY@").getFeedbackToUser());
-        assertEquals(List.of(AMY), model.getFilteredPersonList());
-        assertTrue(model.getActiveTagFilters().isEmpty());
+        assertEquals("0 members listed.", logic.execute("findemail AMY@").getFeedbackToUser());
+        assertTrue(model.getFilteredPersonList().isEmpty());
+        assertEquals(List.of(new Tag("husband")), model.getActiveTagFilters());
         assertEquals("0 members listed.", logic.execute("findemail missing@").getFeedbackToUser());
+        assertEquals("0 members listed.", logic.execute("findemail @example.com").getFeedbackToUser());
+        logic.execute("list");
         assertEquals("2 members listed.", logic.execute("findemail @example.com").getFeedbackToUser());
 
         assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
@@ -323,8 +325,6 @@ public class LogicManagerTest {
         model.addPerson(BOB);
         model.addPerson(AMY);
         logic.execute("sort");
-        logic.execute("find Bob");
-        logic.execute("filter t/husband");
 
         logic.execute("findemail @example.com");
         assertEquals(List.of(AMY, BOB), model.getFilteredPersonList());

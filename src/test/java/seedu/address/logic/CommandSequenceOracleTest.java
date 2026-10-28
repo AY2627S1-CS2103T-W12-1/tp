@@ -237,7 +237,6 @@ public class CommandSequenceOracleTest {
         private Change findByEmail() throws Exception {
             String query = "@group" + random.nextInt(3);
             command("findemail " + query);
-            resetFilters();
             filterKeys.add("email:" + query);
             restrictions.add(member -> member.getEmail().contains(query));
             return Change.NONE;

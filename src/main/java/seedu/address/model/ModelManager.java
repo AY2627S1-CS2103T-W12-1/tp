@@ -176,6 +176,13 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public void filterFilteredPersonListByEmail(EmailContainsKeywordsPredicate predicate) {
+        requireNonNull(predicate);
+        activeFilters.add(ActiveFilter.createEmailFilter(predicate));
+        refreshFilteredPersons();
+    }
+
+    @Override
     public void filterFilteredPersonListByTag(Tag tag) {
         requireNonNull(tag);
         if (!getActiveTagFilters().contains(tag)) {

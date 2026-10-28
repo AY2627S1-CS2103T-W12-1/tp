@@ -175,14 +175,18 @@ Matching ignores letter case. Whitespace separates keywords, and any keyword can
 Keywords are literal text, not regular expressions; names and phone numbers are not searched.
 Supply at least one keyword. No matches produce `0 members listed.` and an empty list.
 
-Each new `findemail` searches the full roster and replaces earlier name searches, email searches,
-tag filters, and `show` selections. Active name sorting stays applied. Use `filter t/TAG` to narrow the email results,
-or `list` to show everyone again. Searching does not change records or save the data file.
+* Each `findemail` narrows the **currently displayed list**. Earlier name searches, email searches,
+  tag filters, and `show` selections stay active. Name sorting stays applied.
+* Each search adds an **Email:** box in command order. Use its **X** to remove only that email condition.
+* For example, `filter t/committee` then `findemail example` keeps committee members whose emails contain
+  `example`. Running `findemail zara` next keeps only those whose emails also contain `zara`.
+* Keywords within one command mean **any**; separate searches must **all** match.
+* Use `list` to clear all conditions and search the whole roster again.
+
+Searching does not change records or save the data file.
 Check the current displayed numbers before using `edit` or `delete`. Editing keeps the email search;
 if an edited email no longer matches, the member disappears from view but remains in the roster.
 Use `help findemail` for the same instructions offline.
-The filter row shows an **Email:** box with the search terms. Remove it with its **X** button to
-clear only the email condition while keeping any later name or tag filters.
 
 #### Filter displayed members by tag: `filter`
 
@@ -202,11 +206,11 @@ stays the same, and their displayed numbers update.
 * Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
   Applying the same tag again does not add a duplicate condition.
 * A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
-  A new `findemail` searches the whole roster and replaces previous filters.
+  A new `findemail` also narrows these results by email, retaining previous conditions.
 
 The result reports `N member(s) listed with tag "TAG".` for one active tag filter. With multiple
 active tags, it names every distinct tag in the order applied, for example:
-`1 member(s) listed with tags "committee", "year1".` Use `list` or `findemail` to clear all active tag filters.
+`1 member(s) listed with tags "committee", "year1".` Use `list` to clear all active conditions.
 No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
 
 Check the displayed numbers before using `edit`, `tag`, `untag`, or `delete`. Editing keeps the active search and filters.

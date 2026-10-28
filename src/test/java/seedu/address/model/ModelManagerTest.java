@@ -206,6 +206,18 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void filterFilteredPersonListByEmail_nullPredicate_preservesExistingView() {
+        modelManager.addPerson(ALICE);
+        modelManager.filterFilteredPersonListByTag(new Tag("friends"));
+        List<ActiveFilter> originalFilters = modelManager.getActiveFilters();
+
+        assertThrows(NullPointerException.class, () -> modelManager.filterFilteredPersonListByEmail(null));
+
+        assertEquals(originalFilters, modelManager.getActiveFilters());
+        assertEquals(List.of(ALICE), modelManager.getFilteredPersonList());
+    }
+
+    @Test
     public void multipleNameFilters_narrowResultsAndCanBeRemovedIndividually() {
         AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build();
         modelManager = new ModelManager(addressBook, new UserPrefs());

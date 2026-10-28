@@ -39,11 +39,12 @@ public enum CommandHelp {
             "Supply at least one name word or part of one. Searches use names, not phone numbers or tags."),
     FINDEMAIL("Browse members", "findemail", "Find members by email",
             "findemail KEYWORD [MORE_KEYWORDS]...", "findemail @example.com",
-            "Searches all members for any literal email fragment, ignoring letter case.",
+            "Narrows displayed members by any literal email fragment, ignoring letter case.",
             "Shows members whose email contains @example.com. No match produces an empty list.",
             "Use a full email address or domain fragment. Whitespace separates keywords; any keyword can match. "
-                    + "A new search replaces previous searches, tag filters and show selections, keeping name sorting. "
-                    + "An Email box shows the query; use its X to remove only the email condition. "
+                    + "Each search adds an Email box and retains earlier searches, tag filters, "
+                    + "show selections and name sorting. "
+                    + "Use a box's X to remove only that email condition. "
                     + "Filter narrows these results; list shows everyone again. Check displayed numbers before "
                     + "editing or deleting. An edited member whose email no longer matches disappears from view.",
             "Supply at least one keyword. Matching uses literal text, not regular expressions, and searches "
@@ -54,7 +55,7 @@ public enum CommandHelp {
             "Matching ignores letter case. Repeated filters narrow the list further, and the result "
                     + "names all active tags. Boxes appear left to right in command order, not matching priority. "
                     + "Use a filter's X to remove it, or list to show everyone. Find also narrows the current results. "
-                    + "Findemail searches email addresses across the whole roster and replaces previous filters. "
+                    + "Findemail also narrows the current results by email. "
                     + "Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
             "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
