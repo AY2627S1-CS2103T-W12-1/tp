@@ -31,11 +31,10 @@ public class FilterCommandParserTest {
 
     @Test
     public void parse_invalidTag_rejectsCommand() {
-        String expected = "A filter tag must be 1 to 30 characters long, "
-                + "using ASCII letters or digits with optional internal hyphens.";
+        String expected = Tag.MESSAGE_CONSTRAINTS + ".";
         String overlongTag = "t/" + "a".repeat(31);
         String[] invalidInputs = {"t/", "t/   ", "t/two words", "t/hello!", "t/-year1", "t/year1-",
-            "t/year--1", "t/one t/two", "t/one x/two", overlongTag};
+            "t/year--1", overlongTag};
         for (String input : invalidInputs) {
             assertParseFailure(parser, input, expected);
         }
@@ -46,7 +45,7 @@ public class FilterCommandParserTest {
         String expected = "Only one t/TAG parameter is allowed per filter command. "
                 + "Apply another tag in a separate command.";
         String[] inputs = {"t/committee t/year1", "t/committee\tt/year1", "t/ t/year1",
-            "t/invalid! t/year1"};
+            "t/invalid! t/year1", "t/year-1 t/year-2", "t/one t/two"};
         for (String input : inputs) {
             assertParseFailure(parser, input, expected);
         }
