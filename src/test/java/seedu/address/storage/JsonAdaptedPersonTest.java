@@ -66,6 +66,20 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_valuesWithSurroundingSpaces_returnsTrimmedPerson() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(" " + VALID_NAME + " ", " " + VALID_PHONE + " ",
+                " " + VALID_EMAIL + " ", " " + VALID_ADDRESS + " ",
+                List.of(new JsonAdaptedTag(" owesMoney "), new JsonAdaptedTag("\tfriends\n")));
+        assertEquals(BENSON, person.toModelType());
+    }
+
+    @Test
+    public void toModelType_spacesOnlyAddress_throwsIllegalValueException() {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, "   ", VALID_TAGS);
+        assertThrows(IllegalValueException.class, Address.MESSAGE_CONSTRAINTS, person::toModelType);
+    }
+
+    @Test
     public void toModelType_invalidName_throwsIllegalValueException() {
         JsonAdaptedPerson person =
                 new JsonAdaptedPerson(INVALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, VALID_TAGS);

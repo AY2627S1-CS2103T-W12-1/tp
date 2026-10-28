@@ -662,6 +662,7 @@ Close TrackCall and make a backup first. Keep the existing JSON structure:
 
 * A `persons` array contains the members.
 * Each member has `name`, `phone`, `email`, `address`, and `tags` fields. An empty `address` means none was provided.
+  Spaces before or after a value, including each tag, are ignored, as they are in commands.
 * Use `tags` for each member's group assignments.
 
 ### Missing or invalid files
