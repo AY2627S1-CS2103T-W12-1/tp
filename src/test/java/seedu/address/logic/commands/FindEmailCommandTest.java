@@ -139,19 +139,6 @@ public class FindEmailCommandTest {
     }
 
     @Test
-    public void execute_identicalEmailSearches_removingOneRetainsTheOther() {
-        new FindEmailCommand(predicate("alice")).execute(model);
-        new FindEmailCommand(predicate("alice")).execute(model);
-        assertEquals(2, model.getActiveFilters().size());
-
-        model.removeActiveFilter(model.getActiveFilters().getFirst());
-        assertEquals(List.of(ALICE), model.getFilteredPersonList());
-        assertEquals(1, model.getActiveFilters().size());
-        model.removeActiveFilter(model.getActiveFilters().getFirst());
-        assertEquals(getTypicalAddressBook().getPersonList(), model.getFilteredPersonList());
-    }
-
-    @Test
     public void execute_activeSorting_preservesAlphabeticalDisplayAndStoredOrder() {
         Person zara = new PersonBuilder().withName("Zara Tan").withEmail("zara@example.com").build();
         Person bob = new PersonBuilder().withName("Bob Tan").withEmail("bob@example.com").build();
@@ -163,7 +150,7 @@ public class FindEmailCommandTest {
 
         CommandResult result = new FindEmailCommand(predicate("@example.com")).execute(model);
 
-        assertEquals("3 members listed.", result.getFeedbackToUser());
+        assertEquals("Results unchanged. 3 members listed.", result.getFeedbackToUser());
         assertEquals(List.of(alice, bob, zara), model.getFilteredPersonList());
         assertEquals(List.of(zara, bob, alice), model.getAddressBook().getPersonList());
     }

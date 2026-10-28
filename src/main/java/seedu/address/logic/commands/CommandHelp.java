@@ -33,17 +33,22 @@ public enum CommandHelp {
     FIND("Browse members", "find", "Find a member by name", "find KEYWORD [MORE_KEYWORDS]", "find Alice Tan",
             "Narrows the displayed members by any complete or partial name word, ignoring letter case.",
             "Shows members whose names contain Alice or Tan. No match produces an empty list.",
-            "Each find adds a name filter. Boxes appear left to right in command order, but find and filter "
+            "Each distinct find adds a name filter. Boxes appear left to right in command order, but find and filter "
                     + "order does not change the final matches. Use X to remove one box or list to show everyone. "
-                    + "Jo and oh both match John.",
+                    + "Jo and oh both match John. Repeats ignore keyword case, repetition and order; "
+                    + "they keep the existing box and report that the search is already active. "
+                    + "A different query that keeps the same results adds its own box and reports Results unchanged.",
             "Supply at least one name word or part of one. Searches use names, not phone numbers or tags."),
     FINDEMAIL("Browse members", "findemail", "Find members by email",
             "findemail KEYWORD [MORE_KEYWORDS]...", "findemail @example.com",
             "Narrows displayed members by any literal email fragment, ignoring letter case.",
             "Shows members whose email contains @example.com. No match produces an empty list.",
             "Use a full email address or domain fragment. Whitespace separates keywords; any keyword can match. "
-                    + "Each search adds an Email box and retains earlier searches, tag filters, "
+                    + "Each distinct search adds an Email box and retains earlier searches, tag filters, "
                     + "show selections and name sorting. "
+                    + "Repeats ignore keyword case, repetition and order; they keep the existing box "
+                    + "and report that the search is already active. A different query with the same results "
+                    + "adds its own box and reports Results unchanged. "
                     + "Use a box's X to remove only that email condition. "
                     + "Filter narrows these results; list shows everyone again. Check displayed numbers before "
                     + "editing or deleting. An edited member whose email no longer matches disappears from view.",

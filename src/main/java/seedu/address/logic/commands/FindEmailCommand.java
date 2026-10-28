@@ -18,6 +18,8 @@ public class FindEmailCommand extends Command {
             + "Example: " + COMMAND_WORD + " @example.com alice";
     public static final String MESSAGE_SINGLE = "1 member listed.";
     public static final String MESSAGE_MULTIPLE = "%d members listed.";
+    public static final String MESSAGE_ALREADY_ACTIVE = "This email search is already active. ";
+    public static final String MESSAGE_UNCHANGED = "Results unchanged. ";
 
     private final EmailContainsKeywordsPredicate predicate;
 
@@ -44,9 +46,15 @@ public class FindEmailCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.filterFilteredPersonListByEmail(predicate);
+        int previousCount = model.getFilteredPersonList().size();
+        boolean added = model.filterFilteredPersonListByEmail(predicate);
         int count = model.getFilteredPersonList().size();
-        return new CommandResult(count == 1 ? MESSAGE_SINGLE : String.format(MESSAGE_MULTIPLE, count));
+        String feedback = count == 1 ? MESSAGE_SINGLE : String.format(MESSAGE_MULTIPLE, count);
+        if (!added) {
+            return new CommandResult(MESSAGE_ALREADY_ACTIVE + feedback);
+        }
+        // A cumulative search can only remove members, so equal counts mean the view is unchanged.
+        return new CommandResult((count == previousCount ? MESSAGE_UNCHANGED : "") + feedback);
     }
 
     /**

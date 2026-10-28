@@ -325,6 +325,13 @@ public class MainWindowTest {
             FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
             assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Email: @example.com @school.edu",
                     "Email: alice", "Show: active"), chipLabels(chips));
+            List<String> originalLabels = chipLabels(chips);
+            enter("find BOB ALICE alice");
+            assertEquals("This name search is already active. 1 member listed.", feedback.getText());
+            assertEquals(originalLabels, chipLabels(chips));
+            enter("findemail ALICE");
+            assertEquals("This email search is already active. 1 member listed.", feedback.getText());
+            assertEquals(originalLabels, chipLabels(chips));
             assertTrue(chips.isVisible());
             assertTrue(((HBox) chips.getChildren().get(2)).getStyleClass().contains("filter-chip-email"));
             assertDisplayedNames("Alice Tan");

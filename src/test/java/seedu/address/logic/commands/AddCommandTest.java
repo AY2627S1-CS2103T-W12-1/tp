@@ -170,12 +170,12 @@ public class AddCommandTest {
         }
 
         @Override
-        public void filterFilteredPersonListByName(NameContainsKeywordsPredicate predicate) {
+        public boolean filterFilteredPersonListByName(NameContainsKeywordsPredicate predicate) {
             throw new AssertionError("This method should not be called.");
         }
 
         @Override
-        public void filterFilteredPersonListByEmail(EmailContainsKeywordsPredicate predicate) {
+        public boolean filterFilteredPersonListByEmail(EmailContainsKeywordsPredicate predicate) {
             throw new AssertionError("This method should not be called.");
         }
 

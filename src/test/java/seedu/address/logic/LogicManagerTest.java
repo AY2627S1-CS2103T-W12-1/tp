@@ -308,10 +308,12 @@ public class LogicManagerTest {
         assertEquals("0 members listed.", logic.execute("findemail AMY@").getFeedbackToUser());
         assertTrue(model.getFilteredPersonList().isEmpty());
         assertEquals(List.of(new Tag("husband")), model.getActiveTagFilters());
-        assertEquals("0 members listed.", logic.execute("findemail missing@").getFeedbackToUser());
-        assertEquals("0 members listed.", logic.execute("findemail @example.com").getFeedbackToUser());
+        assertEquals("Results unchanged. 0 members listed.", logic.execute("findemail missing@").getFeedbackToUser());
+        assertEquals("Results unchanged. 0 members listed.",
+                logic.execute("findemail @example.com").getFeedbackToUser());
         logic.execute("list");
-        assertEquals("2 members listed.", logic.execute("findemail @example.com").getFeedbackToUser());
+        assertEquals("Results unchanged. 2 members listed.",
+                logic.execute("findemail @example.com").getFeedbackToUser());
 
         assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
         assertEquals(originalData, Files.readString(dataFile));

@@ -143,12 +143,17 @@ or save member data.
 * Matching ignores letter case and accepts any contiguous part of a name word.
   `Alice`, `Ali`, `lic`, and `ice` all match `Alice Tan`.
   For example, `find ali tan` shows names containing either `ali` or `tan`.
-* Each new `find` adds another name filter. For example, `find Alice Tan` followed by `find Tan`
+* Each distinct `find` adds another name filter. For example, `find Alice Tan` followed by `find Tan`
   keeps members matching both searches.
 * Email addresses, phone numbers, and tags are not searched.
 * Supply at least one keyword.
 
-The result reports `1 member listed.` or `N members listed.`
+Repeating an active search keeps its original box and reports `This name search is already active.`
+Keyword case, order, and repetition do not matter: `find Alice Tan` and `find TAN alice alice` are equivalent.
+A different query that leaves the same members visible adds its own box and reports `Results unchanged.`
+This also applies when the displayed list is empty.
+
+The result includes `1 member listed.` or `N members listed.`
 No matches produce `0 members listed.` and an empty list. No records are deleted.
 Active name, email and tag filters appear as boxes under the command field. Search boxes are blue and tag boxes
 are green. The boxes appear left to right in the order applied. With an unchanged roster, their order
@@ -177,10 +182,14 @@ Supply at least one keyword. No matches produce `0 members listed.` and an empty
 
 * Each `findemail` narrows the **currently displayed list**. Earlier name searches, email searches,
   tag filters, and `show` selections stay active. Name sorting stays applied.
-* Each search adds an **Email:** box in command order. Use its **X** to remove only that email condition.
+* Each distinct search adds an **Email:** box in command order. Use its **X** to remove only that email condition.
 * For example, `filter t/committee` then `findemail example` keeps committee members whose emails contain
   `example`. Running `findemail zara` next keeps only those whose emails also contain `zara`.
 * Keywords within one command mean **any**; separate searches must **all** match.
+* Repeating an active query keeps its original box and reports `This email search is already active.`
+  Keyword case, order, and repetition do not matter.
+* A different query that leaves the same members visible adds its own box and reports `Results unchanged.`
+  The existing conditions still apply, including after edits and when other boxes are removed.
 * Use `list` to clear all conditions and search the whole roster again.
 
 Searching does not change records or save the data file.
