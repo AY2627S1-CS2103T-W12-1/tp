@@ -5,10 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -37,6 +39,7 @@ import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
 import seedu.address.testutil.JavaFxTestUtil;
+import seedu.address.testutil.PersonBuilder;
 import seedu.address.ui.UiManager;
 
 /** Exercises startup and recovery against disposable files without exiting the shared JavaFX toolkit. */
@@ -160,6 +163,44 @@ public class MainAppTest {
         assertEquals(new AddressBook(), roster.readAddressBook().orElseThrow());
         assertEquals("damaged backup", Files.readString(backup));
         assertPreservedCopy();
+    }
+
+    @Test
+    public void start_afterEmptyRecovery_externalEditIsRefusedBeforeFirstSave() throws Exception {
+        assertOutsideEditProtectedAfterRecovery("Start empty", new AddressBook());
+    }
+
+    @Test
+    public void start_afterBackupRecovery_externalEditIsRefusedBeforeFirstSave() throws Exception {
+        assertOutsideEditProtectedAfterRecovery("Restore backup", getTypicalAddressBook());
+    }
+
+    /** Checks the actual startup path without reading through session storage before its first save. */
+    private void assertOutsideEditProtectedAfterRecovery(String choice, AddressBook recovered) throws Exception {
+        Path file = roster.getAddressBookFilePath();
+        JsonAddressBookStorage externalWriter = new JsonAddressBookStorage(file);
+        externalWriter.saveAddressBook(getTypicalAddressBook(), JsonAddressBookStorage.getBackupFilePath(file));
+        Files.writeString(file, "damaged roster");
+        onJavaFxThread(() -> {
+            answerDialog(choice);
+            app.start(new Stage());
+        });
+        assertEquals(recovered, app.model.getAddressBook());
+        AddressBook outside = new AddressBook();
+        outside.addPerson(new PersonBuilder().withName("Outside Editor").build());
+        externalWriter.saveAddressBook(outside);
+        byte[] outsideBytes = Files.readAllBytes(file);
+        byte[] backupBytes = Files.readAllBytes(JsonAddressBookStorage.getBackupFilePath(file));
+
+        IOException failure = assertThrows(IOException.class, () ->
+                app.storage.saveAddressBook(app.model.getAddressBook()));
+
+        assertEquals(JsonAddressBookStorage.MESSAGE_CHANGED_OUTSIDE, failure.getMessage());
+        assertArrayEquals(outsideBytes, Files.readAllBytes(file));
+        assertArrayEquals(backupBytes, Files.readAllBytes(JsonAddressBookStorage.getBackupFilePath(file)));
+        app.storage.saveAddressBook(app.model.getAddressBook());
+        assertEquals(recovered, new JsonAddressBookStorage(file).readAddressBook().orElseThrow());
+        assertArrayEquals(outsideBytes, Files.readAllBytes(JsonAddressBookStorage.getBackupFilePath(file)));
     }
 
     @Test
