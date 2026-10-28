@@ -152,6 +152,7 @@ public enum CommandHelp {
                     + "overwritten. Tags are sorted and joined with semicolons. The roster and current search "
                     + "stay unchanged.",
             "Use an output path ending in .csv (ignoring letter case), with an existing writable parent directory. "
+                    + "Double quotes are not allowed in export paths; spaces need no surrounding quotes. "
                     + "The active roster, preferences, application lock, and running JAR "
                     + "cannot be export destinations. "
                     + "An invalid path or a failed write reports an error and preserves any previous export."),
