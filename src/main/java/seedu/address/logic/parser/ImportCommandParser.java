@@ -53,6 +53,13 @@ public class ImportCommandParser implements Parser<ImportCommand> {
         }
     }
 
+    /**
+     * Extracts a quoted or unquoted path and rejects unmatched quotes or trailing arguments.
+     *
+     * @param rawPath The raw path argument supplied to the import command.
+     * @return The extracted path without surrounding quotes.
+     * @throws ParseException If the path has unmatched quotes or is followed by extra arguments.
+     */
     private static String extractPath(String rawPath) throws ParseException {
         if (rawPath.startsWith("\"")) {
             int closingQuote = rawPath.indexOf('"', 1);
@@ -86,6 +93,13 @@ public class ImportCommandParser implements Parser<ImportCommand> {
         return -1;
     }
 
+    /**
+     * Selects the most specific parse error for arguments following the import path.
+     * Repeated path parameters take precedence over unknown parameter prefixes.
+     *
+     * @param arguments The trailing arguments to classify.
+     * @return The parse exception describing the first recognized error or invalid format.
+     */
     private static ParseException getExtraArgumentsError(String arguments) {
         for (String token : arguments.split("\\s+")) {
             if (token.startsWith("p/")) {

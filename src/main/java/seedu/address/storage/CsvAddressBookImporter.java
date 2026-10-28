@@ -189,6 +189,13 @@ public final class CsvAddressBookImporter {
         }
     }
 
+    /**
+     * Decodes CSV bytes as strict UTF-8 and reports malformed input as an import error.
+     *
+     * @param bytes The CSV file contents.
+     * @return The decoded CSV text.
+     * @throws CsvImportException If the bytes are not valid UTF-8.
+     */
     private static String decodeUtf8(byte[] bytes) throws CsvImportException {
         try {
             return StandardCharsets.UTF_8.newDecoder()
@@ -201,6 +208,12 @@ public final class CsvAddressBookImporter {
         }
     }
 
+    /**
+     * Rejects lone carriage returns while allowing CRLF record endings.
+     *
+     * @param contents The decoded CSV text to validate.
+     * @throws CsvImportException If a carriage return is not followed by a line feed.
+     */
     private static void validateRecordEndings(String contents) throws CsvImportException {
         for (int index = 0; index < contents.length(); index++) {
             if (contents.charAt(index) == '\r'
@@ -210,6 +223,13 @@ public final class CsvAddressBookImporter {
         }
     }
 
+    /**
+     * Validates that CSV headers are recognized, unique, and complete, then indexes their columns.
+     *
+     * @param record The first CSV record containing the headers.
+     * @return A mapping from each header name to its column index.
+     * @throws CsvImportException If a header is unknown, duplicated, or missing.
+     */
     private static Map<String, Integer> parseHeaders(CSVRecord record) throws CsvImportException {
         Map<String, Integer> indexes = new HashMap<>();
         for (int index = 0; index < record.size(); index++) {
@@ -224,6 +244,14 @@ public final class CsvAddressBookImporter {
         return indexes;
     }
 
+    /**
+     * Validates and constructs a person from one CSV row, attaching the row number to import errors.
+     *
+     * @param record The CSV row to parse.
+     * @param headerIndexes The column indexes for the required fields.
+     * @return The person represented by the row.
+     * @throws CsvImportException If the row has the wrong number of fields or invalid values.
+     */
     private static Person parsePerson(CSVRecord record, Map<String, Integer> headerIndexes) throws CsvImportException {
         long row = record.getRecordNumber();
         if (record.size() != FIELD_COUNT) {
@@ -254,6 +282,15 @@ public final class CsvAddressBookImporter {
                 new Address(addressValue), tags);
     }
 
+    /**
+     * Parses semicolon-separated tags, trimming each value and rejecting invalid entries.
+     * Duplicate tags are collapsed by the returned set.
+     *
+     * @param tagsValue The tag field from a CSV row.
+     * @param row The CSV row number used in any reported import error.
+     * @return The parsed tags, or an empty set when the field is empty.
+     * @throws CsvImportException If any tag is invalid.
+     */
     private static Set<Tag> parseTags(String tagsValue, long row) throws CsvImportException {
         Set<Tag> tags = new HashSet<>();
         if (tagsValue.isEmpty()) {
