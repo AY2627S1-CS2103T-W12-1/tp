@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.exceptions.DataLoadingException;
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 
@@ -243,6 +244,47 @@ public class JsonAddressBookStorageTest {
 
         assertArrayEquals(original, Files.readAllBytes(file));
         assertTrue(Files.exists(backup.resolve("keep.txt")));
+    }
+
+    @Test
+    public void save_activeWriteFails_preservesPreviousDistinctBackup() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        AddressBook earlier = getTypicalAddressBook();
+        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(new AddressBook()), file);
+        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(earlier), backup);
+        byte[] activeBefore = Files.readAllBytes(file);
+        byte[] backupBefore = Files.readAllBytes(backup);
+
+        JsonAddressBookStorage storage = storageWithFailingActiveWrite(file);
+        assertThrows(IOException.class, () -> storage.saveAddressBook(earlier));
+
+        assertArrayEquals(activeBefore, Files.readAllBytes(file));
+        assertArrayEquals(backupBefore, Files.readAllBytes(backup));
+    }
+
+    @Test
+    public void save_activeWriteFails_removesNewBackup() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(new AddressBook()), file);
+        byte[] activeBefore = Files.readAllBytes(file);
+
+        JsonAddressBookStorage storage = storageWithFailingActiveWrite(file);
+        assertThrows(IOException.class, () -> storage.saveAddressBook(getTypicalAddressBook()));
+
+        assertArrayEquals(activeBefore, Files.readAllBytes(file));
+        assertFalse(Files.exists(backup));
+    }
+
+    /** Injects a failure at the active-file write, after backup rotation has completed. */
+    private JsonAddressBookStorage storageWithFailingActiveWrite(Path file) {
+        return new JsonAddressBookStorage(file) {
+            @Override
+            protected void writeActiveRoster(ReadOnlyAddressBook addressBook, Path target) throws IOException {
+                throw new IOException("Injected active roster write failure");
+            }
+        };
     }
 
     @Test
