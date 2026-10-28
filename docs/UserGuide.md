@@ -289,6 +289,7 @@ If you omit `a/`, the address is shown as `(none)` until you add one with `edit`
 
 Duplicate checking ignores name capitalization, repeated whitespace and surrounding whitespace.
 For example, `Alice Tan`, `alice tan` and `Alice  Tan` match when phone, email and address also match.
+Unicode letter case is ignored too; for example, `ΟΣ`, `οσ` and `ος` match.
 Those other fields are trimmed but otherwise compared exactly; tags are ignored.
 Names keep their entered capitalization and spacing in storage and display. Accents and punctuation
 are not removed by duplicate checking, and this rule does not expand the supported name characters.

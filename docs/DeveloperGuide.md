@@ -472,8 +472,9 @@ through the usual preferences setup.
 The current JSON format uses a `persons` array and a `tags` array per member. Duplicate identity compares
 all four trimmed contact fields exactly, including case and internal spacing, and ignores tags.
 This legacy `Person#isSamePerson` rule remains the storage invariant so older rosters continue to load.
-For new input, `Person#isDuplicateContactOf` compares names after whitespace collapse and `Locale.ROOT`
-lowercasing, with exact trimmed phone/email/address comparisons. Add and edit reject a match against
+For new input, `Person#isDuplicateContactOf` compares names with `String.equalsIgnoreCase` after whitespace
+collapse, with exact trimmed phone/email/address comparisons. This handles Unicode case pairs such as Greek sigma
+without context-sensitive lowercasing. Add and edit reject a match against
 another stored member; import skips matches against the roster and earlier accepted rows. Stored names,
 `equals` and `hashCode` are unchanged. Tags and unchanged-contact edits remain possible on legacy variants.
 The email validator avoids excessive backtracking on long
