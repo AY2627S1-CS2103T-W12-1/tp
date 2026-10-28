@@ -388,6 +388,24 @@ public class MainWindowTest {
     }
 
     @Test
+    public void showChip_afterLastSelectedMemberDeleted_keepsEmptySelectionUntilRemoved() throws Exception {
+        onJavaFxThread(() -> {
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+            enter("show 1");
+            enter("delete 1");
+            enter("y");
+
+            assertEquals(List.of("Show: 0 selected"), chipLabels(chips));
+            Label showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
+            assertEquals("Selected members: No selected members remain", showLabel.getTooltip().getText());
+            assertDisplayedNames();
+
+            removeChip(chips, 0);
+            assertDisplayedNames("Bob Lee");
+        });
+    }
+
+    @Test
     public void showChips_keepCommandOrderAsFiltersChange() throws Exception {
         onJavaFxThread(() -> {
             Person alice = model.getAddressBook().getPersonList().getFirst();

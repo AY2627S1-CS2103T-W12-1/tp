@@ -142,16 +142,6 @@ public class LogicManager implements Logic {
     }
 
     @Override
-    public int getActiveShowSelectionCount() {
-        return model.getActiveShowSelectionCount();
-    }
-
-    @Override
-    public void clearShowSelections() {
-        model.clearShowSelections();
-    }
-
-    @Override
     public void removeActiveFilter(ActiveFilter filter) {
         model.removeActiveFilter(filter);
     }
