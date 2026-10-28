@@ -73,8 +73,7 @@ public class CommandSequenceOracleTest {
         assertEquals(List.of("Alice"), session.model.getFilteredPersonList().stream()
                 .map(person -> person.getName().fullName).toList());
         assertEquals(4, session.model.getActiveFilters().size());
-        assertEquals(2, session.model.getActiveFilters().stream()
-                .filter(filter -> filter.getKind() == ActiveFilter.Kind.SHOW).count());
+        assertEquals(2, getShowFilters(session.model.getActiveFilters()).size());
         Files.delete(blocker);
         Files.delete(backup);
         session.command("tagall t/retry");
@@ -83,11 +82,13 @@ public class CommandSequenceOracleTest {
         assertEquals(List.of("Alice"), savedPeople.stream()
                 .filter(person -> person.getTags().stream().anyMatch(tag -> tag.tagName.equals("retry")))
                 .map(person -> person.getName().fullName).toList());
-        session.logic.getActiveFilters().stream()
-                .filter(filter -> filter.getKind() == ActiveFilter.Kind.SHOW)
-                .forEach(session.logic::removeActiveFilter);
+        getShowFilters(session.logic.getActiveFilters()).forEach(session.logic::removeActiveFilter);
         assertEquals(List.of("Alice", "Bob"), session.model.getFilteredPersonList().stream()
                 .map(person -> person.getName().fullName).toList());
+    }
+
+    private static List<ActiveFilter> getShowFilters(List<ActiveFilter> filters) {
+        return filters.stream().filter(filter -> filter.getKind() == ActiveFilter.Kind.SHOW).toList();
     }
 
     private record Member(int id, String name, Set<String> tags) {
@@ -401,15 +402,12 @@ public class CommandSequenceOracleTest {
             if (choice == 0 && !selections.isEmpty()) {
                 int removed = random.nextInt(selections.size());
                 history.add("click: remove show selection " + removed);
-                List<ActiveFilter> showFilters = model.getActiveFilters().stream()
-                        .filter(filter -> filter.getKind() == ActiveFilter.Kind.SHOW).toList();
+                List<ActiveFilter> showFilters = getShowFilters(model.getActiveFilters());
                 model.removeActiveFilter(showFilters.get(removed));
                 selections.remove(removed);
             } else if (choice == 1) {
                 history.add("click: remove all show selections");
-                logic.getActiveFilters().stream()
-                        .filter(filter -> filter.getKind() == ActiveFilter.Kind.SHOW)
-                        .forEach(logic::removeActiveFilter);
+                getShowFilters(logic.getActiveFilters()).forEach(logic::removeActiveFilter);
                 selections.clear();
             } else if (!restrictions.isEmpty()) {
                 int removed = random.nextInt(restrictions.size());
@@ -428,8 +426,7 @@ public class CommandSequenceOracleTest {
             byte[] before = input.savedBefore();
             String context = describeStep(step);
             assertEquals(filterKeys.size() + selections.size(), model.getActiveFilters().size(), context);
-            assertEquals(selections.size(), model.getActiveFilters().stream()
-                    .filter(filter -> filter.getKind() == ActiveFilter.Kind.SHOW).count(), context);
+            assertEquals(selections.size(), getShowFilters(model.getActiveFilters()).size(), context);
             assertEquals(roster.stream().map(Member::formatSnapshot).toList(),
                     model.getAddressBook().getPersonList().stream().map(Session::formatSnapshot).toList(), context);
             assertEquals(getVisibleMembers().stream().map(Member::formatSnapshot).toList(),
