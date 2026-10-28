@@ -131,6 +131,43 @@ public class JsonAddressBookStorageTest {
     }
 
     @Test
+    public void saveAddressBook_fileCreatedAfterMissingRead_refusesThenBacksUpOutsideVersion() throws Exception {
+        for (AddressBook outside : List.of(new AddressBook(), getTypicalAddressBook())) {
+            Path file = testFolder.resolve("appeared-" + outside.getPersonList().size() + ".json");
+            JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+            assertTrue(storage.readAddressBook().isEmpty());
+            new JsonAddressBookStorage(file).saveAddressBook(outside);
+            Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+            Files.writeString(backup, "Retain the previous backup");
+            byte[] outsideBytes = Files.readAllBytes(file);
+            byte[] backupBytes = Files.readAllBytes(backup);
+            AddressBook session = new AddressBook();
+            session.addPerson(IDA);
+
+            assertThrows(IOException.class, JsonAddressBookStorage.MESSAGE_CHANGED_OUTSIDE, () ->
+                    storage.saveAddressBook(session));
+            assertArrayEquals(outsideBytes, Files.readAllBytes(file));
+            assertArrayEquals(backupBytes, Files.readAllBytes(backup));
+
+            storage.saveAddressBook(session);
+            assertEquals(session, storage.readAddressBook(file).orElseThrow());
+            assertEquals(outside, storage.readBackup().orElseThrow());
+        }
+    }
+
+    @Test
+    public void saveAddressBook_fileStillMissingAfterRead_allowsInitialSave() throws Exception {
+        Path file = testFolder.resolve("first-save.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        assertTrue(storage.readAddressBook().isEmpty());
+
+        storage.saveAddressBook(getTypicalAddressBook());
+
+        assertEquals(getTypicalAddressBook(), storage.readAddressBook(file).orElseThrow());
+        assertFalse(Files.exists(JsonAddressBookStorage.getBackupFilePath(file)));
+    }
+
+    @Test
     public void saveAddressBook_fileChangedOutsideAfterLoad_refusesOnceThenKeepsOutsideVersionInBackup()
             throws Exception {
         Path file = testFolder.resolve("members.json");

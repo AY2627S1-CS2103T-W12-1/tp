@@ -35,8 +35,10 @@ public class JsonAddressBookStorage {
     private static final Logger logger = LogsCenter.getLogger(JsonAddressBookStorage.class);
 
     private Path filePath;
-    // The roster this storage last read from or wrote to filePath, or null if it has not done so yet.
+    // The last observed roster, or null when a successful read found no file.
     private ReadOnlyAddressBook lastKnownRoster;
+    // Distinguishes an observed missing file from a storage instance that has not read or saved yet.
+    private boolean hasObservedRoster;
 
     public JsonAddressBookStorage(Path filePath) {
         this.filePath = filePath;
@@ -99,6 +101,7 @@ public class JsonAddressBookStorage {
     public Optional<ReadOnlyAddressBook> readAddressBook() throws DataLoadingException {
         Optional<ReadOnlyAddressBook> loaded = readAddressBook(filePath);
         lastKnownRoster = loaded.map(AddressBook::new).orElse(null);
+        hasObservedRoster = true;
         return loaded;
     }
 
@@ -143,6 +146,7 @@ public class JsonAddressBookStorage {
         }
         saveAddressBook(addressBook, filePath);
         lastKnownRoster = new AddressBook(addressBook);
+        hasObservedRoster = true;
     }
 
     /**
@@ -176,12 +180,12 @@ public class JsonAddressBookStorage {
      * to report.
      */
     private Optional<ReadOnlyAddressBook> findChangeOutside() {
-        if (lastKnownRoster == null) {
+        if (!hasObservedRoster) {
             return Optional.empty();
         }
         try {
             return readAddressBook(filePath)
-                    .filter(current -> !hasSameSavedData(current, lastKnownRoster))
+                    .filter(current -> lastKnownRoster == null || !hasSameSavedData(current, lastKnownRoster))
                     .map(AddressBook::new);
         } catch (DataLoadingException e) {
             return Optional.empty();

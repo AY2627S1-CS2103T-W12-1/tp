@@ -351,7 +351,7 @@ These messages follow the list and clear feature specifications:
 | Clear one member | `Cleared 1 member. The roster is now empty.` |
 | Clear multiple members | `Cleared N members. The roster is now empty.` |
 | Invalid clear arguments | `Invalid command format. Usage: clear. This command removes all members.` |
-| Failed clear save | `Unable to clear the roster because the changes could not be saved. No members were removed. Run clear again to retry.` |
+| Failed clear save | `Unable to clear the roster because the changes could not be saved. No members were removed.` |
 
 #### Test coverage {id="test-coverage-1"}
 

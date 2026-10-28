@@ -220,7 +220,8 @@ public class ListClearIntegrationTest {
             CommandException exception = assertThrows(CommandException.class, () -> logic.execute("y"));
             assertFalse(logic.isAwaitingConfirmation());
             assertThrows(ParseException.class, () -> logic.execute("y"));
-            assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, exception.getMessage());
+            assertTrue(exception.getMessage().startsWith(ClearCommand.MESSAGE_SAVE_FAILURE));
+            assertTrue(exception.getMessage().contains(storage.failure.getMessage()));
             assertEquals(failure, exception.getCause());
             assertEquals(before, model.getAddressBook());
             assertEquals(List.of(shown), model.getFilteredPersonList());
@@ -241,7 +242,8 @@ public class ListClearIntegrationTest {
         model.updateFilteredPersonList(person -> false);
         storage.failure = new IOException("Disk full");
         CommandException exception = assertThrows(CommandException.class, () -> logic.execute("clear"));
-        assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, exception.getMessage());
+        assertTrue(exception.getMessage().startsWith(ClearCommand.MESSAGE_SAVE_FAILURE));
+        assertTrue(exception.getMessage().contains(storage.failure.getMessage()));
         assertEquals(1, storage.saveAttempts);
         model.setAddressBook(getTypicalAddressBook());
         assertEquals(List.of(), model.getFilteredPersonList());
