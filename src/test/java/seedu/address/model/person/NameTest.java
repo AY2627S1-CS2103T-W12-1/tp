@@ -1,5 +1,6 @@
 package seedu.address.model.person;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -43,13 +44,14 @@ public class NameTest {
         for (String value : new String[] {"Anne-Marie", "Jos\u00e9 Garcia", "Jose\u0301 Garcia",
             "O'Connor", "D\u2019Arcy", "\u674e\u660e"}) {
             assertTrue(Name.isValidName(value));
-            org.junit.jupiter.api.Assertions.assertEquals(value, new Name(value).fullName);
+            assertEquals(value, new Name(value).fullName);
         }
         for (String value : new String[] {"-Anne", "'Connor", "\u0301", "Alice/Other", "Alice\nBob",
             "Alice\tBob", "Alice@Bob", "\ud83d\ude00"}) {
             assertFalse(Name.isValidName(value));
         }
     }
+
     @Test
     public void equals() {
         Name name = new Name("Valid Name");

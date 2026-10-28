@@ -22,6 +22,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.Phone;
 import seedu.address.testutil.PersonBuilder;
 
 public class ImportCommandTest {
@@ -150,7 +151,7 @@ public class ImportCommandTest {
 
         CommandException error = assertThrows(CommandException.class, () -> new ImportCommand(file).execute(model));
 
-        assertEquals("Could not import CSV: row 3: " + seedu.address.model.person.Phone.MESSAGE_CONSTRAINTS
+        assertEquals("Could not import CSV: row 3: " + Phone.MESSAGE_CONSTRAINTS
                 + ". No members were imported.", error.getMessage());
         assertEquals(List.of(existing), model.getAddressBook().getPersonList());
         assertEquals(List.of(), model.getFilteredPersonList());

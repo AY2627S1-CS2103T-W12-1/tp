@@ -316,6 +316,12 @@ public class MainWindow extends UiPart<Stage> {
         }
     }
 
+    /**
+     * Refreshes the filter controls and shows removal feedback with the updated member count.
+     * Restores focus after a focused chip is removed and repeats a pending deletion prompt if needed.
+     *
+     * @param message Description of the removal to include in the feedback.
+     */
     private void showChipRemoval(String message) {
         Node focused = primaryStage.getScene().getFocusOwner();
         int focusedChipIndex = focused == null ? -1 : activeFiltersPane.getChildren().indexOf(focused.getParent());

@@ -1,5 +1,6 @@
 package seedu.address.model.person;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -42,13 +43,14 @@ public class PhoneTest {
     public void formattedPhone_preservesValueAndRejectsMalformedFormatting() {
         for (String value : new String[] {"+6591234567", "+65 9123 4567", "1  2 3", "001 234"}) {
             assertTrue(Phone.isValidPhone(value));
-            org.junit.jupiter.api.Assertions.assertEquals(value, new Phone(value).value);
+            assertEquals(value, new Phone(value).value);
         }
         for (String value : new String[] {"+", "+12", "1 2", "++123", "12+3", " 123", "123 ",
             "123-456", "(123)", "123\t456", "\u0661\u0662\u0663"}) {
             assertFalse(Phone.isValidPhone(value));
         }
     }
+
     @Test
     public void equals() {
         Phone phone = new Phone("999");

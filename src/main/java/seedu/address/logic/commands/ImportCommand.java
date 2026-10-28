@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +29,8 @@ public class ImportCommand extends Command {
     public static final String MESSAGE_SUCCESS =
             "Imported %1$d member(s) from \"%2$s\". Skipped %3$d duplicate record(s).";
     public static final String MESSAGE_FAILURE = "Could not import CSV: %s";
+    public static final String MESSAGE_FILE_NOT_FOUND =
+            "Could not import CSV: File not found: %s. Check the file name and location.";
     public static final String MESSAGE_INVALID_FILE = "Could not import CSV: %s No members were imported.";
     public static final String MESSAGE_SAVE_FAILURE = "Could not save data to file: %s";
 
@@ -44,13 +47,17 @@ public class ImportCommand extends Command {
         requireNonNull(model);
 
         List<Person> candidates;
-        Path resolvedPath;
+        Path resolvedPath = filePath;
         try {
             resolvedPath = FileUtil.resolvePath(filePath).toAbsolutePath().normalize();
             candidates = CsvAddressBookImporter.read(resolvedPath);
         } catch (CsvImportException e) {
             logger.warning("CSV import rejected: invalid file");
             throw new CommandException(String.format(MESSAGE_INVALID_FILE, ensureSentence(e.getMessage())), e);
+        } catch (NoSuchFileException e) {
+            logger.warning("CSV import failed because the file was not found");
+            throw new CommandException(String.format(MESSAGE_FILE_NOT_FOUND,
+                    resolvedPath.toAbsolutePath().normalize()), e);
         } catch (IOException e) {
             logger.warning("CSV import failed due to an I/O error");
             throw new CommandException(String.format(MESSAGE_FAILURE, getErrorDetails(e)), e);
@@ -60,7 +67,7 @@ public class ImportCommand extends Command {
         List<Person> peopleToAdd = new ArrayList<>();
         int duplicateCount = 0;
         for (Person candidate : candidates) {
-            if (knownPeople.stream().anyMatch(candidate::isSamePerson)) {
+            if (knownPeople.stream().anyMatch(candidate::isDuplicateContactOf)) {
                 duplicateCount++;
             } else {
                 knownPeople.add(candidate);

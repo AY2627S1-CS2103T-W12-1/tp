@@ -3,6 +3,7 @@ package seedu.address.ui;
 import java.util.Comparator;
 
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
@@ -34,6 +35,8 @@ public class MemberDetailsPanel extends UiPart<Region> {
     @FXML
     private Label address;
     @FXML
+    private Button copyAddressButton;
+    @FXML
     private FlowPane tags;
 
     /** Starts with all contact details hidden until the user selects a roster row. */
@@ -50,7 +53,9 @@ public class MemberDetailsPanel extends UiPart<Region> {
         name.setText(person.getName().fullName);
         phone.setText(person.getPhone().value);
         email.setText(person.getEmail().value);
-        address.setText(person.getAddress().value.isEmpty() ? "(none)" : person.getAddress().value);
+        String addressValue = person.getAddress().value;
+        address.setText(addressValue.isEmpty() ? "(none)" : addressValue);
+        copyAddressButton.setDisable(addressValue.isEmpty());
         tags.getChildren().clear();
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))
@@ -83,6 +88,7 @@ public class MemberDetailsPanel extends UiPart<Region> {
         phone.setText("");
         email.setText("");
         address.setText("");
+        copyAddressButton.setDisable(true);
         tags.getChildren().clear();
         detailsScroll.setVisible(false);
         detailsScroll.setManaged(false);

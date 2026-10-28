@@ -2,18 +2,25 @@ package seedu.address.storage;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static seedu.address.storage.CsvAddressBookImporter.MAX_FILE_BYTES;
+import static seedu.address.storage.CsvAddressBookImporter.MAX_MEMBER_ROWS;
+import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_FILE_TOO_LARGE;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_CSV;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_HEADER;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_RECORD_ENDING;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_UTF8;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_MULTILINE_FIELD;
+import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_TOO_MANY_ROWS;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -30,6 +37,39 @@ public class CsvAddressBookImporterTest {
 
     @TempDir
     public Path tempDir;
+
+    @Test
+    public void read_oversizedFile_rejectsBeforeParsingContents() throws Exception {
+        Path file = tempDir.resolve("oversized.csv");
+        try (RandomAccessFile output = new RandomAccessFile(file.toFile(), "rw")) {
+            output.setLength(MAX_FILE_BYTES + 1);
+        }
+        CsvImportException error = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
+        assertEquals(MESSAGE_FILE_TOO_LARGE, error.getMessage());
+    }
+
+    @Test
+    public void read_exactByteLimit_acceptsFile() throws Exception {
+        byte[] input = new byte[MAX_FILE_BYTES];
+        Arrays.fill(input, (byte) ' ');
+        byte[] header = "name,phone,email,address,tags\n".getBytes(StandardCharsets.UTF_8);
+        System.arraycopy(header, 0, input, 0, header.length);
+        Path file = tempDir.resolve("limit.csv");
+        Files.write(file, input);
+        assertEquals(List.of(), CsvAddressBookImporter.read(file));
+    }
+
+    @Test
+    public void read_memberRowLimit_acceptsBoundaryAndRejectsOneMore() throws Exception {
+        String header = "name,phone,email,address,tags\n";
+        String row = "Alice,123,alice@example.com,Home,\n";
+        Path file = write(header + row.repeat(MAX_MEMBER_ROWS));
+        assertEquals(MAX_MEMBER_ROWS, CsvAddressBookImporter.read(file).size());
+        Files.writeString(file, row, StandardOpenOption.APPEND);
+        CsvImportException error = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
+        assertEquals(MESSAGE_TOO_MANY_ROWS,
+                error.getMessage());
+    }
 
     @Test
     public void read_unescapedQuoteInUnquotedField_rejectsCsvSyntaxAtTheCorrectRow() throws Exception {
@@ -68,6 +108,22 @@ public class CsvAddressBookImporterTest {
                 .withEmail("jane@example.com").withAddress("Second Street").withTags("year2").build();
 
         assertEquals(List.of(john, jane), CsvAddressBookImporter.read(file));
+    }
+
+    @Test
+    public void read_caseVariantTags_keepsOneTagAcrossExportAndImport() throws Exception {
+        Path source = write("name,phone,email,address,tags\n"
+                + "Alice,123,alice@example.com,Home,Student;student;STUDENT\n");
+
+        List<Person> imported = CsvAddressBookImporter.read(source);
+        assertEquals(1, imported.getFirst().getTags().size());
+        assertEquals("Student", imported.getFirst().getTags().iterator().next().tagName);
+        assertEquals(new Tag("student"), imported.getFirst().getTags().iterator().next());
+
+        Path exported = tempDir.resolve("exported.csv");
+        CsvAddressBookExporter.export(imported, exported);
+        assertEquals(imported, CsvAddressBookImporter.read(exported));
+        assertEquals(1, CsvAddressBookImporter.read(exported).getFirst().getTags().size());
     }
 
     @Test

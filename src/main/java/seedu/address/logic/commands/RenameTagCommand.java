@@ -47,7 +47,7 @@ public class RenameTagCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        if (oldTag.equals(newTag)) {
+        if (oldTag.tagName.equals(newTag.tagName)) {
             throw new CommandException(MESSAGE_SAME_TAG);
         }
         // Copies the targets first, as updating a member changes the roster being read.
@@ -59,17 +59,24 @@ public class RenameTagCommand extends Command {
             throw new CommandException(String.format(MESSAGE_TAG_NOT_FOUND, oldTag.tagName));
         }
 
+        boolean isCaseOnlyRename = oldTag.equals(newTag);
+        int renamedCount = 0;
         int mergedCount = 0;
         for (Person target : targets) {
-            if (target.getTags().contains(newTag)) {
+            if (isCaseOnlyRename && target.getTags().stream()
+                    .anyMatch(tag -> tag.tagName.equals(newTag.tagName))) {
+                continue;
+            }
+            if (!isCaseOnlyRename && target.getTags().contains(newTag)) {
                 mergedCount++;
             }
             model.setPerson(target, createRenamedPerson(target));
+            renamedCount++;
         }
 
         logger.info(String.format("renametag t/%s t/%s: updated %d member(s), %d already had the new tag",
-                oldTag.tagName, newTag.tagName, targets.size(), mergedCount));
-        String message = String.format(MESSAGE_SUCCESS, oldTag.tagName, newTag.tagName, targets.size());
+                oldTag.tagName, newTag.tagName, renamedCount, mergedCount));
+        String message = String.format(MESSAGE_SUCCESS, oldTag.tagName, newTag.tagName, renamedCount);
         if (mergedCount > 0) {
             message += String.format(MESSAGE_MERGED, mergedCount, newTag.tagName);
         }
@@ -98,12 +105,13 @@ public class RenameTagCommand extends Command {
             return false;
         }
 
-        return oldTag.equals(otherRenameTagCommand.oldTag) && newTag.equals(otherRenameTagCommand.newTag);
+        return oldTag.tagName.equals(otherRenameTagCommand.oldTag.tagName)
+                && newTag.tagName.equals(otherRenameTagCommand.newTag.tagName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(oldTag, newTag);
+        return Objects.hash(oldTag.tagName, newTag.tagName);
     }
 
     @Override

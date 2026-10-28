@@ -4,6 +4,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
@@ -76,6 +77,23 @@ public class Person {
                 && otherPerson.getPhone().value.trim().equals(getPhone().value.trim())
                 && otherPerson.getEmail().value.trim().equals(getEmail().value.trim())
                 && otherPerson.getAddress().value.trim().equals(getAddress().value.trim());
+    }
+
+    /**
+     * Checks duplicate contact input without changing stored names or the legacy storage identity rule.
+     * Name case and repeated whitespace are ignored; other contact fields are trimmed and compared exactly.
+     * Tags are ignored. Existing JSON records continue to use {@link #isSamePerson(Person)} when loading.
+     */
+    public boolean isDuplicateContactOf(Person otherPerson) {
+        return otherPerson != null
+                && normaliseName(name.fullName).equals(normaliseName(otherPerson.getName().fullName))
+                && phone.value.trim().equals(otherPerson.getPhone().value.trim())
+                && email.value.trim().equals(otherPerson.getEmail().value.trim())
+                && address.value.trim().equals(otherPerson.getAddress().value.trim());
+    }
+
+    private static String normaliseName(String value) {
+        return value.replaceAll("(?U)\\s+", " ").trim().toLowerCase(Locale.ROOT);
     }
 
     /**

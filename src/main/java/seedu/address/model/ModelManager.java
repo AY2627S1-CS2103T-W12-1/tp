@@ -215,6 +215,10 @@ public class ModelManager implements Model {
         }
     }
 
+    /**
+     * Reapplies additional predicates and removable active filters to the displayed person list.
+     * A person remains visible only when it satisfies every filter in both groups.
+     */
     private void refreshFilteredPersons() {
         filteredPersons.setPredicate(person -> {
             for (Predicate<Person> filter : additionalFilters) {
