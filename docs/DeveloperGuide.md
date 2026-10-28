@@ -873,7 +873,8 @@ not promised releases, in line with the
      Tag-only and unchanged-contact edits remain available on legacy name variants.
    - Equal names are allowed when another contact field differs. This is not real-world identity verification.
 3. **Tags**
-   - Accept 1–30 ASCII letters or digits. Matching is case-sensitive; internal spaces are invalid.
+   - Accept 1–30 ASCII letters or digits with optional internal hyphens. Matching ignores letter case.
+     Whitespace, underscores, other symbols, and non-ASCII letters are invalid.
    - Store each tag once per member. Display tags in ASCII order: digits, uppercase, then lowercase.
 4. **Listing and search**
    - `list` restores all records in stored order and clears every condition.
@@ -1264,7 +1265,7 @@ Validation, duplicates and filters are functional rules. Development-process rul
 | Roster / address book | The complete collection of member records, including records hidden from the displayed list. The file and starter code use the term address book. |
 | Member record | One member's name, phone number, email address, address, and tag assignments. |
 | Group | A set of members sharing a tag, such as a committee or cohort. Groups are not separate stored objects in the MVP. |
-| Tag | A case-sensitive label containing 1 to 30 ASCII letters or digits, assigned at most once to each member. |
+| Tag | A label containing 1 to 30 ASCII letters or digits with optional internal hyphens, matched without regard to case and assigned at most once to each member. |
 | Displayed list | The records currently visible after the active search, tag filters, and index selections. It is the target set for a bulk tag command. |
 | Active search and filters | The name-search, email-search, tag, and index-selection conditions used to determine which records are displayed. A new `find` adds a condition; `findemail` replaces them, and `list` clears them all. |
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |

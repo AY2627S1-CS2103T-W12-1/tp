@@ -249,7 +249,7 @@ URLs, numeric slashes such as `12/3`, and slashes embedded in words remain addre
 | Phone | At least three ASCII digits. No spaces or punctuation. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text when adding; `edit INDEX a/` clears an existing address. |
-| Tag | 1 to 30 ASCII letters or digits, without spaces. Tags are case-sensitive. |
+| Tag | 1 to 30 ASCII letters or digits with optional internal hyphens, such as `year-1`. Spaces, underscores, other symbols such as `@ # $ % .`, and accented letters are not allowed. Matching ignores letter case. |
 
 **Email rules:**
 
