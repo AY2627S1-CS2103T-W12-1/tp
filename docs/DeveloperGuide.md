@@ -1556,7 +1556,7 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
    Expect three imports and zero skipped duplicates. Restart and check every field and tag is retained.
 4. Copy `members.csv` to `member list.csv`, then run `import p/"member list.csv"`.
    The quoted path must work and all three duplicates must be skipped. Try `import p/missing.csv`:
-   expect a read error with the roster and view unchanged.
+   expect a file-not-found error that includes the resolved path, with the roster and view unchanged.
 5. Make a separate `invalid.csv` with the valid header, one valid member, and then a row with an invalid
    phone. Import it: expect a row-specific error, no partial import, and no saved-file or view change.
    Repeat with a malformed header, broken CSV quoting, and a quoted field containing a line break.
