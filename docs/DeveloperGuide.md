@@ -488,6 +488,8 @@ single ASCII letters followed by `/` before tokenising.
 Only `n/`, `p/`, `e/`, `a/`, and `t/` are supported. Unknown letters and uppercase prefixes
 report the corresponding command's usage message before field validation. The standalone `c/o` abbreviation
 (case-insensitive) is exempt; URLs, numeric slashes, and slashes embedded in words are literal text.
+While inside an `a/` field, `A/` followed by an ASCII digit is exempt too, preserving `Block A/12`.
+Supported lowercase prefixes end that address context; other unsupported prefixes still fail.
 Other commands retain their own parsing rules.
 
 ### CSV import
@@ -651,7 +653,7 @@ invalid arguments fail before saving. A save failure after an actual change foll
 
 `TagAllCommandParser` and `UntagAllCommandParser` both delegate to `BulkTagArgumentParser#parse`, so the two
 commands share one grammar and one set of error messages. It accepts exactly one tag of
-1 to 30 ASCII letters or digits. Surrounding spaces are ignored. `tag` and `untag` use the same method for
+1 to 30 characters using ASCII letters or digits with optional internal hyphens. Surrounding spaces are ignored. `tag` and `untag` use the same method for
 their tag argument.
 
 * Text before `t/`, a missing `t/`, or any `n/`, `p/`, `e/`, or `a/` prefix reports invalid command format
@@ -937,7 +939,7 @@ These rules describe the selected MVP and apply to the use cases below.
    available. Duplicate checking does not establish a person's real-world identity.
 3. A tag contains 1 to 30 ASCII letters or digits with optional internal hyphens and matches regardless of letter case.
    It contains no other whitespace. Store each tag once per member, retaining its spelling for display, and display tags in ASCII order:
-   digits, uppercase letters, then lowercase letters.
+   hyphens, digits, uppercase letters, then lowercase letters.
 4. `list` resets all searches and tag filters. `find KEYWORD [MORE_KEYWORDS]` narrows the
    displayed list. It matches complete or partial name words, ignores letter case, and accepts a match on
    any keyword within one command. Consecutive `find` commands retain the intersection of their
@@ -1002,17 +1004,29 @@ name/phone/email/address/tag order, then duplicate identity.
 
 | Field | Requirement |
 | --- | --- |
-| Name | ASCII letters, digits, and spaces, with at least one letter or digit. Preserve internal spaces and case. |
-| Phone | At least three ASCII digits, without signs, punctuation, or internal whitespace. This does not verify reachability. |
+| Name | Start with a Unicode letter or ASCII digit; accept Unicode letters, combining marks, ASCII digits, spaces, hyphens, and straight or curly apostrophes. Preserve spelling, combining accents, internal spaces, and case. |
+| Phone | At least three ASCII digits, an optional leading `+`, and internal ASCII spaces. Begin and end with a digit after the optional `+`. Preserve formatting without inferring country codes or normalizing identity. Reject hyphens, parentheses, and internal tabs. This does not verify reachability. |
 | Email | Exactly one `@` and no whitespace. The local part contains non-empty runs of ASCII letters or digits, optionally separated by a single punctuation character listed below. Domain labels are separated by dots; each contains non-empty runs of ASCII letters or digits, optionally separated by single hyphens. The final label has at least two characters. Syntax validation does not verify mailbox existence. |
 | Address | Optional for `add`; omission stores an empty value, while an explicitly blank `a/` is rejected. In `edit`, omission preserves the value and a bare `a/` clears it. Non-empty addresses must be single-line text after trimming surrounding spaces or tabs. Preserve internal spaces, tabs, and case. |
 | Tags | Rule 3 applies. A member can have zero or more tags. Repeated identical tags collapse into one assignment. An empty tag is invalid except for the lone `t/` edit operation in rule 7. |
 
+Name validation preserves the entered Unicode representation and permits repeated or trailing name punctuation.
+Duplicate-name comparison ignores case and repeated whitespace, but does not apply Unicode NFC normalization.
+Search also compares the entered representation. Sorting uses Java's case-insensitive string ordering,
+not a locale-specific alphabet; accented names may appear after `Z`.
+Phone identity retains formatting, including repeated internal spaces, so differently formatted numbers can coexist.
+The address-unit exception is deliberately limited to `A/` followed by a digit; other reserved prefixes still fail.
+
 Allowed email local-part punctuation:
 
 ```text
-+ _ . -
++ _ . ' -
 ```
+
+`CommonContactFormatsWorkflowTest` verifies accepted names, formatted phones, apostrophe emails,
+and address unit labels through add/edit, JSON reload, CSV export, and CSV import. It also checks that
+unsupported address prefixes are rejected without changing saved bytes. `NameTest`, `PhoneTest`,
+and `EmailTest` cover invalid boundary values and the preserved formatting contract.
 
 ### Offline help and readable feedback {id="offline-help-and-readable-feedback"}
 

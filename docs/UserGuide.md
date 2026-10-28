@@ -243,18 +243,28 @@ Add reserves whitespace-delimited single ASCII letters followed by `/` for field
 Only lowercase `n/`, `p/`, `e/`, `a/`, and `t/` are accepted; `x/extra` and `T/committee`
 report an invalid command format. The standalone abbreviation `c/o` (in any letter case),
 URLs, numeric slashes such as `12/3`, and slashes embedded in words remain address text.
+Within an `a/` value, uppercase `A/` followed by a digit is also literal address text,
+so `a/Block A/12` is accepted. Other uppercase or unknown field prefixes remain invalid.
 
 | Field | Current rule |
 | --- | --- |
-| Name | ASCII letters, digits, and spaces. Cannot be blank. |
-| Phone | At least three ASCII digits. No spaces or punctuation. |
+| Name | Start with a Unicode letter or ASCII digit. Unicode letters, combining marks, ASCII digits, spaces, hyphens, and straight or curly apostrophes are accepted. |
+| Phone | At least three ASCII digits, with an optional leading `+` and spaces between digits. Formatting is preserved. Hyphens, parentheses, and internal tabs are rejected. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text when adding; `edit INDEX a/` clears an existing address. |
 | Tag | 1 to 30 ASCII letters or digits with optional internal hyphens. Matching ignores letter case. |
 
+Names such as `Anne-Marie`, `José Garcia`, and `O'Connor` keep their entered spelling,
+including combining accents. Phone examples include `+6591234567` and `9123 4567`.
+Phone formatting is stored, displayed, copied, and exported as entered; the app does not infer country
+codes or treat differently formatted numbers as equal. Multiple spaces between digit groups are accepted.
+Names retain their Unicode representation, so visually identical accented spellings can match differently in searches
+or duplicate checks. Sorting uses case-insensitive text order rather than a language-specific alphabet;
+for example, `Émile` sorts after `Zara`.
+
 **Email rules:**
 
-* The local part contains ASCII letters or digits, optionally separated by single `+`, `_`, `.`, or `-` characters.
+* The local part contains ASCII letters or digits, optionally separated by single `+`, `_`, `.`, apostrophe (`'`), or `-` characters.
 * Domain labels contain ASCII letters or digits, optionally separated by single hyphens.
 * The final domain label needs at least two characters.
 

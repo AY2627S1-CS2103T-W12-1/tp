@@ -252,8 +252,8 @@ public class UserCsvWorkflowTest {
         // UG field rules and whole-file validation: no partial import and no view changes on rejection.
         List<String> invalidRows = List.of(
                 ",123,a@example.com,Home,", "Al!ce,123,a@example.com,Home,",
-                "\u674e,123,a@example.com,Home,", "Alice,12,a@example.com,Home,",
-                "Alice,\u0661\u0662\u0663,a@example.com,Home,", "Alice,123 456,a@example.com,Home,",
+                "\u0301,123,a@example.com,Home,", "Alice,12,a@example.com,Home,",
+                "Alice,\u0661\u0662\u0663,a@example.com,Home,", "Alice,123-456,a@example.com,Home,",
                 "Alice,123,a..b@example.com,Home,", "Alice,123,a@-example.com,Home,",
                 "Alice,123,a@example.c,Home,", "Alice,123,a@example.com,Home," + "x".repeat(31),
                 "Alice,123,a@example.com,Home,two words", "Alice,123,a@example.com,Home,tag;",
