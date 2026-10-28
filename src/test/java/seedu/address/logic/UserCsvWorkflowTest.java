@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -63,8 +64,8 @@ public class UserCsvWorkflowTest {
         byte[] savedBackup = Files.readAllBytes(backup);
         List<byte[]> corruptFiles = List.of(
                 new byte[] {(byte) 0x89, 'P', 'N', 'G', 13, 10, 26, 10},
-                "PK\u0003\u0004not a spreadsheet CSV".getBytes(java.nio.charset.StandardCharsets.UTF_8),
-                "<html><body>not CSV</body></html>".getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                "PK\u0003\u0004not a spreadsheet CSV".getBytes(StandardCharsets.UTF_8),
+                "<html><body>not CSV</body></html>".getBytes(StandardCharsets.UTF_8),
                 utf8(HEADER + "Bob,789,bob@example.com,Home,\n\"unterminated"),
                 utf8(HEADER + "Bob,789,bob@example.com,Home,\nBad,12,bad@example.com,Home,\n"));
         for (int index = 0; index < corruptFiles.size(); index++) {
@@ -224,7 +225,7 @@ public class UserCsvWorkflowTest {
 
     @Test
     public void import_documentedBoundaryValues_acceptsMinimumsAndPreservesMeaningfulWhitespace() throws Exception {
-        // UG: three digits, optional address, 30-character case-sensitive tags, and trimmed CSV values.
+        // UG: three digits, optional address, 30-character case-insensitive tags, and trimmed CSV values.
         Path csv = directory.resolve("boundaries.csv");
         Files.writeString(csv, "\uFEFFtags,address,email,phone,name\r\n"
                 + "\" a ; A ; a ; " + "Z".repeat(30) + " \",\" \tHome\t  Block 1 \t\","
@@ -239,7 +240,7 @@ public class UserCsvWorkflowTest {
         assertEquals("000", alice.getPhone().value);
         assertEquals("a+b@example.co", alice.getEmail().value);
         assertEquals("Home\t  Block 1", alice.getAddress().value);
-        assertEquals(Set.of("a", "A", "Z".repeat(30)), tags(alice));
+        assertEquals(Set.of("a", "Z".repeat(30)), tags(alice));
         assertEquals("", people.get(3).getAddress().value);
         assertTrue(people.get(3).getTags().isEmpty());
         assertEquals(model.getAddressBook(), new JsonAddressBookStorage(rosterFile).readAddressBook().orElseThrow());
@@ -324,7 +325,8 @@ public class UserCsvWorkflowTest {
     private static Set<String> tags(Person person) {
         return person.getTags().stream().map(tag -> tag.tagName).collect(Collectors.toSet());
     }
+
     private static byte[] utf8(String value) {
-        return value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        return value.getBytes(StandardCharsets.UTF_8);
     }
 }

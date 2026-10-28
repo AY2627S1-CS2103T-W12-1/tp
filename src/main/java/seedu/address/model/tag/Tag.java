@@ -3,14 +3,18 @@ package seedu.address.model.tag;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import java.util.Locale;
+
 /**
  * Represents a Tag in the address book.
- * Guarantees: immutable; name is valid as declared in {@link #isValidTagName(String)}
+ * Guarantees: immutable; name is valid as declared in {@link #isValidTagName(String)}.
+ * Letter case is retained for display but ignored when comparing tags.
  */
 public class Tag {
 
-    public static final String MESSAGE_CONSTRAINTS = "Tag names should contain 1 to 30 ASCII letters or digits";
-    public static final String VALIDATION_REGEX = "[A-Za-z0-9]{1,30}";
+    public static final String MESSAGE_CONSTRAINTS =
+            "Tag names should be 1 to 30 characters long, using ASCII letters or digits with optional internal hyphens";
+    public static final String VALIDATION_REGEX = "(?=.{1,30}$)[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*";
 
     public final String tagName;
 
@@ -43,12 +47,12 @@ public class Tag {
             return false;
         }
 
-        return tagName.equals(otherTag.tagName);
+        return tagName.equalsIgnoreCase(otherTag.tagName);
     }
 
     @Override
     public int hashCode() {
-        return tagName.hashCode();
+        return tagName.toLowerCase(Locale.ROOT).hashCode();
     }
 
     /**

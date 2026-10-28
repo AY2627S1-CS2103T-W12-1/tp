@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,9 +52,11 @@ public final class CsvAddressBookImporter {
     public static final int MAX_FILE_BYTES = 10 * 1024 * 1024;
     public static final int MAX_MEMBER_ROWS = 10_000;
     public static final String MESSAGE_FILE_TOO_LARGE =
-            "CSV file exceeds the 10 MiB limit. Split it into smaller CSV files.";
+            String.format(Locale.ROOT, "CSV file exceeds the %d MiB limit. Split it into smaller CSV files.",
+                    MAX_FILE_BYTES / (1024 * 1024));
     public static final String MESSAGE_TOO_MANY_ROWS =
-            "CSV file exceeds the 10,000 member-row limit. Split it into smaller CSV files.";
+            String.format(Locale.ROOT, "CSV file exceeds the %,d member-row limit. Split it into smaller CSV files.",
+                    MAX_MEMBER_ROWS);
 
     private static final int FIELD_COUNT = CsvAddressBookCsv.HEADERS.size();
     private static final char BYTE_ORDER_MARK = '\uFEFF';

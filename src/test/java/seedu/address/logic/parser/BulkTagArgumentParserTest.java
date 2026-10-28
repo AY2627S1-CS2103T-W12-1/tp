@@ -1,12 +1,13 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_EMPTY_TAG;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_INVALID_TAG;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_MULTIPLE_TAGS;
 import static seedu.address.testutil.Assert.assertThrows;
+
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +28,7 @@ public class BulkTagArgumentParserTest {
         assertEquals(new Tag("committee"), BulkTagArgumentParser.parse(" t/committee", USAGE));
         assertEquals(new Tag("committee"), BulkTagArgumentParser.parse("t/committee", USAGE));
         assertEquals(new Tag("year1"), BulkTagArgumentParser.parse(" t/ year1 ", USAGE));
+        assertEquals(new Tag("year-1"), BulkTagArgumentParser.parse(" t/year-1", USAGE));
         assertEquals(new Tag("Batch2026"), BulkTagArgumentParser.parse("\t t/\tBatch2026 \t", USAGE));
     }
 
@@ -40,12 +42,13 @@ public class BulkTagArgumentParserTest {
     }
 
     @Test
-    public void parse_tagsDifferingOnlyInCase_remainDistinct() throws Exception {
+    public void parse_tagsDifferingOnlyInCase_match() throws Exception {
         Tag upper = BulkTagArgumentParser.parse(" t/Year1", USAGE);
         Tag lower = BulkTagArgumentParser.parse(" t/year1", USAGE);
         assertEquals(new Tag("Year1"), upper);
         assertEquals(new Tag("year1"), lower);
-        assertNotEquals(upper, lower);
+        assertEquals(upper, lower);
+        assertEquals(upper.hashCode(), lower.hashCode());
     }
 
     @Test
@@ -67,6 +70,22 @@ public class BulkTagArgumentParserTest {
     }
 
     @Test
+    public void parse_otherFieldPrefix_throwsUsageMessage() {
+        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, USAGE);
+        String[] inputs = {" t/friend n/Bob", " t/friend p/91234567", " t/friend e/bob@example.com",
+            " t/friend a/Clementi", " t/friend\tn/Bob", " t/friend n/", " n/Bob t/friend", " t/a t/b n/Bob"};
+        for (String input : inputs) {
+            assertThrows(ParseException.class, expected, () -> BulkTagArgumentParser.parse(input, USAGE));
+        }
+    }
+
+    @Test
+    public void parseTagValues_tagPrefixesOnly_returnsValuesInOrder() throws Exception {
+        assertEquals(List.of("a", "b"), BulkTagArgumentParser.parseTagValues(" t/a t/ b ", USAGE));
+        assertEquals(List.of(), BulkTagArgumentParser.parseTagValues("", USAGE));
+    }
+
+    @Test
     public void parse_multipleTags_throwsMultipleTagsMessage() {
         for (String input : new String[] {" t/a t/b", " t/a t/", " t/ t/b", " t/a\tt/b"}) {
             assertThrows(ParseException.class, MESSAGE_MULTIPLE_TAGS, () ->
@@ -84,7 +103,8 @@ public class BulkTagArgumentParserTest {
 
     @Test
     public void parse_invalidTag_throwsInvalidTagMessage() {
-        String[] inputs = {" t/year-1", " t/year1 year2", " t/hello!", " t/one x/two", " t/caf\u00e9"};
+        String[] inputs = {" t/-year1", " t/year1-", " t/year--1", " t/year1 year2",
+            " t/hello!", " t/one x/two", " t/caf\u00e9"};
         for (String input : inputs) {
             assertThrows(ParseException.class, MESSAGE_INVALID_TAG, () ->
                     BulkTagArgumentParser.parse(input, USAGE));

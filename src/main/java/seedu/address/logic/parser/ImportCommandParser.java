@@ -21,7 +21,7 @@ public class ImportCommandParser implements Parser<ImportCommand> {
     public static final String MESSAGE_REPEATED_PATH = "Parameter p/ may only be specified once.";
     public static final String MESSAGE_UNKNOWN_PARAMETER = "Unknown parameter: %s";
 
-    private static final Pattern PARAMETER_PREFIX = Pattern.compile("(?i)^([a-z][a-z0-9-]*/)");
+    private static final Pattern PARAMETER_PREFIX = Pattern.compile("(?i)^([a-z]/)");
 
     @Override
     public ImportCommand parse(String args) throws ParseException {
