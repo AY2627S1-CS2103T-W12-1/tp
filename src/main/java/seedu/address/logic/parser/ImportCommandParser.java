@@ -94,8 +94,8 @@ public class ImportCommandParser implements Parser<ImportCommand> {
     }
 
     /**
-     * Selects the most specific parse error for arguments following the import path.
-     * Repeated path parameters take precedence over unknown parameter prefixes.
+     * Returns an error for the first trailing token that repeats {@code p/} or uses an unknown prefix,
+     * or an invalid-format error if neither condition is found.
      *
      * @param arguments The trailing arguments to classify.
      * @return The parse exception describing the first recognized error or invalid format.

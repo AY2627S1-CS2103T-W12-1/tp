@@ -284,7 +284,7 @@ public final class CsvAddressBookImporter {
 
     /**
      * Parses semicolon-separated tags, trimming each value and rejecting invalid entries.
-     * Duplicate tags are collapsed by the returned set.
+     * Tags that differ only in letter case are collapsed, keeping the first spelling.
      *
      * @param tagsValue The tag field from a CSV row.
      * @param row The CSV row number used in any reported import error.
