@@ -210,6 +210,12 @@ public class ModelManagerTest {
         modelManager.deletePerson(BENSON);
         assertEquals("Show: 1 selected", showFilter.getLabel());
         assertEquals("Alice Renamed", showFilter.getShowSelectionNames());
+
+        modelManager.deletePerson(renamedAlice);
+        assertEquals(List.of(showFilter), modelManager.getActiveFilters());
+        assertEquals("Show: 0 selected", showFilter.getLabel());
+        assertEquals("No selected members remain", showFilter.getShowSelectionNames());
+        assertEquals(List.of(), modelManager.getFilteredPersonList());
     }
 
     @Test
@@ -220,11 +226,11 @@ public class ModelManagerTest {
         modelManager.filterFilteredPersonList(new PersonSelectionPredicate(List.of(ALICE, BENSON)));
 
         modelManager.filterFilteredPersonList(new PersonSelectionPredicate(List.of(BENSON, ALICE)));
-        assertEquals(1, modelManager.getActiveShowSelectionCount());
+        assertEquals(1, modelManager.getActiveFilters().size());
         assertEquals(List.of(ALICE, BENSON), modelManager.getFilteredPersonList());
 
         modelManager.filterFilteredPersonList(new PersonSelectionPredicate(List.of(ALICE)));
-        assertEquals(2, modelManager.getActiveShowSelectionCount());
+        assertEquals(2, modelManager.getActiveFilters().size());
         assertEquals(List.of(ALICE), modelManager.getFilteredPersonList());
     }
 

@@ -7,6 +7,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.parser.AddressBookParser;
+import seedu.address.model.ActiveFilter;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -88,9 +89,9 @@ public class SortOrderIntegrationTest {
 
         execute("tagall t/new");
         assertDisplayOrder(1, 2, 4);
-        assertEquals(1, model.getActiveShowSelectionCount());
+        assertEquals(ActiveFilter.Kind.SHOW, model.getActiveFilters().getLast().getKind());
         assertEquals(2, model.getActiveFilters().size());
-        model.clearShowSelections();
+        model.removeActiveFilter(model.getActiveFilters().getLast());
         assertDisplayOrder(1, 2, 3, 4);
         model.removeActiveFilter(model.getActiveFilters().getFirst());
         assertDisplayOrder(1, 2, 3, 4, 5, 0);

@@ -206,18 +206,6 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public int getActiveShowSelectionCount() {
-        return (int) activeFilters.stream().filter(filter -> filter.getKind() == ActiveFilter.Kind.SHOW).count();
-    }
-
-    @Override
-    public void clearShowSelections() {
-        if (activeFilters.removeIf(filter -> filter.getKind() == ActiveFilter.Kind.SHOW)) {
-            refreshFilteredPersons();
-        }
-    }
-
-    @Override
     public void removeActiveFilter(ActiveFilter filter) {
         requireNonNull(filter);
         if (activeFilters.remove(filter)) {

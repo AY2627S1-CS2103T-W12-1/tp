@@ -132,6 +132,8 @@ selected by that command. Hover over the box label to see the selected names. Bo
 to right in command order, alongside name, email, and tag boxes. Select a box's **X** to remove only that
 selection while keeping the other conditions. The **ROSTER** heading shows how many members are
 currently displayed, including when the result is empty.
+If all members in a selection are deleted, its box remains as **Show: 0 selected**. Hovering over it
+shows `Selected members: No selected members remain`; select its **X** to remove the empty selection.
 
 Names in a `show` box's hover text are listed alphabetically, ignoring case. This does not change
 the displayed roster order.
@@ -206,6 +208,8 @@ stays the same, and their displayed numbers update.
 * Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
   Applying the same tag again, even with different letter case, leaves the view unchanged. The result
   names the active spelling, says no changes were made, and shows the current count and active tags.
+  For example, repeating `filter t/committee` begins with
+  `Tag "committee" is already an active filter. No changes were made.`
 * A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
   A new `findemail` searches the whole roster and replaces previous filters.
 
