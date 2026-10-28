@@ -37,6 +37,7 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ConfirmDeleteCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditCommand;
+import seedu.address.logic.commands.ExportCommand;
 import seedu.address.logic.commands.FindEmailCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
@@ -391,7 +392,7 @@ public class LogicManagerTest {
 
         assertTrue(Files.isRegularFile(csvFile));
         assertTrue(Files.isDirectory(rosterFile));
-        assertTrue(result.getFeedbackToUser().startsWith("Exported 1 people to "));
+        assertTrue(result.getFeedbackToUser().startsWith("Exported 1 member to "));
         assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
         assertTrue(model.getFilteredPersonList().isEmpty());
     }
@@ -404,7 +405,9 @@ public class LogicManagerTest {
                 "addressBook.json.corrupt-123.json", "ADDRESSBOOK.JSON.CORRUPT-456.JSON")) {
             Path target = temporaryFolder.resolve(filename);
             Files.writeString(target, "Keep the existing application file");
-            assertThrows(CommandException.class, () -> logic.execute("export " + target));
+            assertThrows(ParseException.class, () -> logic.execute("export " + target));
+            assertThrows(CommandException.class, () -> new ExportCommand(target).execute(model,
+                    temporaryFolder.resolve("addressBook.json"), temporaryFolder.resolve("userPrefs.json")));
             assertEquals("Keep the existing application file", Files.readString(target));
             assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
             assertTrue(model.getFilteredPersonList().isEmpty());
@@ -414,7 +417,9 @@ public class LogicManagerTest {
     @Test
     public void execute_exportToNormalisedStoragePath_rejectsBeforeCreatingFile() throws Exception {
         Path target = temporaryFolder.resolve("nested/../addressBook.json");
-        assertThrows(CommandException.class, () -> logic.execute("export " + target));
+        assertThrows(ParseException.class, () -> logic.execute("export " + target));
+        assertThrows(CommandException.class, () -> new ExportCommand(target).execute(model,
+                temporaryFolder.resolve("addressBook.json"), temporaryFolder.resolve("userPrefs.json")));
         assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
         assertFalse(Files.exists(temporaryFolder.resolve("nested")));
     }
@@ -575,9 +580,9 @@ public class LogicManagerTest {
                 logic.execute("filter t/year1").getFeedbackToUser());
         logic.execute("list");
         assertEquals(clubRoster.getPersonList(), logic.getFilteredPersonList());
-        assertEquals("0 member(s) listed with tag \"Year1\".",
+        assertEquals("3 member(s) listed with tag \"Year1\".",
                 logic.execute("filter t/Year1").getFeedbackToUser());
-        assertEquals(List.of(), logic.getFilteredPersonList());
+        assertEquals(List.of(alice, committeeMember, daniel), logic.getFilteredPersonList());
     }
 
     @Test
@@ -596,11 +601,49 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_caseVariantTags_matchAcrossCommandsAndSave() throws Exception {
+        logic.execute("add n/Alice p/123 e/alice@example.com t/Student t/student");
+        logic.execute("add n/Bob p/456 e/bob@example.com t/student");
+        assertEquals(1, model.getAddressBook().getPersonList().getFirst().getTags().size());
+
+        logic.execute("edit 1 t/Student t/STUDENT");
+        assertEquals(1, model.getAddressBook().getPersonList().getFirst().getTags().size());
+
+        assertEquals("2 member(s) listed with tag \"STUDENT\".",
+                logic.execute("filter t/STUDENT").getFeedbackToUser());
+        assertEquals(2, logic.getFilteredPersonList().size());
+        assertEquals(1, model.getActiveTagFilters().size());
+        logic.execute("filter t/student");
+        assertEquals(1, model.getActiveTagFilters().size());
+
+        logic.execute("tag 1 t/student");
+        assertEquals(1, model.getFilteredPersonList().getFirst().getTags().size());
+        assertEquals("Added tag \"StUdEnT\" to 0 member(s). 2 already had this tag.",
+                logic.execute("tagall t/StUdEnT").getFeedbackToUser());
+
+        logic.execute("untag 1 t/sTuDeNt");
+        assertEquals(1, logic.getFilteredPersonList().size());
+        logic.execute("list");
+        assertEquals("Renamed tag \"STUDENT\" to \"Alumni\" for 1 member(s).",
+                logic.execute("renametag t/STUDENT t/Alumni").getFeedbackToUser());
+        assertEquals("Removed tag \"ALUMNI\" from 1 member(s). 1 did not have this tag.",
+                logic.execute("untagall t/ALUMNI").getFeedbackToUser());
+        assertTrue(model.getAddressBook().getPersonList().stream().allMatch(person -> person.getTags().isEmpty()));
+
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook().getPersonList(), saved.getPersonList());
+    }
+
+    @Test
     public void execute_invalidFilter_preservesDisplayedList() throws Exception {
         model.setAddressBook(getTypicalAddressBook());
         logic.execute("filter t/friends");
-        assertThrows(ParseException.class, () -> logic.execute("filter t/friends t/committee"));
+        String expectedMessage = "Only one t/TAG parameter is allowed per filter command. "
+                + "Apply another tag in a separate command.";
+        assertThrows(ParseException.class, expectedMessage, () -> logic.execute("filter t/friends t/committee"));
         assertEquals(List.of(ALICE, BENSON, DANIEL), logic.getFilteredPersonList());
+        assertEquals(List.of(new Tag("friends")), model.getActiveTagFilters());
     }
 
     @Test
@@ -745,6 +788,20 @@ public class LogicManagerTest {
         ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
                 temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
         assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+    }
+
+    @Test
+    public void execute_caseOnlyRename_savesRequestedSpelling() throws Exception {
+        model.addPerson(new PersonBuilder().withName("Alice").withTags("student").build());
+        model.addPerson(new PersonBuilder().withName("Bob").withTags("Student").build());
+
+        assertEquals("Renamed tag \"STUDENT\" to \"Student\" for 1 member(s).",
+                logic.execute("renametag t/STUDENT t/Student").getFeedbackToUser());
+
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertTrue(saved.getPersonList().stream().allMatch(person ->
+                person.getTags().stream().anyMatch(tag -> tag.tagName.equals("Student"))));
     }
 
     @Test

@@ -198,7 +198,7 @@ clear only the email condition while keeping any later name or tag filters.
 This keeps only committee members in the current view. Their order, including active name sorting,
 stays the same, and their displayed numbers update.
 
-* Matching is exact and case-sensitive: `committee` and `Committee` are different tags.
+* Matching ignores letter case: `committee` and `Committee` identify the same tag.
 * Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
   Applying the same tag again does not add a duplicate condition.
 * A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
@@ -221,6 +221,8 @@ For example, `filter t/committee t/year1` is invalid; apply each tag in a separa
 
 `sort` orders the currently displayed members by full name from A to Z, ignoring letter case.
 It preserves the current search restriction and does not change or save the stored roster order.
+Names that compare equally, including differences only in case or repeated spaces, keep their stored
+relative order after tag or contact-detail updates.
 Sorting stays active as members are added, edited, deleted, or searched. Use `list` to restore
 the complete roster in stored order, or restart the app to return to stored order.
 A successful `import` also restores the complete roster in stored order.
@@ -248,7 +250,7 @@ URLs, numeric slashes such as `12/3`, and slashes embedded in words remain addre
 | Phone | At least three ASCII digits. No spaces or punctuation. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text when adding; `edit INDEX a/` clears an existing address. |
-| Tag | 1 to 30 characters, using ASCII letters or digits with optional internal hyphens. For example, `year-1`. Tags are case-sensitive. |
+| Tag | 1 to 30 ASCII letters or digits with optional internal hyphens. Matching ignores letter case. |
 
 **Email rules:**
 
@@ -266,9 +268,16 @@ This adds Bob with two tags, saves the roster, and shows the complete member lis
 Repeated identical tags appear once.
 If you omit `a/`, the address is shown as `(none)` until you add one with `edit`.
 
-A member is a duplicate only when its trimmed name, phone, email, and address all exactly match an
-existing member, including case and internal spaces. Tags do not affect identity. A same-name member
-with different contact details is allowed.
+Duplicate checking ignores name capitalization, repeated whitespace and surrounding whitespace.
+For example, `Alice Tan`, `alice tan` and `Alice  Tan` match when phone, email and address also match.
+Those other fields are trimmed but otherwise compared exactly; tags are ignored.
+Names keep their entered capitalization and spacing in storage and display. Accents and punctuation
+are not removed by duplicate checking, and this rule does not expand the supported name characters.
+A same-name member with different contact details is allowed.
+
+A duplicate add is rejected. Use `find` to locate the existing member and `edit` to update it.
+Older saved rosters containing these name variants still load without merging or deleting records.
+Tag-only and unchanged-contact edits to those existing records remain available.
 
 #### Update a member: `edit`
 
@@ -285,7 +294,8 @@ After saving, TrackCall confirms the member's name and tags and keeps the active
 The details panel stays hidden until you select a member again to inspect the changed contact fields.
 If the updated member no longer matches the search or filters, they disappear from view but remain
 in the roster. Use `list` to show everyone again.
-An edit that would make all four contact fields match another member is rejected.
+An edit that would match another member under the duplicate rule above is rejected.
+Changing only your own name's capitalization or spacing is allowed when it does not match another member.
 
 **Supplied tags replace all existing tags.**
 
@@ -311,8 +321,9 @@ untag 2 t/friends
 
 Check the displayed number after searching, filtering, showing selected members, or sorting. The
 index identifies the member shown at that number when you submit the command. Hidden members are
-not changed. Tags must be 1 to 30 characters long, using ASCII letters or digits with optional internal hyphens;
-matching is case-sensitive.
+not changed. Tags contain 1 to 30 ASCII letters or digits with optional internal hyphens; matching ignores letter case.
+Adding `t/student` to a member who already has `Student` does not add a second tag.
+If one `add` or `edit` command supplies both spellings, the first `t/` spelling is kept.
 
 If the member already has the tag (for `tag`) or lacks it (for `untag`), TrackCall reports that
 no change was made. A valid no-op still attempts to save. Searches, filters, sorting, and a `show`
@@ -354,9 +365,9 @@ The current search, filters, and sorting stay applied after the update.
 If you remove the tag used by the active filter, the updated members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
 
-Supply exactly one tag of 1 to 30 characters, using ASCII letters or digits with optional internal hyphens.
-Spaces around the tag are ignored, and matching is case-sensitive. Missing `t/`, empty tags, invalid tags, and more than one tag
-are rejected without changing any member. If no members are displayed, TrackCall reports
+Supply exactly one tag of 1 to 30 ASCII letters or digits with optional internal hyphens. Spaces around the tag
+are ignored, and matching ignores letter case. Missing `t/`, empty tags, invalid tags, more than one tag, and
+other field prefixes such as `n/` are rejected without changing any member. If no members are displayed, TrackCall reports
 `There are no members in the current list to update.` and changes nothing.
 
 There is no confirmation or undo. A valid command saves the roster, even when every member is skipped.
@@ -375,8 +386,10 @@ Every member tagged `batch2026` is now tagged `alumni` instead. The result repor
 * `Renamed tag "batch2026" to "alumni" for 15 member(s).`
 * `Renamed tag "year1" to "year2" for 10 member(s). 2 already had "year2".`
 
-A member who already has the new tag keeps a single copy of it.
-Tags are case-sensitive, so `renametag t/committee t/Committee` is a valid rename.
+A member with both distinct tags keeps a single copy of the replacement tag.
+Tags match regardless of letter case. To standardize capitalization across the roster, run
+`renametag t/committee t/Committee`. Members already using `Committee` are skipped and the result
+counts only members whose spelling changed. Supplying identical spellings is rejected.
 
 The current search, filters, and sorting stay applied after the update.
 If you rename the tag used by the active filter, the renamed members disappear from view
@@ -400,16 +413,23 @@ Export a complete roster or bring existing member records into TrackCall.
 The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
 Tags for each member are sorted in case-sensitive ASCII order (hyphens, digits, uppercase letters, then lowercase letters)
 and joined with semicolons.
+If an imported CSV file or saved JSON roster contains case variants of one tag on the same member,
+TrackCall keeps the first spelling listed for that member. The retained spelling appears in the member
+list and exports. On the next roster save, the other spellings are removed from the saved file.
 
 * Without `FILEPATH`, the file is written to `addressbook.csv` beside the JAR. During development,
   it is written to the working directory.
 * Packaged builds resolve relative paths from the JAR folder and accept absolute paths only inside
   that folder. The parent directory must already exist and be writable.
+* The destination must end in `.csv` (ignoring letter case). Other extensions and missing extensions are rejected
+  with `File must have a .csv extension.` Filenames may contain spaces.
 * An existing destination file is overwritten.
   The active roster file, preferences file, their backups and recovery copies, application lock, and running JAR
   cannot be used as export destinations. These reserved paths are case-insensitive, including directory names,
   even before the files exist.
   If exporting fails, an existing destination file is left unchanged.
+* A missing parent folder or a destination that is a folder produces an error explaining what to change.
+  Create the parent folder first and choose a CSV filename. For write failures, check permissions and free disk space.
 * Export leaves the roster, current search, and automatic JSON data file unchanged.
 * An empty roster produces a file containing only the column headers.
 
@@ -454,8 +474,10 @@ name,phone,email,address,tags
 John Doe,98765432,johnd@example.com,"John Street, Block 123",year1;committee
 ```
 
-The whole file is validated before any member is added. Exact contact-detail duplicates against existing
-members or earlier rows are skipped; tags are not merged. The result reports imported and skipped counts.
+The whole file is validated before any member is added. Duplicates against existing members or earlier rows
+are skipped using the same normalized-name rule as `add` and `edit`; tags are not merged.
+The first accepted record keeps its name formatting. The result reports imported and skipped counts;
+inspect the existing member and use `edit` if a skipped record was intended as an update.
 A header-only or duplicate-only file succeeds with zero imports and still retries automatic saving.
 
 If a row, header, CSV structure, or UTF-8 encoding is invalid, no records or view state change. The first

@@ -460,6 +460,11 @@ through the usual preferences setup.
 
 The current JSON format uses a `persons` array and a `tags` array per member. Duplicate identity compares
 all four trimmed contact fields exactly, including case and internal spacing, and ignores tags.
+This legacy `Person#isSamePerson` rule remains the storage invariant so older rosters continue to load.
+For new input, `Person#isDuplicateContactOf` compares names after whitespace collapse and `Locale.ROOT`
+lowercasing, with exact trimmed phone/email/address comparisons. Add and edit reject a match against
+another stored member; import skips matches against the roster and earlier accepted rows. Stored names,
+`equals` and `hashCode` are unchanged. Tags and unchanged-contact edits remain possible on legacy variants.
 The email validator avoids excessive backtracking on long
 input, and a log-file initialisation failure uses the console logger instead of aborting startup.
 
@@ -492,7 +497,7 @@ validating the whole file, so errors cannot cause a partial import. Completely b
 but still contribute to reported row numbers.
 
 `ImportCommand` compares each valid candidate with the complete stored roster and earlier accepted rows
-using `Person#isSamePerson`. It appends only unique members in source order, then clears search, filter,
+using `Person#isDuplicateContactOf`. It appends only unique members in source order, then clears search, filter,
 and sort state. `LogicManager` performs the normal automatic save even for a header-only or duplicate-only
 import. If saving fails, the imported batch remains in memory. The import-specific save error is followed
 by the shared warning about unsaved changes, loss on exit, and retrying after storage access is restored.
@@ -558,7 +563,7 @@ Removing that chip clears only the email condition and preserves any subsequent 
 
 ### Filter members by tag
 
-`filter t/TAG` narrows the displayed list to members with one exact, case-sensitive tag without changing member data.
+`filter t/TAG` narrows the displayed list to members with one tag, ignoring letter case, without changing member data.
 Usage examples are in the [User Guide](UserGuide.html#filter-displayed-members-by-tag-filter).
 
 #### Parsing {id="parsing"}
@@ -599,7 +604,7 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
 #### Test coverage {id="test-coverage-2"}
 
 * `FilterCommandParserTest` and `FilterCommandTest` cover argument validation and narrowing an existing view.
-* `LogicManagerTest` covers cumulative filters, case-sensitive matching, empty results, interactions with
+* `LogicManagerTest` covers cumulative filters, case-insensitive matching, empty results, interactions with
   `find`, `list`, and sorting, and execution without saving.
 * `EditCommandTest` checks that edits retain search and tag conditions and hide members who no longer match.
 
@@ -635,13 +640,16 @@ invalid arguments fail before saving. A save failure after an actual change foll
 #### Parsing {id="parsing-1"}
 
 `TagAllCommandParser` and `UntagAllCommandParser` both delegate to `BulkTagArgumentParser#parse`, so the two
-commands share one grammar and one set of error messages. It tokenizes only `t/` and accepts exactly one tag of
-1 to 30 characters using ASCII letters or digits with optional internal hyphens. Surrounding spaces are ignored.
+commands share one grammar and one set of error messages. It accepts exactly one tag of
+1 to 30 ASCII letters or digits. Surrounding spaces are ignored. `tag` and `untag` use the same method for
+their tag argument.
 
-* Text before `t/`, or a missing `t/`, reports invalid command format with the calling command's usage.
+* Text before `t/`, a missing `t/`, or any `n/`, `p/`, `e/`, or `a/` prefix reports invalid command format
+  with the calling command's usage. These prefixes are tokenized only so that they are not read as part of
+  the tag.
 * An empty tag reports `Tag cannot be empty.`
 * More than one `t/` reports `Only one tag can be applied per command.`
-* Other invalid tags, including internal spaces and other prefixes after the tag, report the tag-format message.
+* Other invalid tags, including internal spaces and unknown prefixes such as `x/`, report the tag-format message.
 
 #### Execution {id="execution-1"}
 
@@ -686,18 +694,22 @@ memory and the previous saved file is unchanged.
 
 `renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for every member who has it.
 
-`RenameTagCommandParser` tokenizes only `t/` and requires exactly two values. A different count, or text
-before the first `t/`, reports invalid command format with the `renametag` usage. Each value is validated by
+`RenameTagCommandParser` reads the `t/` values with `BulkTagArgumentParser#parseTagValues` and requires
+exactly two. A different count, text before the first `t/`, or an `n/`, `p/`, `e/`, or `a/` prefix reports
+invalid command format with the `renametag` usage. Each value is validated by
 `BulkTagArgumentParser#parseTagName`, so empty and invalid tags report the same messages as `tagall` and
-`untagall`. Identical tags report `The new tag must be different from the current tag.`
+`untagall`. Identical spellings report `The new tag must be different from the current tag.`
+Case-only changes are allowed so a group can use one capitalization across the roster.
 
 `RenameTagCommand#execute`:
 
 1. Collects every member in `Model#getAddressBook()` who has the current tag. Unlike `tagall` and `untagall`,
    the target set is the **whole roster**, including members hidden by a search or filter.
 2. Rejects an empty target set with `No member has the tag "CURRENT_TAG".` This throws before saving.
-3. For each target, builds a new `Person` whose tag set has the current tag removed and the new tag added,
-   then calls `Model#setPerson`. A target that already has the new tag keeps one copy and is counted as merged.
+3. For each target requiring a change, builds a new `Person` whose tag set has the current tag removed
+   and the new tag added, then calls `Model#setPerson`. A target that already has a distinct new tag
+   keeps one copy and is counted as merged. A case-only rename skips members already using the
+   requested spelling and does not count matching tags as merges.
 4. Reports the changed count, and the merged count when it is non-zero, for example
    `Renamed tag "year1" to "year2" for 10 member(s). 2 already had "year2".`
 
@@ -706,11 +718,13 @@ through the standard data-changing path.
 
 * **Whole roster instead of displayed list:** a rename that left the old tag on hidden members would split one
   group into two names. Renaming everywhere keeps each group under one name (US29).
-* **Reject an unused current tag:** reporting `0 member(s)` would hide a likely typo, because tags are
-  case-sensitive. Rejecting it also avoids an unnecessary save.
+* **Reject an unused current tag:** reporting `0 member(s)` would hide a likely typo. Matching ignores
+  letter case, and rejecting an unused tag also avoids an unnecessary save.
+* **Allow case-only renames:** tag identity ignores case, but the displayed spelling matters. Comparing
+  the two spellings exactly allows a bulk capitalization change without creating duplicate tags.
 
 `RenameTagCommandTest`, `RenameTagCommandParserTest`, and `LogicManagerTest` cover renaming, merging with an
-existing tag, hidden members, unused and wrong-case tags, wrong tag counts, invalid and identical tags, and
+existing tag, hidden members, unused and differently cased tags, wrong tag counts, invalid and identical tags, and
 whether each case saves.
 
 ### Limitations
@@ -905,20 +919,22 @@ These rules describe the selected MVP and apply to the use cases below.
    Supplied non-empty field values use the same validation in `add` and `edit`. A bare `a/` in
    `edit` clears the optional address; a bare `a/` in `add` is rejected. Manual data loading also
    accepts an empty address value to represent an address that was not supplied.
-2. Two records are duplicates only when their trimmed name, phone, email, and address all match
-   exactly, including case and internal spacing. Tags do not affect identity. Different people
-   may share a name when another contact field differs. An edit excludes its own record from
-   this check. Duplicate checking does not establish a person's real-world identity.
-3. A tag has 1 to 30 characters using ASCII letters or digits with optional internal hyphens, and is case-sensitive.
-   It contains no whitespace. Store each tag once per member and display tags in ASCII order: hyphens, digits,
-   uppercase letters, then lowercase letters.
+2. New contact input is a duplicate when names match after ignoring capitalization and collapsing
+   whitespace, and trimmed phone, email and address match exactly. Tags are ignored. Stored names
+   retain their original capitalization and spacing; accents and punctuation are not removed.
+   Different people may share a name when another contact field differs. An edit excludes its own
+   record. Older saved name variants remain loadable; tag-only and unchanged-contact edits remain
+   available. Duplicate checking does not establish a person's real-world identity.
+3. A tag contains 1 to 30 ASCII letters or digits with optional internal hyphens and matches regardless of letter case.
+   It contains no other whitespace. Store each tag once per member, retaining its spelling for display, and display tags in ASCII order:
+   digits, uppercase letters, then lowercase letters.
 4. `list` resets all searches and tag filters. `find KEYWORD [MORE_KEYWORDS]` narrows the
    displayed list. It matches complete or partial name words, ignores letter case, and accepts a match on
    any keyword within one command. Consecutive `find` commands retain the intersection of their
    matches and any active tag filters. Repeated keywords do not repeat records.
    `findemail KEYWORD [MORE_KEYWORDS]...` replaces previous searches and filters, but matches
    literal email substrings using any whitespace-separated keyword, ignoring case. Neither search disables sorting.
-5. `filter t/TAG` narrows the currently displayed list using exact, case-sensitive tag matching.
+5. `filter t/TAG` narrows the currently displayed list using case-insensitive tag matching.
    Repeated filters retain the intersection of the tags and active name or email searches. A valid
    zero-match result is successful. Use `list` first to filter the whole roster.
 6. An index is an ASCII-digit integer from 1 through the current displayed count. Leading zeroes
@@ -1050,7 +1066,7 @@ These are representative user workflows for the implemented candidate. Internal 
 **MSS**
 
 1. The secretary submits the member's required contact details and optional tags.
-2. TrackCall validates the details and checks for an exact duplicate record.
+2. TrackCall validates the details and checks for a duplicate under shared rule 2.
 3. TrackCall adds the member, saves the roster, and restores the complete member list.
 4. TrackCall reports the added member's name and tags. The secretary can select the member to check
    contact details in the details panel. The use case ends.
@@ -1273,7 +1289,8 @@ leave member data and the displayed member list unchanged and do not save the da
 The file uses UTF-8 JSON with a `persons` array. TrackCall writes `name`, `phone`, `email`, and
 `address` fields and a `tags` array of strings for each member. An empty `address` represents no
 provided address. Loading treats a missing or null `tags` field as an empty array. Member values follow rule 3
-for tags. Missing or null required contact fields, invalid values, null entries, duplicate members,
+for tags. Missing or null required contact fields, invalid values, null entries, duplicates under the legacy
+exact-contact storage rule (rather than normalized-name input matching),
 comments, and trailing commas invalidate the file. Repeated identical tags collapse into one
 assignment. Unknown member fields are ignored, repeated fields keep their last value, and JSON
 numbers in text fields are accepted as text. `{"persons": []}` is a valid empty roster.
@@ -1372,13 +1389,13 @@ such as incremental delivery, are also not product NFRs.
 | Roster / address book | The complete collection of member records, including records hidden from the displayed list. The file and starter code use the term address book. |
 | Member record | One member's name, phone number, email address, address, and tag assignments. |
 | Group | A set of members sharing a tag, such as a committee or cohort. Groups are not separate stored objects in the MVP. |
-| Tag | A case-sensitive label of 1 to 30 characters using ASCII letters or digits with optional internal hyphens, assigned at most once to each member. |
+| Tag | A label containing 1 to 30 ASCII letters or digits with optional internal hyphens, matched without regard to case and assigned at most once to each member. |
 | Displayed list | The records currently visible after the active search, tag filters, and index selections. It is the target set for a bulk tag command. |
 | Active search and filters | The name-search, email-search, tag, and index-selection conditions used to determine which records are displayed. A new `find` adds a condition; `findemail` replaces them, and `list` clears them all. |
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
 | Partial-word matching | Matching any contiguous part of a name word, ignoring case. For example, `John`, `Jo`, and `oh` all match `John Tan`. |
 | Bulk tag update | Adding or removing one tag for the fixed set of members displayed when the command is submitted. |
-| Duplicate record | A record whose trimmed name, phone, email, and address all exactly match another record, including case and internal spacing. Tags are ignored. |
+| Duplicate record | New input whose normalized name and trimmed phone, email and address match another record. Name capitalization and repeated whitespace are ignored; tags are ignored. Legacy JSON loading retains its original exact identity rule. |
 | No-op | A valid operation that leaves record values unchanged. A valid data-changing no-op can still retry saving; a bulk command with no targets is an error. |
 | In-memory data | The working roster held by the running app. After a save failure it can differ from the file and may be lost on exit. |
 | Persisted data | The roster successfully written to the local data file and available for a later session. |
@@ -1475,7 +1492,8 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
    or an internal tab keeps that text. For both `add` and `edit`, append `x/extra` or `T/committee`
    and expect an invalid command format without changing the roster, displayed view, or saved file.
-8. Add two members tagged `committee` and one member without tags. Run `list`, then `filter t/committee`.
+8. Add one member tagged `committee`, one tagged `Committee`, and one without tags. Run `list`, then
+   `filter t/COMMITTEE` and expect both tagged members to appear.
    Run `tagall t/year1` and
    expect only the displayed members to gain `year1`, keeping their other tags. Run it again and expect
    `0 member(s)` changed with all of them skipped. Run `untagall t/committee`: the members disappear
@@ -1484,7 +1502,8 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    Try `tagall`, `tagall t/`, `tagall t/a t/b`, and `tagall committee`. Expect errors and no changes.
    Run `find` for one member tagged `year1`, then `renametag t/year1 t/alumni`. Expect every member with
    `year1` to be renamed, then `list` to show `alumni` on hidden members too. Try `renametag t/year1 t/x`,
-   `renametag t/alumni`, and `renametag t/alumni t/alumni`. Expect errors and no changes.
+   `renametag t/alumni`, and `renametag t/alumni t/alumni`. Expect errors and no changes. Then run
+   `renametag t/alumni t/Alumni` and expect the displayed spelling to change across the roster.
    Restart and check that the tag changes were saved.
 9. Use a disposable roster with at least two members. Ensure the first member has `committee` and
    `friends`, and the second has `committee`. Run `tag 1 t/year1` and confirm only the first displayed
@@ -1548,6 +1567,10 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
    For an import-save failure, temporarily replace the automatic JSON file with a directory: expect the
    imported batch to remain in memory, a save error, and no modification to the source CSV. Restore storage
    access and retry saving with an existing field value before exiting.
+7. In a separate disposable roster, add two members with the same name and distinct phone/email fields.
+   After `sort`, run `tagall t/year1` and `renametag t/year1 t/year2`: their relative displayed order
+   must remain the stored roster order. Repeat with four tied members and a phone-only `edit` or
+   individual `tag`; also test names differing only in case or repeated spaces.
 
 ### Persistence and invalid files
 

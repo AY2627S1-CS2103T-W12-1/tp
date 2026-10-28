@@ -3,11 +3,11 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
@@ -27,12 +27,24 @@ public class ExportCommand extends Command {
     public static final String COMMAND_WORD = "export";
     public static final String DEFAULT_FILE_NAME = "addressbook.csv";
     public static final String MESSAGE_USAGE = COMMAND_WORD + " [FILEPATH]\n"
-            + "Exports all people to a CSV file. If FILEPATH is omitted, writes " + DEFAULT_FILE_NAME
-            + " beside the JAR, or in the working directory during development.";
-    public static final String MESSAGE_SUCCESS = "Exported %1$d people to %2$s.";
-    public static final String MESSAGE_FAILURE = "Could not export people to %1$s: %2$s";
+            + "Exports all members to a CSV file. If FILEPATH is omitted, writes " + DEFAULT_FILE_NAME
+            + " beside the JAR, or in the working directory during development. The path must end in .csv.";
+    public static final String MESSAGE_SUCCESS = "Exported %1$d members to %2$s.";
+    public static final String MESSAGE_SINGLE = "Exported 1 member to %1$s.";
+    public static final String MESSAGE_FAILURE = "Could not export members to %1$s: %2$s";
     public static final String MESSAGE_PROTECTED_DESTINATION =
             "The export destination is used by TrackCall. Choose a different file.";
+
+    public static final String MESSAGE_DIRECTORY_DESTINATION =
+            "The export destination is a folder. Choose a CSV file instead.";
+    public static final String MESSAGE_MISSING_PARENT =
+            "The parent folder does not exist. Create it first, or export to an existing folder.";
+    public static final String MESSAGE_INVALID_PARENT =
+            "The parent path is not a folder. Export to an existing folder.";
+    public static final String MESSAGE_WRITE_DENIED =
+            "Permission denied. Check that the destination file and folder are writable.";
+    public static final String MESSAGE_WRITE_FAILURE =
+            "Could not write the CSV file. Check the destination, folder permissions and available disk space.";
 
     private static final Logger logger = LogsCenter.getLogger(ExportCommand.class);
 
@@ -75,29 +87,55 @@ public class ExportCommand extends Command {
                 checkDestination(targetPath, protectedFile);
                 checkDestination(targetPath, JsonAddressBookStorage.getBackupFilePath(protectedFile));
                 Path protectedPath = FileUtil.resolvePath(protectedFile).toAbsolutePath().normalize();
-                if (Objects.equals(targetPath.getParent(), protectedPath.getParent())
+                if (hasSamePathIgnoringCase(targetPath.getParent(), protectedPath.getParent())
                         && targetPath.getFileName().toString().toLowerCase(Locale.ROOT)
                                 .startsWith((protectedPath.getFileName() + ".corrupt-").toLowerCase(Locale.ROOT))) {
                     throw new IOException(MESSAGE_PROTECTED_DESTINATION);
                 }
             }
-            CsvAddressBookExporter.export(people, targetPath);
+            if (Files.isDirectory(targetPath)) {
+                throw new IOException(MESSAGE_DIRECTORY_DESTINATION);
+            }
+            Path parent = targetPath.getParent();
+            if (!Files.exists(parent)) {
+                throw new IOException(MESSAGE_MISSING_PARENT);
+            }
+            if (!Files.isDirectory(parent)) {
+                throw new IOException(MESSAGE_INVALID_PARENT);
+            }
+            try {
+                CsvAddressBookExporter.export(people, targetPath);
+            } catch (IOException e) {
+                logger.warning("CSV export failed (" + e.getClass().getSimpleName() + ")");
+                String details = e instanceof AccessDeniedException ? MESSAGE_WRITE_DENIED : MESSAGE_WRITE_FAILURE;
+                throw new CommandException(String.format(MESSAGE_FAILURE, targetPath, details), e);
+            }
         } catch (IOException e) {
             logger.warning("CSV export failed (" + e.getClass().getSimpleName() + ")");
             throw new CommandException(String.format(MESSAGE_FAILURE, targetPath, e.getMessage()), e);
         }
         logger.info(String.format("CSV export completed: %d member(s) written", people.size()));
-        return new CommandResult(String.format(MESSAGE_SUCCESS,
-                people.size(), targetPath));
+        return new CommandResult(people.size() == 1 ? String.format(MESSAGE_SINGLE, targetPath)
+                : String.format(MESSAGE_SUCCESS, people.size(), targetPath));
     }
 
-    /** Rejects both equivalent path spellings and existing file aliases such as hard links. */
+    /**
+     * Reserves application paths without regard to case, including before the files exist.
+     * The same reservation on every platform prevents exports that become unsafe on a case-insensitive file system.
+     * Existing aliases such as hard links are still rejected independently of their names.
+     */
     private void checkDestination(Path target, Path protectedFile) throws IOException {
         Path protectedPath = FileUtil.resolvePath(protectedFile).toAbsolutePath().normalize();
-        if (target.equals(protectedPath) || (Files.exists(target) && Files.exists(protectedPath)
+        if (hasSamePathIgnoringCase(target, protectedPath)
+                || (Files.exists(target) && Files.exists(protectedPath)
                 && Files.isSameFile(target, protectedPath))) {
             throw new IOException(MESSAGE_PROTECTED_DESTINATION);
         }
+    }
+
+    /** Compares reserved path spellings, allowing root paths to have no parent. */
+    private boolean hasSamePathIgnoringCase(Path first, Path second) {
+        return first != null && second != null && first.toString().equalsIgnoreCase(second.toString());
     }
 
     @Override

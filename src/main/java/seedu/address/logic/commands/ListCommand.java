@@ -14,7 +14,7 @@ public class ListCommand extends Command {
     public static final String MESSAGE_USAGE = "Invalid command format. Usage: list";
     public static final String MESSAGE_SUCCESS = "Showing %d members.";
     public static final String MESSAGE_SINGLE = "Showing 1 member.";
-    public static final String MESSAGE_EMPTY = "No members in the address book.";
+    public static final String MESSAGE_EMPTY = "No members in the roster.";
 
     @Override
     public boolean isReadOnly() {

@@ -15,7 +15,9 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.model.tag.Tag;
 
 public class JsonAdaptedPersonTest {
     private static final String INVALID_NAME = "R@chel";
@@ -50,6 +52,17 @@ public class JsonAdaptedPersonTest {
     public void toModelType_emptyAddress_returnsPersonWithoutAddress() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, "", VALID_TAGS);
         assertEquals(Address.EMPTY_ADDRESS, person.toModelType().getAddress());
+    }
+
+    @Test
+    public void toModelType_caseVariantTags_keepsOneTag() throws Exception {
+        List<JsonAdaptedTag> tags = List.of(new JsonAdaptedTag("Student"), new JsonAdaptedTag("student"));
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, tags);
+        Person loaded = person.toModelType();
+
+        assertEquals(1, loaded.getTags().size());
+        assertEquals(new Tag("STUDENT"), loaded.getTags().iterator().next());
+        assertEquals("Student", loaded.getTags().iterator().next().tagName);
     }
 
     @Test

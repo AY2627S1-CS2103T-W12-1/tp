@@ -8,7 +8,9 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
@@ -53,6 +55,17 @@ public class AddCommandTest {
         ModelStub modelStub = new ModelStubWithPerson(validPerson);
 
         assertThrows(CommandException.class, AddCommand.MESSAGE_DUPLICATE_PERSON, () -> addCommand.execute(modelStub));
+    }
+
+    @Test
+    public void hashCode_equalMemberValues_retrieveTheSameMapEntry() {
+        AddCommand original = new AddCommand(new PersonBuilder().withTags("friend", "committee").build());
+        AddCommand copy = new AddCommand(new PersonBuilder().withTags("committee", "friend").build());
+        Map<AddCommand, String> commands = new HashMap<>();
+        commands.put(original, "pending");
+        assertEquals("pending", commands.get(copy));
+        assertEquals("pending", commands.put(copy, "replaced"));
+        assertEquals(1, commands.size());
     }
 
     @Test

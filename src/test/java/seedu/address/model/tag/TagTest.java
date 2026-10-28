@@ -10,12 +10,17 @@ import org.junit.jupiter.api.Test;
 public class TagTest {
 
     @Test
-    public void equalityAndHashCode_preserveCaseSensitiveTagIdentity() {
+    public void equalityAndHashCode_ignoreLetterCase() {
         Tag tag = new Tag("committee");
         assertTrue(tag.equals(tag));
         assertEquals(tag, new Tag("committee"));
         assertEquals(tag.hashCode(), new Tag("committee").hashCode());
-        assertFalse(tag.equals(new Tag("Committee")));
+        assertEquals(tag, new Tag("Committee"));
+        assertEquals(tag, new Tag("COMMITTEE"));
+        assertEquals(tag.hashCode(), new Tag("Committee").hashCode());
+        assertEquals("committee", tag.tagName);
+        assertEquals("Committee", new Tag("Committee").tagName);
+        assertFalse(tag.equals(new Tag("committees")));
         assertFalse(tag.equals(null));
         assertFalse(tag.equals("committee"));
     }

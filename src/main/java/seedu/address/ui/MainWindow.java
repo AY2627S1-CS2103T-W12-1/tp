@@ -6,13 +6,17 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Bounds;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.control.Tooltip;
@@ -21,6 +25,8 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -62,6 +68,9 @@ public class MainWindow extends UiPart<Stage> {
 
     @FXML
     private FlowPane activeFiltersPane;
+
+    @FXML
+    private ScrollPane activeFiltersScroll;
 
     @FXML
     private MenuItem helpMenuItem;
@@ -171,6 +180,11 @@ public class MainWindow extends UiPart<Stage> {
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
         mainSplit.setDividerPositions(0.22);
         refreshActiveFilters();
+        primaryStage.getScene().focusOwnerProperty().addListener((observable, previous, focused) -> {
+            if (focused != null && activeFiltersPane.getChildren().contains(focused.getParent())) {
+                scrollFilterIntoView(focused.getParent());
+            }
+        });
 
         primaryStage.getScene().addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.F2) {
@@ -202,6 +216,7 @@ public class MainWindow extends UiPart<Stage> {
 
     /** Rebuilds the filter and show boxes for the displayed list. */
     private void refreshActiveFilters() {
+        int previousCount = activeFiltersPane.getChildren().size();
         activeFiltersPane.getChildren().clear();
         for (ActiveFilter filter : logic.getActiveFilters()) {
             activeFiltersPane.getChildren().add(createFilterChip(filter));
@@ -213,6 +228,20 @@ public class MainWindow extends UiPart<Stage> {
         boolean hasFilters = !activeFiltersPane.getChildren().isEmpty();
         activeFiltersPane.setVisible(hasFilters);
         activeFiltersPane.setManaged(hasFilters);
+        activeFiltersScroll.setVisible(hasFilters);
+        activeFiltersScroll.setManaged(hasFilters);
+        if (hasFilters) {
+            // Font metrics differ across platforms; reserve enough height for one complete styled row.
+            activeFiltersScroll.applyCss();
+            double rowHeight = activeFiltersPane.getChildren().stream()
+                    .mapToDouble(chip -> ((Region) chip).prefHeight(-1)).max().orElse(0);
+            activeFiltersScroll.setMinHeight(rowHeight);
+        }
+        if (activeFiltersPane.getChildren().size() > previousCount) {
+            Node newestChip = activeFiltersPane.getChildren().getLast();
+            // Wait for wrapping to settle without taking keyboard focus away from command entry.
+            Platform.runLater(() -> scrollFilterIntoView(newestChip));
+        }
     }
 
     /** Shows that {@code show} still narrows the roster and lets the user clear every show selection. */
@@ -232,6 +261,7 @@ public class MainWindow extends UiPart<Stage> {
         });
         HBox chip = new HBox(6, label, removeButton);
         chip.getStyleClass().addAll("filter-chip", "filter-chip-show");
+        configureFilterChip(chip, label, removeButton);
         return chip;
     }
 
@@ -239,6 +269,7 @@ public class MainWindow extends UiPart<Stage> {
     private HBox createFilterChip(ActiveFilter filter) {
         String removeDescription = "Remove " + filter.getLabel();
         Label label = new Label(filter.getLabel());
+        label.setTooltip(new Tooltip(filter.getLabel()));
         Button removeButton = new Button("×");
         removeButton.getStyleClass().add("filter-chip-remove");
         removeButton.setAccessibleText(removeDescription);
@@ -251,11 +282,59 @@ public class MainWindow extends UiPart<Stage> {
         HBox chip = new HBox(6, label, removeButton);
         chip.getStyleClass().add("filter-chip");
         chip.getStyleClass().add("filter-chip-" + filter.getKind().name().toLowerCase(java.util.Locale.ROOT));
+        configureFilterChip(chip, label, removeButton);
         return chip;
     }
 
+    /** Keeps long conditions compact while leaving their removal control reachable. */
+    private void configureFilterChip(HBox chip, Label label, Button removeButton) {
+        label.setMinWidth(0);
+        HBox.setHgrow(label, Priority.ALWAYS);
+        removeButton.setMinWidth(Region.USE_PREF_SIZE);
+        chip.maxWidthProperty().bind(activeFiltersPane.widthProperty());
+    }
+
+    /** Scrolls a focused or newly added condition into view after its FlowPane has wrapped. */
+    private void scrollFilterIntoView(Node chip) {
+        if (chip.getParent() != activeFiltersPane) {
+            return;
+        }
+        activeFiltersScroll.applyCss();
+        activeFiltersScroll.requestLayout();
+        activeFiltersScroll.layout();
+        double viewportHeight = activeFiltersScroll.getViewportBounds().getHeight();
+        double scrollableHeight = activeFiltersPane.getHeight() - viewportHeight;
+        if (scrollableHeight <= 0) {
+            return;
+        }
+        Bounds bounds = chip.getBoundsInParent();
+        double offset = activeFiltersScroll.getVvalue() * scrollableHeight;
+        if (bounds.getMinY() < offset) {
+            activeFiltersScroll.setVvalue(bounds.getMinY() / scrollableHeight);
+        } else if (bounds.getMaxY() > offset + viewportHeight) {
+            activeFiltersScroll.setVvalue((bounds.getMaxY() - viewportHeight) / scrollableHeight);
+        }
+    }
+
+    /**
+     * Refreshes the filter controls and shows removal feedback with the updated member count.
+     * Restores focus after a focused chip is removed and repeats a pending deletion prompt if needed.
+     *
+     * @param message Description of the removal to include in the feedback.
+     */
     private void showChipRemoval(String message) {
+        Node focused = primaryStage.getScene().getFocusOwner();
+        int focusedChipIndex = focused == null ? -1 : activeFiltersPane.getChildren().indexOf(focused.getParent());
         refreshActiveFilters();
+        if (focusedChipIndex >= 0) {
+            if (activeFiltersPane.getChildren().isEmpty()) {
+                commandBox.focusInput();
+            } else {
+                int nextIndex = Math.min(focusedChipIndex, activeFiltersPane.getChildren().size() - 1);
+                HBox nextChip = (HBox) activeFiltersPane.getChildren().get(nextIndex);
+                nextChip.getChildren().get(1).requestFocus();
+            }
+        }
         String feedback = message + " " + logic.getFilteredPersonList().size() + " member(s) listed.";
         if (logic.isAwaitingConfirmation()) {
             // Removing a view restriction keeps the deletion pending, so the member it names must stay visible.

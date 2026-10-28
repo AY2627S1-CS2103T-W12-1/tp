@@ -2,6 +2,11 @@ package seedu.address.logic.commands;
 
 import java.util.Optional;
 
+import seedu.address.model.person.Email;
+import seedu.address.model.person.Name;
+import seedu.address.model.person.Phone;
+import seedu.address.model.tag.Tag;
+
 /**
  * Offline help for the commands implemented by TrackCall. Planned commands do not belong in this catalogue.
  */
@@ -46,7 +51,7 @@ public enum CommandHelp {
     FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
             "Shows currently displayed members with the specified tag without changing saved data.",
             "Shows only members tagged committee, in their current order with new displayed numbers.",
-            "Matching is exact and case-sensitive. Repeated filters narrow the list further, and the result "
+            "Matching ignores letter case. Repeated filters narrow the list further, and the result "
                     + "names all active tags. Boxes appear left to right in command order, not matching priority. "
                     + "Use a filter's X to remove it, or list to show everyone. Find also narrows the current results. "
                     + "Findemail searches email addresses across the whole roster and replaces previous filters. "
@@ -61,10 +66,11 @@ public enum CommandHelp {
             "add n/Alice Tan p/91234567 e/alice@example.com a/12 Orchard Road t/committee",
             "Creates a member with a name, phone and email. Address and tags are optional.",
             "Adds Alice Tan and shows the complete roster after the record is saved.",
-            "Fields can appear in any order. Use one t/ prefix per tag; tags may include internal hyphens.",
+            "Fields can appear in any order. Use one t/ prefix per tag. " + memberFieldRules(),
             "Include name, phone and email once. Omit a/ if the address is unknown; a/ needs a value when used. "
-                    + "Phone numbers need at least three digits. "
-                    + "An existing member with the same four contact fields is rejected. If saving fails, the member "
+                    + "Duplicates ignore name case and repeated spaces when phone, email and address match. "
+                    + "Names keep their formatting. Use find and edit for an existing member. "
+                    + "If saving fails, the member "
                     + "remains in this session and the command box clears; follow the recovery guidance before "
                     + "exiting."),
     EDIT("Manage members", "edit", "Update a member",
@@ -74,17 +80,18 @@ public enum CommandHelp {
             "Changes member 1's phone and replaces their tags with committee and year1, "
                     + "keeping the active search and tag filters.",
             "Give the full tag set you want to keep. Use edit 1 t/ to remove all tags, "
-                    + "or edit 1 a/ to clear the address.",
+                    + "or edit 1 a/ to clear the address. " + memberFieldRules(),
             "Use a current positive list number and supply at least one field. Invalid values or duplicate contact "
-                    + "details are rejected. If saving fails, the edit remains in this session and the command box "
+                    + "details are rejected, ignoring name case and repeated spaces when other contact fields match. "
+                    + "Your own record is excluded. If saving fails, the edit remains in this session "
+                    + "and the command box "
                     + "clears; follow the recovery guidance before exiting."),
     TAG("Manage members", "tag", "Tag one member", "tag INDEX t/TAG", "tag 1 t/committee",
             "Adds one tag to the member at a displayed list number while retaining their other tags.",
             "Adds committee to member 1 and shows their name and updated tags after saving.",
             "Check the current list number first. Existing tags, searches, filters and sorting remain in place. "
-                    + "A member who already has the tag is left unchanged.",
-            "Supply one current positive displayed number and one tag of 1 to 30 characters using ASCII "
-                    + "letters or digits with optional internal hyphens. "
+                    + "A member who already has the tag, even with different capitalization, is left unchanged.",
+            "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
                     + "Invalid input or a missing member is rejected. If saving fails, the change remains in this "
                     + "session; follow the recovery guidance before exiting."),
     TAGALL("Manage members", "tagall", "Tag every displayed member", "tagall t/TAG", "tagall t/committee",
@@ -125,11 +132,11 @@ public enum CommandHelp {
             "Replaces one tag with another for every member, including members hidden by a search or filter.",
             "Changes batch2026 to alumni for each member who has it, and reports how many members changed "
                     + "after saving.",
-            "Tags are case-sensitive, so renametag t/committee t/Committee is a valid rename. A member who already "
-                    + "has the new tag keeps one copy. Renaming the tag used by an active filter hides the updated "
+            "Tags match regardless of letter case. Use renametag t/committee t/Committee to standardize "
+                    + "capitalization across the roster. A member with both distinct tags keeps only the "
+                    + "replacement. Renaming the tag used by an active filter hides the updated "
                     + "members; use list to show everyone again.",
-            "Supply exactly two tags of 1 to 30 characters using ASCII letters or digits with optional "
-                    + "internal hyphens, each after t/. The two tags must differ. "
+            "Supply exactly two tags of 1 to 30 ASCII letters or digits, each after t/. Their spellings must differ. "
                     + "A current tag that no member has is rejected without changes. If saving fails, the changes "
                     + "remain in this session and the command box clears; follow the recovery guidance before "
                     + "exiting."),
@@ -140,15 +147,18 @@ public enum CommandHelp {
                     + "Packaged builds use only paths inside the JAR folder. Existing destination files are "
                     + "overwritten. Tags are sorted and joined with semicolons. The roster and current search "
                     + "stay unchanged.",
-            "Use a valid output path whose parent directory exists and is writable. "
+            "Use an output path ending in .csv (ignoring letter case), with an existing writable parent directory. "
                     + "The active roster, preferences, application lock, and running JAR "
                     + "cannot be export destinations. "
                     + "An invalid path or a failed write reports an error and preserves any previous export."),
     IMPORT("Manage members", "import", "Import members from CSV", "import p/FILE_PATH",
             "import p/\"data/member list.csv\"",
             "Validates a UTF-8 CSV file and appends member records without overwriting existing members.",
-            "Imports valid new members, skips exact contact-detail duplicates and restores the complete roster.",
+            "Imports valid new members, skips duplicate contacts and restores the complete roster.",
             "The header must contain name, phone, email, address and tags exactly once, in any order. "
+                    + "Duplicate names ignore case and repeated spaces when other contact fields match; "
+                    + "tags are not merged. "
+                    + "Names keep their formatting. Use edit to update a skipped contact. "
                     + "Quote paths containing whitespace. "
                     + "Packaged builds read files only inside the JAR folder. Values in the tags column are "
                     + "separated with semicolons.",
@@ -204,6 +214,15 @@ public enum CommandHelp {
         this.expectedResult = expectedResult;
         this.notes = notes;
         this.errors = errors;
+    }
+
+    /**
+     * Reuses the field constraints so add and edit explain the same accepted values as validation errors.
+     */
+    private static String memberFieldRules() {
+        return Name.MESSAGE_CONSTRAINTS + ".\n" + Phone.MESSAGE_CONSTRAINTS + ".\n"
+                + Email.MESSAGE_CONSTRAINTS + "\n" + Tag.MESSAGE_CONSTRAINTS
+                + ". Tag matching ignores letter case.";
     }
 
     /**

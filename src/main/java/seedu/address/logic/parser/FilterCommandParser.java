@@ -14,8 +14,10 @@ import seedu.address.model.tag.Tag;
  */
 public class FilterCommandParser implements Parser<FilterCommand> {
     private static final Pattern TAG_ARGUMENT = Pattern.compile("^\\s*t/(.*?)\\s*$", Pattern.DOTALL);
-    private static final String MESSAGE_INVALID_TAG = "A filter tag must be 1 to 30 characters long, "
-            + "using ASCII letters or digits with optional internal hyphens.";
+    private static final Pattern EXTRA_TAG_ARGUMENT = Pattern.compile("\\s+t/");
+    private static final Pattern EXTRA_PARAMETER = Pattern.compile("\\s+[A-Za-z]+/");
+    private static final String MESSAGE_EXTRA_TAG = "Only one t/TAG parameter is allowed per filter command. "
+            + "Apply another tag in a separate command.";
 
     /**
      * Parses {@code args} into a filter command with exactly one valid tag.
@@ -27,9 +29,17 @@ public class FilterCommandParser implements Parser<FilterCommand> {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, FilterCommand.MESSAGE_USAGE));
         }
 
-        String tagName = matcher.group(1).trim();
+        String tagArgument = matcher.group(1);
+        if (EXTRA_TAG_ARGUMENT.matcher(tagArgument).find()) {
+            throw new ParseException(MESSAGE_EXTRA_TAG);
+        }
+        if (EXTRA_PARAMETER.matcher(tagArgument).find()) {
+            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, FilterCommand.MESSAGE_USAGE));
+        }
+
+        String tagName = tagArgument.trim();
         if (!Tag.isValidTagName(tagName)) {
-            throw new ParseException(MESSAGE_INVALID_TAG);
+            throw new ParseException(Tag.MESSAGE_CONSTRAINTS + ".");
         }
         return new FilterCommand(new Tag(tagName));
     }
