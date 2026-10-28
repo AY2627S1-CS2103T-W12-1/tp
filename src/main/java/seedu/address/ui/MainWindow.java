@@ -60,8 +60,8 @@ public class MainWindow extends UiPart<Stage> {
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
 
-    /** The latest deletion prompt, shown again if a filter is removed before the user answers it. */
-    private String pendingDeletionPrompt = "";
+    /** The latest confirmation prompt, shown again if a filter is removed before the user answers it. */
+    private String pendingConfirmationPrompt = "";
 
     @FXML
     private StackPane commandBoxPlaceholder;
@@ -318,7 +318,7 @@ public class MainWindow extends UiPart<Stage> {
 
     /**
      * Refreshes the filter controls and shows removal feedback with the updated member count.
-     * Restores focus after a focused chip is removed and repeats a pending deletion prompt if needed.
+     * Restores focus after a focused chip is removed and repeats a pending confirmation prompt if needed.
      *
      * @param message Description of the removal to include in the feedback.
      */
@@ -337,8 +337,8 @@ public class MainWindow extends UiPart<Stage> {
         }
         String feedback = message + " " + logic.getFilteredPersonList().size() + " member(s) listed.";
         if (logic.isAwaitingConfirmation()) {
-            // Removing a view restriction keeps the deletion pending, so the member it names must stay visible.
-            feedback += "\n\n" + pendingDeletionPrompt;
+            // Removing a view restriction keeps confirmation pending, so repeat the action and its scope.
+            feedback += "\n\n" + pendingConfirmationPrompt;
         }
         resultDisplay.setFeedbackToUser(feedback);
     }
@@ -405,7 +405,7 @@ public class MainWindow extends UiPart<Stage> {
             logger.info("Command completed successfully");
             resultDisplay.setFeedbackToUser(hideContactDetails(commandResult.getFeedbackToUser()));
             if (logic.isAwaitingConfirmation()) {
-                pendingDeletionPrompt = commandResult.getFeedbackToUser();
+                pendingConfirmationPrompt = commandResult.getFeedbackToUser();
             }
 
             if (commandResult.isShowHelp()) {

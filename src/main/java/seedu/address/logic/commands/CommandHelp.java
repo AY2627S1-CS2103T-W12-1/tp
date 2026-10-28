@@ -57,7 +57,9 @@ public enum CommandHelp {
                     + "Findemail searches email addresses across the whole roster and replaces previous filters. "
                     + "Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
-            "Supply exactly one tag of 1 to 30 ASCII letters or digits. Empty tags, internal spaces, "
+            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens. "
+                    + "Empty tags, internal spaces, "
                     + "multiple tags, and extra arguments are rejected."),
     ADD("Manage members", "add", "Add a member",
             "add n/NAME p/PHONE e/EMAIL [a/ADDRESS] [t/TAG]...",
@@ -98,7 +100,9 @@ public enum CommandHelp {
                     + "after saving.",
             "Use find or filter first to choose the group, then check the list. The current search, filters and "
                     + "sorting stay applied.",
-            "Supply exactly one tag of 1 to 30 ASCII letters or digits after t/. Empty tags, internal spaces, "
+            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens after t/. "
+                    + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
                     + "recovery guidance before exiting."),
@@ -108,7 +112,9 @@ public enum CommandHelp {
                     + "after saving.",
             "Use find or filter first to choose the group, then check the list. Removing the tag used by an active "
                     + "filter hides the updated members; use list to show everyone again.",
-            "Supply exactly one tag of 1 to 30 ASCII letters or digits after t/. Empty tags, internal spaces, "
+            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens after t/. "
+                    + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
                     + "recovery guidance before exiting."),
@@ -117,7 +123,8 @@ public enum CommandHelp {
             "Removes friends from member 1 and shows their name and updated tags after saving.",
             "Check the current list number first. Other tags, searches, filters and sorting remain in place. "
                     + "Removing a tag used by an active filter may hide the member from the current list.",
-            "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
+            "Supply one current positive displayed number and one tag of 1 to 30 characters using ASCII "
+                    + "letters or digits with optional internal hyphens. "
                     + "Invalid input or a missing member is rejected. If the member lacks the tag, no change is "
                     + "made. If saving fails, follow the recovery guidance before exiting."),
     RENAMETAG("Manage members", "renametag", "Rename a tag for everyone", "renametag t/CURRENT_TAG t/NEW_TAG",
@@ -155,10 +162,12 @@ public enum CommandHelp {
                     + "Quote paths containing whitespace. "
                     + "Packaged builds read files only inside the JAR folder. Values in the tags column are "
                     + "separated with semicolons.",
-            "Supply one readable .csv path after p/. Invalid files do not change the roster. If saving fails, the "
-                    + "imported batch remains unsaved in this session. Fix storage, then reapply an existing "
-                    + "field with edit "
-                    + "to save it; use clear for an empty roster. Exiting before a successful retry loses the batch."),
+            "Supply one readable .csv path after p/. The file must be at most 10 MiB with at most 10,000 member rows. "
+                    + "Split larger files before importing. A missing file reports its resolved path; "
+                    + "check the file name and location. Invalid files do not change the roster. "
+                    + "If saving fails, the imported batch remains unsaved in this session. "
+                    + "Fix storage, then reapply an existing field with edit to save it; "
+                    + "use clear for an empty roster. Exiting before a successful retry loses the batch."),
     DELETE("Remove records", "delete", "Delete one member", "delete INDEX", "delete 2",
             "Permanently removes the member at a displayed list number after you confirm the deletion.",
             "Asks you to confirm deleting the second member in the current list. Typing y deletes them and shows "
@@ -169,10 +178,13 @@ public enum CommandHelp {
                     + "are rejected. If saving fails, the deletion remains in this session and the command box clears; "
                     + "do not repeat the deletion to retry saving."),
     CLEAR("Remove records", "clear", "Clear the whole roster", "clear", "clear",
-            "Permanently removes every member, including members hidden by a search.",
-            "The roster becomes empty after saving. The result reports how many members were cleared, "
+            "Permanently removes every member after confirmation, including members hidden by a search or filter.",
+            "For a non-empty roster, first shows the total member count and asks you to confirm with y. "
+                    + "After confirmation and saving, the result reports how many members were cleared, "
                     + "or confirms that an already empty roster needed no changes.",
-            "There is no undo or confirmation. Back up your data file before clearing records you may need later.",
+            "Any input other than y cancels without running that input. There is no undo after confirmation. "
+                    + "An already-empty roster saves immediately without confirmation. "
+                    + "Back up records you may need later.",
             "Extra arguments are rejected. If saving fails, the previous roster and displayed list are restored. "
                     + "No members were removed; fix the storage problem before retrying clear."),
     HELP("Help & session", "help", "Open this command guide", "help [COMMAND]", "help edit",
@@ -214,6 +226,8 @@ public enum CommandHelp {
      */
     private static String memberFieldRules() {
         return Name.MESSAGE_CONSTRAINTS + ".\n" + Phone.MESSAGE_CONSTRAINTS + ".\n"
+                + "Phone formatting is preserved; country codes are not inferred.\n"
+                + "Within an address, A/ followed by a digit stays literal, as in a/Block A/12.\n"
                 + Email.MESSAGE_CONSTRAINTS + "\n" + Tag.MESSAGE_CONSTRAINTS
                 + ". Tag matching ignores letter case.";
     }

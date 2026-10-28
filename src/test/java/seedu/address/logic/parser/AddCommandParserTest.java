@@ -124,6 +124,14 @@ public class AddCommandParserTest {
     }
 
     @Test
+    public void parse_hyphenatedTag_success() {
+        Person expectedPerson = new PersonBuilder(BOB).withTags("year-1").build();
+
+        assertParseSuccess(parser, NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB
+                + ADDRESS_DESC_BOB + " t/year-1", new AddCommand(expectedPerson));
+    }
+
+    @Test
     public void parse_tabSeparatedFields_success() {
         String arguments = "\tn/" + VALID_NAME_BOB + "\tp/" + VALID_PHONE_BOB
                 + "\te/" + VALID_EMAIL_BOB + "\ta/" + VALID_ADDRESS_BOB + "\tt/" + VALID_TAG_FRIEND;
