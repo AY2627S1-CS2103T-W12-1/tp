@@ -18,6 +18,7 @@ import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.FileUtil;
 import seedu.address.commons.util.JsonUtil;
+import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.person.Person;
 
@@ -26,9 +27,16 @@ import seedu.address.model.person.Person;
  */
 public class JsonAddressBookStorage {
 
+    public static final String MESSAGE_CHANGED_OUTSIDE = "The data file was changed outside TrackCall after it "
+            + "was last loaded or saved, so it was not replaced. To keep those outside changes, exit and restart "
+            + "TrackCall. To replace them with this session's roster, retry the save; the outside version will "
+            + "be kept in the backup file.";
+
     private static final Logger logger = LogsCenter.getLogger(JsonAddressBookStorage.class);
 
     private Path filePath;
+    // The roster this storage last read from or wrote to filePath, or null if it has not done so yet.
+    private ReadOnlyAddressBook lastKnownRoster;
 
     public JsonAddressBookStorage(Path filePath) {
         this.filePath = filePath;
@@ -89,7 +97,9 @@ public class JsonAddressBookStorage {
      * @throws DataLoadingException if loading the data from storage failed.
      */
     public Optional<ReadOnlyAddressBook> readAddressBook() throws DataLoadingException {
-        return readAddressBook(filePath);
+        Optional<ReadOnlyAddressBook> loaded = readAddressBook(filePath);
+        lastKnownRoster = loaded.map(AddressBook::new).orElse(null);
+        return loaded;
     }
 
     /**
@@ -117,11 +127,22 @@ public class JsonAddressBookStorage {
 
     /**
      * Saves the given {@link ReadOnlyAddressBook} to the storage.
+     * The first save after the file was changed outside TrackCall is refused, so those changes are not
+     * replaced without warning. Retrying the save replaces them and keeps them in the backup file.
+     *
      * @param addressBook cannot be null.
-     * @throws IOException if there was any problem writing to the file.
+     * @throws IOException if there was any problem writing to the file, or it was changed outside TrackCall.
      */
     public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
+        requireNonNull(addressBook);
+        Optional<ReadOnlyAddressBook> changedOutside = findChangeOutside();
+        if (changedOutside.isPresent()) {
+            logger.warning("Refused to replace " + filePath + " because it was changed outside TrackCall");
+            lastKnownRoster = changedOutside.get();
+            throw new IOException(MESSAGE_CHANGED_OUTSIDE);
+        }
         saveAddressBook(addressBook, filePath);
+        lastKnownRoster = new AddressBook(addressBook);
     }
 
     /**
@@ -147,6 +168,24 @@ public class JsonAddressBookStorage {
                     + "The original file and backup have been left unchanged.", e);
         }
         writeActiveRoster(addressBook, target);
+    }
+
+    /**
+     * Returns the roster now in the data file if it is valid and differs from the roster this storage last
+     * read or wrote. An unreadable or invalid file is left for {@link #saveAddressBook(ReadOnlyAddressBook, Path)}
+     * to report.
+     */
+    private Optional<ReadOnlyAddressBook> findChangeOutside() {
+        if (lastKnownRoster == null) {
+            return Optional.empty();
+        }
+        try {
+            return readAddressBook(filePath)
+                    .filter(current -> !hasSameSavedData(current, lastKnownRoster))
+                    .map(AddressBook::new);
+        } catch (DataLoadingException e) {
+            return Optional.empty();
+        }
     }
 
     /** Compares stored member values, including tag spelling that {@code Tag.equals} ignores. */
