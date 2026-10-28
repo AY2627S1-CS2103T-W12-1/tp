@@ -8,6 +8,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
+import static seedu.address.testutil.TypicalPersons.CARL;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.ArrayList;
@@ -69,19 +70,27 @@ public class RenameTagCommandTest {
     }
 
     @Test
-    public void execute_membersHiddenBySearch_renamesWholeRoster() {
+    public void execute_membersHiddenBySearch_renamesOnlyDisplayedMembers() {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         model.updateFilteredPersonList(person -> person.isSamePerson(ALICE));
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         expectedModel.updateFilteredPersonList(person -> person.isSamePerson(ALICE));
-        renameTagForAll(expectedModel, "friends", "buddies");
-        String expectedMessage = "Renamed tag \"friends\" to \"buddies\" for 3 member(s).";
+        expectedModel.setPerson(ALICE, new PersonBuilder(ALICE).withTags("buddies").build());
+        String expectedMessage = "Renamed tag \"friends\" to \"buddies\" for 1 member(s).";
 
         assertCommandSuccess(new RenameTagCommand(friends, buddies), model, expectedMessage, expectedModel);
-        assertTrue(model.getAddressBook().getPersonList().stream()
-                .noneMatch(person -> person.getTags().contains(friends)));
+        assertTrue(model.getAddressBook().getPersonList().contains(BENSON));
         // The search stays applied.
         assertEquals(1, model.getFilteredPersonList().size());
+    }
+
+    @Test
+    public void execute_tagOnlyOnHiddenMembers_throwsCommandException() {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        model.updateFilteredPersonList(person -> person.isSamePerson(CARL));
+
+        assertCommandFailure(new RenameTagCommand(friends, buddies), model,
+                String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "friends"));
     }
 
     @Test

@@ -127,19 +127,19 @@ public enum CommandHelp {
                     + "letters or digits with optional internal hyphens. "
                     + "Invalid input or a missing member is rejected. If the member lacks the tag, no change is "
                     + "made. If saving fails, follow the recovery guidance before exiting."),
-    RENAMETAG("Manage members", "renametag", "Rename a tag for everyone", "renametag t/CURRENT_TAG t/NEW_TAG",
+    RENAMETAG("Manage members", "renametag", "Rename a tag for the current list", "renametag t/CURRENT_TAG t/NEW_TAG",
             "renametag t/batch2026 t/alumni",
-            "Replaces one tag with another for every member, including members hidden by a search or filter.",
-            "Changes batch2026 to alumni for each member who has it, and reports how many members changed "
-                    + "after saving.",
-            "Tags match regardless of letter case. Use renametag t/committee t/Committee to standardize "
-                    + "capitalization across the roster. A member with both distinct tags keeps only the "
-                    + "replacement. Renaming the tag used by an active filter hides the updated "
-                    + "members; use list to show everyone again.",
+            "Replaces one tag with another for every member in the current list. Hidden members are not changed.",
+            "Changes batch2026 to alumni for each displayed member who has it, and reports how many members "
+                    + "changed after saving.",
+            "Tags match regardless of letter case. Run list first to rename for everyone, for example before "
+                    + "renametag t/committee t/Committee to standardize capitalization. A member with both "
+                    + "distinct tags keeps only the replacement. Renaming the tag used by an active filter hides "
+                    + "the updated members; use list to show everyone again.",
             "Supply exactly two tags of 1 to 30 ASCII letters or digits, each after t/. Their spellings must differ. "
-                    + "A current tag that no member has is rejected without changes. If saving fails, the changes "
-                    + "remain in this session and the command box clears; follow the recovery guidance before "
-                    + "exiting."),
+                    + "A current tag that no displayed member has is rejected without changes. If saving fails, "
+                    + "the changes remain in this session and the command box clears; follow the recovery "
+                    + "guidance before exiting."),
     EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
             "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
             "Creates members.csv with name, phone, email, address and tags columns.",

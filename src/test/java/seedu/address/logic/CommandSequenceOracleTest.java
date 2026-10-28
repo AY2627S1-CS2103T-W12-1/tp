@@ -348,7 +348,7 @@ public class CommandSequenceOracleTest {
         private Change renameTag(StepInput input) throws Exception {
             String tag = input.tag();
             String renamed = "Group" + (Integer.parseInt(tag.substring(5)) + 1) % 4;
-            List<Member> targets = roster.stream().filter(member -> member.tags().contains(tag)).toList();
+            List<Member> targets = input.displayed().stream().filter(member -> member.tags().contains(tag)).toList();
             if (targets.isEmpty()) {
                 assertThrows(CommandException.class, () ->
                         logic.execute("renametag t/" + tag + " t/" + renamed));
