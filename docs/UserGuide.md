@@ -663,6 +663,8 @@ Close TrackCall and make a backup first. Keep the existing JSON structure:
 * A `persons` array contains the members.
 * Each member has `name`, `phone`, `email`, `address`, and `tags` fields. An empty `address` means none was provided.
 * Use `tags` for each member's group assignments.
+* Save the file as UTF-8. A byte order mark (BOM) at the start of the file, which some editors such as
+  Windows Notepad add, is accepted.
 
 ### Missing or invalid files
 

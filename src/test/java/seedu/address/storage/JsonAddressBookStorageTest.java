@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -24,6 +25,7 @@ import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
+import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
 /** Tests complete roster persistence and rejection of invalid data files. */
@@ -106,6 +108,26 @@ public class JsonAddressBookStorageTest {
         Path file = testFolder.resolve("empty.json");
         Files.writeString(file, "{\"persons\":[]} \n\t\r\n");
         assertEquals(new AddressBook(), new JsonAddressBookStorage(file).readAddressBook().orElseThrow());
+    }
+
+    @Test
+    public void readAddressBook_byteOrderMark_loadsRosterWithoutChangingFile() throws Exception {
+        Path file = testFolder.resolve("bom.json");
+        String contents = "\uFEFF{\"persons\":[{\"name\":\"Alice\",\"phone\":\"123\","
+                + "\"email\":\"alice@example.com\",\"address\":\"Main Street\",\"tags\":[\"friends\"]}]}";
+        Files.writeString(file, contents);
+        Person alice = new PersonBuilder().withName("Alice").withPhone("123").withEmail("alice@example.com")
+                .withAddress("Main Street").withTags("friends").build();
+
+        ReadOnlyAddressBook loaded = new JsonAddressBookStorage(file).readAddressBook().orElseThrow();
+
+        assertEquals(List.of(alice), loaded.getPersonList());
+        assertEquals(contents, Files.readString(file));
+    }
+
+    @Test
+    public void readAddressBook_byteOrderMarkInsideRoster_throwsDataLoadingException() throws IOException {
+        assertInvalidDataRejected("\uFEFF\uFEFF{\"persons\":[]}");
     }
 
     /** Verifies corrupt data is rejected without changing the file or escaping as an unchecked exception. */
