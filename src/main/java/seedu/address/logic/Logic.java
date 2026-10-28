@@ -31,7 +31,7 @@ public interface Logic {
     /** Returns an unmodifiable view of the filtered list of persons */
     ObservableList<Person> getFilteredPersonList();
 
-    /** Returns the removable name and tag filters in application order. */
+    /** Returns removable display conditions in application order. */
     List<ActiveFilter> getActiveFilters();
 
     /** Returns the number of active {@code show} selections. */

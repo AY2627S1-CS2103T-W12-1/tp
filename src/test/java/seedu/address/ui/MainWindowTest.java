@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 
@@ -348,18 +349,25 @@ public class MainWindowTest {
             assertEquals("ROSTER · 2 shown", heading.getText());
             assertFalse(chips.isVisible());
 
-            enter("show 1");
-            assertEquals("ROSTER · 1 shown", heading.getText());
-            assertEquals(List.of("Show: active"), chipLabels(chips));
+            enter("show 1 2");
+            assertEquals("ROSTER · 2 shown", heading.getText());
+            assertEquals(List.of("Show: 2 selected"), chipLabels(chips));
             assertEquals(2, ((HBox) chips.getChildren().getFirst()).getChildren().size());
             Label showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
-            assertEquals("Show has been applied once. X removes all show selections.",
+            Button showRemove = (Button) ((HBox) chips.getChildren().getFirst()).getChildren().get(1);
+            assertEquals("Selected members: Alice Tan, Bob Lee",
                     showLabel.getTooltip().getText());
+            assertNull(showRemove.getTooltip());
+            assertEquals("Remove this show selection", showRemove.getAccessibleText());
 
             enter("show 1");
-            showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
-            assertEquals("Show has been applied 2 times. X removes all show selections.",
-                    showLabel.getTooltip().getText());
+            assertEquals("ROSTER · 1 shown", heading.getText());
+            assertEquals(List.of("Show: 2 selected", "Show: 1 selected"), chipLabels(chips));
+            enter("show 1");
+            assertEquals(List.of("Show: 2 selected", "Show: 1 selected"), chipLabels(chips));
+            removeChip(chips, 1);
+            assertEquals("ROSTER · 2 shown", heading.getText());
+            assertEquals(List.of("Show: 2 selected"), chipLabels(chips));
             removeChip(chips, 0);
             assertEquals("ROSTER · 2 shown", heading.getText());
             assertFalse(chips.isVisible());
@@ -367,8 +375,8 @@ public class MainWindowTest {
             enter("show 1");
             enter("find Bob");
             assertEquals("ROSTER · 0 shown", heading.getText());
-            assertEquals(List.of("Name: Bob", "Show: active"), chipLabels(chips));
-            removeChip(chips, 1);
+            assertEquals(List.of("Show: 1 selected", "Name: Bob"), chipLabels(chips));
+            removeChip(chips, 0);
             assertEquals("ROSTER · 1 shown", heading.getText());
             assertEquals(List.of("Name: Bob"), chipLabels(chips));
             assertDisplayedNames("Bob Lee");
@@ -376,6 +384,42 @@ public class MainWindowTest {
             enter("list");
             assertEquals("ROSTER · 2 shown", heading.getText());
             assertFalse(chips.isVisible());
+        });
+    }
+
+    @Test
+    public void showChips_keepCommandOrderAsFiltersChange() throws Exception {
+        onJavaFxThread(() -> {
+            Person alice = model.getAddressBook().getPersonList().getFirst();
+            model.setPerson(alice, new PersonBuilder(alice).withTags("committee").build());
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+
+            enter("show 1");
+            enter("show 1");
+            enter("find Alice");
+            enter("filter t/committee");
+            assertEquals(List.of("Show: 1 selected", "Name: Alice", "Tag: committee"),
+                    chipLabels(chips));
+            assertDisplayedNames("Alice Tan");
+
+            removeChip(chips, 1);
+            assertEquals(List.of("Show: 1 selected", "Tag: committee"), chipLabels(chips));
+            removeChip(chips, 0);
+            assertEquals(List.of("Tag: committee"), chipLabels(chips));
+
+            enter("show 1");
+            assertEquals(List.of("Tag: committee", "Show: 1 selected"), chipLabels(chips));
+
+            enter("find Alice");
+            assertEquals(List.of("Tag: committee", "Show: 1 selected", "Name: Alice"), chipLabels(chips));
+            removeChip(chips, 0);
+            assertEquals(List.of("Show: 1 selected", "Name: Alice"), chipLabels(chips));
+
+            enter("list");
+            enter("show 1");
+            enter("filter t/committee");
+            enter("find Alice");
+            assertEquals(List.of("Show: 1 selected", "Tag: committee", "Name: Alice"), chipLabels(chips));
         });
     }
 

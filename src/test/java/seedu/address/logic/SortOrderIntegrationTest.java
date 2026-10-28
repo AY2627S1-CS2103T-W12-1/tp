@@ -89,7 +89,7 @@ public class SortOrderIntegrationTest {
         execute("tagall t/new");
         assertDisplayOrder(1, 2, 4);
         assertEquals(1, model.getActiveShowSelectionCount());
-        assertEquals(1, model.getActiveFilters().size());
+        assertEquals(2, model.getActiveFilters().size());
         model.clearShowSelections();
         assertDisplayOrder(1, 2, 3, 4);
         model.removeActiveFilter(model.getActiveFilters().getFirst());

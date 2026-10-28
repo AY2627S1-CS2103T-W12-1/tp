@@ -98,7 +98,7 @@ public interface Model {
     /** Returns the distinct active tag filters in the order they were applied. */
     List<Tag> getActiveTagFilters();
 
-    /** Returns removable name and tag filters in the order they were applied. */
+    /** Returns removable display conditions in the order they were applied. */
     List<ActiveFilter> getActiveFilters();
 
     /** Returns the number of active {@code show} selections narrowing the displayed list. */
