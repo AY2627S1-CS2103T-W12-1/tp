@@ -221,10 +221,6 @@ public class MainWindow extends UiPart<Stage> {
         for (ActiveFilter filter : logic.getActiveFilters()) {
             activeFiltersPane.getChildren().add(createFilterChip(filter));
         }
-        int showSelectionCount = logic.getActiveShowSelectionCount();
-        if (showSelectionCount > 0) {
-            activeFiltersPane.getChildren().add(createShowIndicator(showSelectionCount));
-        }
         boolean hasFilters = !activeFiltersPane.getChildren().isEmpty();
         activeFiltersPane.setVisible(hasFilters);
         activeFiltersPane.setManaged(hasFilters);
@@ -244,40 +240,23 @@ public class MainWindow extends UiPart<Stage> {
         }
     }
 
-    /** Shows that {@code show} still narrows the roster and lets the user clear every show selection. */
-    private HBox createShowIndicator(int showSelectionCount) {
-        Label label = new Label("Show: active");
-        label.setAccessibleText("Show selection active");
-        String times = showSelectionCount == 1 ? "once" : showSelectionCount + " times";
-        label.setTooltip(new Tooltip("Show has been applied " + times + ". X removes all show selections."));
-        Button removeButton = new Button("×");
-        removeButton.getStyleClass().add("filter-chip-remove");
-        removeButton.setAccessibleText("Remove all show selections");
-        removeButton.setTooltip(new Tooltip("Remove all show selections"));
-        removeButton.setOnAction(event -> {
-            personListPanel.clearSelection();
-            logic.clearShowSelections();
-            showChipRemoval("Removed all show selections.");
-        });
-        HBox chip = new HBox(6, label, removeButton);
-        chip.getStyleClass().addAll("filter-chip", "filter-chip-show");
-        configureFilterChip(chip, label, removeButton);
-        return chip;
-    }
-
     /** Creates a box whose X removes exactly the condition represented by {@code filter}. */
     private HBox createFilterChip(ActiveFilter filter) {
-        String removeDescription = "Remove " + filter.getLabel();
+        boolean isShow = filter.getKind() == ActiveFilter.Kind.SHOW;
+        String showNames = isShow ? filter.getShowSelectionNames() : "";
+        String removeDescription = isShow ? "Remove this show selection" : "Remove " + filter.getLabel();
         Label label = new Label(filter.getLabel());
-        label.setTooltip(new Tooltip(filter.getLabel()));
+        label.setTooltip(new Tooltip(isShow ? "Selected members: " + showNames : filter.getLabel()));
         Button removeButton = new Button("×");
         removeButton.getStyleClass().add("filter-chip-remove");
         removeButton.setAccessibleText(removeDescription);
-        removeButton.setTooltip(new Tooltip(removeDescription));
+        if (!isShow) {
+            removeButton.setTooltip(new Tooltip(removeDescription));
+        }
         removeButton.setOnAction(event -> {
             personListPanel.clearSelection();
             logic.removeActiveFilter(filter);
-            showChipRemoval("Removed " + filter.getLabel() + ".");
+            showChipRemoval(isShow ? "Removed show selection." : "Removed " + filter.getLabel() + ".");
         });
         HBox chip = new HBox(6, label, removeButton);
         chip.getStyleClass().add("filter-chip");

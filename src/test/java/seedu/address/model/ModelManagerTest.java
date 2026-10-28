@@ -196,6 +196,39 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void showFilter_labelTracksEditedAndDeletedSelectedMembers() {
+        AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build();
+        modelManager = new ModelManager(addressBook, new UserPrefs());
+        modelManager.filterFilteredPersonList(new PersonSelectionPredicate(List.of(ALICE, BENSON)));
+        ActiveFilter showFilter = modelManager.getActiveFilters().getFirst();
+        assertEquals("Show: 2 selected", showFilter.getLabel());
+
+        Person renamedAlice = new PersonBuilder(ALICE).withName("Alice Renamed").build();
+        modelManager.setPerson(ALICE, renamedAlice);
+        assertEquals("Alice Renamed, Benson Meier", showFilter.getShowSelectionNames());
+
+        modelManager.deletePerson(BENSON);
+        assertEquals("Show: 1 selected", showFilter.getLabel());
+        assertEquals("Alice Renamed", showFilter.getShowSelectionNames());
+    }
+
+    @Test
+    public void duplicateShowSelection_doesNotAddAnotherFilter() {
+        AddressBook addressBook = new AddressBookBuilder()
+                .withPerson(ALICE).withPerson(BENSON).withPerson(CARL).build();
+        modelManager = new ModelManager(addressBook, new UserPrefs());
+        modelManager.filterFilteredPersonList(new PersonSelectionPredicate(List.of(ALICE, BENSON)));
+
+        modelManager.filterFilteredPersonList(new PersonSelectionPredicate(List.of(BENSON, ALICE)));
+        assertEquals(1, modelManager.getActiveShowSelectionCount());
+        assertEquals(List.of(ALICE, BENSON), modelManager.getFilteredPersonList());
+
+        modelManager.filterFilteredPersonList(new PersonSelectionPredicate(List.of(ALICE)));
+        assertEquals(2, modelManager.getActiveShowSelectionCount());
+        assertEquals(List.of(ALICE), modelManager.getFilteredPersonList());
+    }
+
+    @Test
     public void updateFilteredPersonList_clearsDisplayedFilters() {
         modelManager.updateFilteredPersonList(new NameContainsKeywordsPredicate(List.of("Alice")));
         modelManager.filterFilteredPersonListByTag(new Tag("friends"));

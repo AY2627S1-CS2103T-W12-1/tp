@@ -126,11 +126,15 @@ Extra arguments produce `Invalid command format. Usage: list` without changing t
 `show 1 3` shows only members 1 and 3 from the **currently displayed list**.
 The selected members stay in their current order and receive new displayed numbers starting at 1.
 You can use `show` again with those new numbers, or use `list` to restore the full roster.
-While a `show` selection is active, a **Show: active** box appears under the command field.
-It stays visible even if you remove other search or filter boxes. Hover over it to see how many times
-`show` has been applied. Select its **X** to remove all `show` selections at once while keeping any
-name, email, or tag filters. The **ROSTER** heading shows how many members are currently displayed,
-including when the result is empty.
+Each distinct `show` selection adds a box under the command field, such as **Show: 2 selected**.
+Repeating `show` with the same selected members does not add another box. The count is the number
+selected by that command. Hover over the box label to see the selected names. Boxes appear from left
+to right in command order, alongside name, email, and tag boxes. Select a box's **X** to remove only that
+selection while keeping the other conditions. The **ROSTER** heading shows how many members are
+currently displayed, including when the result is empty.
+
+Names in a `show` box's hover text are listed alphabetically, ignoring case. This does not change
+the displayed roster order.
 
 Supply one or more positive numbers separated by spaces. Repeating a number selects that member once.
 If any number is invalid or outside the current list, the view stays unchanged. `show` does not change

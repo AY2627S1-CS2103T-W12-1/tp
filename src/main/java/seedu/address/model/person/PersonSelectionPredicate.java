@@ -22,6 +22,16 @@ public class PersonSelectionPredicate implements Predicate<Person> {
         return selectedPersons.contains(person);
     }
 
+    /** Returns the members still selected by this show command. */
+    public Set<Person> getSelectedPersons() {
+        return Set.copyOf(selectedPersons);
+    }
+
+    /** Drops a deleted member from the selection. */
+    public void removePerson(Person person) {
+        selectedPersons.remove(person);
+    }
+
     /**
      * Tracks a successful record replacement, returning whether the replaced member was selected.
      * This must be called only after the roster accepts the replacement.
