@@ -162,11 +162,12 @@ public enum CommandHelp {
                     + "Quote paths containing whitespace. "
                     + "Packaged builds read files only inside the JAR folder. Values in the tags column are "
                     + "separated with semicolons.",
-            "Supply one readable .csv path after p/. A missing file reports its resolved path; check the file name "
-                    + "and location. Invalid files do not change the roster. If saving fails, the "
-                    + "imported batch remains unsaved in this session. Fix storage, then reapply an existing "
-                    + "field with edit "
-                    + "to save it; use clear for an empty roster. Exiting before a successful retry loses the batch."),
+            "Supply one readable .csv path after p/. The file must be at most 10 MiB with at most 10,000 member rows. "
+                    + "Split larger files before importing. A missing file reports its resolved path; "
+                    + "check the file name and location. Invalid files do not change the roster. "
+                    + "If saving fails, the imported batch remains unsaved in this session. "
+                    + "Fix storage, then reapply an existing field with edit to save it; "
+                    + "use clear for an empty roster. Exiting before a successful retry loses the batch."),
     DELETE("Remove records", "delete", "Delete one member", "delete INDEX", "delete 2",
             "Permanently removes the member at a displayed list number after you confirm the deletion.",
             "Asks you to confirm deleting the second member in the current list. Typing y deletes them and shows "

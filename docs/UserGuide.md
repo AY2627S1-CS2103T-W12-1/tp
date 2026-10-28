@@ -469,6 +469,12 @@ internal spaces, tabs, and case are preserved. Line breaks inside fields are not
 with semicolons; leave the tags field empty for no tags. Leave the address field empty when it is unknown.
 An optional UTF-8 byte-order mark is accepted.
 
+Imports accept files up to 10 MiB (10,485,760 bytes) and at most 10,000 non-blank member rows,
+counted before duplicate removal. The header and blank rows do not count toward the member-row limit.
+Larger files are rejected without importing any members; split them into smaller CSV files.
+The file name must end in `.csv` (in any letter case). Renaming a PDF, spreadsheet, image, or other file to `.csv`
+does not convert it: its contents must follow the UTF-8 CSV format above.
+
 ```text
 name,phone,email,address,tags
 John Doe,98765432,johnd@example.com,"John Street, Block 123",year1;committee
