@@ -178,8 +178,9 @@ public class MainWindowTest {
             enter("list");
             assertEquals("Showing 1 member.", feedback.getText());
             enter("clear");
+            enter("y");
             assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, feedback.getText());
-            assertEquals("clear", input.getText());
+            assertEquals("y", input.getText());
             assertEquals(1, model.getFilteredPersonList().size());
         });
     }
@@ -216,6 +217,35 @@ public class MainWindowTest {
         assertEquals(savedBackup, Files.readString(backupFile));
         assertEquals(rosterModified, Files.getLastModifiedTime(dataFile));
         assertEquals(backupModified, Files.getLastModifiedTime(backupFile));
+    }
+
+    @Test
+    public void enter_clearAwaitingConfirmation_preservesFilteredRosterUntilConfirmed() throws Exception {
+        onJavaFxThread(() -> {
+            enter("find Alice");
+            enter("clear");
+            assertEquals(String.format(ClearCommand.MESSAGE_CONFIRMATION, 2), feedback.getText());
+            assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertEquals(CommandBox.CONFIRMATION_PROMPT, input.getPromptText());
+            assertDisplayedNames("Alice Tan");
+            assertEquals(2, model.getAddressBook().getPersonList().size());
+            assertFalse(Files.exists(temporaryFolder.resolve("members.json")));
+
+            input.fireEvent(new ActionEvent());
+            assertEquals(ClearCommand.MESSAGE_CANCELLED, feedback.getText());
+            assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertEquals(CommandBox.DEFAULT_PROMPT, input.getPromptText());
+            assertDisplayedNames("Alice Tan");
+            assertEquals(2, model.getAddressBook().getPersonList().size());
+
+            enter("clear");
+            enter("y");
+            assertEquals("Cleared 2 members. The roster is now empty.", feedback.getText());
+            assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertDisplayedNames();
+        });
+        assertTrue(new JsonAddressBookStorage(temporaryFolder.resolve("members.json"))
+                .readAddressBook().orElseThrow().getPersonList().isEmpty());
     }
 
     @Test
@@ -650,6 +680,7 @@ public class MainWindowTest {
             assertTrue(guide.isShowing());
             Event.fireEvent(guide.getScene(), key(KeyCode.ESCAPE));
             enter("clear");
+            enter("y");
             enter("add n/Zara Tan p/90000001 e/zara@example.com a/Test Road t/committee");
             enter("add n/bob Lee p/90000002 e/bob@example.com a/Test Road t/year1");
             enter("add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee");
@@ -672,6 +703,7 @@ public class MainWindowTest {
             enter("y");
             assertDisplayedNames("Zara Tan", "Alice Tan");
             enter("clear");
+            enter("y");
             enter("import p/\"" + exported + "\"");
             assertTrue(feedback.getText().startsWith("Imported 3 member(s)"));
             assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");
@@ -682,6 +714,7 @@ public class MainWindowTest {
                     .noneMatch(tag -> tag.tagName.equals("committee")));
             enter("find Alice");
             enter("clear");
+            enter("y");
             assertEquals("Cleared 3 members. The roster is now empty.", feedback.getText());
             enter("list");
             assertEquals("No members in the roster.", feedback.getText());

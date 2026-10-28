@@ -170,10 +170,13 @@ public enum CommandHelp {
                     + "are rejected. If saving fails, the deletion remains in this session and the command box clears; "
                     + "do not repeat the deletion to retry saving."),
     CLEAR("Remove records", "clear", "Clear the whole roster", "clear", "clear",
-            "Permanently removes every member, including members hidden by a search.",
-            "The roster becomes empty after saving. The result reports how many members were cleared, "
+            "Permanently removes every member after confirmation, including members hidden by a search or filter.",
+            "For a non-empty roster, first shows the total member count and asks you to confirm with y. "
+                    + "After confirmation and saving, the result reports how many members were cleared, "
                     + "or confirms that an already empty roster needed no changes.",
-            "There is no undo or confirmation. Back up your data file before clearing records you may need later.",
+            "Any input other than y cancels without running that input. There is no undo after confirmation. "
+                    + "An already-empty roster saves immediately without confirmation. "
+                    + "Back up records you may need later.",
             "Extra arguments are rejected. If saving fails, the previous roster and displayed list are restored. "
                     + "No members were removed; fix the storage problem before retrying clear."),
     HELP("Help & session", "help", "Open this command guide", "help [COMMAND]", "help edit",
