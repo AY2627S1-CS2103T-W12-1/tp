@@ -671,6 +671,8 @@ Keep the existing JSON structure:
 * Each member has `name`, `phone`, `email`, `address`, and `tags` fields. An empty `address` means none was provided.
   Spaces before or after a value, including each tag, are ignored, as they are in commands.
 * Use `tags` for each member's group assignments.
+* Save the file as UTF-8. A byte order mark (BOM) at the start of the file, which some editors such as
+  Windows Notepad add, is accepted.
 
 ### Missing or invalid files
 
