@@ -115,6 +115,7 @@ These classes inherit from `UiPart`, which provides behaviour shared by visible 
 `HelpWindow` builds its command cards from `CommandHelp` in the Logic component.
 `MainWindow` uses `WindowPlacement` to restore the saved window size and position.
 `RosterRecoveryDialog` is a JavaFX `Alert` that `MainApp` shows when the saved roster cannot be loaded.
+It shows the message of the `DataLoadingException` cause, so the user knows what to fix in the file.
 
 The interface uses JavaFX. Matching `.fxml` files in `src/main/resources/view` define the layouts.
 For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/resources/view/MainWindow.fxml)
@@ -1610,8 +1611,9 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
 2. Back up the member file. Run `help`, `list`, `find Alice`, `filter t/committee`, and `exit`; verify the member file's
    contents and modification time do not change. Preferences may be saved separately.
 3. With the app closed, test each member-file variant: malformed JSON, a `null` root, a null entry
-   in `persons`, and `[null]` in a member's `tags`. Expect a recovery dialog before the roster opens,
-   an exact-byte recovery copy, and a loading error in the log. Close must preserve the invalid member file.
+   in `persons`, and `[null]` in a member's `tags`. Expect a recovery dialog that states the reason before
+   the roster opens, an exact-byte recovery copy, and a loading error in the log. Close must preserve the
+   invalid member file.
    Test Restore backup with a valid `.bak`, and Start empty with an invalid or absent backup. Both must
    preserve the damaged copy and the existing backup. Repeated restarts must create distinct recovery copies.
 4. Test `preferences.json` containing `null` and then a null `guiSettings`. Expect startup with
