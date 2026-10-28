@@ -773,18 +773,19 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_renameTagWithActiveSearch_renamesWholeRosterAndSaves() throws Exception {
+    public void execute_renameTagWithActiveSearch_renamesDisplayedMembersAndSaves() throws Exception {
         model.setAddressBook(getTypicalAddressBook());
         logic.execute("find Alice");
 
-        assertEquals("Renamed tag \"friends\" to \"buddies\" for 3 member(s).",
+        assertEquals("Renamed tag \"friends\" to \"buddies\" for 1 member(s).",
                 logic.execute("renametag t/friends t/buddies").getFeedbackToUser());
 
-        // The search stays applied, while hidden members are renamed too.
+        // The search stays applied, and hidden members keep the current tag.
         assertEquals(1, logic.getFilteredPersonList().size());
-        Tag friends = new Tag("friends");
-        assertTrue(model.getAddressBook().getPersonList().stream().noneMatch(person ->
-                person.getTags().contains(friends)));
+        assertTrue(model.getAddressBook().getPersonList().contains(
+                new PersonBuilder(ALICE).withTags("buddies").build()));
+        assertTrue(model.getAddressBook().getPersonList().contains(BENSON));
+        assertTrue(model.getAddressBook().getPersonList().contains(DANIEL));
         ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
                 temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
         assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
@@ -802,6 +803,17 @@ public class LogicManagerTest {
                 .readAddressBook().orElseThrow();
         assertTrue(saved.getPersonList().stream().allMatch(person ->
                 person.getTags().stream().anyMatch(tag -> tag.tagName.equals("Student"))));
+    }
+
+    @Test
+    public void execute_renameTagOnlyOnHiddenMembers_doesNotSave() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("find Carl");
+
+        assertThrows(CommandException.class, String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "friends"), () ->
+                logic.execute("renametag t/friends t/buddies"));
+        assertEquals(getTypicalAddressBook(), model.getAddressBook());
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
     }
 
     @Test
