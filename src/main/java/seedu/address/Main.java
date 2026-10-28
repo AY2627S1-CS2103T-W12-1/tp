@@ -77,6 +77,11 @@ public class Main {
         System.setProperty("java.library.path", nativeFolder.toString());
     }
 
+    /**
+     * Launches TrackCall's JavaFX application after logging native-access guidance.
+     *
+     * @param args Command-line arguments forwarded to the application.
+     */
     public static void main(String[] args) {
 
         logger.warning("The warnings about a 'restricted method in java.lang.System' "

@@ -52,6 +52,7 @@ public class PersonListPanel extends UiPart<Region> {
         onSelectionChanged.run();
     }
 
+    /** Requests keyboard focus for the roster so arrow keys can select members. */
     public void focusList() {
         personListView.requestFocus();
     }

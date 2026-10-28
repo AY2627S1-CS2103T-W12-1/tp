@@ -25,8 +25,6 @@ public class PersonCard extends UiPart<Region> {
      * @see <a href="https://github.com/se-edu/addressbook-level4/issues/336">The issue on AddressBook level 4</a>
      */
 
-    public final Person person;
-
     @FXML
     private HBox cardPane;
     @FXML
@@ -41,7 +39,6 @@ public class PersonCard extends UiPart<Region> {
      */
     public PersonCard(Person person, int displayedIndex) {
         super(FXML);
-        this.person = person;
         id.setText(Integer.toString(displayedIndex));
         configureWrappedName();
         tags.prefWrapLengthProperty().bind(Bindings.max(0, cardPane.prefWidthProperty().subtract(32)));
