@@ -658,7 +658,12 @@ start from the same folder to keep using the same roster.
 
 ### Editing the file manually
 
-Close TrackCall and make a backup first. Keep the existing JSON structure:
+Close TrackCall and make a backup first. If you edit the file while TrackCall is open, the next save is
+refused with a warning so your edits are not silently replaced. To keep your edits, exit and restart
+TrackCall. To replace them with the roster shown in TrackCall, retry the save; your edited version is
+then kept in `data/addressbook.json.bak`.
+
+Keep the existing JSON structure:
 
 * A `persons` array contains the members.
 * Each member has `name`, `phone`, `email`, `address`, and `tags` fields. An empty `address` means none was provided.

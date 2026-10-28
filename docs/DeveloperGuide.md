@@ -463,6 +463,10 @@ Normal saves validate the current roster. If its member list differs from the re
 they atomically copy the previous roster to the sibling `.bak` file;
 backup failure prevents replacement, and an invalid existing roster blocks normal saves until recovery.
 An unchanged save still attempts to write the current roster but retains the previous distinct backup.
+`JsonAddressBookStorage` also remembers the roster it last read from or wrote to the data file. If the file
+now holds a different valid roster, it was changed outside TrackCall, so the first save is refused with a
+storage error and the change stays in memory. The refused save records the outside version, so a retry
+replaces it and keeps it in `.bak` through the normal backup rotation. Formatting-only edits are not refused.
 Export protects both backup and recovery filenames. Null or invalid preferences fall back to defaults, which are saved
 through the usual preferences setup.
 
@@ -1325,6 +1329,8 @@ assignment. Unknown member fields are ignored, repeated fields keep their last v
 numbers in text fields are accepted as text. `{"persons": []}` is a valid empty roster.
 
 Do not edit the data file while TrackCall is running. Keep a backup before manual changes.
+If the file is changed while TrackCall is running, the next save is refused with a warning instead
+of silently replacing the outside changes.
 
 #### UC08: Finish a TrackCall session
 
