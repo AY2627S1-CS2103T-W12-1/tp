@@ -574,8 +574,11 @@ The parser checks the tag before constructing it; the shared `Tag` model enforce
 
 #### Execution {id="execution"}
 
-`FilterCommand` passes the tag to `ModelManager#filterFilteredPersonListByTag`. The model
-combines it with the active name, email, and tag conditions using logical AND.
+`FilterCommand` checks the active tag filters using case-insensitive `Tag` equality. For a new tag,
+it passes the tag to `ModelManager#filterFilteredPersonListByTag`. The model combines it with the
+active name, email, and tag conditions using logical AND.
+If the tag is already active, it leaves the conditions and displayed list unchanged and reports the
+active tag's stored spelling followed by the current result summary.
 The model keeps removable name, email and tag conditions in application order, which the UI shows left to right.
 `find` adds a name condition, while `list` clears all conditions. `findemail` replaces all conditions
 with an email search. Applying name and tag conditions in a different order gives the same matching
@@ -602,7 +605,8 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
 
 #### Test coverage {id="test-coverage-2"}
 
-* `FilterCommandParserTest` and `FilterCommandTest` cover argument validation and narrowing an existing view.
+* `FilterCommandParserTest` and `FilterCommandTest` cover argument validation, narrowing an existing view,
+  and feedback for a repeated tag with different letter case.
 * `LogicManagerTest` covers cumulative filters, case-insensitive matching, empty results, interactions with
   `find`, `list`, and sorting, and execution without saving.
 * `EditCommandTest` checks that edits retain search and tag conditions and hide members who no longer match.

@@ -573,10 +573,12 @@ public class LogicManagerTest {
         assertEquals(List.of(), logic.getFilteredPersonList());
         logic.removeActiveFilter(logic.getActiveFilters().get(1));
         assertEquals(List.of(alice), logic.getFilteredPersonList());
-        assertEquals("1 member(s) listed with tag \"year1\".",
+        assertEquals("Tag \"year1\" is already an active filter. No changes were made.\n"
+                        + "1 member(s) listed with tag \"year1\".",
                 logic.execute("filter t/year1").getFeedbackToUser());
         assertEquals(List.of(alice), logic.getFilteredPersonList());
-        assertEquals("1 member(s) listed with tag \"year1\".",
+        assertEquals("Tag \"year1\" is already an active filter. No changes were made.\n"
+                        + "1 member(s) listed with tag \"year1\".",
                 logic.execute("filter t/year1").getFeedbackToUser());
         logic.execute("list");
         assertEquals(clubRoster.getPersonList(), logic.getFilteredPersonList());
@@ -613,7 +615,9 @@ public class LogicManagerTest {
                 logic.execute("filter t/STUDENT").getFeedbackToUser());
         assertEquals(2, logic.getFilteredPersonList().size());
         assertEquals(1, model.getActiveTagFilters().size());
-        logic.execute("filter t/student");
+        assertEquals("Tag \"STUDENT\" is already an active filter. No changes were made.\n"
+                        + "2 member(s) listed with tag \"STUDENT\".",
+                logic.execute("filter t/student").getFeedbackToUser());
         assertEquals(1, model.getActiveTagFilters().size());
 
         logic.execute("tag 1 t/student");
