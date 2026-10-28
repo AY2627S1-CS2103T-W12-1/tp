@@ -24,6 +24,7 @@ import seedu.address.commons.exceptions.DataLoadingException;
 import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
+import seedu.address.testutil.PersonBuilder;
 
 /** Tests complete roster persistence and rejection of invalid data files. */
 public class JsonAddressBookStorageTest {
@@ -212,6 +213,60 @@ public class JsonAddressBookStorageTest {
         assertArrayEquals(recoveryBytes, Files.readAllBytes(backup));
         assertEquals(original, storage.readBackup().orElseThrow());
         assertEquals(new AddressBook(), storage.readAddressBook().orElseThrow());
+    }
+
+    @Test
+    public void save_caseOnlyTagChange_createsBackupWithPreviousSpelling() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(rosterWithTag("Committee"));
+        byte[] previousRoster = Files.readAllBytes(file);
+
+        storage.saveAddressBook(rosterWithTag("committee"));
+
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        assertArrayEquals(previousRoster, Files.readAllBytes(backup));
+        assertTrue(Files.readString(file).contains("committee"));
+    }
+
+    @Test
+    public void save_caseOnlyTagChange_replacesExistingBackup() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(rosterWithTag("Earlier"));
+        storage.saveAddressBook(rosterWithTag("Committee"));
+        byte[] previousRoster = Files.readAllBytes(file);
+
+        storage.saveAddressBook(rosterWithTag("committee"));
+
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        assertArrayEquals(previousRoster, Files.readAllBytes(backup));
+        byte[] backupAfterRename = Files.readAllBytes(backup);
+        storage.saveAddressBook(rosterWithTag("committee"));
+        assertArrayEquals(backupAfterRename, Files.readAllBytes(backup));
+    }
+
+    @Test
+    public void save_caseOnlyTagChangeWithFailedWrite_preservesExistingBackup() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(rosterWithTag("Earlier"));
+        storage.saveAddressBook(rosterWithTag("Committee"));
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        byte[] activeBefore = Files.readAllBytes(file);
+        byte[] backupBefore = Files.readAllBytes(backup);
+
+        JsonAddressBookStorage failingStorage = storageWithFailingActiveWrite(file);
+        assertThrows(IOException.class, () -> failingStorage.saveAddressBook(rosterWithTag("committee")));
+
+        assertArrayEquals(activeBefore, Files.readAllBytes(file));
+        assertArrayEquals(backupBefore, Files.readAllBytes(backup));
+    }
+
+    private AddressBook rosterWithTag(String tagName) {
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(new PersonBuilder().withTags(tagName).build());
+        return addressBook;
     }
 
     @Test

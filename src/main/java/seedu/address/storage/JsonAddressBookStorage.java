@@ -6,9 +6,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
@@ -16,6 +19,7 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.commons.util.FileUtil;
 import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.ReadOnlyAddressBook;
+import seedu.address.model.person.Person;
 
 /**
  * A class to access AddressBook data stored as a JSON file on the hard disk.
@@ -133,7 +137,7 @@ public class JsonAddressBookStorage {
         // Validate before rotating the backup: a damaged roster must never replace the last good copy.
         try {
             Optional<ReadOnlyAddressBook> saved = readAddressBook(target);
-            if (saved.isPresent() && !saved.get().getPersonList().equals(addressBook.getPersonList())) {
+            if (saved.isPresent() && !hasSameSavedData(saved.get(), addressBook)) {
                 Path backup = FileUtil.resolvePath(getBackupFilePath(target));
                 saveWithBackup(addressBook, target, backup);
                 return;
@@ -143,6 +147,25 @@ public class JsonAddressBookStorage {
                     + "The original file and backup have been left unchanged.", e);
         }
         writeActiveRoster(addressBook, target);
+    }
+
+    /** Compares stored member values, including tag spelling that {@code Tag.equals} ignores. */
+    private boolean hasSameSavedData(ReadOnlyAddressBook saved, ReadOnlyAddressBook updated) {
+        List<Person> savedPersons = saved.getPersonList();
+        List<Person> updatedPersons = updated.getPersonList();
+        if (!savedPersons.equals(updatedPersons)) {
+            return false;
+        }
+        for (int index = 0; index < savedPersons.size(); index++) {
+            Set<String> savedTagNames = savedPersons.get(index).getTags().stream()
+                    .map(tag -> tag.tagName).collect(Collectors.toSet());
+            Set<String> updatedTagNames = updatedPersons.get(index).getTags().stream()
+                    .map(tag -> tag.tagName).collect(Collectors.toSet());
+            if (!savedTagNames.equals(updatedTagNames)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /** Keeps the previous backup available until the active roster has been saved successfully. */
