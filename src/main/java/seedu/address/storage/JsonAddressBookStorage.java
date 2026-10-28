@@ -135,13 +135,59 @@ public class JsonAddressBookStorage {
             Optional<ReadOnlyAddressBook> saved = readAddressBook(target);
             if (saved.isPresent() && !saved.get().getPersonList().equals(addressBook.getPersonList())) {
                 Path backup = FileUtil.resolvePath(getBackupFilePath(target));
-                FileUtil.writeAtomically(backup,
-                        temporary -> Files.copy(target, temporary, StandardCopyOption.REPLACE_EXISTING));
+                saveWithBackup(addressBook, target, backup);
+                return;
             }
         } catch (DataLoadingException e) {
             throw new IOException("The existing roster could not be loaded. Restart TrackCall to recover it. "
                     + "The original file and backup have been left unchanged.", e);
         }
+        writeActiveRoster(addressBook, target);
+    }
+
+    /** Keeps the previous backup available until the active roster has been saved successfully. */
+    private void saveWithBackup(ReadOnlyAddressBook addressBook, Path target, Path backup) throws IOException {
+        Path previousBackup = null;
+        boolean backupRotated = false;
+        boolean retainPreviousBackup = false;
+        try {
+            if (Files.exists(backup)) {
+                previousBackup = Files.createTempFile(backup.toAbsolutePath().getParent(),
+                        ".trackcall-backup-", ".tmp");
+                Files.copy(backup, previousBackup, StandardCopyOption.REPLACE_EXISTING);
+            }
+            FileUtil.writeAtomically(backup,
+                    temporary -> Files.copy(target, temporary, StandardCopyOption.REPLACE_EXISTING));
+            backupRotated = true;
+            writeActiveRoster(addressBook, target);
+        } catch (IOException | RuntimeException failure) {
+            if (backupRotated) {
+                try {
+                    if (previousBackup == null) {
+                        Files.deleteIfExists(backup);
+                    } else {
+                        Files.move(previousBackup, backup, StandardCopyOption.ATOMIC_MOVE,
+                                StandardCopyOption.REPLACE_EXISTING);
+                    }
+                } catch (IOException rollbackFailure) {
+                    failure.addSuppressed(rollbackFailure);
+                    retainPreviousBackup = true;
+                }
+            }
+            throw failure;
+        } finally {
+            if (previousBackup != null && !retainPreviousBackup) {
+                try {
+                    Files.deleteIfExists(previousBackup);
+                } catch (IOException cleanupFailure) {
+                    logger.warning("Could not remove temporary backup copy: " + previousBackup);
+                }
+            }
+        }
+    }
+
+    /** Writes the active roster after any required backup rotation. */
+    protected void writeActiveRoster(ReadOnlyAddressBook addressBook, Path target) throws IOException {
         JsonUtil.saveJsonFile(new JsonSerializableAddressBook(addressBook), target);
     }
 
