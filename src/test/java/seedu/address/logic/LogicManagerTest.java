@@ -392,7 +392,8 @@ public class LogicManagerTest {
 
         assertTrue(Files.isRegularFile(csvFile));
         assertTrue(Files.isDirectory(rosterFile));
-        assertTrue(result.getFeedbackToUser().startsWith("Exported 1 member to "));
+        assertEquals("Exported 0 displayed members to " + csvFile
+                + " (1 hidden member not exported).", result.getFeedbackToUser());
         assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
         assertTrue(model.getFilteredPersonList().isEmpty());
     }
