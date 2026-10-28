@@ -57,7 +57,9 @@ public enum CommandHelp {
                     + "Findemail searches email addresses across the whole roster and replaces previous filters. "
                     + "Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
-            "Supply exactly one tag of 1 to 30 ASCII letters or digits. Empty tags, internal spaces, "
+            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens. "
+                    + "Empty tags, internal spaces, "
                     + "multiple tags, and extra arguments are rejected."),
     ADD("Manage members", "add", "Add a member",
             "add n/NAME p/PHONE e/EMAIL [a/ADDRESS] [t/TAG]...",
@@ -98,7 +100,9 @@ public enum CommandHelp {
                     + "after saving.",
             "Use find or filter first to choose the group, then check the list. The current search, filters and "
                     + "sorting stay applied.",
-            "Supply exactly one tag of 1 to 30 ASCII letters or digits after t/. Empty tags, internal spaces, "
+            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens after t/. "
+                    + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
                     + "recovery guidance before exiting."),
@@ -108,7 +112,9 @@ public enum CommandHelp {
                     + "after saving.",
             "Use find or filter first to choose the group, then check the list. Removing the tag used by an active "
                     + "filter hides the updated members; use list to show everyone again.",
-            "Supply exactly one tag of 1 to 30 ASCII letters or digits after t/. Empty tags, internal spaces, "
+            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens after t/. "
+                    + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
                     + "recovery guidance before exiting."),
@@ -117,7 +123,8 @@ public enum CommandHelp {
             "Removes friends from member 1 and shows their name and updated tags after saving.",
             "Check the current list number first. Other tags, searches, filters and sorting remain in place. "
                     + "Removing a tag used by an active filter may hide the member from the current list.",
-            "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
+            "Supply one current positive displayed number and one tag of 1 to 30 characters using ASCII "
+                    + "letters or digits with optional internal hyphens. "
                     + "Invalid input or a missing member is rejected. If the member lacks the tag, no change is "
                     + "made. If saving fails, follow the recovery guidance before exiting."),
     RENAMETAG("Manage members", "renametag", "Rename a tag for everyone", "renametag t/CURRENT_TAG t/NEW_TAG",

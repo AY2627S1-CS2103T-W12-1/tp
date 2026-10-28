@@ -28,6 +28,7 @@ public class BulkTagArgumentParserTest {
         assertEquals(new Tag("committee"), BulkTagArgumentParser.parse(" t/committee", USAGE));
         assertEquals(new Tag("committee"), BulkTagArgumentParser.parse("t/committee", USAGE));
         assertEquals(new Tag("year1"), BulkTagArgumentParser.parse(" t/ year1 ", USAGE));
+        assertEquals(new Tag("year-1"), BulkTagArgumentParser.parse(" t/year-1", USAGE));
         assertEquals(new Tag("Batch2026"), BulkTagArgumentParser.parse("\t t/\tBatch2026 \t", USAGE));
     }
 
@@ -102,7 +103,8 @@ public class BulkTagArgumentParserTest {
 
     @Test
     public void parse_invalidTag_throwsInvalidTagMessage() {
-        String[] inputs = {" t/year-1", " t/year1 year2", " t/hello!", " t/one x/two", " t/caf\u00e9"};
+        String[] inputs = {" t/-year1", " t/year1-", " t/year--1", " t/year1 year2",
+            " t/hello!", " t/one x/two", " t/caf\u00e9"};
         for (String input : inputs) {
             assertThrows(ParseException.class, MESSAGE_INVALID_TAG, () ->
                     BulkTagArgumentParser.parse(input, USAGE));

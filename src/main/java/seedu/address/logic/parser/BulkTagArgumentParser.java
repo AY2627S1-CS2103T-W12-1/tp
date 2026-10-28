@@ -19,7 +19,7 @@ import seedu.address.model.tag.Tag;
  */
 public class BulkTagArgumentParser {
     public static final String MESSAGE_EMPTY_TAG = "Tag cannot be empty.";
-    public static final String MESSAGE_INVALID_TAG = Tag.MESSAGE_CONSTRAINTS;
+    public static final String MESSAGE_INVALID_TAG = Tag.MESSAGE_CONSTRAINTS + ".";
     public static final String MESSAGE_MULTIPLE_TAGS = "Only one tag can be applied per command.";
 
     private BulkTagArgumentParser() {
@@ -27,7 +27,7 @@ public class BulkTagArgumentParser {
     }
 
     /**
-     * Parses {@code args} into exactly one tag of 1 to 30 ASCII letters or digits.
+     * Parses {@code args} into exactly one tag of 1 to 30 ASCII letters or digits, with optional internal hyphens.
      * Surrounding whitespace around the tag is ignored.
      *
      * @param args Arguments following the command word.
@@ -75,7 +75,8 @@ public class BulkTagArgumentParser {
     }
 
     /**
-     * Parses one trimmed {@code t/} value into a tag of 1 to 30 ASCII letters or digits.
+     * Parses one trimmed {@code t/} value into a tag of 1 to 30 ASCII letters or digits,
+     * with optional internal hyphens.
      *
      * @throws ParseException If {@code tagName} is empty or invalid.
      */

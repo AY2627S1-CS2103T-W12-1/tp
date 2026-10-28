@@ -212,8 +212,9 @@ No matches produce a count of 0 and an empty list. Filtering does not change or 
 Check the displayed numbers before using `edit`, `tag`, `untag`, or `delete`. Editing keeps the active search and filters.
 If an edited member no longer matches, they disappear from view but remain in the roster.
 
-Supply exactly one tag of 1 to 30 ASCII letters or digits, with no internal spaces. Surrounding spaces
-are ignored. Missing or extra parameters and invalid tags are rejected without changing the view.
+Supply exactly one tag of 1 to 30 characters, using ASCII letters or digits with optional internal hyphens.
+For example, `year-1` is valid. Surrounding spaces are ignored. Missing or extra parameters and invalid
+tags are rejected without changing the view.
 For example, `filter t/committee t/year1` is invalid; apply each tag in a separate command.
 
 #### Sort members by name: `sort`
@@ -249,7 +250,7 @@ URLs, numeric slashes such as `12/3`, and slashes embedded in words remain addre
 | Phone | At least three ASCII digits. No spaces or punctuation. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text when adding; `edit INDEX a/` clears an existing address. |
-| Tag | 1 to 30 ASCII letters or digits, without spaces. Matching ignores letter case. |
+| Tag | 1 to 30 ASCII letters or digits with optional internal hyphens. Matching ignores letter case. |
 
 **Email rules:**
 
@@ -320,7 +321,7 @@ untag 2 t/friends
 
 Check the displayed number after searching, filtering, showing selected members, or sorting. The
 index identifies the member shown at that number when you submit the command. Hidden members are
-not changed. Tags must contain 1 to 30 ASCII letters or digits; matching ignores letter case.
+not changed. Tags contain 1 to 30 ASCII letters or digits with optional internal hyphens; matching ignores letter case.
 Adding `t/student` to a member who already has `Student` does not add a second tag.
 If one `add` or `edit` command supplies both spellings, the first `t/` spelling is kept.
 
@@ -364,7 +365,7 @@ The current search, filters, and sorting stay applied after the update.
 If you remove the tag used by the active filter, the updated members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
 
-Supply exactly one tag of 1 to 30 ASCII letters or digits with no internal spaces. Spaces around the tag
+Supply exactly one tag of 1 to 30 ASCII letters or digits with optional internal hyphens. Spaces around the tag
 are ignored, and matching ignores letter case. Missing `t/`, empty tags, invalid tags, more than one tag, and
 other field prefixes such as `n/` are rejected without changing any member. If no members are displayed, TrackCall reports
 `There are no members in the current list to update.` and changes nothing.
@@ -394,7 +395,8 @@ The current search, filters, and sorting stay applied after the update.
 If you rename the tag used by the active filter, the renamed members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
 
-Supply exactly two tags, each after `t/`, with 1 to 30 ASCII letters or digits and no internal spaces.
+Supply exactly two tags, each after `t/`, with 1 to 30 characters using ASCII letters or digits and
+optional internal hyphens.
 The two tags must be different. If no member has the current tag, TrackCall reports
 `No member has the tag "CURRENT_TAG".` and changes nothing. Other invalid input is rejected without
 changing any member.
@@ -409,7 +411,7 @@ Export a complete roster or bring existing member records into TrackCall.
 
 `export [FILEPATH]` writes every member to a UTF-8 CSV file, including members hidden by a search.
 The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
-Tags for each member are sorted in case-sensitive ASCII order (digits, uppercase letters, then lowercase letters)
+Tags for each member are sorted in case-sensitive ASCII order (hyphens, digits, uppercase letters, then lowercase letters)
 and joined with semicolons.
 If an imported CSV file or saved JSON roster contains case variants of one tag on the same member,
 TrackCall keeps the first spelling listed for that member. The retained spelling appears in the member
