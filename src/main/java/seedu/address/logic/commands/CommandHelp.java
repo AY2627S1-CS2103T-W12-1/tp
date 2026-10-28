@@ -54,8 +54,9 @@ public enum CommandHelp {
     FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
             "Shows currently displayed members with the specified tag without changing saved data.",
             "Shows only members tagged committee, in their current order with new displayed numbers.",
-            "Matching ignores letter case. Repeated filters narrow the list further, and the result "
-                    + "names all active tags. Boxes appear left to right in command order, not matching priority. "
+            "Matching ignores letter case. Adding another tag narrows the list further, and the result "
+                    + "names all active tags. Repeating an active tag leaves the view unchanged and reports "
+                    + "that no changes were made. Boxes appear left to right in command order, not matching priority. "
                     + "Use a filter's X to remove it, or list to show everyone. Find also narrows the current results. "
                     + "Findemail searches email addresses across the whole roster and replaces previous filters. "
                     + "Edit and delete use displayed numbers; "

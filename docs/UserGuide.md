@@ -204,7 +204,8 @@ stays the same, and their displayed numbers update.
 
 * Matching ignores letter case: `committee` and `Committee` identify the same tag.
 * Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
-  Applying the same tag again does not add a duplicate condition.
+  Applying the same tag again, even with different letter case, leaves the view unchanged. The result
+  names the active spelling, says no changes were made, and shows the current count and active tags.
 * A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
   A new `findemail` searches the whole roster and replaces previous filters.
 
