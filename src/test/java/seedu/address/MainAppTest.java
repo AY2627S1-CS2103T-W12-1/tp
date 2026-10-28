@@ -12,6 +12,7 @@ import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -30,6 +31,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.tag.Tag;
 import seedu.address.model.util.SampleDataUtil;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
@@ -94,7 +96,7 @@ public class MainAppTest {
                 answerDialog("OK");
             });
             answerDialog("Start empty");
-            assertFalse(app.recoverRoster(owner));
+            assertFalse(app.recoverRoster(owner, "Invalid JSON data"));
         });
 
         assertEquals("changed original", Files.readString(roster.getAddressBookFilePath()));
@@ -161,11 +163,27 @@ public class MainAppTest {
     }
 
     @Test
+    public void start_invalidTag_showsReasonInRecoveryDialog() throws Exception {
+        Files.writeString(roster.getAddressBookFilePath(), "{\"persons\":[{\"name\":\"Alice\",\"phone\":\"123\","
+                + "\"email\":\"alice@example.com\",\"address\":\"\",\"tags\":[\"committee!\"]}]}");
+        AtomicReference<String> shownText = new AtomicReference<>();
+
+        onJavaFxThread(() -> {
+            Platform.runLater(() -> shownText.set(findDialogPane().getContentText()));
+            answerDialog("Start empty");
+            app.start(new Stage());
+        });
+
+        assertTrue(opened);
+        assertTrue(shownText.get().startsWith("Reason: " + Tag.MESSAGE_CONSTRAINTS + "\n\n"));
+    }
+
+    @Test
     public void recovery_closeWithoutBackup_preservesOriginalAndDoesNotOpenUi() throws Exception {
         Files.writeString(roster.getAddressBookFilePath(), "damaged roster");
         onJavaFxThread(() -> {
             answerDialog("Close");
-            assertFalse(app.recoverRoster(new Stage()));
+            assertFalse(app.recoverRoster(new Stage(), "Invalid JSON data"));
         });
 
         assertFalse(opened);
@@ -178,7 +196,7 @@ public class MainAppTest {
         Files.createDirectory(roster.getAddressBookFilePath());
         onJavaFxThread(() -> {
             answerDialog("OK");
-            assertFalse(app.recoverRoster(new Stage()));
+            assertFalse(app.recoverRoster(new Stage(), "Invalid JSON data"));
         });
 
         assertFalse(opened);
@@ -224,11 +242,15 @@ public class MainAppTest {
         }
     }
 
+    private static DialogPane findDialogPane() {
+        return (DialogPane) Window.getWindows().stream()
+                .filter(window -> window.getScene().getRoot() instanceof DialogPane)
+                .findFirst().orElseThrow().getScene().getRoot();
+    }
+
     private void answerDialog(String label) {
         Platform.runLater(() -> {
-            DialogPane pane = (DialogPane) Window.getWindows().stream()
-                    .filter(window -> window.getScene().getRoot() instanceof DialogPane)
-                    .findFirst().orElseThrow().getScene().getRoot();
+            DialogPane pane = findDialogPane();
             var button = pane.getButtonTypes().stream().filter(type -> type.getText().equals(label))
                     .findFirst().orElseThrow();
             Button control = (Button) pane.lookupButton(button);

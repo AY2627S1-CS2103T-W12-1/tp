@@ -684,7 +684,9 @@ without replacing that backup, including `clear` on an already-empty roster.
 If the backup cannot be written, the roster save fails and the existing roster stays unchanged.
 
 If the roster cannot be loaded, TrackCall first preserves its exact contents in a uniquely named
-`data/addressbook.json.corrupt-....json` file. It then offers:
+`data/addressbook.json.corrupt-....json` file. It then shows why the roster could not be loaded,
+for example `Reason: Tag names should be 1 to 30 characters long, using ASCII letters or digits with optional
+internal hyphens`, and offers:
 
 * **Restore backup**, when the backup is valid: restore the previous saved roster.
 * **Start empty**: explicitly replace the unreadable roster with an empty roster.
