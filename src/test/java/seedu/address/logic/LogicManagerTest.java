@@ -573,16 +573,18 @@ public class LogicManagerTest {
         assertEquals(List.of(), logic.getFilteredPersonList());
         logic.removeActiveFilter(logic.getActiveFilters().get(1));
         assertEquals(List.of(alice), logic.getFilteredPersonList());
-        assertEquals("1 member(s) listed with tag \"year1\".",
+        assertEquals("Tag \"year1\" is already an active filter. No changes were made.\n"
+                        + "1 member(s) listed with tag \"year1\".",
                 logic.execute("filter t/year1").getFeedbackToUser());
         assertEquals(List.of(alice), logic.getFilteredPersonList());
-        assertEquals("1 member(s) listed with tag \"year1\".",
+        assertEquals("Tag \"year1\" is already an active filter. No changes were made.\n"
+                        + "1 member(s) listed with tag \"year1\".",
                 logic.execute("filter t/year1").getFeedbackToUser());
         logic.execute("list");
         assertEquals(clubRoster.getPersonList(), logic.getFilteredPersonList());
-        assertEquals("0 member(s) listed with tag \"Year1\".",
+        assertEquals("3 member(s) listed with tag \"Year1\".",
                 logic.execute("filter t/Year1").getFeedbackToUser());
-        assertEquals(List.of(), logic.getFilteredPersonList());
+        assertEquals(List.of(alice, committeeMember, daniel), logic.getFilteredPersonList());
     }
 
     @Test
@@ -598,6 +600,43 @@ public class LogicManagerTest {
                 logic.execute("filter t/committee").getFeedbackToUser());
         assertEquals(List.of(amy, bob), logic.getFilteredPersonList());
         assertEquals(List.of(bob, ALICE, amy), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void execute_caseVariantTags_matchAcrossCommandsAndSave() throws Exception {
+        logic.execute("add n/Alice p/123 e/alice@example.com t/Student t/student");
+        logic.execute("add n/Bob p/456 e/bob@example.com t/student");
+        assertEquals(1, model.getAddressBook().getPersonList().getFirst().getTags().size());
+
+        logic.execute("edit 1 t/Student t/STUDENT");
+        assertEquals(1, model.getAddressBook().getPersonList().getFirst().getTags().size());
+
+        assertEquals("2 member(s) listed with tag \"STUDENT\".",
+                logic.execute("filter t/STUDENT").getFeedbackToUser());
+        assertEquals(2, logic.getFilteredPersonList().size());
+        assertEquals(1, model.getActiveTagFilters().size());
+        assertEquals("Tag \"STUDENT\" is already an active filter. No changes were made.\n"
+                        + "2 member(s) listed with tag \"STUDENT\".",
+                logic.execute("filter t/student").getFeedbackToUser());
+        assertEquals(1, model.getActiveTagFilters().size());
+
+        logic.execute("tag 1 t/student");
+        assertEquals(1, model.getFilteredPersonList().getFirst().getTags().size());
+        assertEquals("Added tag \"StUdEnT\" to 0 member(s). 2 already had this tag.",
+                logic.execute("tagall t/StUdEnT").getFeedbackToUser());
+
+        logic.execute("untag 1 t/sTuDeNt");
+        assertEquals(1, logic.getFilteredPersonList().size());
+        logic.execute("list");
+        assertEquals("Renamed tag \"STUDENT\" to \"Alumni\" for 1 member(s).",
+                logic.execute("renametag t/STUDENT t/Alumni").getFeedbackToUser());
+        assertEquals("Removed tag \"ALUMNI\" from 1 member(s). 1 did not have this tag.",
+                logic.execute("untagall t/ALUMNI").getFeedbackToUser());
+        assertTrue(model.getAddressBook().getPersonList().stream().allMatch(person -> person.getTags().isEmpty()));
+
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook().getPersonList(), saved.getPersonList());
     }
 
     @Test
@@ -738,21 +777,47 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_renameTagWithActiveSearch_renamesWholeRosterAndSaves() throws Exception {
+    public void execute_renameTagWithActiveSearch_renamesDisplayedMembersAndSaves() throws Exception {
         model.setAddressBook(getTypicalAddressBook());
         logic.execute("find Alice");
 
-        assertEquals("Renamed tag \"friends\" to \"buddies\" for 3 member(s).",
+        assertEquals("Renamed tag \"friends\" to \"buddies\" for 1 member(s).",
                 logic.execute("renametag t/friends t/buddies").getFeedbackToUser());
 
-        // The search stays applied, while hidden members are renamed too.
+        // The search stays applied, and hidden members keep the current tag.
         assertEquals(1, logic.getFilteredPersonList().size());
-        Tag friends = new Tag("friends");
-        assertTrue(model.getAddressBook().getPersonList().stream().noneMatch(person ->
-                person.getTags().contains(friends)));
+        assertTrue(model.getAddressBook().getPersonList().contains(
+                new PersonBuilder(ALICE).withTags("buddies").build()));
+        assertTrue(model.getAddressBook().getPersonList().contains(BENSON));
+        assertTrue(model.getAddressBook().getPersonList().contains(DANIEL));
         ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
                 temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
         assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+    }
+
+    @Test
+    public void execute_caseOnlyRename_savesRequestedSpelling() throws Exception {
+        model.addPerson(new PersonBuilder().withName("Alice").withTags("student").build());
+        model.addPerson(new PersonBuilder().withName("Bob").withTags("Student").build());
+
+        assertEquals("Renamed tag \"STUDENT\" to \"Student\" for 1 member(s).",
+                logic.execute("renametag t/STUDENT t/Student").getFeedbackToUser());
+
+        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
+                .readAddressBook().orElseThrow();
+        assertTrue(saved.getPersonList().stream().allMatch(person ->
+                person.getTags().stream().anyMatch(tag -> tag.tagName.equals("Student"))));
+    }
+
+    @Test
+    public void execute_renameTagOnlyOnHiddenMembers_doesNotSave() throws Exception {
+        model.setAddressBook(getTypicalAddressBook());
+        logic.execute("find Carl");
+
+        assertThrows(CommandException.class, String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "friends"), () ->
+                logic.execute("renametag t/friends t/buddies"));
+        assertEquals(getTypicalAddressBook(), model.getAddressBook());
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
     }
 
     @Test
@@ -813,9 +878,10 @@ public class LogicManagerTest {
             AddressBook original = new AddressBook(model.getAddressBook());
             useFailingStorage(error);
             logic.execute("find Amy");
+            logic.execute("clear");
 
             SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
-                    SaveFailureException.class, () -> logic.execute("clear"));
+                    SaveFailureException.class, () -> logic.execute("y"));
 
             assertFalse(failure.isChangeApplied());
             assertEquals(original, model.getAddressBook());

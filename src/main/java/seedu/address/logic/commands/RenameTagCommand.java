@@ -17,17 +17,18 @@ import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 
 /**
- * Renames one tag for every member in the roster, including members hidden by a search or filter.
+ * Renames one tag for every member in the currently displayed list who has it.
  */
 public class RenameTagCommand extends Command {
     public static final String COMMAND_WORD = "renametag";
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Renames a tag for every member in the roster, including hidden members.\n"
+            + ": Renames a tag for every member in the current list who has it. "
+            + "Hidden members are not changed.\n"
             + "Parameters: t/CURRENT_TAG t/NEW_TAG\n"
             + "Example: " + COMMAND_WORD + " t/batch2026 t/alumni";
     public static final String MESSAGE_SUCCESS = "Renamed tag \"%1$s\" to \"%2$s\" for %3$d member(s).";
     public static final String MESSAGE_MERGED = " %1$d already had \"%2$s\".";
-    public static final String MESSAGE_TAG_NOT_FOUND = "No member has the tag \"%1$s\".";
+    public static final String MESSAGE_TAG_NOT_FOUND = "No member in the current list has the tag \"%1$s\".";
     public static final String MESSAGE_SAME_TAG = "The new tag must be different from the current tag.";
 
     private static final Logger logger = LogsCenter.getLogger(RenameTagCommand.class);
@@ -36,7 +37,8 @@ public class RenameTagCommand extends Command {
     private final Tag newTag;
 
     /**
-     * Creates a command that replaces {@code oldTag} with {@code newTag} for every member who has {@code oldTag}.
+     * Creates a command that replaces {@code oldTag} with {@code newTag} for every displayed member
+     * who has {@code oldTag}.
      */
     public RenameTagCommand(Tag oldTag, Tag newTag) {
         requireAllNonNull(oldTag, newTag);
@@ -47,29 +49,36 @@ public class RenameTagCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        if (oldTag.equals(newTag)) {
+        if (oldTag.tagName.equals(newTag.tagName)) {
             throw new CommandException(MESSAGE_SAME_TAG);
         }
-        // Copies the targets first, as updating a member changes the roster being read.
-        List<Person> targets = model.getAddressBook().getPersonList().stream()
+        // Copies the targets first, as updating a member refreshes the displayed list.
+        List<Person> targets = model.getFilteredPersonList().stream()
                 .filter(person -> person.getTags().contains(oldTag))
                 .toList();
         if (targets.isEmpty()) {
-            logger.info(String.format("renametag rejected: no member has tag %s", oldTag.tagName));
+            logger.info(String.format("renametag rejected: no displayed member has tag %s", oldTag.tagName));
             throw new CommandException(String.format(MESSAGE_TAG_NOT_FOUND, oldTag.tagName));
         }
 
+        boolean isCaseOnlyRename = oldTag.equals(newTag);
+        int renamedCount = 0;
         int mergedCount = 0;
         for (Person target : targets) {
-            if (target.getTags().contains(newTag)) {
+            if (isCaseOnlyRename && target.getTags().stream()
+                    .anyMatch(tag -> tag.tagName.equals(newTag.tagName))) {
+                continue;
+            }
+            if (!isCaseOnlyRename && target.getTags().contains(newTag)) {
                 mergedCount++;
             }
             model.setPerson(target, createRenamedPerson(target));
+            renamedCount++;
         }
 
         logger.info(String.format("renametag t/%s t/%s: updated %d member(s), %d already had the new tag",
-                oldTag.tagName, newTag.tagName, targets.size(), mergedCount));
-        String message = String.format(MESSAGE_SUCCESS, oldTag.tagName, newTag.tagName, targets.size());
+                oldTag.tagName, newTag.tagName, renamedCount, mergedCount));
+        String message = String.format(MESSAGE_SUCCESS, oldTag.tagName, newTag.tagName, renamedCount);
         if (mergedCount > 0) {
             message += String.format(MESSAGE_MERGED, mergedCount, newTag.tagName);
         }
@@ -98,12 +107,13 @@ public class RenameTagCommand extends Command {
             return false;
         }
 
-        return oldTag.equals(otherRenameTagCommand.oldTag) && newTag.equals(otherRenameTagCommand.newTag);
+        return oldTag.tagName.equals(otherRenameTagCommand.oldTag.tagName)
+                && newTag.tagName.equals(otherRenameTagCommand.newTag.tagName);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(oldTag, newTag);
+        return Objects.hash(oldTag.tagName, newTag.tagName);
     }
 
     @Override

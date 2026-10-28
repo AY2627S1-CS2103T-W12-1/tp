@@ -15,7 +15,8 @@ ModelManager --> "0..*" Predicate : additionalFilters
 ActiveFilter --> "1" Predicate : predicate
 PersonSelectionPredicate ..|> Predicate
 note bottom of ActiveFilter
-Name, email and tag conditions.
+Name, email, tag and show conditions.
+Each show condition wraps one selection predicate.
 All active conditions are combined with AND.
 end note
 @enduml

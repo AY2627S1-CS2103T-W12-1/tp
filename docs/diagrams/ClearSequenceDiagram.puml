@@ -1,14 +1,20 @@
 @startuml
 !include style.puml
 skinparam ArrowFontStyle plain
+mainframe sd ExecuteConfirmedClear
 participant ":LogicManager" as logic LOGIC_COLOR
 participant "command:ClearCommand" as command LOGIC_COLOR
 participant "model:Model" as model MODEL_COLOR
 participant "storage:Storage" as storage STORAGE_COLOR
 
-[-> logic : execute("clear")
+note over logic, command
+A prior clear request stored the pending command and prompted for confirmation.
+This trace confirms it. Any other reply cancels without executing or saving.
+An already-empty roster reaches the same execution flow directly from clear.
+end note
+[-> logic : execute("y")
 activate logic
-note over logic, command: Parsing omitted; command is ClearCommand.
+note over logic, command: Consume the pending command without parsing y as a new command.
 logic -> model : getAddressBook()
 activate model
 model --> logic : currentRoster

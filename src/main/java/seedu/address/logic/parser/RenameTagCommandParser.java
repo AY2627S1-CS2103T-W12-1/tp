@@ -30,7 +30,7 @@ public class RenameTagCommandParser implements Parser<RenameTagCommand> {
 
         Tag oldTag = BulkTagArgumentParser.parseTagName(tagValues.get(0));
         Tag newTag = BulkTagArgumentParser.parseTagName(tagValues.get(1));
-        if (oldTag.equals(newTag)) {
+        if (oldTag.tagName.equals(newTag.tagName)) {
             throw new ParseException(MESSAGE_SAME_TAG);
         }
         return new RenameTagCommand(oldTag, newTag);

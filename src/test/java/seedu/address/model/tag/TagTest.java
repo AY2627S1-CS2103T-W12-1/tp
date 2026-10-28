@@ -10,12 +10,17 @@ import org.junit.jupiter.api.Test;
 public class TagTest {
 
     @Test
-    public void equalityAndHashCode_preserveCaseSensitiveTagIdentity() {
+    public void equalityAndHashCode_ignoreLetterCase() {
         Tag tag = new Tag("committee");
         assertTrue(tag.equals(tag));
         assertEquals(tag, new Tag("committee"));
         assertEquals(tag.hashCode(), new Tag("committee").hashCode());
-        assertFalse(tag.equals(new Tag("Committee")));
+        assertEquals(tag, new Tag("Committee"));
+        assertEquals(tag, new Tag("COMMITTEE"));
+        assertEquals(tag.hashCode(), new Tag("Committee").hashCode());
+        assertEquals("committee", tag.tagName);
+        assertEquals("Committee", new Tag("Committee").tagName);
+        assertFalse(tag.equals(new Tag("committees")));
         assertFalse(tag.equals(null));
         assertFalse(tag.equals("committee"));
     }
@@ -38,12 +43,19 @@ public class TagTest {
 
         assertFalse(Tag.isValidTagName(""));
         assertFalse(Tag.isValidTagName("a".repeat(31)));
-        assertFalse(Tag.isValidTagName("committee-member"));
+        assertFalse(Tag.isValidTagName("-committee"));
+        assertFalse(Tag.isValidTagName("committee-"));
+        assertFalse(Tag.isValidTagName("committee--member"));
+        assertFalse(Tag.isValidTagName("committee member"));
+        assertFalse(Tag.isValidTagName("committee/member"));
         assertFalse(Tag.isValidTagName("café"));
 
         assertTrue(Tag.isValidTagName("a"));
         assertTrue(Tag.isValidTagName("Year1"));
+        assertTrue(Tag.isValidTagName("year-1"));
+        assertTrue(Tag.isValidTagName("committee-member"));
         assertTrue(Tag.isValidTagName("a".repeat(30)));
+        assertTrue(Tag.isValidTagName("a".repeat(28) + "-1"));
     }
 
 }

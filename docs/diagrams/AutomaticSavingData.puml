@@ -18,7 +18,7 @@ if (Parsing and execution succeeded?) then (no)
 else (yes)
 endif
 
-if (Read-only command or cancelled deletion?) then (yes)
+if (Read-only command, pending confirmation,\nor cancelled confirmation?) then (yes)
     :Show result without saving;
     stop
 else (no)
@@ -26,9 +26,11 @@ endif
 
 :Attempt to save the complete roster;
 note right
-Validate the existing roster and rotate its backup
-only when the member data differs. Write to a
-sibling temporary file, then replace atomically.
+Check the last-read/saved baseline for outside changes.
+Validate the existing roster; rotate its backup only
+when member data differs, including tag spelling.
+Write to a sibling temporary file, then replace atomically.
+If that write fails, roll back the backup rotation.
 end note
 if (Save succeeded?) then (yes)
     :Show result;

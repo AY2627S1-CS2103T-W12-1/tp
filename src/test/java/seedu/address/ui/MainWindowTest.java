@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 
@@ -178,8 +179,9 @@ public class MainWindowTest {
             enter("list");
             assertEquals("Showing 1 member.", feedback.getText());
             enter("clear");
+            enter("y");
             assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, feedback.getText());
-            assertEquals("clear", input.getText());
+            assertEquals("y", input.getText());
             assertEquals(1, model.getFilteredPersonList().size());
         });
     }
@@ -216,6 +218,35 @@ public class MainWindowTest {
         assertEquals(savedBackup, Files.readString(backupFile));
         assertEquals(rosterModified, Files.getLastModifiedTime(dataFile));
         assertEquals(backupModified, Files.getLastModifiedTime(backupFile));
+    }
+
+    @Test
+    public void enter_clearAwaitingConfirmation_preservesFilteredRosterUntilConfirmed() throws Exception {
+        onJavaFxThread(() -> {
+            enter("find Alice");
+            enter("clear");
+            assertEquals(String.format(ClearCommand.MESSAGE_CONFIRMATION, 2), feedback.getText());
+            assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertEquals(CommandBox.CONFIRMATION_PROMPT, input.getPromptText());
+            assertDisplayedNames("Alice Tan");
+            assertEquals(2, model.getAddressBook().getPersonList().size());
+            assertFalse(Files.exists(temporaryFolder.resolve("members.json")));
+
+            input.fireEvent(new ActionEvent());
+            assertEquals(ClearCommand.MESSAGE_CANCELLED, feedback.getText());
+            assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertEquals(CommandBox.DEFAULT_PROMPT, input.getPromptText());
+            assertDisplayedNames("Alice Tan");
+            assertEquals(2, model.getAddressBook().getPersonList().size());
+
+            enter("clear");
+            enter("y");
+            assertEquals("Cleared 2 members. The roster is now empty.", feedback.getText());
+            assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertDisplayedNames();
+        });
+        assertTrue(new JsonAddressBookStorage(temporaryFolder.resolve("members.json"))
+                .readAddressBook().orElseThrow().getPersonList().isEmpty());
     }
 
     @Test
@@ -318,18 +349,25 @@ public class MainWindowTest {
             assertEquals("ROSTER · 2 shown", heading.getText());
             assertFalse(chips.isVisible());
 
-            enter("show 1");
-            assertEquals("ROSTER · 1 shown", heading.getText());
-            assertEquals(List.of("Show: active"), chipLabels(chips));
+            enter("show 1 2");
+            assertEquals("ROSTER · 2 shown", heading.getText());
+            assertEquals(List.of("Show: 2 selected"), chipLabels(chips));
             assertEquals(2, ((HBox) chips.getChildren().getFirst()).getChildren().size());
             Label showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
-            assertEquals("Show has been applied once. X removes all show selections.",
+            Button showRemove = (Button) ((HBox) chips.getChildren().getFirst()).getChildren().get(1);
+            assertEquals("Selected members: Alice Tan, Bob Lee",
                     showLabel.getTooltip().getText());
+            assertNull(showRemove.getTooltip());
+            assertEquals("Remove this show selection", showRemove.getAccessibleText());
 
             enter("show 1");
-            showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
-            assertEquals("Show has been applied 2 times. X removes all show selections.",
-                    showLabel.getTooltip().getText());
+            assertEquals("ROSTER · 1 shown", heading.getText());
+            assertEquals(List.of("Show: 2 selected", "Show: 1 selected"), chipLabels(chips));
+            enter("show 1");
+            assertEquals(List.of("Show: 2 selected", "Show: 1 selected"), chipLabels(chips));
+            removeChip(chips, 1);
+            assertEquals("ROSTER · 2 shown", heading.getText());
+            assertEquals(List.of("Show: 2 selected"), chipLabels(chips));
             removeChip(chips, 0);
             assertEquals("ROSTER · 2 shown", heading.getText());
             assertFalse(chips.isVisible());
@@ -337,8 +375,8 @@ public class MainWindowTest {
             enter("show 1");
             enter("find Bob");
             assertEquals("ROSTER · 0 shown", heading.getText());
-            assertEquals(List.of("Name: Bob", "Show: active"), chipLabels(chips));
-            removeChip(chips, 1);
+            assertEquals(List.of("Show: 1 selected", "Name: Bob"), chipLabels(chips));
+            removeChip(chips, 0);
             assertEquals("ROSTER · 1 shown", heading.getText());
             assertEquals(List.of("Name: Bob"), chipLabels(chips));
             assertDisplayedNames("Bob Lee");
@@ -346,6 +384,60 @@ public class MainWindowTest {
             enter("list");
             assertEquals("ROSTER · 2 shown", heading.getText());
             assertFalse(chips.isVisible());
+        });
+    }
+
+    @Test
+    public void showChip_afterLastSelectedMemberDeleted_keepsEmptySelectionUntilRemoved() throws Exception {
+        onJavaFxThread(() -> {
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+            enter("show 1");
+            enter("delete 1");
+            enter("y");
+
+            assertEquals(List.of("Show: 0 selected"), chipLabels(chips));
+            Label showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
+            assertEquals("Selected members: No selected members remain", showLabel.getTooltip().getText());
+            assertDisplayedNames();
+
+            removeChip(chips, 0);
+            assertDisplayedNames("Bob Lee");
+        });
+    }
+
+    @Test
+    public void showChips_keepCommandOrderAsFiltersChange() throws Exception {
+        onJavaFxThread(() -> {
+            Person alice = model.getAddressBook().getPersonList().getFirst();
+            model.setPerson(alice, new PersonBuilder(alice).withTags("committee").build());
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+
+            enter("show 1");
+            enter("show 1");
+            enter("find Alice");
+            enter("filter t/committee");
+            assertEquals(List.of("Show: 1 selected", "Name: Alice", "Tag: committee"),
+                    chipLabels(chips));
+            assertDisplayedNames("Alice Tan");
+
+            removeChip(chips, 1);
+            assertEquals(List.of("Show: 1 selected", "Tag: committee"), chipLabels(chips));
+            removeChip(chips, 0);
+            assertEquals(List.of("Tag: committee"), chipLabels(chips));
+
+            enter("show 1");
+            assertEquals(List.of("Tag: committee", "Show: 1 selected"), chipLabels(chips));
+
+            enter("find Alice");
+            assertEquals(List.of("Tag: committee", "Show: 1 selected", "Name: Alice"), chipLabels(chips));
+            removeChip(chips, 0);
+            assertEquals(List.of("Show: 1 selected", "Name: Alice"), chipLabels(chips));
+
+            enter("list");
+            enter("show 1");
+            enter("filter t/committee");
+            enter("find Alice");
+            assertEquals(List.of("Show: 1 selected", "Tag: committee", "Name: Alice"), chipLabels(chips));
         });
     }
 
@@ -650,6 +742,7 @@ public class MainWindowTest {
             assertTrue(guide.isShowing());
             Event.fireEvent(guide.getScene(), key(KeyCode.ESCAPE));
             enter("clear");
+            enter("y");
             enter("add n/Zara Tan p/90000001 e/zara@example.com a/Test Road t/committee");
             enter("add n/bob Lee p/90000002 e/bob@example.com a/Test Road t/year1");
             enter("add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee");
@@ -672,6 +765,7 @@ public class MainWindowTest {
             enter("y");
             assertDisplayedNames("Zara Tan", "Alice Tan");
             enter("clear");
+            enter("y");
             enter("import p/\"" + exported + "\"");
             assertTrue(feedback.getText().startsWith("Imported 3 member(s)"));
             assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");
@@ -682,6 +776,7 @@ public class MainWindowTest {
                     .noneMatch(tag -> tag.tagName.equals("committee")));
             enter("find Alice");
             enter("clear");
+            enter("y");
             assertEquals("Cleared 3 members. The roster is now empty.", feedback.getText());
             enter("list");
             assertEquals("No members in the roster.", feedback.getText());

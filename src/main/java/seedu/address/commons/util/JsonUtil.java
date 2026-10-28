@@ -26,6 +26,7 @@ import seedu.address.commons.exceptions.DataLoadingException;
 public class JsonUtil {
 
     private static final Logger logger = LogsCenter.getLogger(JsonUtil.class);
+    private static final char BYTE_ORDER_MARK = '\uFEFF';
 
     private static ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules()
             .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
@@ -39,7 +40,12 @@ public class JsonUtil {
 
     static <T> T deserializeObjectFromJsonFile(Path jsonFile, Class<T> classOfObjectToDeserialize)
             throws IOException {
-        return fromJsonString(FileUtil.readFromFile(jsonFile), classOfObjectToDeserialize);
+        String json = FileUtil.readFromFile(jsonFile);
+        // Some editors, such as Windows Notepad, start UTF-8 files with a byte order mark.
+        if (!json.isEmpty() && json.charAt(0) == BYTE_ORDER_MARK) {
+            json = json.substring(1);
+        }
+        return fromJsonString(json, classOfObjectToDeserialize);
     }
 
     /**

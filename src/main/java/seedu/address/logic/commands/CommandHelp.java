@@ -19,8 +19,11 @@ public enum CommandHelp {
     SHOW("Browse members", "show", "Show only selected members", "show INDEX [MORE_INDEXES]...", "show 1 3",
             "Show only the members at the specified numbers in the current list.",
             "Shows members 1 and 3 in their current order, then renumbers the displayed list.",
-            "One Show: active box represents every show selection. Use its X to remove them all while keeping "
-                    + "other filters, or use list to restore everyone. Repeated numbers select a member once. "
+            "Each distinct show selection adds a box with its selected-member count. Repeating the same "
+                    + "selection adds no box. Hover over a box label to see names in alphabetical order, "
+                    + "ignoring case; use its X to remove only that selection while keeping other filters, "
+                    + "or use list to restore everyone. "
+                    + "Repeated numbers select a member once. "
                     + "A later show uses the new numbers.",
             "Supply space-separated positive displayed numbers. An invalid or missing number leaves the view "
                     + "unchanged."),
@@ -51,13 +54,16 @@ public enum CommandHelp {
     FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
             "Shows currently displayed members with the specified tag without changing saved data.",
             "Shows only members tagged committee, in their current order with new displayed numbers.",
-            "Matching is exact and case-sensitive. Repeated filters narrow the list further, and the result "
-                    + "names all active tags. Boxes appear left to right in command order, not matching priority. "
+            "Matching ignores letter case. Adding another tag narrows the list further, and the result "
+                    + "names all active tags. Repeating an active tag leaves the view unchanged and reports "
+                    + "that no changes were made. Boxes appear left to right in command order, not matching priority. "
                     + "Use a filter's X to remove it, or list to show everyone. Find also narrows the current results. "
                     + "Findemail searches email addresses across the whole roster and replaces previous filters. "
                     + "Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
-            "Supply exactly one tag of 1 to 30 ASCII letters or digits. Empty tags, internal spaces, "
+            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens. "
+                    + "Empty tags, internal spaces, "
                     + "multiple tags, and extra arguments are rejected."),
     ADD("Manage members", "add", "Add a member",
             "add n/NAME p/PHONE e/EMAIL [a/ADDRESS] [t/TAG]...",
@@ -88,7 +94,7 @@ public enum CommandHelp {
             "Adds one tag to the member at a displayed list number while retaining their other tags.",
             "Adds committee to member 1 and shows their name and updated tags after saving.",
             "Check the current list number first. Existing tags, searches, filters and sorting remain in place. "
-                    + "A member who already has the tag is left unchanged.",
+                    + "A member who already has the tag, even with different capitalization, is left unchanged.",
             "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
                     + "Invalid input or a missing member is rejected. If saving fails, the change remains in this "
                     + "session; follow the recovery guidance before exiting."),
@@ -98,7 +104,9 @@ public enum CommandHelp {
                     + "after saving.",
             "Use find or filter first to choose the group, then check the list. The current search, filters and "
                     + "sorting stay applied.",
-            "Supply exactly one tag of 1 to 30 ASCII letters or digits after t/. Empty tags, internal spaces, "
+            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens after t/. "
+                    + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
                     + "recovery guidance before exiting."),
@@ -108,7 +116,9 @@ public enum CommandHelp {
                     + "after saving.",
             "Use find or filter first to choose the group, then check the list. Removing the tag used by an active "
                     + "filter hides the updated members; use list to show everyone again.",
-            "Supply exactly one tag of 1 to 30 ASCII letters or digits after t/. Empty tags, internal spaces, "
+            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
+                    + "internal hyphens after t/. "
+                    + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
                     + "recovery guidance before exiting."),
@@ -117,21 +127,23 @@ public enum CommandHelp {
             "Removes friends from member 1 and shows their name and updated tags after saving.",
             "Check the current list number first. Other tags, searches, filters and sorting remain in place. "
                     + "Removing a tag used by an active filter may hide the member from the current list.",
-            "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
+            "Supply one current positive displayed number and one tag of 1 to 30 characters using ASCII "
+                    + "letters or digits with optional internal hyphens. "
                     + "Invalid input or a missing member is rejected. If the member lacks the tag, no change is "
                     + "made. If saving fails, follow the recovery guidance before exiting."),
-    RENAMETAG("Manage members", "renametag", "Rename a tag for everyone", "renametag t/CURRENT_TAG t/NEW_TAG",
+    RENAMETAG("Manage members", "renametag", "Rename a tag for the current list", "renametag t/CURRENT_TAG t/NEW_TAG",
             "renametag t/batch2026 t/alumni",
-            "Replaces one tag with another for every member, including members hidden by a search or filter.",
-            "Changes batch2026 to alumni for each member who has it, and reports how many members changed "
-                    + "after saving.",
-            "Tags are case-sensitive, so renametag t/committee t/Committee is a valid rename. A member who already "
-                    + "has the new tag keeps one copy. Renaming the tag used by an active filter hides the updated "
-                    + "members; use list to show everyone again.",
-            "Supply exactly two tags of 1 to 30 ASCII letters or digits, each after t/. The two tags must differ. "
-                    + "A current tag that no member has is rejected without changes. If saving fails, the changes "
-                    + "remain in this session and the command box clears; follow the recovery guidance before "
-                    + "exiting."),
+            "Replaces one tag with another for every member in the current list. Hidden members are not changed.",
+            "Changes batch2026 to alumni for each displayed member who has it, and reports how many members "
+                    + "changed after saving.",
+            "Tags match regardless of letter case. Run list first to rename for everyone, for example before "
+                    + "renametag t/committee t/Committee to standardize capitalization. A member with both "
+                    + "distinct tags keeps only the replacement. Renaming the tag used by an active filter hides "
+                    + "the updated members; use list to show everyone again.",
+            "Supply exactly two tags of 1 to 30 ASCII letters or digits, each after t/. Their spellings must differ. "
+                    + "A current tag that no displayed member has is rejected without changes. If saving fails, "
+                    + "the changes remain in this session and the command box clears; follow the recovery "
+                    + "guidance before exiting."),
     EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
             "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
             "Creates members.csv with name, phone, email, address and tags columns.",
@@ -154,10 +166,12 @@ public enum CommandHelp {
                     + "Quote paths containing whitespace. "
                     + "Packaged builds read files only inside the JAR folder. Values in the tags column are "
                     + "separated with semicolons.",
-            "Supply one readable .csv path after p/. Invalid files do not change the roster. If saving fails, the "
-                    + "imported batch remains unsaved in this session. Fix storage, then reapply an existing "
-                    + "field with edit "
-                    + "to save it; use clear for an empty roster. Exiting before a successful retry loses the batch."),
+            "Supply one readable .csv path after p/. The file must be at most 10 MiB with at most 10,000 member rows. "
+                    + "Split larger files before importing. A missing file reports its resolved path; "
+                    + "check the file name and location. Invalid files do not change the roster. "
+                    + "If saving fails, the imported batch remains unsaved in this session. "
+                    + "Fix storage, then reapply an existing field with edit to save it; "
+                    + "use clear for an empty roster. Exiting before a successful retry loses the batch."),
     DELETE("Remove records", "delete", "Delete one member", "delete INDEX", "delete 2",
             "Permanently removes the member at a displayed list number after you confirm the deletion.",
             "Asks you to confirm deleting the second member in the current list. Typing y deletes them and shows "
@@ -168,10 +182,13 @@ public enum CommandHelp {
                     + "are rejected. If saving fails, the deletion remains in this session and the command box clears; "
                     + "do not repeat the deletion to retry saving."),
     CLEAR("Remove records", "clear", "Clear the whole roster", "clear", "clear",
-            "Permanently removes every member, including members hidden by a search.",
-            "The roster becomes empty after saving. The result reports how many members were cleared, "
+            "Permanently removes every member after confirmation, including members hidden by a search or filter.",
+            "For a non-empty roster, first shows the total member count and asks you to confirm with y. "
+                    + "After confirmation and saving, the result reports how many members were cleared, "
                     + "or confirms that an already empty roster needed no changes.",
-            "There is no undo or confirmation. Back up your data file before clearing records you may need later.",
+            "Any input other than y cancels without running that input. There is no undo after confirmation. "
+                    + "An already-empty roster saves immediately without confirmation. "
+                    + "Back up records you may need later.",
             "Extra arguments are rejected. If saving fails, the previous roster and displayed list are restored. "
                     + "No members were removed; fix the storage problem before retrying clear."),
     HELP("Help & session", "help", "Open this command guide", "help [COMMAND]", "help edit",
@@ -213,7 +230,10 @@ public enum CommandHelp {
      */
     private static String memberFieldRules() {
         return Name.MESSAGE_CONSTRAINTS + ".\n" + Phone.MESSAGE_CONSTRAINTS + ".\n"
-                + Email.MESSAGE_CONSTRAINTS + "\n" + Tag.MESSAGE_CONSTRAINTS + ".";
+                + "Phone formatting is preserved; country codes are not inferred.\n"
+                + "Within an address, A/ followed by a digit stays literal, as in a/Block A/12.\n"
+                + Email.MESSAGE_CONSTRAINTS + "\n" + Tag.MESSAGE_CONSTRAINTS
+                + ". Tag matching ignores letter case.";
     }
 
     /**

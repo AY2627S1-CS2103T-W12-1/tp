@@ -44,8 +44,8 @@ public class LogicManager implements Logic {
     private final Storage storage;
     private final AddressBookParser addressBookParser;
 
-    /** The deletion awaiting confirmation by the next input, or null if none is pending. */
-    private ConfirmDeleteCommand pendingDeletion;
+    /** The destructive command awaiting confirmation by the next input, or null if none is pending. */
+    private Command pendingConfirmation;
 
     /**
      * Constructs a {@code LogicManager} with the given {@code Model} and {@code Storage}.
@@ -60,27 +60,34 @@ public class LogicManager implements Logic {
     public CommandResult execute(String commandText) throws CommandException, ParseException {
         logger.info("User command received");
 
-        if (pendingDeletion != null) {
-            ConfirmDeleteCommand confirmation = pendingDeletion;
-            // The next input always ends the confirmation, so a later "y" cannot delete anyone.
-            pendingDeletion = null;
+        if (pendingConfirmation != null) {
+            Command confirmation = pendingConfirmation;
+            // The next input always ends the confirmation, so a later "y" cannot repeat a destructive action.
+            pendingConfirmation = null;
             if (!commandText.strip().equals(ConfirmDeleteCommand.CONFIRMATION_WORD)) {
-                logger.info("Deletion cancelled; the cancelling input was not run as a command");
-                return new CommandResult(ConfirmDeleteCommand.MESSAGE_CANCELLED);
+                logger.info("Confirmation cancelled; the cancelling input was not run as a command");
+                return new CommandResult(confirmation instanceof ClearCommand
+                        ? ClearCommand.MESSAGE_CANCELLED : ConfirmDeleteCommand.MESSAGE_CANCELLED);
             }
-            logger.info("Deletion confirmed");
+            logger.info("Destructive command confirmed");
             return executeAndSave(confirmation);
         }
 
         Command command = addressBookParser.parseCommand(commandText);
+        int memberCount = model.getAddressBook().getPersonList().size();
+        if (command instanceof ClearCommand && memberCount > 0) {
+            // Delay execution and persistence until the next input explicitly confirms the entire roster.
+            pendingConfirmation = command;
+            return new CommandResult(String.format(ClearCommand.MESSAGE_CONFIRMATION, memberCount));
+        }
         CommandResult commandResult = executeAndSave(command);
-        pendingDeletion = commandResult.getPendingDeletion().orElse(null);
+        pendingConfirmation = commandResult.getPendingDeletion().orElse(null);
         return commandResult;
     }
 
     @Override
     public boolean isAwaitingConfirmation() {
-        return pendingDeletion != null;
+        return pendingConfirmation != null;
     }
 
     /**
@@ -132,16 +139,6 @@ public class LogicManager implements Logic {
     @Override
     public List<ActiveFilter> getActiveFilters() {
         return model.getActiveFilters();
-    }
-
-    @Override
-    public int getActiveShowSelectionCount() {
-        return model.getActiveShowSelectionCount();
-    }
-
-    @Override
-    public void clearShowSelections() {
-        model.clearShowSelections();
     }
 
     @Override

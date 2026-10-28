@@ -1,5 +1,6 @@
 package seedu.address.model.person;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -36,6 +37,19 @@ public class NameTest {
         assertTrue(Name.isValidName("peter the 2nd")); // alphanumeric characters
         assertTrue(Name.isValidName("Capital Tan")); // with capital letters
         assertTrue(Name.isValidName("David Roger Jackson Ray Jr 2nd")); // long names
+    }
+
+    @Test
+    public void unicodeNamesAndPunctuation_preserveSpellingAndRejectCommandCharacters() {
+        for (String value : new String[] {"Anne-Marie", "Jos\u00e9 Garcia", "Jose\u0301 Garcia",
+            "O'Connor", "D\u2019Arcy", "\u674e\u660e"}) {
+            assertTrue(Name.isValidName(value));
+            assertEquals(value, new Name(value).fullName);
+        }
+        for (String value : new String[] {"-Anne", "'Connor", "\u0301", "Alice/Other", "Alice\nBob",
+            "Alice\tBob", "Alice@Bob", "\ud83d\ude00"}) {
+            assertFalse(Name.isValidName(value));
+        }
     }
 
     @Test
