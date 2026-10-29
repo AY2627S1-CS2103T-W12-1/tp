@@ -122,7 +122,7 @@ public class ListClearIntegrationTest {
         String saved = Files.readString(dataFile);
         storage.saveAttempts = 0;
 
-        for (String cancellation : List.of("", "n", "no", "exit", "clear", "delete 1")) {
+        for (String cancellation : List.of("", "n", "no", "not-a-command", "exit", "clear", "delete 1")) {
             String prompt = logic.execute("clear").getFeedbackToUser();
             assertEquals(String.format(ClearCommand.MESSAGE_CONFIRMATION, before.getPersonList().size()), prompt);
             assertTrue(logic.isAwaitingConfirmation());
@@ -150,7 +150,8 @@ public class ListClearIntegrationTest {
         AddressBook before = new AddressBook(model.getAddressBook());
         String prompt = logic.execute("clear").getFeedbackToUser();
 
-        assertEquals("To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.\n\n"
+        assertEquals("To confirm, type yes exactly, in lowercase, and press Enter, or "
+                + "type anything else to cancel (except yes or y in any letter case).\n\n"
                 + prompt, logic.execute(" y ").getFeedbackToUser());
         assertTrue(prompt.contains("Total members: " + before.getPersonList().size()));
         assertTrue(logic.isAwaitingConfirmation());
@@ -241,7 +242,8 @@ public class ListClearIntegrationTest {
             CommandException exception = assertThrows(CommandException.class, () -> logic.execute("yes"));
             assertFalse(logic.isAwaitingConfirmation());
             assertThrows(ParseException.class, () -> logic.execute("yes"));
-            assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, exception.getMessage());
+            assertTrue(exception.getMessage().startsWith(ClearCommand.MESSAGE_SAVE_FAILURE));
+            assertTrue(exception.getMessage().contains(storage.failure.getMessage()));
             assertEquals(failure, exception.getCause());
             assertEquals(before, model.getAddressBook());
             assertEquals(List.of(shown), model.getFilteredPersonList());
@@ -262,7 +264,8 @@ public class ListClearIntegrationTest {
         model.updateFilteredPersonList(person -> false);
         storage.failure = new IOException("Disk full");
         CommandException exception = assertThrows(CommandException.class, () -> logic.execute("clear"));
-        assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, exception.getMessage());
+        assertTrue(exception.getMessage().startsWith(ClearCommand.MESSAGE_SAVE_FAILURE));
+        assertTrue(exception.getMessage().contains(storage.failure.getMessage()));
         assertEquals(1, storage.saveAttempts);
         model.setAddressBook(getTypicalAddressBook());
         assertEquals(List.of(), model.getFilteredPersonList());
