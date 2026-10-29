@@ -11,9 +11,13 @@ public final class Confirmation {
     /** The only input that confirms a pending deletion or clear. */
     public static final String WORD = "yes";
 
+    /** Explains cancellation without treating near misses as cancelling input. */
+    public static final String CANCEL_INSTRUCTION =
+            "type anything else to cancel (except yes or y in any letter case)";
+
     /** Shown for a near miss such as {@code y} or {@code YES}, which keeps the confirmation pending. */
     public static final String REMINDER = "To confirm, type " + WORD
-            + " exactly, in lowercase, and press Enter. To cancel, type anything else.";
+            + " exactly, in lowercase, and press Enter, or " + CANCEL_INSTRUCTION + ".";
 
     /** Appended to a cancellation when the cancelling input was a command, which is not run. */
     public static final String INPUT_NOT_RUN = "\n\"%1$s\" was not run. Enter it again to run it.";

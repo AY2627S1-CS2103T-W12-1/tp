@@ -1651,7 +1651,7 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    `untag 999 t/year1`, `tag 1 t/`, and `untag 1 t/a t/b`; each must fail without changing the roster.
 10. With two stored records and a search showing only one, run `clear`.
    Check that the prompt counts both members and no records change. Reply with `n`; the view and saved file stay unchanged.
-   Run `clear` and reply `Y`; expect `To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type anything else.`
+   Run `clear` and reply `Y`; expect `To confirm, type yes exactly, in lowercase, and press Enter, or type anything else to cancel (except yes or y in any letter case).`
    followed by the clear prompt, with nothing removed.
    Run `clear` again and confirm with `yes`. After saving, expect
    `Cleared 2 members. The roster is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
