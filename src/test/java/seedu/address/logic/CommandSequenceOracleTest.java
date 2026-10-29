@@ -233,18 +233,21 @@ public class CommandSequenceOracleTest {
         private Change findByName() throws Exception {
             String query = "Team" + (char) ('A' + random.nextInt(4));
             command("find " + query);
-            filterKeys.add("name:" + query);
-            restrictions.add(member -> member.name().toLowerCase(Locale.ROOT)
-                    .contains(query.toLowerCase(Locale.ROOT)));
+            if (!filterKeys.contains("name:" + query)) {
+                filterKeys.add("name:" + query);
+                restrictions.add(member -> member.name().toLowerCase(Locale.ROOT)
+                        .contains(query.toLowerCase(Locale.ROOT)));
+            }
             return Change.NONE;
         }
 
         private Change findByEmail() throws Exception {
             String query = "@group" + random.nextInt(3);
             command("findemail " + query);
-            resetFilters();
-            filterKeys.add("email:" + query);
-            restrictions.add(member -> member.getEmail().contains(query));
+            if (!filterKeys.contains("email:" + query)) {
+                filterKeys.add("email:" + query);
+                restrictions.add(member -> member.getEmail().contains(query));
+            }
             return Change.NONE;
         }
 
