@@ -79,7 +79,8 @@
         "persistence-and-invalid-files": "Persistence and invalid files",
         "release-acceptance-checks-still-required": "Release acceptance checks still required",
         "v1-5-release-candidate-changes": "v1.5 release candidate changes",
-        "additional-release-checks": "Additional release checks"
+        "additional-release-checks": "Additional release checks",
+        "displayed-clearing-and-whole-roster-override": "Displayed clearing and whole-roster override"
       },
       "headingKeywords": {}
     },
