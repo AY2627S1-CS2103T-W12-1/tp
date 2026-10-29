@@ -123,7 +123,7 @@ public class MainApp extends Application {
             model.setAddressBook(saved.orElseGet(SampleDataUtil::getSampleAddressBook));
         } catch (DataLoadingException e) {
             logger.warning("The saved roster could not be loaded. Recovery is required: " + e.getMessage());
-            if (!recoverRoster(primaryStage, getLoadingFailureReason(e))) {
+            if (!canStartAfterRecovery(primaryStage, getLoadingFailureReason(e))) {
                 Platform.exit();
                 return;
             }
@@ -140,8 +140,10 @@ public class MainApp extends Application {
      * Preserves the damaged file and requires an explicit choice before exposing the editable roster.
      *
      * @param reason Why the roster could not be loaded, shown in the recovery dialog.
+     * @return True if the user chose to restore the backup or start empty and the roster was recovered,
+     *         or false if they chose to close TrackCall or recovery failed.
      */
-    boolean recoverRoster(Stage owner, String reason) {
+    boolean canStartAfterRecovery(Stage owner, String reason) {
         JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(storage.getAddressBookFilePath());
         try {
             Path preservedFile = addressBookStorage.preserveDamagedFile();

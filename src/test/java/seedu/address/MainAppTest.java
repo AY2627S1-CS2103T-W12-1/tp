@@ -99,7 +99,7 @@ public class MainAppTest {
                 answerDialog("OK");
             });
             answerDialog("Start empty");
-            assertFalse(app.recoverRoster(owner, "Invalid JSON data"));
+            assertFalse(app.canStartAfterRecovery(owner, "Invalid JSON data"));
         });
 
         assertEquals("changed original", Files.readString(roster.getAddressBookFilePath()));
@@ -224,7 +224,7 @@ public class MainAppTest {
         Files.writeString(roster.getAddressBookFilePath(), "damaged roster");
         onJavaFxThread(() -> {
             answerDialog("Close");
-            assertFalse(app.recoverRoster(new Stage(), "Invalid JSON data"));
+            assertFalse(app.canStartAfterRecovery(new Stage(), "Invalid JSON data"));
         });
 
         assertFalse(opened);
@@ -237,7 +237,7 @@ public class MainAppTest {
         Files.createDirectory(roster.getAddressBookFilePath());
         onJavaFxThread(() -> {
             answerDialog("OK");
-            assertFalse(app.recoverRoster(new Stage(), "Invalid JSON data"));
+            assertFalse(app.canStartAfterRecovery(new Stage(), "Invalid JSON data"));
         });
 
         assertFalse(opened);

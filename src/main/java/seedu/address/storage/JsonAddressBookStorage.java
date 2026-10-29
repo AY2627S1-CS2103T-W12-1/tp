@@ -184,6 +184,8 @@ public class JsonAddressBookStorage {
                     .filter(current -> !hasSameSavedData(current, lastKnownRoster))
                     .map(AddressBook::new);
         } catch (DataLoadingException e) {
+            logger.info("Could not check " + filePath + " for outside changes; the save will report any problem: "
+                    + e.getMessage());
             return Optional.empty();
         }
     }
