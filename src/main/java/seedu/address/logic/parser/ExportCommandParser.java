@@ -14,6 +14,10 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class ExportCommandParser implements Parser<ExportCommand> {
 
+    public static final String MESSAGE_QUOTED_PATH =
+            "Export paths must not contain double quotes. Choose a filename without double quotes; "
+            + "spaces are allowed without surrounding quotes.";
+
     public static final String MESSAGE_NON_CSV_FILE = "File must have a .csv extension.";
 
     /**
@@ -22,13 +26,17 @@ public class ExportCommandParser implements Parser<ExportCommand> {
      *
      * @param args the arguments following the export command word.
      * @return an export command for the supplied path or the default filename.
-     * @throws ParseException if the path is invalid for the current filesystem.
+     * @throws ParseException if the path is invalid, contains double quotes, or lacks a CSV extension.
      */
     @Override
     public ExportCommand parse(String args) throws ParseException {
         String filePath = args.trim();
         if (filePath.isEmpty()) {
             filePath = ExportCommand.DEFAULT_FILE_NAME;
+        }
+
+        if (filePath.indexOf('"') >= 0) {
+            throw new ParseException(MESSAGE_QUOTED_PATH);
         }
 
         try {

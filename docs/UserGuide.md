@@ -445,6 +445,8 @@ list and exports. On the next roster save, the other spellings are removed from 
   that folder. The parent directory must already exist and be writable.
 * The destination must end in `.csv` (ignoring letter case). Other extensions and missing extensions are rejected
   with `File must have a .csv extension.` Filenames may contain spaces.
+* Double quotes are rejected anywhere in the export path, including directory names, because `import`
+  cannot read filenames containing them. Choose another name; spaces do not need surrounding quotes.
 * An existing destination file is overwritten.
   The active roster file, preferences file, their backups and recovery copies, application lock, and running JAR
   cannot be used as export destinations. These reserved paths are case-insensitive, including directory names,

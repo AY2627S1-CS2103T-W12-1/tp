@@ -533,6 +533,9 @@ An import-save failure leaves the imported batch in memory and preserves the pre
 
 ![CSV export of the complete roster through an atomic file write](images/CsvExportSequenceDiagram.png)
 
+`ExportCommandParser` rejects double quotes in destination paths before any file is written, so exports do not
+produce filenames that `ImportCommandParser` cannot read. Spaces remain supported without surrounding quotes.
+
 The sequence shows a successful export after command parsing. `LogicManager` supplies the active roster and preferences
 paths to `ExportCommand`, which checks the destination against protected application files before
 calling `CsvAddressBookExporter`. Path resolution also applies the shared file-location restrictions.
