@@ -12,9 +12,12 @@ import java.util.Locale;
  */
 public class Tag {
 
+    public static final int MAX_LENGTH = 30;
+
     public static final String MESSAGE_CONSTRAINTS =
-            "Tag names should be 1 to 30 characters long, using ASCII letters or digits with optional internal hyphens";
-    public static final String VALIDATION_REGEX = "(?=.{1,30}$)[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*";
+            "Tag names should be 1 to " + MAX_LENGTH
+            + " characters long, using ASCII letters or digits with optional internal hyphens";
+    public static final String VALIDATION_REGEX = "(?=.{1," + MAX_LENGTH + "}$)[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*";
 
     public final String tagName;
 

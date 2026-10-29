@@ -698,12 +698,21 @@ commands share one grammar and one set of error messages. It accepts exactly one
 1 to 30 characters using ASCII letters or digits with optional internal hyphens. Surrounding spaces are ignored. `tag` and `untag` use the same method for
 their tag argument.
 
-* Text before `t/`, a missing `t/`, or any `n/`, `p/`, `e/`, or `a/` prefix reports invalid command format
-  with the calling command's usage. These prefixes are tokenized only so that they are not read as part of
-  the tag.
+* A missing `t/` reports `Missing t/ prefix. Supply tags using t/TAG.`
+* Text before a supplied `t/` is named in an `Unexpected text before t/` error.
+* An `n/`, `p/`, `e/`, or `a/` prefix is named as an unsupported field.
+  Each of these errors includes the calling command's usage.
 * An empty tag reports `Tag cannot be empty.`
 * More than one `t/` reports `Only one tag can be applied per command. Run the command once for each tag.`
-* Other invalid tags, including internal spaces and unknown prefixes such as `x/`, report the tag-format message.
+* Unsupported characters are named in the error, followed by the allowed ASCII letters, digits, and internal
+  single hyphens. A space, tab or other whitespace inside a tag reports `Tag cannot contain spaces. Use a hyphen
+  instead, e.g. year-1.` A double quote is shown escaped as `\"`.
+* Leading, trailing, and consecutive hyphens each report a specific error with `year-1` as a valid example.
+* Unsupported characters are checked before length, so non-ASCII code points are not misreported as
+  overlong ASCII tags. Invisible control characters are shown as code points, for example `U+0000`.
+* Overlong tags report their actual length and the limit from `Tag.MAX_LENGTH`.
+* These argument errors give the reason followed by usage without a generic format-error header.
+  Existing index parsing in `tag` and `untag` retains its format-error header.
 
 #### Execution {id="execution-1"}
 
@@ -768,8 +777,9 @@ memory and the previous saved file is unchanged.
 `renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for every displayed member who has it.
 
 `RenameTagCommandParser` reads the `t/` values with `BulkTagArgumentParser#parseTagValues` and requires
-exactly two. A different count, text before the first `t/`, or an `n/`, `p/`, `e/`, or `a/` prefix reports
-invalid command format with the `renametag` usage. Each value is validated by
+exactly two. A different count reports the received count and explains that the current tag precedes the
+new tag. Text before the first `t/` and unsupported member field prefixes receive the shared specific
+errors, with the `renametag` usage. Each value is validated by
 `BulkTagArgumentParser#parseTagName`, so empty and invalid tags report the same messages as `tagall` and
 `untagall`. Identical spellings report `The new tag must be different from the current tag.`
 Case-only changes are allowed so a group can use one capitalization.
