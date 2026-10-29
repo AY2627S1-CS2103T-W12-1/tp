@@ -48,8 +48,8 @@ public class MainApp extends Application {
     static final String REASON_NOT_JSON_FORMAT = "The data file is not valid JSON near line %s, column %s. "
             + "Check the quotes, commas and brackets there.";
     static final String REASON_UNEXPECTED_FORMAT = "The data file is not in the expected format near line %s, "
-            + "column %s. It must be an object with a \"persons\" list, and each member's \"tags\" must be a list "
-            + "of text values.";
+            + "column %s. Check for a missing or extra comma, quote or bracket there. The file must be an object "
+            + "with a \"persons\" list, and each member's \"tags\" must be a list of text values.";
 
     /** Exception types that Jackson throws for text that is not valid JSON. */
     private static final Set<String> JSON_SYNTAX_ERRORS =
