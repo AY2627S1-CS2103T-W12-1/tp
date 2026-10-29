@@ -61,8 +61,7 @@ public enum CommandHelp {
                     + "Findemail searches email addresses across the whole roster and replaces previous filters. "
                     + "Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
-            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
-                    + "internal hyphens. "
+            "Supply exactly one tag. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Empty tags, internal spaces, "
                     + "multiple tags, and extra arguments are rejected."),
     ADD("Manage members", "add", "Add a member",
@@ -95,7 +94,7 @@ public enum CommandHelp {
             "Adds committee to member 1 and shows their name and updated tags after saving.",
             "Check the current list number first. Existing tags, searches, filters and sorting remain in place. "
                     + "A member who already has the tag, even with different capitalization, is left unchanged.",
-            "Supply one current positive displayed number and one tag of 1 to 30 ASCII letters or digits. "
+            "Supply one current positive displayed number and one tag. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Invalid input or a missing member is rejected. If saving fails, the change remains in this "
                     + "session; follow the recovery guidance before exiting."),
     TAGALL("Manage members", "tagall", "Tag every displayed member", "tagall t/TAG", "tagall t/committee",
@@ -104,8 +103,7 @@ public enum CommandHelp {
                     + "after saving.",
             "Use find or filter first to choose the group, then check the list. The current search, filters and "
                     + "sorting stay applied.",
-            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
-                    + "internal hyphens after t/. "
+            "Supply exactly one tag after t/. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
@@ -116,8 +114,7 @@ public enum CommandHelp {
                     + "after saving.",
             "Use find or filter first to choose the group, then check the list. Removing the tag used by an active "
                     + "filter hides the updated members; use list to show everyone again.",
-            "Supply exactly one tag of 1 to 30 characters using ASCII letters or digits with optional "
-                    + "internal hyphens after t/. "
+            "Supply exactly one tag after t/. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
                     + "If saving fails, the changes remain in this session and the command box clears; follow the "
@@ -127,8 +124,7 @@ public enum CommandHelp {
             "Removes friends from member 1 and shows their name and updated tags after saving.",
             "Check the current list number first. Other tags, searches, filters and sorting remain in place. "
                     + "Removing a tag used by an active filter may hide the member from the current list.",
-            "Supply one current positive displayed number and one tag of 1 to 30 characters using ASCII "
-                    + "letters or digits with optional internal hyphens. "
+            "Supply one current positive displayed number and one tag. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Invalid input or a missing member is rejected. If the member lacks the tag, no change is "
                     + "made. If saving fails, follow the recovery guidance before exiting."),
     RENAMETAG("Manage members", "renametag", "Rename a tag for the current list", "renametag t/CURRENT_TAG t/NEW_TAG",
@@ -140,7 +136,8 @@ public enum CommandHelp {
                     + "renametag t/committee t/Committee to standardize capitalization. A member with both "
                     + "distinct tags keeps only the replacement. Renaming the tag used by an active filter hides "
                     + "the updated members; use list to show everyone again.",
-            "Supply exactly two tags of 1 to 30 ASCII letters or digits, each after t/. Their spellings must differ. "
+            "Supply exactly two tags, each after t/. " + Tag.MESSAGE_CONSTRAINTS + ". "
+                    + "Their spellings must differ. "
                     + "A current tag that no displayed member has is rejected without changes. If saving fails, "
                     + "the changes remain in this session and the command box clears; follow the recovery "
                     + "guidance before exiting."),
@@ -152,6 +149,7 @@ public enum CommandHelp {
                     + "overwritten. Tags are sorted and joined with semicolons. The roster and current search "
                     + "stay unchanged.",
             "Use an output path ending in .csv (ignoring letter case), with an existing writable parent directory. "
+                    + "Double quotes are not allowed in export paths; spaces need no surrounding quotes. "
                     + "The active roster, preferences, application lock, and running JAR "
                     + "cannot be export destinations. "
                     + "An invalid path or a failed write reports an error and preserves any previous export."),
@@ -174,19 +172,23 @@ public enum CommandHelp {
                     + "use clear for an empty roster. Exiting before a successful retry loses the batch."),
     DELETE("Remove records", "delete", "Delete one member", "delete INDEX", "delete 2",
             "Permanently removes the member at a displayed list number after you confirm the deletion.",
-            "Asks you to confirm deleting the second member in the current list. Typing y deletes them and shows "
+            "Asks you to confirm deleting the second member in the current list. Typing yes deletes them and shows "
                     + "their name and tags after saving.",
-            "Search first if needed, then check the number and contact details. The confirmation names the member; "
-                    + "any input other than y cancels without running that input. There is no undo after confirming.",
+            "Search first if needed, then check the number and contact details. The confirmation names the member "
+                    + "and their number. Only yes, in lowercase, confirms. y, Y or YES keeps the prompt and "
+                    + "reminds you; any other input "
+                    + "cancels without running that input. There is no undo after confirming.",
             "Supply one positive number shown in the current list. Zero, negative numbers and missing members "
                     + "are rejected. If saving fails, the deletion remains in this session and the command box clears; "
                     + "do not repeat the deletion to retry saving."),
     CLEAR("Remove records", "clear", "Clear the whole roster", "clear", "clear",
             "Permanently removes every member after confirmation, including members hidden by a search or filter.",
-            "For a non-empty roster, first shows the total member count and asks you to confirm with y. "
+            "For a non-empty roster, first shows the total member count and asks you to confirm with yes. "
                     + "After confirmation and saving, the result reports how many members were cleared, "
                     + "or confirms that an already empty roster needed no changes.",
-            "Any input other than y cancels without running that input. There is no undo after confirmation. "
+            "Only yes, in lowercase, confirms. y, Y or YES keeps the prompt and reminds you; "
+                    + "any other input cancels without running "
+                    + "that input. There is no undo after confirmation. "
                     + "An already-empty roster saves immediately without confirmation. "
                     + "Back up records you may need later.",
             "Extra arguments are rejected. If saving fails, the previous roster and displayed list are restored. "

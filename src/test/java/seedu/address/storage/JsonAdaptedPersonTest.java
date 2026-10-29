@@ -125,6 +125,15 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_addressWithLineBreak_throwsLineBreakMessage() {
+        for (String address : new String[] {"Blk 1\nClementi Rd", "Blk 1\r\nClementi Rd", "Blk 1\rClementi Rd"}) {
+            JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, address, VALID_TAGS);
+            assertThrows(IllegalValueException.class, JsonAdaptedPerson.MESSAGE_ADDRESS_LINE_BREAK,
+                    person::toModelType);
+        }
+    }
+
+    @Test
     public void toModelType_invalidAddress_throwsIllegalValueException() {
         JsonAdaptedPerson person =
                 new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, INVALID_ADDRESS, VALID_TAGS);

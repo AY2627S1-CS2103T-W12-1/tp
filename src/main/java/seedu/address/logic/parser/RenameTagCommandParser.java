@@ -12,7 +12,12 @@ import seedu.address.model.tag.Tag;
  * Parses the current and new tags accepted by {@code renametag}.
  */
 public class RenameTagCommandParser implements Parser<RenameTagCommand> {
-    public static final String MESSAGE_SAME_TAG = "The new tag must be different from the current tag.";
+
+    public static final String MESSAGE_CURRENT_TAG_PREFIX = "Current tag: ";
+    public static final String MESSAGE_NEW_TAG_PREFIX = "New tag: ";
+
+    /** The current tag and the new tag. */
+    private static final int REQUIRED_TAG_COUNT = 2;
 
     /**
      * Parses {@code args} into a renametag command with exactly two valid tags.
@@ -24,15 +29,27 @@ public class RenameTagCommandParser implements Parser<RenameTagCommand> {
     public RenameTagCommand parse(String args) throws ParseException {
         List<String> tagValues = BulkTagArgumentParser.parseTagValues(args, RenameTagCommand.MESSAGE_USAGE);
 
-        if (tagValues.size() != 2) {
+        if (tagValues.size() != REQUIRED_TAG_COUNT) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, RenameTagCommand.MESSAGE_USAGE));
         }
 
-        Tag oldTag = BulkTagArgumentParser.parseTagName(tagValues.get(0));
-        Tag newTag = BulkTagArgumentParser.parseTagName(tagValues.get(1));
+        Tag oldTag = parseTag(tagValues.get(0), MESSAGE_CURRENT_TAG_PREFIX);
+        Tag newTag = parseTag(tagValues.get(1), MESSAGE_NEW_TAG_PREFIX);
         if (oldTag.tagName.equals(newTag.tagName)) {
-            throw new ParseException(MESSAGE_SAME_TAG);
+            throw new ParseException(RenameTagCommand.MESSAGE_SAME_TAG);
         }
         return new RenameTagCommand(oldTag, newTag);
+    }
+
+    /**
+     * Parses {@code tagName} into a tag. If it is invalid, the error starts with {@code prefix}, which says
+     * whether the current tag or the new tag is the invalid one.
+     */
+    private static Tag parseTag(String tagName, String prefix) throws ParseException {
+        try {
+            return BulkTagArgumentParser.parseTagName(tagName);
+        } catch (ParseException e) {
+            throw new ParseException(prefix + e.getMessage());
+        }
     }
 }

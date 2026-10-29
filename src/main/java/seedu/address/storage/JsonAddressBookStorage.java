@@ -29,15 +29,16 @@ public class JsonAddressBookStorage {
 
     public static final String MESSAGE_CHANGED_OUTSIDE = "The data file was changed outside TrackCall after it "
             + "was last loaded or saved, so it was not replaced. To keep those outside changes, exit and restart "
-            + "TrackCall. To replace them with this session's roster, retry the save; the outside version will "
-            + "be kept in the backup file.";
+            + "TrackCall; this session's unsaved changes are discarded. To replace them with this session's roster "
+            + "instead, run any command that changes the roster, such as edit with the displayed number and an "
+            + "existing field value; the outside version will be kept in the backup file.";
 
     private static final Logger logger = LogsCenter.getLogger(JsonAddressBookStorage.class);
 
     private Path filePath;
-    // The last observed roster, or null when a successful read found no file.
+    /** The last observed roster, or null when a successful read found no file. */
     private ReadOnlyAddressBook lastKnownRoster;
-    // Distinguishes an observed missing file from a storage instance that has not read or saved yet.
+    /** Distinguishes an observed missing file from a storage instance that has not read or saved yet. */
     private boolean hasObservedRoster;
     /** Keeps the warning's backup promise until a save succeeds or the roster is explicitly reloaded. */
     private boolean backupOutsideOnNextSave;
@@ -199,6 +200,8 @@ public class JsonAddressBookStorage {
                     .filter(current -> lastKnownRoster == null || !hasSameSavedData(current, lastKnownRoster))
                     .map(AddressBook::new);
         } catch (DataLoadingException e) {
+            logger.info("Could not check " + filePath + " for outside changes; the save will report any problem: "
+                    + e.getMessage());
             return Optional.empty();
         }
     }

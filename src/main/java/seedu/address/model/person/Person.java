@@ -4,7 +4,6 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
@@ -86,14 +85,15 @@ public class Person {
      */
     public boolean isDuplicateContactOf(Person otherPerson) {
         return otherPerson != null
-                && normaliseName(name.fullName).equals(normaliseName(otherPerson.getName().fullName))
+                && normaliseName(name.fullName).equalsIgnoreCase(normaliseName(otherPerson.getName().fullName))
                 && phone.value.trim().equals(otherPerson.getPhone().value.trim())
                 && email.value.trim().equals(otherPerson.getEmail().value.trim())
                 && address.value.trim().equals(otherPerson.getAddress().value.trim());
     }
 
+    /** Collapses spacing without locale-sensitive lowercasing, which changes Greek sigma by word position. */
     private static String normaliseName(String value) {
-        return value.replaceAll("(?U)\\s+", " ").trim().toLowerCase(Locale.ROOT);
+        return value.replaceAll("(?U)\\s+", " ").trim();
     }
 
     /**
