@@ -61,7 +61,7 @@ This project uses GitHub Actions for CI. The necessary workflow configuration fi
 
 As part of CI, Gradle generates JaCoCo coverage reports from the tests, and CI uploads the coverage data to Codecov. Codecov then provides information about test coverage.
 
-The CI is configured to fail if the Codecov task fails. Therefore, developers are advised to check the code coverage levels periodically and take corrective actions if the coverage level falls below desired levels.
+CI uploads coverage from pushes to `master` and from pull requests branched inside the team repository. Pull requests from member forks only run the checks, because GitHub gives them no token for the upload. A failed upload is reported without failing the build, so developers are advised to check the code coverage levels periodically on Codecov and take corrective actions if the coverage level falls below desired levels.
 
 To enable Codecov for forks of this project, follow the steps given in [this se-edu guide](https://se-education.org/guides/tutorials/codecov.html).
 
