@@ -2,6 +2,8 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -10,17 +12,17 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.tag.Tag;
 
 /**
- * Parses the single tag accepted by {@code filter}.
+ * Parses the one or more tags accepted by {@code filter}. Several tags in one command are alternatives.
  */
 public class FilterCommandParser implements Parser<FilterCommand> {
     private static final Pattern TAG_ARGUMENT = Pattern.compile("^\\s*t/(.*?)\\s*$", Pattern.DOTALL);
-    private static final Pattern EXTRA_TAG_ARGUMENT = Pattern.compile("\\s+t/");
-    private static final Pattern EXTRA_PARAMETER = Pattern.compile("\\s+[A-Za-z]+/");
-    private static final String MESSAGE_EXTRA_TAG = "Only one t/TAG parameter is allowed per filter command. "
-            + "Apply another tag in a separate command.";
+    /** Whitespace followed by {@code t/}, which separates the tags of one command. */
+    private static final Pattern TAG_SEPARATOR = Pattern.compile("\\s+t/");
+    /** Whitespace followed by a prefix other than {@code t/}, which {@code filter} does not accept. */
+    private static final Pattern EXTRA_PARAMETER = Pattern.compile("\\s+(?!t/)[A-Za-z]+/");
 
     /**
-     * Parses {@code args} into a filter command with exactly one valid tag.
+     * Parses {@code args} into a filter command with at least one valid tag.
      */
     @Override
     public FilterCommand parse(String args) throws ParseException {
@@ -30,17 +32,19 @@ public class FilterCommandParser implements Parser<FilterCommand> {
         }
 
         String tagArgument = matcher.group(1);
-        if (EXTRA_TAG_ARGUMENT.matcher(tagArgument).find()) {
-            throw new ParseException(MESSAGE_EXTRA_TAG);
-        }
         if (EXTRA_PARAMETER.matcher(tagArgument).find()) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, FilterCommand.MESSAGE_USAGE));
         }
 
-        String tagName = tagArgument.trim();
-        if (!Tag.isValidTagName(tagName)) {
-            throw new ParseException(Tag.MESSAGE_CONSTRAINTS + ".");
+        List<Tag> tags = new ArrayList<>();
+        // A negative limit keeps empty trailing values, so "t/a t/" is rejected instead of ignored.
+        for (String untrimmedName : TAG_SEPARATOR.split(tagArgument, -1)) {
+            String tagName = untrimmedName.trim();
+            if (!Tag.isValidTagName(tagName)) {
+                throw new ParseException(Tag.MESSAGE_CONSTRAINTS + ".");
+            }
+            tags.add(new Tag(tagName));
         }
-        return new FilterCommand(new Tag(tagName));
+        return new FilterCommand(tags);
     }
 }

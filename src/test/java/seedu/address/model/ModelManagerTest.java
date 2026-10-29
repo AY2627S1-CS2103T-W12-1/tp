@@ -178,7 +178,7 @@ public class ModelManagerTest {
         modelManager.updateFilteredPersonList(nameFilter);
         modelManager.filterFilteredPersonListByTag(friends);
         modelManager.filterFilteredPersonListByTag(owesMoney);
-        assertEquals(List.of("Name: Alice Benson", "Tag: friends", "Tag: owesMoney"),
+        assertEquals(List.of("Name: Alice or Benson", "Tag: friends", "Tag: owesMoney"),
                 modelManager.getActiveFilters().stream().map(ActiveFilter::getLabel).toList());
         assertEquals(List.of(friends, owesMoney), modelManager.getActiveTagFilters());
 
@@ -265,7 +265,7 @@ public class ModelManagerTest {
         modelManager.filterFilteredPersonListByTag(new Tag("friends"));
         modelManager.filterFilteredPersonListByName(new NameContainsKeywordsPredicate(List.of("Meier")));
 
-        assertEquals(List.of("Name: Alice Benson", "Tag: friends", "Name: Meier"),
+        assertEquals(List.of("Name: Alice or Benson", "Tag: friends", "Name: Meier"),
                 modelManager.getActiveFilters().stream().map(ActiveFilter::getLabel).toList());
         assertEquals(List.of(BENSON), modelManager.getFilteredPersonList());
 

@@ -337,8 +337,8 @@ public class MainWindowTest {
             enter("findemail @example.com @school.edu");
             enter("findemail alice");
             FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
-            assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Show: 1 selected",
-                    "Email: @example.com @school.edu", "Email: alice"), chipLabels(chips));
+            assertEquals(List.of("Name: Alice or Bob", "Tag: committee", "Show: 1 selected",
+                    "Email: @example.com or @school.edu", "Email: alice"), chipLabels(chips));
             List<String> originalLabels = chipLabels(chips);
             enter("find BOB ALICE alice");
             assertEquals("This name search is already active. 1 member listed.", feedback.getText());
@@ -355,12 +355,12 @@ public class MainWindowTest {
             removeChip(chips, 5);
             assertDisplayedNames("Alice Tan");
             removeChip(chips, 4);
-            assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Show: 1 selected",
-                    "Email: @example.com @school.edu"), chipLabels(chips));
+            assertEquals(List.of("Name: Alice or Bob", "Tag: committee", "Show: 1 selected",
+                    "Email: @example.com or @school.edu"), chipLabels(chips));
             assertDisplayedNames("Alice Tan");
             removeChip(chips, 3);
             assertDisplayedNames("Alice Tan");
-            assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Show: 1 selected"), chipLabels(chips));
+            assertEquals(List.of("Name: Alice or Bob", "Tag: committee", "Show: 1 selected"), chipLabels(chips));
             enter("list");
             assertEquals(List.of(), chipLabels(chips));
             assertDisplayedNames("Alice Tan", "Bob Lee");
@@ -482,7 +482,7 @@ public class MainWindowTest {
             enter("filter t/classA");
             enter("find Tan");
             enter("filter t/team");
-            assertEquals(List.of("Name: Alice Bob", "Tag: classA", "Name: Tan", "Tag: team"), chipLabels(chips));
+            assertEquals(List.of("Name: Alice or Bob", "Tag: classA", "Name: Tan", "Tag: team"), chipLabels(chips));
             assertTrue(((HBox) chips.getChildren().get(0)).getStyleClass().contains("filter-chip-name"));
             assertTrue(((HBox) chips.getChildren().get(1)).getStyleClass().contains("filter-chip-tag"));
             assertDisplayedNames("Alice Tan");
@@ -494,10 +494,10 @@ public class MainWindowTest {
             removeChip(chips, 3);
             assertFalse(details.isVisible());
             assertEquals(-1, roster.getSelectionModel().getSelectedIndex());
-            assertEquals(List.of("Name: Alice Bob", "Tag: classA", "Name: Tan"), chipLabels(chips));
+            assertEquals(List.of("Name: Alice or Bob", "Tag: classA", "Name: Tan"), chipLabels(chips));
             assertDisplayedNames("Alice Tan");
             removeChip(chips, 2);
-            assertEquals(List.of("Name: Alice Bob", "Tag: classA"), chipLabels(chips));
+            assertEquals(List.of("Name: Alice or Bob", "Tag: classA"), chipLabels(chips));
             assertDisplayedNames("Alice Tan", "Bob Lee");
             removeChip(chips, 0);
             assertEquals(List.of("Tag: classA"), chipLabels(chips));
@@ -528,7 +528,7 @@ public class MainWindowTest {
             HBox chip = (HBox) chips.getChildren().getFirst();
             Label label = (Label) chip.getChildren().getFirst();
             Button removeButton = (Button) chip.getChildren().get(1);
-            assertEquals("Name: " + condition, label.getText());
+            assertEquals("Name: " + condition.replace(" ", " or "), label.getText());
             assertEquals(label.getText(), label.getTooltip().getText());
             assertTrue(label.getWidth() < label.prefWidth(-1), "The long label should be ellipsized");
             assertInside(removeButton, scroll.lookup(".viewport"));

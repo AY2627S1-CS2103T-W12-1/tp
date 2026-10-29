@@ -613,23 +613,31 @@ cumulative searches, order-independent matching, selections, chip removal, sorti
 
 ### Filter members by tag
 
-`filter t/TAG` narrows the displayed list to members with one tag, ignoring letter case, without changing member data.
+`filter t/TAG [t/MORE_TAGS]...` narrows the displayed list to members with at least one of the given tags,
+ignoring letter case, without changing member data. Tags in the same command are alternatives (logical OR);
+separate commands narrow the list further (logical AND).
 Usage examples are in the [User Guide](UserGuide.html#filter-displayed-members-by-tag-filter).
 
 #### Parsing {id="parsing"}
 
-`FilterCommandParser` accepts one `t/TAG` argument, trims surrounding whitespace, and requires 1 to 30
-characters using ASCII letters or digits with optional internal hyphens. Missing, repeated, or invalid arguments are
-rejected before the view changes.
-The parser uses the shared `Tag` model rule before constructing the tag.
+`FilterCommandParser` accepts one or more `t/TAG` arguments. It splits them on whitespace followed by `t/`, trims
+each value, and requires 1 to 30 characters using ASCII letters or digits with optional internal hyphens.
+A missing `t/`, an unknown prefix, or any invalid or empty tag rejects the whole command before the view changes.
+The parser uses the shared `Tag` model rule before constructing each tag. A repeated tag, in any letter case,
+counts once because `FilterCommand` keeps its tags in a `LinkedHashSet`.
 
 #### Execution {id="execution"}
 
-`FilterCommand` checks the active tag filters using case-insensitive `Tag` equality. For a new tag,
-it passes the tag to `ModelManager#filterFilteredPersonListByTag`. The model combines it with the
-active name, email, and tag conditions using logical AND.
-If the tag is already active, it leaves the conditions and displayed list unchanged and reports the
-active tag's stored spelling followed by the current result summary.
+`FilterCommand` passes its tags to `ModelManager#filterFilteredPersonListByTags`, which adds one
+`ActiveFilter` of kind `TAG` whose predicate is true when a member has any of those tags (`anyMatch`).
+The model combines this filter with the active name, email, tag, and `show` conditions using logical AND.
+So `filter t/a t/b` followed by `filter t/c` means (`a` or `b`) and `c`.
+`ActiveFilter#hasSameTags` compares tag sets ignoring order and letter case. If an equal filter is already active,
+`FilterCommand` leaves the conditions and displayed list unchanged and reports the active filter's stored
+spelling followed by the current result summary.
+The filter box label joins alternatives with `or`, for example `Tag: committee or alumni`. `find` and `findemail`
+boxes use the same wording, for example `Name: Alice or Tan` and `Email: @example.com or @school.edu`, because
+keywords within one of those commands are also alternatives.
 The model keeps removable name, email, tag, and `show` conditions in application order, shown left to right in the UI.
 `find` adds a distinct name condition and `findemail` adds a distinct email condition; `list` clears all conditions.
 Applying name, email, and tag conditions in a different order gives the same matching
@@ -637,7 +645,8 @@ members when the roster is unchanged.
 The observable filtered list updates automatically, and the command reports the resulting member
 count and all active tag names.
 A single tag uses `N member(s) listed with tag "TAG".`; multiple tags use
-`N member(s) listed with tags "TAG1", "TAG2".` in application order.
+`N member(s) listed with tags "TAG1", "TAG2".` in application order. Tags that came from one command are
+joined with `or`, for example `N member(s) listed with tags "TAG1" or "TAG2", "TAG3".`
 A zero-match result is successful.
 
 Filtering preserves the current display order, including name sorting. Visible members are renumbered,
@@ -650,6 +659,11 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
   filter without restoring hidden members. For example, filtering by `committee` and then `year1` keeps
   members with both tags. Another `find` or `findemail` also narrows the view;
   `list` clears all conditions.
+* **OR within a command, AND between commands:** keywords of `find` and `findemail` already mean "any",
+  so allowing several tags in one `filter` keeps the three commands consistent. Without it, a request such as
+  "committee or alumni" could not be expressed, because successive filters can only narrow. One `ActiveFilter`
+  holds the whole group, so its X removes all alternatives together. An alternative was one box per tag with an
+  OR flag, but that makes the left-to-right box order ambiguous and the X button's effect unclear.
 * **Keep filters active after edits:** the model retains the predicate rather than a fixed set of matching
   members. Replacing an edited member in the observable list re-evaluates that predicate. A member who no
   longer matches disappears from view but remains in the roster, so later commands operate on the updated group.
@@ -657,7 +671,9 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
 #### Test coverage {id="test-coverage-2"}
 
 * `FilterCommandParserTest` and `FilterCommandTest` cover argument validation, narrowing an existing view,
-  and feedback for a repeated tag with different letter case.
+  feedback for a repeated tag with different letter case, alternatives within one command (OR), and a
+  grouped filter combined with a separate filter (AND). `ModelManagerTest` and `MainWindowTest` cover the
+  `A or B` box labels.
 * `LogicManagerTest` covers cumulative filters, case-insensitive matching, empty results, interactions with
   `find`, `list`, and sorting, and execution without saving.
 * `EditCommandTest` checks that edits retain search and tag conditions and hide members who no longer match.

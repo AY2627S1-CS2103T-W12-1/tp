@@ -203,16 +203,24 @@ public class ModelManager implements Model {
     @Override
     public void filterFilteredPersonListByTag(Tag tag) {
         requireNonNull(tag);
-        if (!getActiveTagFilters().contains(tag)) {
-            activeFilters.add(ActiveFilter.createTagFilter(tag));
-            refreshFilteredPersons();
+        filterFilteredPersonListByTags(List.of(tag));
+    }
+
+    @Override
+    public boolean filterFilteredPersonListByTags(List<Tag> tags) {
+        requireNonNull(tags);
+        if (activeFilters.stream().anyMatch(filter -> filter.hasSameTags(tags))) {
+            return false;
         }
+        activeFilters.add(ActiveFilter.createTagFilter(tags));
+        refreshFilteredPersons();
+        return true;
     }
 
     @Override
     public List<Tag> getActiveTagFilters() {
         return activeFilters.stream().filter(filter -> filter.getKind() == ActiveFilter.Kind.TAG)
-                .map(ActiveFilter::getTag).toList();
+                .flatMap(filter -> filter.getTags().stream()).toList();
     }
 
     @Override

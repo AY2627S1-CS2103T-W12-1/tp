@@ -57,19 +57,22 @@ public enum CommandHelp {
                     + "editing or deleting. An edited member whose email no longer matches disappears from view.",
             "Supply at least one keyword. Matching uses literal text, not regular expressions, and searches "
                     + "email addresses only, not names or phone numbers. Searching does not save the roster."),
-    FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
-            "Shows currently displayed members with the specified tag without changing saved data.",
-            "Shows only members tagged committee, in their current order with new displayed numbers.",
-            "Matching ignores letter case. Adding another tag narrows the list further, and the result "
-                    + "names all active tags. Repeating an active tag leaves the view unchanged and reports "
-                    + "that no changes were made. Boxes appear left to right in command order, not matching priority. "
+    FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG [t/MORE_TAGS]...",
+            "filter t/committee t/alumni",
+            "Shows currently displayed members with any of the specified tags without changing saved data.",
+            "Shows only members tagged committee or alumni, in their current order with new numbers.",
+            "Matching ignores letter case. Tags in the same command mean or, and the box reads "
+                    + "Tag: committee or alumni. A separate filter command narrows the list further (and), "
+                    + "and the result names all active tags. Repeating an active filter leaves the view "
+                    + "unchanged and reports that no changes were made. Boxes appear left to right in "
+                    + "command order, not matching priority. "
                     + "Use a filter's X to remove it, or list to show everyone. Find also narrows the current results. "
                     + "Findemail also narrows the current results by email. "
                     + "Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
-            "Supply exactly one tag. " + Tag.MESSAGE_CONSTRAINTS + ". "
+            "Supply at least one tag, each after t/. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Empty tags, internal spaces, "
-                    + "multiple tags, and extra arguments are rejected."),
+                    + "and extra arguments are rejected, and one invalid tag rejects the whole command."),
     ADD("Manage members", "add", "Add a member",
             "add n/NAME p/PHONE e/EMAIL [a/ADDRESS] [t/TAG]...",
             "add n/Alice Tan p/91234567 e/alice@example.com a/12 Orchard Road t/committee",
