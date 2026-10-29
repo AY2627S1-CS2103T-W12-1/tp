@@ -52,7 +52,8 @@ public class FilterCommand extends Command {
 
     @Override
     public boolean equals(Object other) {
-        return other == this || other instanceof FilterCommand otherFilterCommand && tag.equals(otherFilterCommand.tag);
+        return other == this
+                || other instanceof FilterCommand otherFilterCommand && tag.equals(otherFilterCommand.tag);
     }
 
     @Override

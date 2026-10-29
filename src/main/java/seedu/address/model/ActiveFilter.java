@@ -28,7 +28,8 @@ public final class ActiveFilter {
 
     /** Creates a name condition whose keywords are alternatives within this one search. */
     public static ActiveFilter createNameFilter(NameContainsKeywordsPredicate predicate) {
-        return new ActiveFilter(Kind.NAME, "Name: " + String.join(" ", predicate.getKeywords()), predicate, null);
+        String label = "Name: " + String.join(" ", predicate.getKeywords());
+        return new ActiveFilter(Kind.NAME, label, predicate, null);
     }
 
     /** Creates a condition matching any of the given email fragments. */

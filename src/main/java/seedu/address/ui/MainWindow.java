@@ -46,6 +46,9 @@ import seedu.address.model.person.Person;
 public class MainWindow extends UiPart<Stage> {
 
     private static final String FXML = "MainWindow.fxml";
+    private static final String REMOVE_BUTTON_TEXT = "×";
+    private static final double DIVIDER_POSITION = 0.22;
+    private static final int FILTER_CHIP_SPACING = 6;
 
     private final Logger logger = LogsCenter.getLogger(getClass());
 
@@ -178,7 +181,7 @@ public class MainWindow extends UiPart<Stage> {
 
         commandBox = new CommandBox(this::executeCommand);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
-        mainSplit.setDividerPositions(0.22);
+        mainSplit.setDividerPositions(DIVIDER_POSITION);
         refreshActiveFilters();
         primaryStage.getScene().focusOwnerProperty().addListener((observable, previous, focused) -> {
             if (focused != null && activeFiltersPane.getChildren().contains(focused.getParent())) {
@@ -204,7 +207,8 @@ public class MainWindow extends UiPart<Stage> {
         if (personListPanel.getSelectedPerson() == null || personListPanel.getSelectedIndex() < 0) {
             memberDetailsPanel.clear();
         } else {
-            memberDetailsPanel.showPerson(personListPanel.getSelectedPerson(), personListPanel.getSelectedIndex() + 1);
+            int displayedNumber = personListPanel.getSelectedIndex() + 1;
+            memberDetailsPanel.showPerson(personListPanel.getSelectedPerson(), displayedNumber);
         }
     }
 
@@ -250,16 +254,11 @@ public class MainWindow extends UiPart<Stage> {
         label.setAccessibleText("Show selection active");
         String times = showSelectionCount == 1 ? "once" : showSelectionCount + " times";
         label.setTooltip(new Tooltip("Show has been applied " + times + ". X removes all show selections."));
-        Button removeButton = new Button("×");
-        removeButton.getStyleClass().add("filter-chip-remove");
-        removeButton.setAccessibleText("Remove all show selections");
-        removeButton.setTooltip(new Tooltip("Remove all show selections"));
-        removeButton.setOnAction(event -> {
-            personListPanel.clearSelection();
+        Button removeButton = createRemoveButton("Remove all show selections", () -> {
             logic.clearShowSelections();
             showChipRemoval("Removed all show selections.");
         });
-        HBox chip = new HBox(6, label, removeButton);
+        HBox chip = new HBox(FILTER_CHIP_SPACING, label, removeButton);
         chip.getStyleClass().addAll("filter-chip", "filter-chip-show");
         configureFilterChip(chip, label, removeButton);
         return chip;
@@ -267,23 +266,35 @@ public class MainWindow extends UiPart<Stage> {
 
     /** Creates a box whose X removes exactly the condition represented by {@code filter}. */
     private HBox createFilterChip(ActiveFilter filter) {
-        String removeDescription = "Remove " + filter.getLabel();
         Label label = new Label(filter.getLabel());
         label.setTooltip(new Tooltip(filter.getLabel()));
-        Button removeButton = new Button("×");
-        removeButton.getStyleClass().add("filter-chip-remove");
-        removeButton.setAccessibleText(removeDescription);
-        removeButton.setTooltip(new Tooltip(removeDescription));
-        removeButton.setOnAction(event -> {
-            personListPanel.clearSelection();
+        Button removeButton = createRemoveButton("Remove " + filter.getLabel(), () -> {
             logic.removeActiveFilter(filter);
             showChipRemoval("Removed " + filter.getLabel() + ".");
         });
-        HBox chip = new HBox(6, label, removeButton);
+        HBox chip = new HBox(FILTER_CHIP_SPACING, label, removeButton);
         chip.getStyleClass().add("filter-chip");
         chip.getStyleClass().add("filter-chip-" + filter.getKind().name().toLowerCase(java.util.Locale.ROOT));
         configureFilterChip(chip, label, removeButton);
         return chip;
+    }
+
+    /**
+     * Creates the X button of a filter box. Clicking it clears the list selection, then runs {@code onRemove}.
+     *
+     * @param description Accessible text and tooltip describing what the button removes.
+     * @param onRemove Action that removes the condition and reports the removal.
+     */
+    private Button createRemoveButton(String description, Runnable onRemove) {
+        Button removeButton = new Button(REMOVE_BUTTON_TEXT);
+        removeButton.getStyleClass().add("filter-chip-remove");
+        removeButton.setAccessibleText(description);
+        removeButton.setTooltip(new Tooltip(description));
+        removeButton.setOnAction(event -> {
+            personListPanel.clearSelection();
+            onRemove.run();
+        });
+        return removeButton;
     }
 
     /** Keeps long conditions compact while leaving their removal control reachable. */
