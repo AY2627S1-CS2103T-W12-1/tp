@@ -26,7 +26,7 @@ model --> command
 deactivate model
 command -> model : getFilteredPersonList()
 activate model
-model --> command : sortedPersons
+model --> command : filteredPersons
 note left of command: Count the displayed members.
 deactivate model
 command --> logic : CommandResult with count

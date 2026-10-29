@@ -7,15 +7,13 @@ skinparam classBackgroundColor MODEL_COLOR
 skinparam nodesep 35
 skinparam ranksep 40
 class ModelManager
-class "SortedList<Person>" as Sorted <<JavaFX>>
 class "FilteredList<Person>" as Filtered <<JavaFX>>
 interface "ObservableList<Person>" as Records <<JavaFX>>
-ModelManager -down-> "1" Sorted : sortedPersons
 ModelManager -right-> "1" Filtered : filteredPersons
-Sorted -down-> "1" Filtered : source
 Filtered -down-> "1" Records : source
 note bottom of Records
 Live roster list from AddressBook.
-Filtering and sorting do not reorder stored records.
+Filtering preserves stored order.
+sort reorders the complete roster.
 end note
 @enduml

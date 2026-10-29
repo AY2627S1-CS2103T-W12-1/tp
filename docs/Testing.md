@@ -61,7 +61,7 @@ These categories describe what a test exercises; a suite can cover more than one
 - **`CommandSequenceOracleTest`:** compares the application with an independent reference roster.
   Runs 3,200 steps across eight fixed seeds, covering filters, sorting, selections, tags, CSV,
   deletion confirmation, reloads, and saved-file preservation after read-only commands.
-  A separate scenario checks view rollback after a failed clear.
+  A separate scenario checks condition and stored-order rollback after a failed clear.
 - **`CsvRoundTripRandomizedTest`:** checks that exported data can be imported without losing fields or order.
   Covers quoted and Unicode text, shuffled columns, empty and large rosters, malformed UTF-8,
   invalid final rows, and cleanup after a failed export.

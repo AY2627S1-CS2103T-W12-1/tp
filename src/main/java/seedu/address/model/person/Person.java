@@ -85,15 +85,10 @@ public class Person {
      */
     public boolean isDuplicateContactOf(Person otherPerson) {
         return otherPerson != null
-                && normaliseName(name.fullName).equalsIgnoreCase(normaliseName(otherPerson.getName().fullName))
+                && name.getComparisonKey().equalsIgnoreCase(otherPerson.getName().getComparisonKey())
                 && phone.value.trim().equals(otherPerson.getPhone().value.trim())
                 && email.value.trim().equals(otherPerson.getEmail().value.trim())
                 && address.value.trim().equals(otherPerson.getAddress().value.trim());
-    }
-
-    /** Collapses spacing without locale-sensitive lowercasing, which changes Greek sigma by word position. */
-    private static String normaliseName(String value) {
-        return value.replaceAll("(?U)\\s+", " ").trim();
     }
 
     /**

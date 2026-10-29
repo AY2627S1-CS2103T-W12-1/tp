@@ -16,8 +16,8 @@ state "Narrowed\n(one or more conditions)" as Narrowed
 
 AllMembers --> Narrowed : find / filter / show / findemail
 Narrowed --> AllMembers : remove last chip
-Narrowed --> AllMembers : list, successful add,\nsuccessful clear, valid import
-Narrowed --> Narrowed : add or remove a condition\n(findemail replaces all)
+Narrowed --> AllMembers : list, successful add,\nsuccessful clear /all, valid import
+Narrowed --> Narrowed : add or remove a condition
 
 note left of Narrowed
 All conditions combine with AND.
@@ -26,7 +26,8 @@ selection adds no new condition.
 end note
 
 note right of AllMembers
-sort and delete do not change the state.
-list also turns sorting off.
+sort, delete and displayed clear
+retain the active conditions.
+list preserves stored order.
 end note
 @enduml

@@ -31,5 +31,5 @@ Command --> Logic : CommandResult(exported count, path, hidden count if any)
 deactivate Command
 Logic -->[ : CommandResult
 deactivate Logic
-note over Logic,Model : The roster, filters and sorting remain unchanged.
+note over Logic,Model : The roster order and active filters remain unchanged.
 @enduml

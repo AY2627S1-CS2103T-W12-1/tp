@@ -29,7 +29,6 @@ loop each unique candidate
 Command -> Model : addPerson(candidate)
 end
 Command -> Model : updateFilteredPersonList(SHOW_ALL)
-Command -> Model : setNameSorting(false)
 Command -->[ : CommandResult(imported, skipped)
 deactivate Command
 @enduml
