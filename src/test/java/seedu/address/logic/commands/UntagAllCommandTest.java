@@ -53,7 +53,8 @@ public class UntagAllCommandTest {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         removeTagFromAll(expectedModel, "friends");
-        String expectedMessage = "Removed tag \"friends\" from 3 member(s). 4 did not have this tag.";
+        String expectedMessage = "Removed tag \"friends\" (any letter case)"
+                + " from 3 member(s). 4 did not have this tag.";
 
         try (LogCapture logs = new LogCapture(UntagAllCommand.class)) {
             assertCommandSuccess(new UntagAllCommand(friends), model, expectedMessage, expectedModel);
@@ -68,7 +69,8 @@ public class UntagAllCommandTest {
     public void execute_noDisplayedMemberHasTag_changesNothing() {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        String expectedMessage = "Removed tag \"committee\" from 0 member(s). 7 did not have this tag.";
+        String expectedMessage = "Removed tag \"committee\" (any letter case)"
+                + " from 0 member(s). 7 did not have this tag.";
 
         try (LogCapture logs = new LogCapture(UntagAllCommand.class)) {
             assertCommandSuccess(new UntagAllCommand(committee), model, expectedMessage, expectedModel);
@@ -84,7 +86,7 @@ public class UntagAllCommandTest {
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         expectedModel.updateFilteredPersonList(HAS_FRIENDS_TAG);
         removeTagFromAll(expectedModel, "friends");
-        String expectedMessage = "Removed tag \"friends\" from 3 member(s).";
+        String expectedMessage = "Removed tag \"friends\" (any letter case) from 3 member(s).";
 
         try (LogCapture logs = new LogCapture(UntagAllCommand.class)) {
             assertCommandSuccess(new UntagAllCommand(friends), model, expectedMessage, expectedModel);
@@ -104,7 +106,7 @@ public class UntagAllCommandTest {
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         expectedModel.updateFilteredPersonList(IS_BENSON);
         removeTagFromAll(expectedModel, "friends");
-        String expectedMessage = "Removed tag \"friends\" from 1 member(s).";
+        String expectedMessage = "Removed tag \"friends\" (any letter case) from 1 member(s).";
 
         assertCommandSuccess(new UntagAllCommand(friends), model, expectedMessage, expectedModel);
         assertTrue(model.getAddressBook().getPersonList().contains(ALICE));

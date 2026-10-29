@@ -630,7 +630,7 @@ public class LogicManagerTest {
         logic.execute("list");
         assertEquals("Renamed tag \"STUDENT\" to \"Alumni\" for 1 member(s).",
                 logic.execute("renametag t/STUDENT t/Alumni").getFeedbackToUser());
-        assertEquals("Removed tag \"ALUMNI\" from 1 member(s). 1 did not have this tag.",
+        assertEquals("Removed tag \"ALUMNI\" (any letter case) from 1 member(s). 1 did not have this tag.",
                 logic.execute("untagall t/ALUMNI").getFeedbackToUser());
         assertTrue(model.getAddressBook().getPersonList().stream().allMatch(person -> person.getTags().isEmpty()));
 
@@ -718,7 +718,7 @@ public class LogicManagerTest {
         model.setAddressBook(getTypicalAddressBook());
         logic.execute("filter t/friends");
 
-        assertEquals("Removed tag \"friends\" from 3 member(s).",
+        assertEquals("Removed tag \"friends\" (any letter case) from 3 member(s).",
                 logic.execute("untagall t/friends").getFeedbackToUser());
 
         // The filter stays applied, so the updated members are hidden but still stored.
@@ -760,7 +760,7 @@ public class LogicManagerTest {
         model.addPerson(BOB);
         Path dataFile = temporaryFolder.resolve("addressBook.json");
 
-        assertEquals("Removed tag \"committee\" from 0 member(s). 1 did not have this tag.",
+        assertEquals("Removed tag \"committee\" (any letter case) from 0 member(s). 1 did not have this tag.",
                 logic.execute("untagall t/committee").getFeedbackToUser());
         assertTrue(Files.exists(dataFile));
     }
