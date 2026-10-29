@@ -40,7 +40,7 @@ public class TagAllCommandTest extends BulkTagCommandTest<TagAllCommand> {
         Model model = createTypicalModel();
         Model expectedModel = createTypicalModel();
         addTagToDisplayed(expectedModel, "friends");
-        String expectedMessage = "Added tag \"friends\" to 4 member(s). 3 already had this tag.";
+        String expectedMessage = "Added tag \"friends\" to 4 member(s). 3 already had this tag (any letter case).";
 
         assertCommandSuccessWithLog(new TagAllCommand(friends), model, expectedMessage, expectedModel,
                 "tagall t/friends: updated 4 of 7 displayed member(s), skipped 3");
@@ -51,7 +51,7 @@ public class TagAllCommandTest extends BulkTagCommandTest<TagAllCommand> {
     public void execute_allDisplayedMembersHaveTag_changesNothing() {
         Model model = createTypicalModel(HAS_FRIENDS_TAG);
         Model expectedModel = createTypicalModel(HAS_FRIENDS_TAG);
-        String expectedMessage = "Added tag \"friends\" to 0 member(s). 3 already had this tag."
+        String expectedMessage = "Added tag \"friends\" to 0 member(s). 3 already had this tag (any letter case)."
                 + " No changes were made.";
 
         assertCommandSuccessWithLog(new TagAllCommand(friends), model, expectedMessage, expectedModel,

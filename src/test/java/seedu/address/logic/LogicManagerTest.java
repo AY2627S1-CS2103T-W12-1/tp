@@ -645,7 +645,8 @@ public class LogicManagerTest {
 
         logic.execute("tag 1 t/student");
         assertEquals(1, model.getFilteredPersonList().getFirst().getTags().size());
-        assertEquals("Added tag \"StUdEnT\" to 0 member(s). 2 already had this tag. No changes were made.",
+        assertEquals("Added tag \"StUdEnT\" to 0 member(s). 2 already had this tag (any letter case)."
+                + " No changes were made.",
                 logic.execute("tagall t/StUdEnT").getFeedbackToUser());
 
         logic.execute("untag 1 t/sTuDeNt");
@@ -717,7 +718,8 @@ public class LogicManagerTest {
     public void execute_tagAllWithNoChanges_stillSaves() throws Exception {
         model.addPerson(BOB);
 
-        assertEquals("Added tag \"friend\" to 0 member(s). 1 already had this tag. No changes were made.",
+        assertEquals("Added tag \"friend\" to 0 member(s). 1 already had this tag (any letter case)."
+                + " No changes were made.",
                 logic.execute("tagall t/friend").getFeedbackToUser());
         assertModelSaved();
     }
@@ -790,7 +792,8 @@ public class LogicManagerTest {
         model.setAddressBook(getTypicalAddressBook());
         logic.execute("find Alice");
 
-        assertEquals("Renamed tag \"friends\" to \"buddies\" for 1 member(s).",
+        assertEquals("Renamed tag \"friends\" to \"buddies\" for 1 member(s)."
+                + String.format(RenameTagCommand.MESSAGE_HIDDEN_KEEP_TAG, 2, "friends"),
                 logic.execute("renametag t/friends t/buddies").getFeedbackToUser());
 
         // The search stays applied, and hidden members keep the current tag.
@@ -821,7 +824,8 @@ public class LogicManagerTest {
         model.setAddressBook(getTypicalAddressBook());
         logic.execute("find Carl");
 
-        assertThrows(CommandException.class, String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "friends"), () ->
+        assertThrows(CommandException.class, String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "friends")
+                + String.format(RenameTagCommand.MESSAGE_HIDDEN_HAVE_TAG, 3), () ->
                 logic.execute("renametag t/friends t/buddies"));
         assertEquals(getTypicalAddressBook(), model.getAddressBook());
         assertNothingSaved();

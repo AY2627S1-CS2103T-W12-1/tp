@@ -90,7 +90,8 @@ public class RenameTagCommandTest {
         Model expectedModel = createTypicalModel();
         expectedModel.updateFilteredPersonList(person -> person.isSamePerson(ALICE));
         expectedModel.setPerson(ALICE, new PersonBuilder(ALICE).withTags("buddies").build());
-        String expectedMessage = "Renamed tag \"friends\" to \"buddies\" for 1 member(s).";
+        String expectedMessage = "Renamed tag \"friends\" to \"buddies\" for 1 member(s)."
+                + String.format(RenameTagCommand.MESSAGE_HIDDEN_KEEP_TAG, 2, "friends");
 
         assertCommandSuccess(new RenameTagCommand(friends, buddies), model, expectedMessage, expectedModel);
         assertTrue(model.getAddressBook().getPersonList().contains(BENSON));
@@ -104,7 +105,21 @@ public class RenameTagCommandTest {
         model.updateFilteredPersonList(person -> person.isSamePerson(CARL));
 
         assertCommandFailure(new RenameTagCommand(friends, buddies), model,
-                String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "friends"));
+                String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "friends")
+                        + String.format(RenameTagCommand.MESSAGE_HIDDEN_HAVE_TAG, 3));
+    }
+
+    @Test
+    public void execute_caseOnlyRenameWithHiddenOtherSpelling_mentionsHiddenMembers() throws Exception {
+        Model model = createTypicalModel();
+        model.setPerson(BENSON, new PersonBuilder(BENSON).withTags("FRIENDS").build());
+        model.updateFilteredPersonList(person -> person.isSamePerson(ALICE));
+
+        String feedback = new RenameTagCommand(new Tag("Friends"), new Tag("friends")).execute(model)
+                .getFeedbackToUser();
+
+        assertEquals("Every displayed member with this tag already uses \"friends\". No changes were made."
+                + String.format(RenameTagCommand.MESSAGE_HIDDEN_KEEP_TAG, 1, "Friends"), feedback);
     }
 
     @Test

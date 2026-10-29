@@ -22,7 +22,8 @@ import seedu.address.model.tag.Tag;
  * Members whose tags would not change are skipped.
  */
 public abstract class BulkTagCommand extends Command {
-    public static final String MESSAGE_EMPTY_LIST = "There are no members in the current list to update.";
+    public static final String MESSAGE_EMPTY_LIST = "There are no members in the current list to update. "
+            + "Run list to show everyone, or use find or filter to choose a group.";
 
     protected final Tag tag;
 

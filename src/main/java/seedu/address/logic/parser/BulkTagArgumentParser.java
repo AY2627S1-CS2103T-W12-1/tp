@@ -22,7 +22,8 @@ import seedu.address.model.tag.Tag;
 public final class BulkTagArgumentParser {
     public static final String MESSAGE_EMPTY_TAG = "Tag cannot be empty.";
     public static final String MESSAGE_INVALID_TAG = Tag.MESSAGE_CONSTRAINTS + ".";
-    public static final String MESSAGE_MULTIPLE_TAGS = "Only one tag can be applied per command.";
+    public static final String MESSAGE_MULTIPLE_TAGS =
+            "Only one tag can be applied per command. Run the command once for each tag.";
 
     private BulkTagArgumentParser() {
         // Prevents instantiation of this utility class.

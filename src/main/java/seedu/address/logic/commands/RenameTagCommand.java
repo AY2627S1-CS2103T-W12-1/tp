@@ -31,6 +31,9 @@ public class RenameTagCommand extends Command {
     public static final String MESSAGE_SUCCESS = "Renamed tag \"%1$s\" to \"%2$s\" for %3$d member(s).";
     public static final String MESSAGE_MERGED = " %1$d already had \"%2$s\".";
     public static final String MESSAGE_TAG_NOT_FOUND = "No member in the current list has the tag \"%1$s\".";
+    public static final String MESSAGE_HIDDEN_HAVE_TAG = " %1$d hidden member(s) have it; run list first.";
+    public static final String MESSAGE_HIDDEN_KEEP_TAG = "\n%1$d hidden member(s) still have \"%2$s\". "
+            + "Run list, then renametag again to rename it for everyone.";
     public static final String MESSAGE_ALREADY_SPELLED =
             "Every displayed member with this tag already uses \"%1$s\"." + Messages.MESSAGE_NO_CHANGES;
     public static final String MESSAGE_SAME_TAG = "The new tag must be different from the current tag.";
@@ -85,7 +88,12 @@ public class RenameTagCommand extends Command {
                 .toList();
         if (membersWithOldTag.isEmpty()) {
             logger.info(String.format("renametag rejected: no displayed member has tag %s", oldTag.tagName));
-            throw new CommandException(String.format(MESSAGE_TAG_NOT_FOUND, oldTag.tagName));
+            String message = String.format(MESSAGE_TAG_NOT_FOUND, oldTag.tagName);
+            int hiddenCount = countHiddenMembersWithOldTag(model);
+            if (hiddenCount > 0) {
+                message += String.format(MESSAGE_HIDDEN_HAVE_TAG, hiddenCount);
+            }
+            throw new CommandException(message);
         }
         return membersWithOldTag;
     }
@@ -118,14 +126,31 @@ public class RenameTagCommand extends Command {
      * already had {@code newTag}. It also explains when the active filters now hide some of them.
      */
     private String createFeedback(Model model, List<Person> renamedPersons, int mergedCount) {
+        String feedback;
         if (renamedPersons.isEmpty()) {
-            return String.format(MESSAGE_ALREADY_SPELLED, newTag.tagName);
+            feedback = String.format(MESSAGE_ALREADY_SPELLED, newTag.tagName);
+        } else {
+            feedback = String.format(MESSAGE_SUCCESS, oldTag.tagName, newTag.tagName, renamedPersons.size());
+            if (mergedCount > 0) {
+                feedback += String.format(MESSAGE_MERGED, mergedCount, newTag.tagName);
+            }
+            feedback += TagUpdateUtil.describeHiddenUpdates(model, renamedPersons);
         }
-        String feedback = String.format(MESSAGE_SUCCESS, oldTag.tagName, newTag.tagName, renamedPersons.size());
-        if (mergedCount > 0) {
-            feedback += String.format(MESSAGE_MERGED, mergedCount, newTag.tagName);
-        }
-        return feedback + TagUpdateUtil.describeHiddenUpdates(model, renamedPersons);
+        int hiddenCount = countHiddenMembersWithOldTag(model);
+        return hiddenCount == 0 ? feedback : feedback + String.format(MESSAGE_HIDDEN_KEEP_TAG, hiddenCount,
+                oldTag.tagName);
+    }
+
+    /**
+     * Returns how many members hidden from the displayed list still need to be renamed, as they have
+     * {@code oldTag} in a spelling that this command would change.
+     */
+    private int countHiddenMembersWithOldTag(Model model) {
+        List<Person> displayedMembers = model.getFilteredPersonList();
+        return (int) model.getAddressBook().getPersonList().stream()
+                .filter(person -> person.getTags().contains(oldTag) && !isAlreadyRenamed(person))
+                .filter(person -> !displayedMembers.contains(person))
+                .count();
     }
 
     /**
