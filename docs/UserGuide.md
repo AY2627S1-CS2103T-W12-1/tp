@@ -411,6 +411,17 @@ are ignored, and matching ignores letter case. Missing `t/`, empty tags, invalid
 other field prefixes such as `n/` are rejected without changing any member. If no members are displayed, TrackCall reports
 `There are no members in the current list to update. Run list to show everyone, or use find or filter to choose a group.`
 and changes nothing.
+Unsupported characters are identified in the error. For example, `tagall t/year_1` reports
+`Tag contains unsupported character "_". Use letters (A-Z, a-z), digits (0-9), or internal hyphens (-), e.g. year-1.`
+Use `tagall t/year-1` if you intended a hyphen.
+A leading or trailing hyphen reports `Tag cannot start with a hyphen (-).` or
+`Tag cannot end with a hyphen (-).`, followed by an example. Consecutive hyphens such as `year--1`
+report `Tag cannot contain consecutive hyphens (--). Use a single hyphen, e.g. year-1.`
+
+Missing `t/` and unexpected text before it receive separate errors with the command usage.
+Other member fields are named in the error: for example, `untagall t/year1 e/year1@gmail.com` reports
+`Field e/ is not supported. This command accepts only t/TAG parameters.`
+A tag of 31 characters reports `Tag is too long: 31 characters. Maximum: 30.`
 
 There is no confirmation or undo. A valid command saves the roster, even when every member is skipped.
 
@@ -447,7 +458,8 @@ because they no longer match. They are not deleted; run `list` to show everyone.
 The result then also reports the current list, for example
 `0 member(s) listed with tag "batch2026". Run list to show everyone.`
 
-Supply exactly two tags, each after `t/`, with 1 to 30 characters using ASCII letters or digits and
+Supply exactly two tags, each after `t/`. If a different count is supplied, the error reports that count
+and asks for the current tag followed by the new tag. Each tag has 1 to 30 characters using ASCII letters or digits and
 optional internal hyphens.
 The two tags must be different. If no member in the current list has the current tag, TrackCall reports
 `No member in the current list has the tag "CURRENT_TAG".` and changes nothing, even if hidden members

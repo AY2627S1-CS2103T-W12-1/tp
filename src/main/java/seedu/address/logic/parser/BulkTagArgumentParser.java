@@ -2,7 +2,6 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
@@ -22,6 +21,20 @@ import seedu.address.model.tag.Tag;
 public final class BulkTagArgumentParser {
     public static final String MESSAGE_EMPTY_TAG = "Tag cannot be empty.";
     public static final String MESSAGE_INVALID_TAG = Tag.MESSAGE_CONSTRAINTS + ".";
+    public static final String MESSAGE_UNSUPPORTED_CHARACTER = "Tag contains unsupported character \"%s\". "
+            + "Use letters (A-Z, a-z), digits (0-9), or internal hyphens (-), e.g. year-1.";
+    public static final String MESSAGE_LEADING_HYPHEN =
+            "Tag cannot start with a hyphen (-). Start with a letter or digit, e.g. year-1.";
+    public static final String MESSAGE_TRAILING_HYPHEN =
+            "Tag cannot end with a hyphen (-). End with a letter or digit, e.g. year-1.";
+    public static final String MESSAGE_REPEATED_HYPHENS =
+            "Tag cannot contain consecutive hyphens (--). Use a single hyphen, e.g. year-1.";
+    public static final String MESSAGE_MISSING_PREFIX = "Missing t/ prefix. Supply tags using t/TAG.";
+    public static final String MESSAGE_UNEXPECTED_TEXT = "Unexpected text before t/: \"%s\".";
+    public static final String MESSAGE_UNSUPPORTED_FIELD =
+            "Field %s is not supported. This command accepts only t/TAG parameters.";
+    public static final String MESSAGE_TAG_TOO_LONG =
+            "Tag is too long: %d characters. Maximum: " + Tag.MAX_LENGTH + ".";
     public static final String MESSAGE_MULTIPLE_TAGS =
             "Only one tag can be applied per command. Run the command once for each tag.";
 
@@ -44,7 +57,7 @@ public final class BulkTagArgumentParser {
         List<String> tagValues = parseTagValues(args, usage);
 
         if (tagValues.isEmpty()) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, usage));
+            throw new ParseException(MESSAGE_MISSING_PREFIX + "\n" + usage);
         }
         if (tagValues.size() > 1) {
             throw new ParseException(MESSAGE_MULTIPLE_TAGS);
@@ -55,8 +68,8 @@ public final class BulkTagArgumentParser {
 
     /**
      * Returns the trimmed {@code t/} values in {@code args}, in the order given.
-     * Other member field prefixes are recognized so that they are reported as a format error
-     * instead of being read as part of a tag.
+     * Other member field prefixes are recognized so the error can name the unsupported field
+     * instead of reading it as part of a tag.
      *
      * @param args Arguments following the command word.
      * @param usage Usage message of the calling command, shown when the arguments are malformed.
@@ -68,13 +81,29 @@ public final class BulkTagArgumentParser {
         // A leading space lets the tokenizer recognize a prefix at the very start of the arguments.
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" " + args, PREFIX_TAG, PREFIX_NAME,
                 PREFIX_PHONE, PREFIX_EMAIL, PREFIX_ADDRESS);
-        boolean hasOtherFieldPrefix = Stream.of(PREFIX_NAME, PREFIX_PHONE, PREFIX_EMAIL, PREFIX_ADDRESS)
-                .anyMatch(prefix -> argMultimap.getValue(prefix).isPresent());
-
-        if (!argMultimap.getPreamble().isEmpty() || hasOtherFieldPrefix) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, usage));
-        }
+        validateFieldPrefixes(argMultimap, usage);
+        validatePreamble(argMultimap, usage);
         return argMultimap.getAllValues(PREFIX_TAG);
+    }
+
+    /** Rejects member fields that cannot be used by tag commands. */
+    private static void validateFieldPrefixes(ArgumentMultimap arguments, String usage) throws ParseException {
+        var unsupportedPrefix = Stream.of(PREFIX_NAME, PREFIX_PHONE, PREFIX_EMAIL, PREFIX_ADDRESS)
+                .filter(prefix -> arguments.getValue(prefix).isPresent())
+                .findFirst();
+        if (unsupportedPrefix.isPresent()) {
+            throw new ParseException(String.format(MESSAGE_UNSUPPORTED_FIELD, unsupportedPrefix.get()) + "\n" + usage);
+        }
+    }
+
+    /** Distinguishes a missing tag prefix from extra text before a supplied tag. */
+    private static void validatePreamble(ArgumentMultimap arguments, String usage) throws ParseException {
+        if (arguments.getPreamble().isEmpty()) {
+            return;
+        }
+        String message = arguments.getAllValues(PREFIX_TAG).isEmpty() ? MESSAGE_MISSING_PREFIX
+                : String.format(MESSAGE_UNEXPECTED_TEXT, arguments.getPreamble());
+        throw new ParseException(message + "\n" + usage);
     }
 
     /**
@@ -88,9 +117,54 @@ public final class BulkTagArgumentParser {
         if (tagName.isEmpty()) {
             throw new ParseException(MESSAGE_EMPTY_TAG);
         }
+        validateTagLength(tagName);
+        validateSupportedCharacters(tagName);
+        validateHyphenPlacement(tagName);
         if (!Tag.isValidTagName(tagName)) {
             throw new ParseException(MESSAGE_INVALID_TAG);
         }
         return new Tag(tagName);
     }
+
+    /** Rejects overlong tags using the same limit as the model. */
+    private static void validateTagLength(String tagName) throws ParseException {
+        if (tagName.length() > Tag.MAX_LENGTH) {
+            throw new ParseException(String.format(MESSAGE_TAG_TOO_LONG, tagName.length()));
+        }
+    }
+
+    /** Rejects the first unsupported character and explains the accepted alternatives. */
+    private static void validateSupportedCharacters(String tagName) throws ParseException {
+        var unsupportedCharacter = tagName.codePoints()
+                .filter(character -> !isSupportedCharacter(character))
+                .findFirst();
+        if (unsupportedCharacter.isPresent()) {
+            int character = unsupportedCharacter.getAsInt();
+            String description = Character.isWhitespace(character) || Character.isSpaceChar(character)
+                    ? "whitespace" : new String(Character.toChars(character));
+            throw new ParseException(String.format(MESSAGE_UNSUPPORTED_CHARACTER, description));
+        }
+    }
+
+    /** Returns whether a code point is an ASCII letter, digit or hyphen. */
+    private static boolean isSupportedCharacter(int character) {
+        return character >= 'A' && character <= 'Z'
+                || character >= 'a' && character <= 'z'
+                || character >= '0' && character <= '9'
+                || character == '-';
+    }
+
+    /** Explains the first invalid hyphen position in an otherwise supported tag name. */
+    private static void validateHyphenPlacement(String tagName) throws ParseException {
+        if (tagName.startsWith("-")) {
+            throw new ParseException(MESSAGE_LEADING_HYPHEN);
+        }
+        if (tagName.endsWith("-")) {
+            throw new ParseException(MESSAGE_TRAILING_HYPHEN);
+        }
+        if (tagName.contains("--")) {
+            throw new ParseException(MESSAGE_REPEATED_HYPHENS);
+        }
+    }
+
 }

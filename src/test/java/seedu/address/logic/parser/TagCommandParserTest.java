@@ -2,8 +2,9 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_EMPTY_TAG;
-import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_INVALID_TAG;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_MULTIPLE_TAGS;
+import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_TAG_TOO_LONG;
+import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_UNSUPPORTED_CHARACTER;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -27,17 +28,27 @@ public class TagCommandParserTest {
     public void parse_invalidIndexOrMissingTag_showsUsage() {
         String usage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, TagCommand.MESSAGE_USAGE);
         String[] invalid = {"", "1", "0 t/a", "-1 t/a", "1.5 t/a", "2147483648 t/a",
-            "1 2 t/a", "1 a", "t/a", "1 t/a p/extra"};
+            "t/a"};
         for (String args : invalid) {
             assertParseFailure(parser, args, usage);
         }
     }
 
     @Test
+    public void parse_missingTagPrefixOrExtraField_reportsReason() {
+        assertParseFailure(parser, "1 a", BulkTagArgumentParser.MESSAGE_MISSING_PREFIX
+                + "\n" + TagCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "1 2 t/a", "Unexpected text before t/: \"2\".\n" + TagCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "1 t/a p/extra",
+                "Field p/ is not supported. This command accepts only t/TAG parameters.\n"
+                        + TagCommand.MESSAGE_USAGE);
+    }
+
+    @Test
     public void parse_invalidTag_reportsTagError() {
         assertParseFailure(parser, "1 t/", MESSAGE_EMPTY_TAG);
-        assertParseFailure(parser, "1 t/two words", MESSAGE_INVALID_TAG);
-        assertParseFailure(parser, "1 t/" + "a".repeat(31), MESSAGE_INVALID_TAG);
+        assertParseFailure(parser, "1 t/two words", String.format(MESSAGE_UNSUPPORTED_CHARACTER, "whitespace"));
+        assertParseFailure(parser, "1 t/" + "a".repeat(31), String.format(MESSAGE_TAG_TOO_LONG, 31));
         assertParseFailure(parser, "1 t/a t/b", MESSAGE_MULTIPLE_TAGS);
     }
 }
