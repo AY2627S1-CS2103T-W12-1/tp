@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.BulkTagCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ConfirmDeleteCommand;
 import seedu.address.logic.commands.DeleteCommand;
@@ -43,8 +44,6 @@ import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.RenameTagCommand;
 import seedu.address.logic.commands.SortCommand;
-import seedu.address.logic.commands.TagAllCommand;
-import seedu.address.logic.commands.UntagAllCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.commands.exceptions.SaveFailureException;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -133,7 +132,8 @@ public class LogicManagerTest {
 
         CommandResult prompt = logic.execute("delete 2");
         assertEquals("Delete member 2, " + BOB.getName() + "?\nTags: " + Messages.formatTags(BOB)
-                + "\nType yes and press Enter to confirm, or type no to cancel the deletion.",
+                + "\nType yes and press Enter to confirm, or "
+                + "type anything else to cancel (except yes or y in any letter case).",
                 prompt.getFeedbackToUser());
         assertTrue(logic.isAwaitingConfirmation());
         // Asking for confirmation neither removes the member nor saves the roster.
@@ -152,7 +152,8 @@ public class LogicManagerTest {
     public void execute_deleteThenOtherInput_cancelsWithoutRunningInput() throws Exception {
         model.addPerson(AMY);
         model.addPerson(BOB);
-        String[] cancellingInputs = {"n", "no", "", "yess", "yes please", "clear", "delete 1", "  list  "};
+        String[] cancellingInputs = {"n", "no", "not-a-command", "", "yess", "yes please",
+            "clear", "delete 1", "  list  "};
 
         for (String input : cancellingInputs) {
             logic.execute("delete 1");
@@ -178,7 +179,8 @@ public class LogicManagerTest {
 
         for (String nearMiss : List.of("y", "Y", "YES", " Yes ")) {
             // The reminder repeats the original prompt, so the member to be deleted stays named.
-            assertEquals("To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.\n\n"
+            assertEquals("To confirm, type yes exactly, in lowercase, and press Enter, or "
+                    + "type anything else to cancel (except yes or y in any letter case).\n\n"
                     + prompt, logic.execute(nearMiss).getFeedbackToUser(), nearMiss);
             assertTrue(logic.isAwaitingConfirmation(), nearMiss);
         }
@@ -646,7 +648,8 @@ public class LogicManagerTest {
 
         logic.execute("tag 1 t/student");
         assertEquals(1, model.getFilteredPersonList().getFirst().getTags().size());
-        assertEquals("Added tag \"StUdEnT\" to 0 member(s). 2 already had this tag. No changes were made.",
+        assertEquals("Added tag \"StUdEnT\" to 0 member(s). 2 already had this tag (any letter case)."
+                + " No changes were made.",
                 logic.execute("tagall t/StUdEnT").getFeedbackToUser());
 
         logic.execute("untag 1 t/sTuDeNt");
@@ -717,20 +720,21 @@ public class LogicManagerTest {
     @Test
     public void execute_tagAllWithNoChanges_stillSaves() throws Exception {
         model.addPerson(BOB);
-        Path dataFile = temporaryFolder.resolve("addressBook.json");
 
-        assertEquals("Added tag \"friend\" to 0 member(s). 1 already had this tag. No changes were made.",
+        assertEquals("Added tag \"friend\" to 0 member(s). 1 already had this tag (any letter case)."
+                + " No changes were made.",
                 logic.execute("tagall t/friend").getFeedbackToUser());
-        assertTrue(Files.exists(dataFile));
+        assertModelSaved();
     }
 
     @Test
-    public void execute_tagAllOnEmptyList_doesNotSave() throws Exception {
+    public void execute_bulkTagOnEmptyList_doesNotSave() throws Exception {
         model.setAddressBook(getTypicalAddressBook());
         logic.execute("filter t/missing");
 
-        assertThrows(CommandException.class, TagAllCommand.MESSAGE_EMPTY_LIST, () ->
-                logic.execute("tagall t/committee"));
+        for (String command : new String[] {"tagall t/committee", "untagall t/friends"}) {
+            assertThrows(CommandException.class, BulkTagCommand.MESSAGE_EMPTY_LIST, () -> logic.execute(command));
+        }
         assertEquals(getTypicalAddressBook(), model.getAddressBook());
         assertNothingSaved();
     }
@@ -779,23 +783,11 @@ public class LogicManagerTest {
     @Test
     public void execute_untagAllWithNoChanges_stillSaves() throws Exception {
         model.addPerson(BOB);
-        Path dataFile = temporaryFolder.resolve("addressBook.json");
 
         assertEquals("Removed tag \"committee\" (any letter case) from 0 member(s). 1 did not have this tag."
                 + " No changes were made.",
                 logic.execute("untagall t/committee").getFeedbackToUser());
-        assertTrue(Files.exists(dataFile));
-    }
-
-    @Test
-    public void execute_untagAllOnEmptyList_doesNotSave() throws Exception {
-        model.setAddressBook(getTypicalAddressBook());
-        logic.execute("filter t/missing");
-
-        assertThrows(CommandException.class, UntagAllCommand.MESSAGE_EMPTY_LIST, () ->
-                logic.execute("untagall t/friends"));
-        assertEquals(getTypicalAddressBook(), model.getAddressBook());
-        assertNothingSaved();
+        assertModelSaved();
     }
 
     @Test
@@ -803,7 +795,8 @@ public class LogicManagerTest {
         model.setAddressBook(getTypicalAddressBook());
         logic.execute("find Alice");
 
-        assertEquals("Renamed tag \"friends\" to \"buddies\" for 1 member(s).",
+        assertEquals("Renamed tag \"friends\" to \"buddies\" for 1 member(s)."
+                + String.format(RenameTagCommand.MESSAGE_HIDDEN_KEEP_TAG, 2, "friends"),
                 logic.execute("renametag t/friends t/buddies").getFeedbackToUser());
 
         // The search stays applied, and hidden members keep the current tag.
@@ -834,7 +827,8 @@ public class LogicManagerTest {
         model.setAddressBook(getTypicalAddressBook());
         logic.execute("find Carl");
 
-        assertThrows(CommandException.class, String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "friends"), () ->
+        assertThrows(CommandException.class, String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "friends")
+                + String.format(RenameTagCommand.MESSAGE_HIDDEN_HAVE_TAG, 3), () ->
                 logic.execute("renametag t/friends t/buddies"));
         assertEquals(getTypicalAddressBook(), model.getAddressBook());
         assertNothingSaved();
@@ -945,9 +939,15 @@ public class LogicManagerTest {
      * Asserts that the data file holds the same members as the model.
      */
     private void assertModelSaved() throws Exception {
-        ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
-                temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
-        assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+        assertEquals(model.getAddressBook().getPersonList(), readSavedRoster().getPersonList());
+    }
+
+    /**
+     * Returns the roster that has been saved to the data file.
+     */
+    private ReadOnlyAddressBook readSavedRoster() throws Exception {
+        return new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json")).readAddressBook()
+                .orElseThrow();
     }
 
     /**

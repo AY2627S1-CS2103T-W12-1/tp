@@ -72,14 +72,22 @@ public class LogicManager implements Logic {
         int memberCount = model.getAddressBook().getPersonList().size();
         if (command instanceof ClearCommand && memberCount > 0) {
             // Delay execution and persistence until the next input explicitly confirms the entire roster.
-            pendingConfirmation = command;
-            pendingConfirmationPrompt = String.format(ClearCommand.MESSAGE_CONFIRMATION, memberCount);
-            return new CommandResult(pendingConfirmationPrompt);
+            String prompt = String.format(ClearCommand.MESSAGE_CONFIRMATION, memberCount);
+            requestConfirmation(command, prompt);
+            return new CommandResult(prompt);
         }
         CommandResult commandResult = executeAndSave(command);
-        pendingConfirmation = commandResult.getPendingDeletion().orElse(null);
-        pendingConfirmationPrompt = commandResult.getFeedbackToUser();
+        commandResult.getPendingDeletion()
+                .ifPresent(deletion -> requestConfirmation(deletion, commandResult.getFeedbackToUser()));
         return commandResult;
+    }
+
+    /**
+     * Waits for the next input to confirm {@code command}, which {@code prompt} has described to the user.
+     */
+    private void requestConfirmation(Command command, String prompt) {
+        pendingConfirmation = command;
+        pendingConfirmationPrompt = prompt;
     }
 
     /**
@@ -88,15 +96,15 @@ public class LogicManager implements Logic {
      */
     private CommandResult handleConfirmationInput(String input) throws CommandException {
         assert pendingConfirmation != null : "Confirmation input is handled only while a command is pending";
-        if (ConfirmDeleteCommand.isNearMiss(input)) {
+        if (Confirmation.isNearMiss(input)) {
             logger.info("Inexact confirmation word received; the confirmation stays pending");
-            return new CommandResult(ConfirmDeleteCommand.MESSAGE_CONFIRMATION_REMINDER
+            return new CommandResult(Confirmation.REMINDER
                     + "\n\n" + pendingConfirmationPrompt);
         }
         Command confirmation = pendingConfirmation;
         // Any other input ends the confirmation, so a later "yes" cannot repeat a destructive action.
         pendingConfirmation = null;
-        if (!input.equals(ConfirmDeleteCommand.CONFIRMATION_WORD)) {
+        if (!input.equals(Confirmation.WORD)) {
             logger.info("Confirmation cancelled; the cancelling input was not run as a command");
             return new CommandResult(createCancellationMessage(confirmation, input));
         }
@@ -112,9 +120,9 @@ public class LogicManager implements Logic {
         String message = confirmation instanceof ClearCommand
                 ? ClearCommand.MESSAGE_CANCELLED
                 : ConfirmDeleteCommand.MESSAGE_CANCELLED;
-        String firstWord = input.split("\\s+", 2)[0];
+        String firstWord = input.split("\\s+")[0];
         if (CommandHelp.find(firstWord).isPresent()) {
-            message += String.format(ConfirmDeleteCommand.MESSAGE_INPUT_NOT_RUN, input);
+            message += String.format(Confirmation.INPUT_NOT_RUN, input);
         }
         return message;
     }

@@ -170,7 +170,7 @@ policies below.
 3. The next input does not reach `AddressBookParser`. If it is exactly `yes` after surrounding whitespace
    is ignored, `LogicManager` executes the `ConfirmDeleteCommand` and saves the roster as for other
    data-changing commands. A near miss (`y`, or `yes` in another letter case, checked by
-   `ConfirmDeleteCommand#isNearMiss`) keeps the deletion pending and reminds the user to type `yes` exactly.
+   `Confirmation#isNearMiss`) keeps the deletion pending and reminds the user to type `yes` exactly.
    The reminder repeats the original prompt, and `MainWindow` keeps that prompt for later filter-box removals.
    Any other input cancels the deletion and is not run as a command; when it starts with a command word,
    the cancellation says that command was not run. Except for a near miss, the pending deletion is cleared.
@@ -470,6 +470,13 @@ An unchanged save still attempts to write the current roster but retains the pre
 now holds a different valid roster, it was changed outside TrackCall, so the first save is refused with a
 storage error and the change stays in memory. The refused save records the outside version, so a retry
 replaces it and keeps it in `.bak` through the normal backup rotation. Formatting-only edits are not refused.
+
+Design considerations for outside-edit detection: comparing the parsed roster (the current choice) ignores
+formatting-only edits and unchanged files, at the cost of one extra read per save. Alternatives: a modification
+time or hash is cheaper, but a hash flags whitespace-only edits and timestamps can be unreliable; watching the file
+and reloading would silently discard unsaved in-memory changes and needs platform-specific watchers. An edit that
+leaves the file invalid is not treated as an outside change; saves then fail until restart and recovery.
+
 Export protects both backup and recovery filenames. Null or invalid preferences fall back to defaults, which are saved
 through the usual preferences setup.
 
@@ -680,7 +687,7 @@ their tag argument.
   with the calling command's usage. These prefixes are tokenized only so that they are not read as part of
   the tag.
 * An empty tag reports `Tag cannot be empty.`
-* More than one `t/` reports `Only one tag can be applied per command.`
+* More than one `t/` reports `Only one tag can be applied per command. Run the command once for each tag.`
 * Other invalid tags, including internal spaces and unknown prefixes such as `x/`, report the tag-format message.
 
 #### Execution {id="execution-1"}
@@ -692,16 +699,17 @@ and `updateTags`, which adds or removes the tag.
 1. Copy `Model#getFilteredPersonList()` into a new list. This fixes the target set before any update.
    The copy matters because each update refreshes the displayed list. For example, removing the tag used by an
    active filter hides the updated member immediately.
-2. Reject an empty target set with `There are no members in the current list to update.`
+2. Reject an empty target set with `There are no members in the current list to update. Run list to show everyone,
+   or use find or filter to choose a group.`
 3. For each target that lacks the tag (`tagall`) or has it (`untagall`), build a new `Person` with an updated
    copy of its tag set and call `Model#setPerson`. Other targets are skipped. Hidden members are never visited.
 4. Report the changed count, and the skipped count when it is non-zero, for example
-   `Added tag "committee" to 9 member(s). 3 already had this tag.` A zero changed count adds
+   `Added tag "committee" to 9 member(s). 3 already had this tag (any letter case).` A zero changed count adds
    `No changes were made.`, for example
    `Removed tag "committee" (any letter case) from 0 member(s). 3 did not have this tag. No changes were made.`
    If the active filters now hide updated members, which only `untagall` can cause, it also reports the
    displayed list using
-   `FilterCommand#describeHiddenUpdates`, for example
+   `TagUpdateUtil#describeHiddenUpdates`, for example
    `0 member(s) listed with tag "committee". Run list to show everyone.`
 
 Neither command changes the search predicate or name sorting, so the current view stays applied after the
@@ -712,6 +720,11 @@ roster after every valid invocation, including one where every target is skipped
 before saving. A failed save follows the standard `SaveFailureException` path: the whole batch remains in
 memory and the previous saved file is unchanged.
 
+![tagall: parsing, updating each displayed member who lacks the tag, and saving](images/BulkTagSequenceDiagram.png)
+
+`untagall` differs only in `needsUpdate` and `updateTags`. `renametag` follows the same flow through
+`RenameTagCommandParser`. Temporary parser objects are left to garbage collection, not explicitly destroyed.
+
 #### Design considerations {id="design-considerations-1"}
 
 * **One shared argument parser:** keeps `tagall` and `untagall` input rules and messages identical.
@@ -721,6 +734,10 @@ memory and the previous saved file is unchanged.
   cannot drift apart in how they select targets, log results, or word their feedback.
 * **Skip instead of reject:** a member who already has (or lacks) the tag is skipped and counted, so one
   overlapping group does not block the rest of the batch (UC03 extension 6b).
+* **Alternative: act on the whole roster:** simpler, but it cannot target a filtered group (US09). Running
+  `list` first gives whole-roster behaviour when it is wanted.
+* **Alternative: an index list such as `tagall 1 3 5 t/TAG`:** precise for small groups but error-prone for large
+  ones. Using `show` first to narrow the displayed list achieves the same result.
 
 #### Test coverage {id="test-coverage-3"}
 
@@ -731,7 +748,7 @@ memory and the previous saved file is unchanged.
 * `LogicManagerTest` checks that only displayed members change, that no-op batches save, and that an empty
   list does not save.
 
-#### Renaming a tag
+### Renaming a tag
 
 `renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for every displayed member who has it.
 
@@ -746,20 +763,24 @@ Case-only changes are allowed so a group can use one capitalization.
 
 1. Collects every member in `Model#getFilteredPersonList()` who has the current tag. Like `tagall` and
    `untagall`, the target set is the **displayed list**, so members hidden by a search or filter are not changed.
-2. Rejects an empty target set with `No member in the current list has the tag "CURRENT_TAG".`
-   This throws before saving.
+2. Rejects an empty target set with `No member in the current list has the tag "CURRENT_TAG".`, followed by
+   how many hidden members have the tag when there are any. This throws before saving.
 3. For each target requiring a change, builds a new `Person` whose tag set has the current tag removed
    and the new tag added, then calls `Model#setPerson`. A target that already has a distinct new tag
    keeps one copy and is counted as merged. A case-only rename skips members already using the
    requested spelling and does not count matching tags as merges.
 4. Reports the changed count, and the merged count when it is non-zero, for example
    `Renamed tag "year1" to "year2" for 10 member(s). 2 already had "year2".` If renamed members are now
-   hidden, it also reports the displayed list using `FilterCommand#describeHiddenUpdates`, for example
+   hidden, it also reports the displayed list using `TagUpdateUtil#describeHiddenUpdates`, for example
    `0 member(s) listed with tag "year1". Run list to show everyone.` A case-only rename that changes nobody
-   reports `Every displayed member with this tag already uses "NEW_TAG". No changes were made.`
+   reports `Every displayed member with this tag already uses "NEW_TAG". No changes were made.` Finally, if
+   hidden members still have the current tag, it adds `N hidden member(s) still have "CURRENT_TAG". Run list, then
+   renametag again to rename it for everyone.`
 
 Like the other bulk commands, it keeps the current search, filters and sorting, and saves the complete roster
 through the standard data-changing path.
+
+#### Design considerations {id="design-considerations-rename"}
 
 * **Displayed list instead of whole roster:** all three bulk tag commands act on what the user can see, so
   a rename can be limited to part of a group. Running `list` first renames the tag for everyone (US29).
@@ -767,6 +788,12 @@ through the standard data-changing path.
   letter case, and rejecting an unused tag also avoids an unnecessary save.
 * **Allow case-only renames:** tag identity ignores case, but the displayed spelling matters. Comparing
   the two spellings exactly allows a bulk capitalization change without creating duplicate tags.
+* **Merge keeps the typed spelling:** when a member already has the new tag in another letter case, that member
+  ends up with the spelling typed in the command, so the result is predictable for the user.
+* **Alternative: `untagall` then `tagall`:** reuses existing commands, but removing the old tag can hide members
+  from an active filter on it before the second step runs, and it needs two saves. Rejected.
+
+#### Test coverage {id="test-coverage-rename"}
 
 `RenameTagCommandTest`, `RenameTagCommandParserTest`, and `LogicManagerTest` cover renaming, merging with an
 existing tag, hidden members that keep the current tag, unused and differently cased tags, wrong tag counts, invalid and identical tags, and
@@ -1345,6 +1372,9 @@ leave member data and the displayed member list unchanged and do not save the da
 
 **Extensions**
 
+* **1a.** TrackCall is still running when the file is saved. The next save is refused with a warning and the
+  change stays in memory. The secretary exits and restarts to keep the edit (resume at step 2), or runs a
+  roster-changing command to replace it; the edited version is then kept in `.bak`.
 * **3a.** The file is missing. TrackCall loads sample members and logs that the file was missing.
   It creates the file only after a valid data-changing command saves successfully. The use case ends.
 * **3b.** The file is invalid or unreadable. TrackCall preserves its bytes in a uniquely named
@@ -1427,6 +1457,36 @@ the intended task without unintended data changes.
   of success. The use case ends without confirmed persistence; shared rule 10 explains
   which changes remain in memory and how to retry.
 
+#### UC10: Rename a group tag {id="uc10-rename-a-group-tag"}
+
+**Related story:** US29.
+
+**Goal:** replace one tag with another for a group without changing other tags.
+
+**MSS**
+
+1. The secretary lists, searches, or filters the roster to display the members whose tag should change.
+2. TrackCall displays the matching members.
+3. The secretary requests renaming the current tag to the new tag.
+4. TrackCall replaces the tag for every displayed member who has it, saves the roster, and reports how many
+   members changed. The use case ends.
+
+**Extensions**
+
+* **3a.** The request does not contain exactly two valid tags, contains another field prefix, or repeats the same
+  spelling. TrackCall reports the error and changes nothing. The secretary can retry step 3.
+* **4a.** No displayed member has the current tag. TrackCall reports
+  `No member in the current list has the tag "CURRENT_TAG".`, changes nothing, and does not save. The use case
+  resumes at step 1.
+* **4b.** Some targets already have the new tag. TrackCall keeps one copy, reports them as already having it, and
+  continues.
+* **4c.** The tags differ only in letter case and every target already uses the new spelling. TrackCall reports
+  that no changes were made. The use case ends.
+* **4d.** The renamed tag was required by an active filter. The renamed members leave the view, and TrackCall
+  reports the current list and suggests `list`. No records are deleted.
+* **4e.** Saving fails. The renamed tags remain in memory and the saved file is unchanged. Recovery follows
+  rule 10. The use case ends.
+
 ### Non-functional requirements
 
 These are acceptance requirements for the intended product, not verified results for the current build.
@@ -1465,6 +1525,9 @@ such as incremental delivery, are also not product NFRs.
 | Index | A record's current displayed number, starting at 1. It is not a permanent member ID and can change after another command. |
 | Partial-word matching | Matching any contiguous part of a name word, ignoring case. For example, `John`, `Jo`, and `oh` all match `John Tan`. |
 | Bulk tag update | Adding or removing one tag for the fixed set of members displayed when the command is submitted. |
+| Tag rename | Replacing one tag with another for every displayed member who has it (`renametag`). |
+| Confirmation prompt | The pending question shown after `delete INDEX` or a non-empty `clear`. Only `yes` confirms; `y` or `yes` in another letter case keeps it pending; other input cancels. |
+| Outside edit | A valid change made to the data file while TrackCall is running; the next save is refused once. |
 | Duplicate record | New input whose normalized name and trimmed phone, email and address match another record. Name capitalization and repeated whitespace are ignored; tags are ignored. Legacy JSON loading retains its original exact identity rule. |
 | No-op | A valid operation that leaves record values unchanged. A valid data-changing no-op can still retry saving; a bulk command with no targets is an error. |
 | In-memory data | The working roster held by the running app. After a save failure it can differ from the file and may be lost on exit. |
@@ -1571,7 +1634,8 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    expect only the displayed members to gain `year1`, keeping their other tags. Run it again and expect
    `0 member(s)` changed with all of them skipped. Run `untagall t/committee`: the members disappear
    from the filtered view, and `list` shows them without `committee`. Run `filter t/missing`, then
-   `tagall t/year1`, and expect `There are no members in the current list to update.`
+   `tagall t/year1`, and expect `There are no members in the current list to update. Run list to show everyone, or use find or filter to
+   choose a group.`
    Try `tagall`, `tagall t/`, `tagall t/a t/b`, and `tagall committee`. Expect errors and no changes.
    Run `find` for one member tagged `year1`, then `renametag t/year1 t/alumni`. Expect only that member
    to be renamed, then `list` to show `year1` still on the hidden members. Run `find` for a member without
@@ -1587,6 +1651,8 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    `untag 999 t/year1`, `tag 1 t/`, and `untag 1 t/a t/b`; each must fail without changing the roster.
 10. With two stored records and a search showing only one, run `clear`.
    Check that the prompt counts both members and no records change. Reply with `n`; the view and saved file stay unchanged.
+   Run `clear` and reply `Y`; expect `To confirm, type yes exactly, in lowercase, and press Enter, or type anything else to cancel (except yes or y in any letter case).`
+   followed by the clear prompt, with nothing removed.
    Run `clear` again and confirm with `yes`. After saving, expect
    `Cleared 2 members. The roster is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
    `The roster is already empty. No changes were made.`
@@ -1689,6 +1755,16 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
      Success must report the total removed, including hidden members.
    * Repeat the failure check with an already-empty roster.
    * Restore the test data afterward.
+
+7. Start TrackCall with a valid roster. While it is open, change one member's phone in `data/addressbook.json`
+   to another valid number and save the file. Run `tag 1 t/year1`. Expect a save error starting
+   `Could not save data due to the following error: The data file was changed outside TrackCall`, and the file
+   still holding your edit. Run `tag 1 t/year1` again (a valid no-op still attempts to save). Expect success, and
+   the outside version kept in `data/addressbook.json.bak`. Repeat the outside edit with an invalid tag such as
+   `bad tag`: expect `The existing roster could not be loaded. Restart TrackCall to recover it.` on every save,
+   and after a restart a recovery dialog whose `Reason:` explains the problem.
+8. With TrackCall closed, save the data file as UTF-8 with a byte order mark and put spaces around one tag value,
+   for example `" committee "`. Expect the roster to load, with the tag `committee`.
 
 The null-loading regressions above correspond to [issue #36](https://github.com/AY2627S1-CS2103T-W12-1/tp/issues/36).
 The automated storage tests also exercise atomic replacement failure and preservation of existing bytes.

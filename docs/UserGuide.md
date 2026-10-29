@@ -371,7 +371,7 @@ file stays unchanged. Follow [Correcting errors](#correcting-errors) before exit
 
 `tagall t/TAG` adds one tag to every member in the **currently displayed list**.
 `untagall t/TAG` removes one tag from every displayed member.
-Members hidden by a search or filter are not changed, and each member's other tags are kept.
+Members hidden by `find`, `findemail`, `filter`, or `show` are not changed, and each member's other tags are kept.
 
 1. Use `find` or `filter` to show the group, then check the displayed members.
 2. Run `tagall` or `untagall` with one tag.
@@ -394,11 +394,11 @@ Every displayed committee member now also has the `event2026` tag.
 Members who already have the tag (for `tagall`) or do not have it (for `untagall`) are skipped.
 The result reports both counts:
 
-* `Added tag "committee" to 9 member(s). 3 already had this tag.`
-* `Removed tag "committee" (any letter case) from 12 member(s).`
+* `Added tag "event2026" to 9 member(s). 3 already had this tag (any letter case).`
+* `Removed tag "committee" (any letter case) from 9 member(s). 3 did not have this tag.`
 
 When every displayed member is skipped, the result ends with `No changes were made.`, for example
-`Added tag "committee" to 0 member(s). 12 already had this tag. No changes were made.`
+`Added tag "committee" to 0 member(s). 12 already had this tag (any letter case). No changes were made.`
 
 The current search, filters, and sorting stay applied after the update.
 If you remove the tag used by the active filter, the updated members disappear from view
@@ -409,7 +409,8 @@ The result then also reports the current list, for example
 Supply exactly one tag of 1 to 30 ASCII letters or digits with optional internal hyphens. Spaces around the tag
 are ignored, and matching ignores letter case. Missing `t/`, empty tags, invalid tags, more than one tag, and
 other field prefixes such as `n/` are rejected without changing any member. If no members are displayed, TrackCall reports
-`There are no members in the current list to update.` and changes nothing.
+`There are no members in the current list to update. Run list to show everyone, or use find or filter to choose a group.`
+and changes nothing.
 
 There is no confirmation or undo. A valid command saves the roster, even when every member is skipped.
 
@@ -433,7 +434,12 @@ Tags match regardless of letter case. To standardize capitalization across the r
 `renametag t/committee t/Committee`. Members already using `Committee` are skipped and the result
 counts only members whose spelling changed. If every matching member already uses the new spelling,
 TrackCall reports `Every displayed member with this tag already uses "Committee". No changes were made.`
-Supplying identical spellings is rejected.
+Supplying identical spellings is rejected with `The new tag must be different from the current tag.`
+If a member already has the new tag in another letter case, that member keeps the spelling you typed in the
+command.
+
+If hidden members still have the current tag after the update, the result says so, for example
+`2 hidden member(s) still have "friends". Run list, then renametag again to rename it for everyone.`
 
 The current search, filters, and sorting stay applied after the update.
 If you rename the tag used by the active filter, the renamed members disappear from view
@@ -445,8 +451,10 @@ Supply exactly two tags, each after `t/`, with 1 to 30 characters using ASCII le
 optional internal hyphens.
 The two tags must be different. If no member in the current list has the current tag, TrackCall reports
 `No member in the current list has the tag "CURRENT_TAG".` and changes nothing, even if hidden members
-have it. Other invalid input is rejected without
-changing any member.
+have it. When hidden members do have it, the message adds how many and suggests running `list` first:
+`3 hidden member(s) have it; run list first.`
+If an invalid tag is given, the error starts with `Current tag:` or `New tag:`, so you can see which one to fix.
+Other invalid input is rejected without changing any member.
 
 There is no confirmation or undo. A valid command saves the roster.
 
@@ -557,7 +565,7 @@ after you confirm the deletion.
    ```text
    Delete member 2, Bernice Yu?
    Tags: batch2026, year1
-   Type yes and press Enter to confirm, or type no to cancel the deletion.
+   Type yes and press Enter to confirm, or type anything else to cancel (except yes or y in any letter case).
    ```
 
    The command box is highlighted until you answer:
@@ -567,9 +575,10 @@ after you confirm the deletion.
    Asking for confirmation does not change or save the roster.
 3. Type `yes` and press Enter to delete that member.
 
-Only `yes`, typed exactly in lowercase, confirms. `y`, `Y`, `YES`, or `Yes` does not confirm or cancel: it keeps
+Only `yes`, typed exactly in lowercase, confirms. `y`, or `yes` in any other letter case (such as `Y`, `YES`, or `Yes`),
+does not confirm or cancel: it keeps
 the prompt pending and reminds you:
-`To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.`
+`To confirm, type yes exactly, in lowercase, and press Enter, or type anything else to cancel (except yes or y in any letter case).`
 The reminder is followed by the original prompt, so the member to be deleted (or, for `clear`, the total member
 count) stays visible, including after you remove a filter box.
 
@@ -589,9 +598,9 @@ It saves the empty roster and resets the search after a successful save.
 
 1. Run `clear`. TrackCall shows the total number of stored members, including anyone hidden by searches or filters.
 2. Type `yes` and press Enter to clear and save the entire roster.
-   As for `delete`, `y`, `Y`, `YES`, or `Yes` keeps the prompt pending and reminds you to type `yes` exactly.
-   Any other input, such as `no`, cancels with `Clear cancelled. No members were removed.` That input is not
-   run as a command.
+   As for `delete`, `y` or `yes` in another letter case keeps the prompt pending and reminds you to type `yes` exactly.
+   Any other input, such as `no`, cancels with `Clear cancelled. No members were removed.` That input is not run;
+   if it is a command, the result also says it was not run.
 
 The roster, current view, and saved file stay unchanged while the prompt is pending or when you cancel.
 An already-empty roster saves immediately without prompting, so `clear` can still retry an unsaved empty roster.
@@ -710,10 +719,13 @@ start from the same folder to keep using the same roster.
 
 ### Editing the file manually
 
-Close TrackCall and make a backup first. If you edit the file while TrackCall is open, the next save is
+Close TrackCall and make a backup first. If you make a valid edit while TrackCall is open, the next save is
 refused with a warning so your edits are not silently replaced. To keep your edits, exit and restart
-TrackCall. To replace them with the roster shown in TrackCall, retry the save; your edited version is
-then kept in `data/addressbook.json.bak`.
+TrackCall; this session's unsaved changes are discarded. To replace your edits with the roster shown in
+TrackCall instead, run any command that changes the roster, such as `edit` with the displayed number and an
+existing field value (see [A save fails after changing records](#a-save-fails-after-add-edit-delete-tag-untag-tagall-untagall-renametag-or-import));
+your edited version is then kept in `data/addressbook.json.bak`. If your edit made the file invalid, every save is
+refused until you restart TrackCall and choose a recovery action.
 
 Keep the existing JSON structure:
 
@@ -723,6 +735,10 @@ Keep the existing JSON structure:
 * Use `tags` for each member's group assignments.
 * Save the file as UTF-8. A byte order mark (BOM) at the start of the file, which some editors such as
   Windows Notepad add, is accepted.
+* Every value must follow the same rules as in the [add](#add-a-member-add) command, and two members cannot have
+  identical contact details. An address of only spaces is invalid. One invalid value makes the whole file invalid.
+
+If the file cannot be loaded, the recovery dialog explains why.
 
 ### Missing or invalid files
 
@@ -743,8 +759,16 @@ If the backup cannot be written, the roster save fails and the existing roster s
 
 If the roster cannot be loaded, TrackCall first preserves its exact contents in a uniquely named
 `data/addressbook.json.corrupt-....json` file. It then shows why the roster could not be loaded,
-for example `Reason: Tag names should be 1 to 30 characters long, using ASCII letters or digits with optional
-internal hyphens`, and offers:
+after `Reason:`. Examples:
+
+* `The data file is not saved as UTF-8 text. Save it again with UTF-8 encoding in your text editor, then restart TrackCall.`
+* `The data file is not valid JSON near line L, column C. Check the quotes, commas and brackets there.`
+  (L and C are numbers.)
+* `The data file must contain a "persons" list.`
+* `Addresses must be on one line. Remove the line break from the address.`
+* `Tag names should be 1 to 30 characters long, using ASCII letters or digits with optional internal hyphens`
+
+The dialog offers:
 
 * **Restore backup**, when the backup is valid: restore the previous saved roster.
 * **Start empty**: explicitly replace the unreadable roster with an empty roster.

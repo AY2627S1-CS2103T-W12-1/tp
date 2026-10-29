@@ -34,6 +34,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.FilterCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ActiveFilter;
@@ -314,7 +315,8 @@ public class MainWindow extends UiPart<Stage> {
                 nextChip.getChildren().get(1).requestFocus();
             }
         }
-        String feedback = message + " " + logic.getFilteredPersonList().size() + " member(s) listed.";
+        String feedback = message + " "
+                + String.format(FilterCommand.MESSAGE_LISTED, logic.getFilteredPersonList().size());
         if (logic.isAwaitingConfirmation()) {
             // Removing a view restriction keeps confirmation pending, so repeat the action and its scope.
             feedback += "\n\n" + pendingConfirmationPrompt;
