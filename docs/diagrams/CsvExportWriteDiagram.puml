@@ -13,7 +13,7 @@ FileUtil -> FileUtil : create temporary file
 FileUtil -> Exporter : writeCsv(people, temporary)
 activate Exporter
 note over Exporter
-Write the UTF-8 header and all records.
+Write the UTF-8 header and the supplied displayed records.
 Close the writer before returning.
 end note
 Exporter --> FileUtil

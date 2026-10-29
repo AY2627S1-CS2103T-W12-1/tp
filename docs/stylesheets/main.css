@@ -135,6 +135,11 @@ header {
 
 /* Preserve the full outline in MarkBind's mobile navigation menu. */
 @media screen and (max-width: 1299.98px) {
+  /* The mobile overlay owns scrolling; its full-height list must not trap wheel input. */
+  .mb-mobile-nav .nav-component {
+    overscroll-behavior: auto;
+  }
+
   #flex-body {
     grid-template-columns: 224px minmax(0, 1fr);
     column-gap: 24px;
@@ -322,11 +327,17 @@ header {
 /* Reserve each screenshot's canvas while it loads, keeping section links in place. */
 #content-wrapper img[src$="images/Ui.png"],
 #content-wrapper img[src$="images/user-guide/interface.png"],
-#content-wrapper img[src$="images/user-guide/validation.png"],
 #content-wrapper img[src*="/framed-"] {
   width: 100%;
   max-width: 960px;
   aspect-ratio: 4 / 3;
+  object-fit: contain;
+}
+
+#content-wrapper img[src$="images/user-guide/validation.png"] {
+  width: 100%;
+  max-width: 960px;
+  aspect-ratio: 1100 / 189;
   object-fit: contain;
 }
 

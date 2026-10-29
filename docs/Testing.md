@@ -56,7 +56,7 @@ These categories describe what a test exercises; a suite can cover more than one
 ### What each suite covers
 
 - **`UserCsvWorkflowTest`:** uses commands, real CSV fixtures, and fresh storage sessions.
-  Checks full-roster exports while filtering, duplicate imports, field boundaries, rejected imports,
+  Checks displayed-member exports and hidden counts while filtering, duplicate imports, field boundaries, rejected imports,
   and save-failure recovery guidance.
 - **`CommandSequenceOracleTest`:** compares the application with an independent reference roster.
   Runs 3,200 steps across eight fixed seeds, covering filters, sorting, selections, tags, CSV,

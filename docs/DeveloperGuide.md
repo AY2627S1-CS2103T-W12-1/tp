@@ -319,6 +319,7 @@ before refreshing the view.
 - `StorageManager` delegates roster JSON to `JsonAddressBookStorage` and preferences to `JsonUserPrefsStorage`.
 - `ImportCommand` and `ExportCommand` call the CSV helpers directly.
 - `CsvAddressBookCsv` provides their shared header and format. Commons CSV handles quoting and escaping.
+- Export snapshots `Model#getFilteredPersonList()` and reports hidden-member counts when applicable.
 - CSV export is a user-requested copy. It does not replace automatic JSON persistence.
 
 **Write safeguards**
@@ -460,7 +461,7 @@ the retained input is the answer `yes`; run `clear` again to start a fresh confi
 **Rules and design**
 
 - Indexed commands read the sorted display, not the stored list.
-- Export still uses stored order. No descending or multi-field sorting is provided.
+- Export uses the current displayed order. No descending or multi-field sorting is provided.
 - A view comparator avoids rewriting records for presentation changes.
 - Break ties using stored roster order, including after member or tag updates. Names that differ only
   in case or repeated spaces use the same name key, then the stored-order tie-breaker.
@@ -590,7 +591,7 @@ cumulative and repeat-detection rules for names.
 2. Load valid records in stored order. A missing file loads sample members.
 3. For invalid data, preserve the exact bytes in a unique `.corrupt-....json` copy.
 4. Show the loading failure reason after `Reason:`: UTF-8 errors, JSON line/column syntax errors,
-   a missing `persons` list, or an invalid member field. Offer a validated backup, an empty roster, or closing without replacement.
+   a missing `persons` list, or an invalid member field. Malformed JSON also includes a JSON syntax hint without exposing file contents. Offer a validated backup, an empty roster, or closing without replacement.
 5. Verify the original still matches its preserved copy before recovery replacement.
 6. Reload the recovered roster through the same storage instance to refresh its saved-data baseline.
 
@@ -648,8 +649,8 @@ cumulative and repeat-detection rules for names.
   - **Email:** ASCII letters and digits in the local part, separated singly by `+ _ . - '`. The local part
     starts and ends with a letter or digit, and consecutive separators are rejected.
   - **Address:** optional. When present, it must contain a character other than whitespace or Unicode spaces.
-- `tag`, `untag`, `tagall`, `untagall` and `renametag` reject standalone `n/`, `p/`, `e/` and `a/`
-  with a format error. Unknown prefixes such as `x/` still fail tag-value validation.
+- Tag parsers name unsupported member fields, preambles and missing `t/` prefixes in their diagnostics.
+  Invalid tag values receive the specific reason followed by the command usage.
 - `list`, `sort`, `clear` and `exit` take no arguments. Each other command enforces its own grammar.
 
 
@@ -709,15 +710,15 @@ Commons CSV handles quoting instead of manual string splitting.
 
 ### 9. CSV export
 
-**Purpose:** write all stored members to a separate CSV without changing the displayed view.
+**Purpose:** export displayed members, in displayed order, without changing the view or automatic JSON file.
 
 **Flow**
 
 1. `LogicManager` supplies protected roster and preferences paths to `ExportCommand`.
 2. Parse the path, rejecting any double quote before checking the extension, then resolve and validate the
    destination before writing.
-3. Export the full roster, including hidden members, in stored order.
-4. Return the exported count and path. Do not save the automatic JSON roster.
+3. Snapshot and export the displayed members in their current order. Report how many stored members were excluded.
+4. Return the exported count and path; include the hidden-member count when any were excluded. Do not save the automatic JSON roster.
 
 **Overview: `sd ExportRoster`**
 
@@ -734,7 +735,7 @@ Commons CSV handles quoting instead of manual string splitting.
 **Rules and design**
 
 - Write UTF-8 with a header row. Sort each member's tags and join them with semicolons.
-- Use Commons CSV for quoting and escaping. An empty roster produces a header-only file.
+- Use Commons CSV for quoting and escaping. An empty displayed list produces a header-only file. Run `list` before exporting to include everyone.
 - `ExportCommandParser` requires a `.csv` extension, ignoring letter case.
 - Reject a double quote anywhere in the path, including directory names, because `import` cannot read such
   filenames. Spaces need no surrounding quotes, unlike `import`.
@@ -834,10 +835,21 @@ A second `t/` reports that only one filter tag is allowed and suggests a separat
 **Input:** `TagAllCommandParser` and `UntagAllCommandParser` share `BulkTagArgumentParser`.
 Require exactly one valid `t/TAG`.
 
-- Missing `t/`, preambles, or `n/`, `p/`, `e/`, `a/` report invalid format with command usage.
-- Empty tags report `Tag cannot be empty.`; multiple tags report
-  `Only one tag can be applied per command. Run the command once for each tag.`
-- Other invalid values, including internal spaces or `x/`, report the tag-format constraint.
+* A missing `t/` reports `Missing t/ prefix. Supply tags using t/TAG.`
+* Text before a supplied `t/` is named in an `Unexpected text before t/` error.
+* An `n/`, `p/`, `e/`, or `a/` prefix is named as an unsupported field.
+  Each of these errors includes the calling command's usage.
+* An empty tag reports `Tag cannot be empty.`
+* More than one `t/` reports `Only one tag can be applied per command. Run the command once for each tag.`
+* Unsupported characters are named in the error, followed by the allowed ASCII letters, digits, and internal
+  single hyphens. A space, tab or other whitespace inside a tag reports `Tag cannot contain spaces. Use a hyphen
+  instead, e.g. year-1.` A double quote is shown escaped as `\"`.
+* Leading, trailing, and consecutive hyphens each report a specific error with `year-1` as a valid example.
+* Unsupported characters are checked before length, so non-ASCII code points are not misreported as
+  overlong ASCII tags. Invisible control characters are shown as code points, for example `U+0000`.
+* Overlong tags report their actual length and the limit from `Tag.MAX_LENGTH`.
+* These argument errors give the reason followed by usage without a generic format-error header.
+  Existing index parsing in `tag` and `untag` retains its format-error header.
 
 <span id="execution-1"></span>
 
@@ -886,6 +898,15 @@ removes the tag. `tagall` updates members who lack the tag; `untagall` updates m
 <span id="renaming-a-tag"></span>
 
 **Renaming within the displayed group**
+
+`RenameTagCommandParser` reads the `t/` values with `BulkTagArgumentParser#parseTagValues` and requires
+exactly two. A different count reports the received count and explains that the current tag precedes the
+new tag. Text before the first `t/` and unsupported member field prefixes receive the shared specific
+errors, with the `renametag` usage. Each value is validated by
+`BulkTagArgumentParser#parseTagName`, so empty and invalid tags report the same messages as `tagall` and
+`untagall`. Identical spellings report `The new tag must be different from the current tag.`
+Case-only changes are allowed so a group can use one capitalization.
+
 
 `RenameTagCommand` extends `Command` directly instead of `BulkTagCommand`. It handles two tags, rejects an
 old tag that no displayed member has, and counts merges as well as changes, which the shared loop does not.
@@ -1283,8 +1304,9 @@ such as the automatic previous-version backup.
 * **3a.** Some rows duplicate existing members or earlier rows. TrackCall skips them without merging
   tags and continues. A header-only file or an all-duplicate file is also valid.
 
-**Export variation:** the secretary supplies an optional destination; TrackCall writes the entire
-stored roster in stored order and reports the count and destination. Hidden members are included.
+**Export variation:** the secretary supplies an optional destination; TrackCall writes the
+displayed members in displayed order and reports the exported count and destination. Hidden members are excluded
+and counted in the feedback; run `list` before exporting to include everyone.
 An invalid destination or write failure leaves an existing destination unchanged. Export does not
 alter the roster, view or JSON file.
 
@@ -1528,11 +1550,11 @@ this candidate. Record it separately from the nonbreaking-space cases above; rej
 
 1. Run `sort` twice. **Expect:** Alice, Bob, Zara both times; `list` restores Zara, Bob, Alice.
    Try `sort date`. **Expect:** an error preserving the view. Sorting must not save the roster.
-2. Run `filter t/committee`, `sort`, then `export members.csv`. **Expect:** all three records in stored order,
-   including hidden Zara, with the view unchanged. Inspect the CSV. **Expect:** the documented UTF-8 header,
+2. Run `filter t/committee`, `sort`, then `export members.csv`. **Expect:** Alice and Bob exported in displayed
+   order, with hidden Zara excluded and the view unchanged. Inspect the CSV. **Expect:** the documented UTF-8 header,
    correctly quoted fields, and sorted semicolon-separated tags.
-3. Run `import p/members.csv`. **Expect:** zero imports and three skipped duplicates; filters and sorting reset.
-   Run `clear`, confirm with `yes`, then import again. **Expect:** three imports that persist after restart.
+3. Run `import p/members.csv`. **Expect:** zero imports and two skipped duplicates; filters and sorting reset.
+   Run `clear`, confirm with `yes`, then import again. **Expect:** two imports that persist after restart.
    Import Alice's details with a lowercase or repeated-space name. **Expect:** a skipped duplicate, no merged tags.
 4. Copy the CSV to `member list.csv`. **Expect:** `import p/"member list.csv"` works and a missing source fails
    without changes. `export member list.csv`, without quotes, creates a file named exactly that.
@@ -1561,9 +1583,6 @@ this candidate. Record it separately from the nonbreaking-space cases above; rej
 8. Import a file over 10 MiB, then a separate file with 10,001 valid nonblank member rows.
    **Expect:** the matching limit error with no imports, saves or view changes, even if the rows are duplicates.
 
-11. Import valid files at the 10 MiB and 10,000 non-blank-row boundaries, then files exceeding each limit.
-    Count rows before duplicate removal. **Expect:** accepted boundary files and rejected oversized files,
-    with no partial import or view change on rejection.
 
 ### Persistence and invalid files
 
