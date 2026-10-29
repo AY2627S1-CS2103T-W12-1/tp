@@ -126,11 +126,17 @@ Extra arguments produce `Invalid command format. Usage: list` without changing t
 `show 1 3` shows only members 1 and 3 from the **currently displayed list**.
 The selected members stay in their current order and receive new displayed numbers starting at 1.
 You can use `show` again with those new numbers, or use `list` to restore the full roster.
-While a `show` selection is active, a **Show: active** box appears under the command field.
-It stays visible even if you remove other search or filter boxes. Hover over it to see how many times
-`show` has been applied. Select its **X** to remove all `show` selections at once while keeping any
-name, email, or tag filters. The **ROSTER** heading shows how many members are currently displayed,
-including when the result is empty.
+Each distinct `show` selection adds a box under the command field, such as **Show: 2 selected**.
+Repeating `show` with the same selected members does not add another box. The count is the number
+selected by that command. Hover over the box label to see the selected names. Boxes appear from left
+to right in command order, alongside name, email, and tag boxes. Select a box's **X** to remove only that
+selection while keeping the other conditions. The **ROSTER** heading shows how many members are
+currently displayed, including when the result is empty.
+If all members in a selection are deleted, its box remains as **Show: 0 selected**. Hovering over it
+shows `Selected members: No selected members remain`; select its **X** to remove the empty selection.
+
+Names in a `show` box's hover text are listed alphabetically, ignoring case. This does not change
+the displayed roster order.
 
 Supply one or more positive numbers separated by spaces. Repeating a number selects that member once.
 If any number is invalid or outside the current list, the view stays unchanged. `show` does not change
@@ -213,7 +219,10 @@ stays the same, and their displayed numbers update.
 
 * Matching ignores letter case: `committee` and `Committee` identify the same tag.
 * Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
-  Applying the same tag again does not add a duplicate condition.
+  Applying the same tag again, even with different letter case, leaves the view unchanged. The result
+  names the active spelling, says no changes were made, and shows the current count and active tags.
+  For example, repeating `filter t/committee` begins with
+  `Tag "committee" is already an active filter. No changes were made.`
 * A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
   A new `findemail` also narrows these results by email, retaining previous conditions.
 

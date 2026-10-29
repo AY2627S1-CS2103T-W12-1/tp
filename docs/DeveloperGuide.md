@@ -215,12 +215,10 @@ The Model component stores:
 * **Displayed data:** a filtered list, such as name-search results or an index selection.
   A `SortedList` wraps it for optional name sorting while the stored roster keeps its original order.
   An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
-* **Removable filters:** `ModelManager` keeps `ActiveFilter` objects for
-  name, email and tag conditions. The UI uses these to show and remove individual filter boxes.
-  Filters retain application order; `list` and a successful `import` or `clear` remove them.
-  `show` selections use `PersonSelectionPredicate` objects retained separately.
-  The UI displays one **Show: active** box whenever at least one selection remains. Its X clears all
-  selection predicates while retaining name, email, tag, and other additional filters.
+* **Removable filters:** `ModelManager` keeps `ActiveFilter` objects for name, email, tag, and
+  `show` conditions in application order. Each `show` condition wraps one `PersonSelectionPredicate`,
+  so the UI can display and remove its box independently. Other internal predicates remain in
+  `additionalFilters`. `list` and a successful `import` or `clear` remove the conditions.
   The roster heading follows the observable displayed-list size, including zero-result views.
 * **Preferences:** a `UserPrefs` object, currently containing GUI settings.
   Other components access it through `ReadOnlyUserPrefs`.
@@ -549,10 +547,15 @@ Neither successful nor failed export changes the displayed filters or sorting.
 
 `show INDEX [MORE_INDEXES]...` validates every index against the current displayed list before
 changing the view. `ShowCommand` stores the corresponding members in a `PersonSelectionPredicate`;
-repeated indexes collapse to one member, and argument order does not reorder the list. Each `show`
-adds another selection condition, so it can only narrow the current view. `ModelManager#setPerson`
+repeated indexes collapse to one member, and argument order does not reorder the list. Each distinct
+`show` selection adds another condition, so it can only narrow the current view. `ModelManager#setPerson`
 updates these predicates after an edit or tag change to keep the selection attached to the member.
-Removing the **Show: active** box removes all selection predicates while retaining name, email, and tag filters.
+Each distinct `show` selection has a separate box in command order. Repeating a selection with the
+same members leaves the existing box in place. Its label reports the number of selected
+members and its tooltip lists their names. Removing that box removes only its predicate, leaving the
+other `show`, name, email, and tag conditions active.
+`ActiveFilter#getShowSelectionNames()` sorts tooltip names with `String.CASE_INSENSITIVE_ORDER`;
+this does not change the displayed roster order.
 `list`, successful `add`, successful `clear`, and valid `import` clear the selections.
 
 `SortCommand` enables a comparator on `ModelManager`'s `SortedList`. It compares names ignoring case
@@ -581,7 +584,7 @@ selection narrowing, record replacement, ordering, and read-only execution.
   count unchanged reports `Results unchanged.` and keeps its new condition. Because searches only narrow the list,
   equal counts mean the same members remain visible.
 * **Retained state:** keep earlier name searches, email searches, tag filters, `show` selections, and name sorting.
-* **Filter boxes:** show one Email box per distinct search, in application order with the other name and tag boxes.
+* **Filter boxes:** show one Email box per distinct search, in application order with name, tag, and `show` boxes.
   Its X removes only that condition. Remaining conditions still determine which members appear.
 * **Edits:** re-evaluate the email predicates when a member changes. A nonmatching member disappears
   from the view but remains stored. Edit and delete use current displayed indices.
@@ -604,9 +607,12 @@ The parser uses the shared `Tag` model rule before constructing the tag.
 
 #### Execution {id="execution"}
 
-`FilterCommand` passes the tag to `ModelManager#filterFilteredPersonListByTag`. The model
-combines it with the active name, email, and tag conditions using logical AND.
-The model keeps removable name, email and tag conditions in application order, which the UI shows left to right.
+`FilterCommand` checks the active tag filters using case-insensitive `Tag` equality. For a new tag,
+it passes the tag to `ModelManager#filterFilteredPersonListByTag`. The model combines it with the
+active name, email, and tag conditions using logical AND.
+If the tag is already active, it leaves the conditions and displayed list unchanged and reports the
+active tag's stored spelling followed by the current result summary.
+The model keeps removable name, email, tag, and `show` conditions in application order, shown left to right in the UI.
 `find` adds a distinct name condition and `findemail` adds a distinct email condition; `list` clears all conditions.
 Applying name, email, and tag conditions in a different order gives the same matching
 members when the roster is unchanged.
@@ -632,7 +638,8 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
 
 #### Test coverage {id="test-coverage-2"}
 
-* `FilterCommandParserTest` and `FilterCommandTest` cover argument validation and narrowing an existing view.
+* `FilterCommandParserTest` and `FilterCommandTest` cover argument validation, narrowing an existing view,
+  and feedback for a repeated tag with different letter case.
 * `LogicManagerTest` covers cumulative filters, case-insensitive matching, empty results, interactions with
   `find`, `list`, and sorting, and execution without saving.
 * `EditCommandTest` checks that edits retain search and tag conditions and hide members who no longer match.
@@ -907,7 +914,7 @@ The original 32 rows and existing story IDs are retained. Overlapping source sto
 | US35 | `***` | club secretary | have exact duplicate records rejected during data entry | avoid recording the same contact details twice |
 | US37 | `**` | club secretary | find members by a full email address or domain fragment | retrieve contacts or select an email-domain group |
 | US38 | `***` | club secretary | choose a startup recovery action when the roster cannot be read | recover usable records while keeping a copy of the damaged file |
-| US39 | `**` | club secretary | remove one active search or tag filter, or all show selections | broaden the displayed results while keeping other conditions |
+| US39 | `**` | club secretary | remove one active search, tag filter, or show selection | broaden the displayed results while keeping other conditions |
 | US40 | `**` | club secretary | show a subset using current displayed member numbers | focus on selected records before applying a group command |
 
 US24 is implemented by `tag INDEX t/TAG`; US28 is implemented by `untag INDEX t/TAG`. Each
@@ -1542,8 +1549,10 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    everyone. A missing tag, repeated tag, or invalid tag must leave the view unchanged. Filtering
    must not save the file.
    Run `list`, then `show 1 3` with at least three members visible. Expect only those two members
-   in their original order, renumbered 1 and 2. Run `show 2` to narrow the view again. An
-   out-of-range number must leave the view unchanged; `list` restores everyone.
+   in their original order, renumbered 1 and 2. Run `show 2` to narrow the view again. Expect two
+   show boxes in command order. Run `show 1` again and expect no third box. Remove the second box
+   with X and expect both members to reappear while the first box remains. An out-of-range number
+   must leave the view unchanged; `list` restores everyone.
 7. Paste a valid add command with actual tab separators before `n/`, `p/`, `e/`, and `a/`.
    It must parse like the space-separated form. Verify that an address containing `c/o`, a URL,
    or an internal tab keeps that text. For both `add` and `edit`, append `x/extra` or `T/committee`

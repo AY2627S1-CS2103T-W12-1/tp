@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 
@@ -323,8 +324,8 @@ public class MainWindowTest {
             enter("findemail @example.com @school.edu");
             enter("findemail alice");
             FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
-            assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Email: @example.com @school.edu",
-                    "Email: alice", "Show: active"), chipLabels(chips));
+            assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Show: 1 selected",
+                    "Email: @example.com @school.edu", "Email: alice"), chipLabels(chips));
             List<String> originalLabels = chipLabels(chips);
             enter("find BOB ALICE alice");
             assertEquals("This name search is already active. 1 member listed.", feedback.getText());
@@ -333,20 +334,20 @@ public class MainWindowTest {
             assertEquals("This email search is already active. 1 member listed.", feedback.getText());
             assertEquals(originalLabels, chipLabels(chips));
             assertTrue(chips.isVisible());
-            assertTrue(((HBox) chips.getChildren().get(2)).getStyleClass().contains("filter-chip-email"));
+            assertTrue(((HBox) chips.getChildren().get(3)).getStyleClass().contains("filter-chip-email"));
             assertDisplayedNames("Alice Tan");
 
             enter("findemail bob");
             assertDisplayedNames();
+            removeChip(chips, 5);
+            assertDisplayedNames("Alice Tan");
             removeChip(chips, 4);
+            assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Show: 1 selected",
+                    "Email: @example.com @school.edu"), chipLabels(chips));
             assertDisplayedNames("Alice Tan");
             removeChip(chips, 3);
-            assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Email: @example.com @school.edu",
-                    "Show: active"), chipLabels(chips));
             assertDisplayedNames("Alice Tan");
-            removeChip(chips, 2);
-            assertDisplayedNames("Alice Tan");
-            assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Show: active"), chipLabels(chips));
+            assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Show: 1 selected"), chipLabels(chips));
             enter("list");
             assertEquals(List.of(), chipLabels(chips));
             assertDisplayedNames("Alice Tan", "Bob Lee");
@@ -362,18 +363,25 @@ public class MainWindowTest {
             assertEquals("ROSTER · 2 shown", heading.getText());
             assertFalse(chips.isVisible());
 
-            enter("show 1");
-            assertEquals("ROSTER · 1 shown", heading.getText());
-            assertEquals(List.of("Show: active"), chipLabels(chips));
+            enter("show 1 2");
+            assertEquals("ROSTER · 2 shown", heading.getText());
+            assertEquals(List.of("Show: 2 selected"), chipLabels(chips));
             assertEquals(2, ((HBox) chips.getChildren().getFirst()).getChildren().size());
             Label showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
-            assertEquals("Show has been applied once. X removes all show selections.",
+            Button showRemove = (Button) ((HBox) chips.getChildren().getFirst()).getChildren().get(1);
+            assertEquals("Selected members: Alice Tan, Bob Lee",
                     showLabel.getTooltip().getText());
+            assertNull(showRemove.getTooltip());
+            assertEquals("Remove this show selection", showRemove.getAccessibleText());
 
             enter("show 1");
-            showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
-            assertEquals("Show has been applied 2 times. X removes all show selections.",
-                    showLabel.getTooltip().getText());
+            assertEquals("ROSTER · 1 shown", heading.getText());
+            assertEquals(List.of("Show: 2 selected", "Show: 1 selected"), chipLabels(chips));
+            enter("show 1");
+            assertEquals(List.of("Show: 2 selected", "Show: 1 selected"), chipLabels(chips));
+            removeChip(chips, 1);
+            assertEquals("ROSTER · 2 shown", heading.getText());
+            assertEquals(List.of("Show: 2 selected"), chipLabels(chips));
             removeChip(chips, 0);
             assertEquals("ROSTER · 2 shown", heading.getText());
             assertFalse(chips.isVisible());
@@ -381,8 +389,8 @@ public class MainWindowTest {
             enter("show 1");
             enter("find Bob");
             assertEquals("ROSTER · 0 shown", heading.getText());
-            assertEquals(List.of("Name: Bob", "Show: active"), chipLabels(chips));
-            removeChip(chips, 1);
+            assertEquals(List.of("Show: 1 selected", "Name: Bob"), chipLabels(chips));
+            removeChip(chips, 0);
             assertEquals("ROSTER · 1 shown", heading.getText());
             assertEquals(List.of("Name: Bob"), chipLabels(chips));
             assertDisplayedNames("Bob Lee");
@@ -390,6 +398,60 @@ public class MainWindowTest {
             enter("list");
             assertEquals("ROSTER · 2 shown", heading.getText());
             assertFalse(chips.isVisible());
+        });
+    }
+
+    @Test
+    public void showChip_afterLastSelectedMemberDeleted_keepsEmptySelectionUntilRemoved() throws Exception {
+        onJavaFxThread(() -> {
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+            enter("show 1");
+            enter("delete 1");
+            enter("y");
+
+            assertEquals(List.of("Show: 0 selected"), chipLabels(chips));
+            Label showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
+            assertEquals("Selected members: No selected members remain", showLabel.getTooltip().getText());
+            assertDisplayedNames();
+
+            removeChip(chips, 0);
+            assertDisplayedNames("Bob Lee");
+        });
+    }
+
+    @Test
+    public void showChips_keepCommandOrderAsFiltersChange() throws Exception {
+        onJavaFxThread(() -> {
+            Person alice = model.getAddressBook().getPersonList().getFirst();
+            model.setPerson(alice, new PersonBuilder(alice).withTags("committee").build());
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+
+            enter("show 1");
+            enter("show 1");
+            enter("find Alice");
+            enter("filter t/committee");
+            assertEquals(List.of("Show: 1 selected", "Name: Alice", "Tag: committee"),
+                    chipLabels(chips));
+            assertDisplayedNames("Alice Tan");
+
+            removeChip(chips, 1);
+            assertEquals(List.of("Show: 1 selected", "Tag: committee"), chipLabels(chips));
+            removeChip(chips, 0);
+            assertEquals(List.of("Tag: committee"), chipLabels(chips));
+
+            enter("show 1");
+            assertEquals(List.of("Tag: committee", "Show: 1 selected"), chipLabels(chips));
+
+            enter("find Alice");
+            assertEquals(List.of("Tag: committee", "Show: 1 selected", "Name: Alice"), chipLabels(chips));
+            removeChip(chips, 0);
+            assertEquals(List.of("Show: 1 selected", "Name: Alice"), chipLabels(chips));
+
+            enter("list");
+            enter("show 1");
+            enter("filter t/committee");
+            enter("find Alice");
+            assertEquals(List.of("Show: 1 selected", "Tag: committee", "Name: Alice"), chipLabels(chips));
         });
     }
 

@@ -18,6 +18,8 @@ public class FilterCommand extends Command {
     public static final String MESSAGE_USAGE = "filter: Shows currently displayed members with one tag.\n"
             + "Parameters: t/TAG\nExample: filter t/committee";
     public static final String MESSAGE_SUCCESS = "%d member(s) listed with %s %s.";
+    public static final String MESSAGE_ALREADY_FILTERED = "Tag \"%s\" is already an active filter. "
+            + "No changes were made.\n";
 
     private static final Logger logger = LogsCenter.getLogger(FilterCommand.class);
 
@@ -38,7 +40,10 @@ public class FilterCommand extends Command {
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.filterFilteredPersonListByTag(tag);
+        Tag existingTag = model.getActiveTagFilters().stream().filter(tag::equals).findFirst().orElse(null);
+        if (existingTag == null) {
+            model.filterFilteredPersonListByTag(tag);
+        }
         List<Tag> activeTags = model.getActiveTagFilters();
         String tagNames = activeTags.stream()
                 .map(activeTag -> "\"" + activeTag.tagName + "\"")
@@ -47,7 +52,11 @@ public class FilterCommand extends Command {
         int displayedCount = model.getFilteredPersonList().size();
         logger.info(String.format("filter t/%s: %d member(s) displayed; active tag filters (%d): %s; "
                 + "name searches are not included", tag.tagName, displayedCount, activeTags.size(), tagNames));
-        return new CommandResult(String.format(MESSAGE_SUCCESS, displayedCount, tagLabel, tagNames));
+        String feedback = String.format(MESSAGE_SUCCESS, displayedCount, tagLabel, tagNames);
+        if (existingTag != null) {
+            feedback = String.format(MESSAGE_ALREADY_FILTERED, existingTag.tagName) + feedback;
+        }
+        return new CommandResult(feedback);
     }
 
     @Override

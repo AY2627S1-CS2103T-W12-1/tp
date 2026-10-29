@@ -11,13 +11,14 @@ import java.util.stream.Collectors;
 import seedu.address.model.person.EmailContainsKeywordsPredicate;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
+import seedu.address.model.person.PersonSelectionPredicate;
 import seedu.address.model.tag.Tag;
 
-/** One removable name, email or tag condition in the displayed member list. */
+/** One removable condition in the displayed member list. */
 public final class ActiveFilter {
     /** The kind of condition shown in the active filter row. */
     public enum Kind {
-        NAME, EMAIL, TAG
+        NAME, EMAIL, TAG, SHOW
     }
 
     private final Kind kind;
@@ -65,7 +66,13 @@ public final class ActiveFilter {
 
     /** Compares searches of the same kind, ignoring keyword case, repetition and order. */
     public boolean hasSameSearch(ActiveFilter other) {
-        return kind != Kind.TAG && kind == other.kind && searchKeywords.equals(other.searchKeywords);
+        return (kind == Kind.NAME || kind == Kind.EMAIL)
+                && kind == other.kind && searchKeywords.equals(other.searchKeywords);
+    }
+
+    /** Creates one removable condition for a single show command. */
+    public static ActiveFilter createShowFilter(PersonSelectionPredicate predicate) {
+        return new ActiveFilter(Kind.SHOW, null, predicate, null, List.of());
     }
 
     public Kind getKind() {
@@ -73,7 +80,42 @@ public final class ActiveFilter {
     }
 
     public String getLabel() {
+        if (kind == Kind.SHOW) {
+            int count = ((PersonSelectionPredicate) predicate).getSelectedPersons().size();
+            return "Show: " + count + " selected";
+        }
         return label;
+    }
+
+    /** Returns the selected names for a show condition's tooltip. */
+    public String getShowSelectionNames() {
+        if (kind != Kind.SHOW) {
+            throw new IllegalStateException("Only show conditions have selected members");
+        }
+        return ((PersonSelectionPredicate) predicate).getSelectedPersons().stream()
+                .map(person -> person.getName().fullName)
+                .sorted(String.CASE_INSENSITIVE_ORDER)
+                .reduce((first, second) -> first + ", " + second)
+                .orElse("No selected members remain");
+    }
+
+    /** Whether this show condition already selects the same members. */
+    boolean hasSameShowSelection(PersonSelectionPredicate selection) {
+        return kind == Kind.SHOW && ((PersonSelectionPredicate) predicate).getSelectedPersons()
+                .equals(selection.getSelectedPersons());
+    }
+
+    /** Keeps a show condition attached to a member after its record is edited. */
+    boolean replaceSelectedPerson(Person target, Person editedPerson) {
+        return kind == Kind.SHOW && ((PersonSelectionPredicate) predicate).replacePerson(target, editedPerson);
+    }
+
+    /** Removes a deleted member from a show condition's description. */
+    void removeSelectedPerson(Person person) {
+        if (kind == Kind.SHOW) {
+            PersonSelectionPredicate selection = (PersonSelectionPredicate) predicate;
+            selection.removePerson(person);
+        }
     }
 
     /** Returns whether the member satisfies this condition. */

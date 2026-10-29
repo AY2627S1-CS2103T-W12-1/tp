@@ -19,8 +19,11 @@ public enum CommandHelp {
     SHOW("Browse members", "show", "Show only selected members", "show INDEX [MORE_INDEXES]...", "show 1 3",
             "Show only the members at the specified numbers in the current list.",
             "Shows members 1 and 3 in their current order, then renumbers the displayed list.",
-            "One Show: active box represents every show selection. Use its X to remove them all while keeping "
-                    + "other filters, or use list to restore everyone. Repeated numbers select a member once. "
+            "Each distinct show selection adds a box with its selected-member count. Repeating the same "
+                    + "selection adds no box. Hover over a box label to see names in alphabetical order, "
+                    + "ignoring case; use its X to remove only that selection while keeping other filters, "
+                    + "or use list to restore everyone. "
+                    + "Repeated numbers select a member once. "
                     + "A later show uses the new numbers.",
             "Supply space-separated positive displayed numbers. An invalid or missing number leaves the view "
                     + "unchanged."),
@@ -57,8 +60,9 @@ public enum CommandHelp {
     FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
             "Shows currently displayed members with the specified tag without changing saved data.",
             "Shows only members tagged committee, in their current order with new displayed numbers.",
-            "Matching ignores letter case. Repeated filters narrow the list further, and the result "
-                    + "names all active tags. Boxes appear left to right in command order, not matching priority. "
+            "Matching ignores letter case. Adding another tag narrows the list further, and the result "
+                    + "names all active tags. Repeating an active tag leaves the view unchanged and reports "
+                    + "that no changes were made. Boxes appear left to right in command order, not matching priority. "
                     + "Use a filter's X to remove it, or list to show everyone. Find also narrows the current results. "
                     + "Findemail also narrows the current results by email. "
                     + "Edit and delete use displayed numbers; "

@@ -110,14 +110,8 @@ public interface Model {
     /** Returns the distinct active tag filters in the order they were applied. */
     List<Tag> getActiveTagFilters();
 
-    /** Returns removable name, email and tag filters in the order they were applied. */
+    /** Returns removable display conditions in the order they were applied. */
     List<ActiveFilter> getActiveFilters();
-
-    /** Returns the number of active {@code show} selections narrowing the displayed list. */
-    int getActiveShowSelectionCount();
-
-    /** Clears every {@code show} selection while retaining other active filters. */
-    void clearShowSelections();
 
     /** Removes exactly one active filter while retaining the others. */
     void removeActiveFilter(ActiveFilter filter);
