@@ -108,7 +108,7 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_searchWhitespace_isConsistentAcrossBoundaries() throws Exception {
-        for (String separator : List.of(" ", "\t", "\n", "\u2003", "\u3000")) {
+        for (String separator : List.of(" ", "\t", "\n", "\u2003", "\u3000", "\u00a0", "\u2007", "\u202f")) {
             assertEquals(new FindCommand(new NameContainsKeywordsPredicate(List.of("Alice", "Bob"))),
                     parser.parseCommand(separator + "find" + separator + "Alice" + separator + "Bob" + separator));
             assertEquals(new FindEmailCommand(new EmailContainsKeywordsPredicate(List.of("alice", "bob"))),
@@ -121,7 +121,7 @@ public class AddressBookParserTest {
         Person member = new PersonBuilder().build();
         String add = PersonUtil.getAddCommand(member);
         String fields = add.substring(AddCommand.COMMAND_WORD.length()).stripLeading();
-        for (String separator : List.of("\t", "\n", "\u2003", "\u3000")) {
+        for (String separator : List.of("\t", "\n", "\u2003", "\u3000", "\u00a0", "\u2007", "\u202f")) {
             assertEquals(new AddCommand(member), parser.parseCommand("add" + separator + fields));
             assertEquals(new DeleteCommand(INDEX_FIRST_PERSON), parser.parseCommand("delete" + separator + "1"));
             assertEquals(new TagCommand(INDEX_FIRST_PERSON, new Tag("committee")),
@@ -129,6 +129,19 @@ public class AddressBookParserTest {
             assertEquals(new FilterCommand(new Tag("committee")), parser.parseCommand("filter" + separator
                     + "t/committee"));
             assertEquals(new HelpCommand("add"), parser.parseCommand("help" + separator + "add"));
+        }
+    }
+
+    @Test
+    public void parseCommand_unicodeOuterSpaces_preservesNoArgumentCommandsAndFieldValues() throws Exception {
+        Person member = new PersonBuilder().withName("Alice Tan").withAddress("Block\u00a0A 12").build();
+        for (String separator : List.of("\u00a0", "\u2007", "\u202f")) {
+            assertTrue(parser.parseCommand(separator + "list" + separator) instanceof ListCommand);
+            assertEquals(new HelpCommand(), parser.parseCommand(separator + "help" + separator));
+            assertEquals(new AddCommand(member),
+                    parser.parseCommand(separator + PersonUtil.getAddCommand(member)));
+            assertThrows(ParseException.class, () -> parser.parseCommand(separator));
+            assertThrows(ParseException.class, () -> parser.parseCommand("list" + separator + "extra"));
         }
     }
 
