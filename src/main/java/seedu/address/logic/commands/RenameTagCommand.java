@@ -137,6 +137,8 @@ public class RenameTagCommand extends Command {
         assert person.getTags().contains(oldTag) : "renametag updates only members who have the current tag";
         Set<Tag> updatedTags = new HashSet<>(person.getTags());
         updatedTags.remove(oldTag);
+        // Tags match regardless of letter case, so this also drops a different spelling of newTag.
+        updatedTags.remove(newTag);
         updatedTags.add(newTag);
         return new Person(person.getName(), person.getPhone(), person.getEmail(), person.getAddress(),
                 updatedTags);

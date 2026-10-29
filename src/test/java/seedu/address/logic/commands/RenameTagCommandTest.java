@@ -72,6 +72,18 @@ public class RenameTagCommandTest {
     }
 
     @Test
+    public void execute_memberHasNewTagInOtherCase_usesTypedSpelling() throws Exception {
+        Model model = createTypicalModel();
+        model.setPerson(BENSON, new PersonBuilder(BENSON).withTags("owesMoney", "FRIENDS").build());
+
+        new RenameTagCommand(owesMoney, friends).execute(model);
+
+        Person renamedBenson = model.getAddressBook().getPersonList().stream()
+                .filter(person -> person.isSamePerson(BENSON)).findFirst().orElseThrow();
+        assertEquals(List.of("friends"), renamedBenson.getTags().stream().map(tag -> tag.tagName).toList());
+    }
+
+    @Test
     public void execute_membersHiddenBySearch_renamesOnlyDisplayedMembers() {
         Model model = createTypicalModel();
         model.updateFilteredPersonList(person -> person.isSamePerson(ALICE));
