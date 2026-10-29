@@ -18,6 +18,8 @@ import seedu.address.model.tag.Tag;
 public final class ActiveFilter {
     /** Joins the alternatives of one condition in its label, since a member needs only one of them. */
     public static final String ALTERNATIVES_SEPARATOR = " / ";
+    /** The most tags of one group that its box names before summarizing the rest as {@code +N more}. */
+    public static final int MAX_SHOWN_TAGS = 4;
 
     /** The kind of condition shown in the active filter row. */
     public enum Kind {
@@ -105,12 +107,30 @@ public final class ActiveFilter {
         return kind;
     }
 
+    /**
+     * Returns the text of this condition's box. A tag group with more than {@value #MAX_SHOWN_TAGS} tags shows
+     * the first few followed by {@code +N more}; use {@link #getFullLabel()} for every tag.
+     */
     public String getLabel() {
         if (kind == Kind.SHOW) {
             int count = ((PersonSelectionPredicate) predicate).getSelectedPersons().size();
             return "Show: " + count + " selected";
         }
+        if (kind == Kind.TAG && tags.size() > MAX_SHOWN_TAGS) {
+            String shownTags = tags.stream().limit(MAX_SHOWN_TAGS).map(tag -> tag.tagName)
+                    .collect(Collectors.joining(ALTERNATIVES_SEPARATOR));
+            int hiddenCount = tags.size() - MAX_SHOWN_TAGS;
+            return "Tag: " + shownTags + ALTERNATIVES_SEPARATOR + "+" + hiddenCount + " more";
+        }
         return label;
+    }
+
+    /**
+     * Returns the complete text of this condition, listing every tag of a tag group.
+     * Used for tooltips and accessible text, where there is room for the whole list.
+     */
+    public String getFullLabel() {
+        return kind == Kind.SHOW ? getLabel() : label;
     }
 
     /** Returns the selected names for a show condition's tooltip. */

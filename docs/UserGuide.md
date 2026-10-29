@@ -240,6 +240,9 @@ stays the same, and their displayed numbers update.
   `alumni`, or both. It adds one box that reads `Tag: committee / alumni`, and `filter t/a t/b t/c` shows
   `Tag: a / b / c`. The `/` stands for "or"; it is used instead of the word because a tag could itself be named
   `or`. Its **X** removes the whole group. Repeating a tag in one command counts it once.
+* **Long groups are shortened.** A box names at most four tags. With more, the rest become `+N more`, so
+  `filter t/a t/b t/c t/d t/e t/f` shows `Tag: a / b / c / d / +2 more`. Hover over the box to read every tag;
+  the result message and the remove button's screen-reader text also list all of them.
 * **Separate commands mean and.** Each filter narrows the current results. Run `filter t/year1` next to keep
   members with **both** conditions, here (`committee` or `alumni`) and `year1`.
 * Applying the same tags again, in any order or letter case, leaves the view unchanged. The result
@@ -254,10 +257,13 @@ stays the same, and their displayed numbers update.
 The result reports `N member(s) listed with tag "TAG".` for one active tag filter. With multiple
 active tags, it lists each active tag condition in the order applied, for example:
 `1 member(s) listed with tags "committee", "year1".` Tags that came from one command are joined with `/`,
-for example `2 member(s) listed with tags "committee" / "alumni".` Repeats are removed within one condition
-only, so `filter t/committee t/alumni` followed by `filter t/committee` lists
-`"committee" / "alumni", "committee"`: both conditions are active and must hold. Use `list` to clear all
-active conditions.
+for example `2 member(s) listed with tags "committee" / "alumni".` In the list, a comma means **and** and a
+slash means **or**. When a group is listed next to other conditions it is put in parentheses so the two cannot
+be confused: `filter t/committee t/alumni` followed by `filter t/year1` reports
+`1 member(s) listed with tags ("committee" / "alumni"), "year1".`, meaning (`committee` or `alumni`) and `year1`.
+Repeats are removed within one condition only, so `filter t/committee t/alumni` followed by
+`filter t/committee` lists `("committee" / "alumni"), "committee"`: both conditions are active and must hold.
+Use `list` to clear all active conditions.
 No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
 
 Check the displayed numbers before using `edit`, `tag`, `untag`, or `delete`. Editing keeps the active search and filters.

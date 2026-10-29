@@ -91,9 +91,12 @@ public class FilterCommand extends Command {
             return String.format(MESSAGE_LISTED, displayedCount);
         }
         String tagLabel = activeTags.size() == 1 ? "tag" : "tags";
-        String conditions = model.getActiveFilters().stream()
+        List<ActiveFilter> tagFilters = model.getActiveFilters().stream()
                 .filter(filter -> filter.getKind() == ActiveFilter.Kind.TAG)
-                .map(filter -> formatAlternatives(filter.getTags()))
+                .toList();
+        boolean hasSeveralConditions = tagFilters.size() > 1;
+        String conditions = tagFilters.stream()
+                .map(filter -> formatCondition(filter.getTags(), hasSeveralConditions))
                 .collect(Collectors.joining(", "));
         return String.format(MESSAGE_SUCCESS, displayedCount, tagLabel, conditions);
     }
@@ -111,6 +114,15 @@ public class FilterCommand extends Command {
             return String.format(MESSAGE_ALREADY_FILTERED, existingTags.getFirst().tagName);
         }
         return String.format(MESSAGE_ALREADY_FILTERED_ANY, formatAlternatives(existingTags));
+    }
+
+    /**
+     * Formats one tag condition. A group is put in parentheses when it is listed next to other conditions,
+     * so that its " / " (any) cannot be mistaken for the ", " (and) between conditions.
+     */
+    private static String formatCondition(List<Tag> alternatives, boolean isAmongOthers) {
+        String text = formatAlternatives(alternatives);
+        return isAmongOthers && alternatives.size() > 1 ? "(" + text + ")" : text;
     }
 
     /** Quotes each tag name and joins them with " / ", as they are in one filter. */

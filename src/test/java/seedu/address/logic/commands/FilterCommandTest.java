@@ -53,7 +53,7 @@ public class FilterCommandTest {
         committeeOrAlumni.execute(model);
         CommandResult result = new FilterCommand(new Tag("year1")).execute(model);
 
-        assertEquals("1 member(s) listed with tags \"committee\" / \"alumni\", \"year1\".",
+        assertEquals("1 member(s) listed with tags (\"committee\" / \"alumni\"), \"year1\".",
                 result.getFeedbackToUser());
         assertEquals(List.of("Tag: committee / alumni", "Tag: year1"), activeLabels(model));
         assertEquals(List.of("Lee Alumni"), displayedNames(model));
@@ -76,10 +76,36 @@ public class FilterCommandTest {
 
         CommandResult result = new FilterCommand(new Tag("committee")).execute(model);
 
-        assertEquals("1 member(s) listed with tags \"committee\" / \"alumni\", \"committee\".",
+        assertEquals("1 member(s) listed with tags (\"committee\" / \"alumni\"), \"committee\".",
                 result.getFeedbackToUser());
         assertEquals(List.of("Tag: committee / alumni", "Tag: committee"), activeLabels(model));
         assertEquals(List.of("Pat Committee"), displayedNames(model));
+    }
+
+    @Test
+    public void execute_manyTagsInOneCommand_capsBoxLabelButKeepsEveryTagElsewhere() {
+        Model model = clubModel();
+        FilterCommand sixTags = new FilterCommand(List.of(new Tag("t1"), new Tag("t2"), new Tag("t3"),
+                new Tag("t4"), new Tag("t5"), new Tag("t6")));
+
+        CommandResult result = sixTags.execute(model);
+
+        ActiveFilter box = model.getActiveFilters().getFirst();
+        assertEquals("Tag: t1 / t2 / t3 / t4 / +2 more", box.getLabel());
+        assertEquals("Tag: t1 / t2 / t3 / t4 / t5 / t6", box.getFullLabel());
+        assertEquals("0 member(s) listed with tags \"t1\" / \"t2\" / \"t3\" / \"t4\" / \"t5\" / \"t6\".",
+                result.getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_exactlyMaxShownTags_keepsWholeLabel() {
+        Model model = clubModel();
+
+        new FilterCommand(List.of(new Tag("t1"), new Tag("t2"), new Tag("t3"), new Tag("t4"))).execute(model);
+
+        ActiveFilter box = model.getActiveFilters().getFirst();
+        assertEquals("Tag: t1 / t2 / t3 / t4", box.getLabel());
+        assertEquals(box.getLabel(), box.getFullLabel());
     }
 
     @Test

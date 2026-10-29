@@ -490,6 +490,22 @@ public class MainWindowTest {
     }
 
     @Test
+    public void activeFilterChips_manyTagsInGroup_capsLabelButTooltipAndAccessibleTextListAll() throws Exception {
+        onJavaFxThread(() -> {
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+
+            enter("filter t/t1 t/t2 t/t3 t/t4 t/t5 t/t6");
+
+            HBox chip = (HBox) chips.getChildren().getFirst();
+            Label label = (Label) chip.getChildren().getFirst();
+            Button removeButton = (Button) chip.getChildren().get(1);
+            assertEquals("Tag: t1 / t2 / t3 / t4 / +2 more", label.getText());
+            assertEquals("Tag: t1 / t2 / t3 / t4 / t5 / t6", label.getTooltip().getText());
+            assertEquals("Remove Tag: t1 / t2 / t3 / t4 / t5 / t6", removeButton.getAccessibleText());
+        });
+    }
+
+    @Test
     public void activeFilterChips_removeIndividualFiltersAndUpdateDisplayedMembers() throws Exception {
         onJavaFxThread(() -> {
             Person alice = model.getAddressBook().getPersonList().get(0);

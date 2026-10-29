@@ -645,6 +645,12 @@ The filter box label joins alternatives with `/` (`ActiveFilter#ALTERNATIVES_SEP
 and `Email: @example.com / @school.edu`, because keywords within one of those commands are also alternatives.
 The word "or" is not used as the separator because a tag can legally be named `or`, which would make
 `Tag: a or or or b` ambiguous; `/` cannot appear in a tag.
+`ActiveFilter#getLabel` caps a tag group at `ActiveFilter.MAX_SHOWN_TAGS` (4) tags, so a long group cannot make
+one box wrap across the filter area: `filter t/a t/b t/c t/d t/e t/f` shows `Tag: a / b / c / d / +2 more`.
+`+` cannot occur in a tag, so `+N more` is never mistaken for one. `ActiveFilter#getFullLabel` always lists
+every tag, and `MainWindow` uses it for the box's tooltip and the remove button's accessible text, so no
+information is lost. Name and email boxes are not capped; JavaFX ellipsizes an over-long label and the tooltip
+holds the full text.
 The model keeps removable name, email, tag, and `show` conditions in application order, shown left to right in the UI.
 `find` adds a distinct name condition and `findemail` adds a distinct email condition; `list` clears all conditions.
 Applying name, email, and tag conditions in a different order gives the same matching
@@ -653,7 +659,10 @@ The observable filtered list updates automatically, and the command reports the 
 count and all active tag names.
 A single tag uses `N member(s) listed with tag "TAG".`; multiple tags use
 `N member(s) listed with tags "TAG1", "TAG2".` in application order. Tags that came from one command are
-joined with `/`, for example `N member(s) listed with tags "TAG1" / "TAG2", "TAG3".`
+joined with `/`, for example `N member(s) listed with tags "TAG1" / "TAG2".` A comma between conditions means
+AND and a slash within one means OR. To keep the two readable, `FilterCommand#formatCondition` puts a group in
+parentheses whenever more than one tag condition is listed, for example
+`N member(s) listed with tags ("TAG1" / "TAG2"), "TAG3".`; a lone group stays unparenthesized.
 A zero-match result is successful.
 
 Filtering preserves the current display order, including name sorting. Visible members are renumbered,
@@ -679,8 +688,9 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
 
 * `FilterCommandParserTest` and `FilterCommandTest` cover argument validation, narrowing an existing view,
   feedback for a repeated tag with different letter case, alternatives within one command (OR), and a
-  grouped filter combined with a separate filter (AND). `ModelManagerTest` and `MainWindowTest` cover the
-  `A or B` box labels.
+  grouped filter combined with a separate filter (AND), the parenthesized result line, and the four-tag cap
+  with its full-list label. `ModelManagerTest` and `MainWindowTest` cover the `A / B` box labels, including
+  the capped box's tooltip and accessible text.
 * `LogicManagerTest` covers cumulative filters, case-insensitive matching, empty results, interactions with
   `find`, `list`, and sorting, and execution without saving.
 * `EditCommandTest` checks that edits retain search and tag conditions and hide members who no longer match.
