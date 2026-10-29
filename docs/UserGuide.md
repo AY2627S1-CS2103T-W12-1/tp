@@ -177,7 +177,8 @@ Search by a full email address or any part of an email address:
 * `findemail @example.com` finds emails containing that domain fragment.
 * `findemail @example.com @school.edu` finds emails containing **either** fragment.
 
-Matching ignores letter case. Whitespace separates keywords, and any keyword can match.
+Matching ignores letter case. Whitespace, including pasted nonbreaking spaces, separates keywords;
+any keyword can match.
 Keywords are literal text, not regular expressions; names and phone numbers are not searched.
 Supply at least one keyword. No matches produce `0 members listed.` and an empty list.
 
@@ -260,7 +261,7 @@ so `a/Block A/12` is accepted. Other uppercase or unknown field prefixes remain 
 | Name | Start with a Unicode letter or ASCII digit. Unicode letters, combining marks, ASCII digits, spaces, hyphens, and straight or curly apostrophes are accepted. |
 | Phone | At least three ASCII digits, with an optional leading `+` and spaces between digits. Formatting is preserved. Hyphens, parentheses, and internal tabs are rejected. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
-| Address | Non-blank text when adding; `edit INDEX a/` clears an existing address. |
+| Address | Non-blank text when provided; Unicode-space-only values are rejected. `edit INDEX a/` clears an address. |
 | Tag | 1 to 30 ASCII letters or digits with optional internal hyphens. Matching ignores letter case. |
 
 Names such as `Anne-Marie`, `José Garcia`, and `O'Connor` keep their entered spelling,
@@ -289,6 +290,7 @@ If you omit `a/`, the address is shown as `(none)` until you add one with `edit`
 
 Duplicate checking ignores name capitalization, repeated whitespace and surrounding whitespace.
 For example, `Alice Tan`, `alice tan` and `Alice  Tan` match when phone, email and address also match.
+Unicode letter case is ignored too; for example, `ΟΣ`, `οσ` and `ος` match.
 Those other fields are trimmed but otherwise compared exactly; tags are ignored.
 Names keep their entered capitalization and spacing in storage and display. Accents and punctuation
 are not removed by duplicate checking, and this rule does not expand the supported name characters.
@@ -453,6 +455,8 @@ list and exports. On the next roster save, the other spellings are removed from 
   that folder. The parent directory must already exist and be writable.
 * The destination must end in `.csv` (ignoring letter case). Other extensions and missing extensions are rejected
   with `File must have a .csv extension.` Filenames may contain spaces.
+* Double quotes are rejected anywhere in the export path, including directory names, because `import`
+  cannot read filenames containing them. Choose another name; spaces do not need surrounding quotes.
 * An existing destination file is overwritten.
   The active roster file, preferences file, their backups and recovery copies, application lock, and running JAR
   cannot be used as export destinations. These reserved paths are case-insensitive, including directory names,
@@ -546,6 +550,8 @@ after you confirm the deletion.
 Only `yes`, typed exactly in lowercase, confirms. `y`, `Y`, `YES`, or `Yes` does not confirm or cancel: it keeps
 the prompt pending and reminds you:
 `To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.`
+The reminder is followed by the original prompt, so the member to be deleted (or, for `clear`, the total member
+count) stays visible, including after you remove a filter box.
 
 Any other input, such as `no` or another command, cancels the deletion with
 `Deletion cancelled. No member was removed.` That input is not run, so enter it again if you need it.

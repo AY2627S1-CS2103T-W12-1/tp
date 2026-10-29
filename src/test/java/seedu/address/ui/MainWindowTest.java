@@ -290,6 +290,26 @@ public class MainWindowTest {
     }
 
     @Test
+    public void removeFilterChip_afterNearMissReply_keepsOriginalPromptAndTarget() throws Exception {
+        onJavaFxThread(() -> {
+            enter("find Bob");
+            enter("delete 1");
+            enter("Y");
+            assertTrue(feedback.getText().startsWith("To confirm, type yes exactly"));
+            assertTrue(feedback.getText().contains("Delete member 1, Bob Lee?"));
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+
+            removeChip(chips, 0);
+
+            assertTrue(feedback.getText().startsWith("Removed Name: Bob. 2 member(s) listed."));
+            assertTrue(feedback.getText().contains("Delete member 1, Bob Lee?"));
+            assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            enter("yes");
+            assertDisplayedNames("Alice Tan");
+        });
+    }
+
+    @Test
     public void enter_failedAddSave_refreshesFilterChipsToMatchRetainedRoster() throws Exception {
         Files.createDirectory(temporaryFolder.resolve("members.json"));
         onJavaFxThread(() -> {

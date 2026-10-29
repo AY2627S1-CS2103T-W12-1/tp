@@ -171,6 +171,7 @@ policies below.
    is ignored, `LogicManager` executes the `ConfirmDeleteCommand` and saves the roster as for other
    data-changing commands. A near miss (`y`, or `yes` in another letter case, checked by
    `ConfirmDeleteCommand#isNearMiss`) keeps the deletion pending and reminds the user to type `yes` exactly.
+   The reminder repeats the original prompt, and `MainWindow` keeps that prompt for later filter-box removals.
    Any other input cancels the deletion and is not run as a command; when it starts with a command word,
    the cancellation says that command was not run. Except for a near miss, the pending deletion is cleared.
 
@@ -475,8 +476,9 @@ through the usual preferences setup.
 The current JSON format uses a `persons` array and a `tags` array per member. Duplicate identity compares
 all four trimmed contact fields exactly, including case and internal spacing, and ignores tags.
 This legacy `Person#isSamePerson` rule remains the storage invariant so older rosters continue to load.
-For new input, `Person#isDuplicateContactOf` compares names after whitespace collapse and `Locale.ROOT`
-lowercasing, with exact trimmed phone/email/address comparisons. Add and edit reject a match against
+For new input, `Person#isDuplicateContactOf` compares names with `String.equalsIgnoreCase` after whitespace
+collapse, with exact trimmed phone/email/address comparisons. This handles Unicode case pairs such as Greek sigma
+without context-sensitive lowercasing. Add and edit reject a match against
 another stored member; import skips matches against the roster and earlier accepted rows. Stored names,
 `equals` and `hashCode` are unchanged. Tags and unchanged-contact edits remain possible on legacy variants.
 The email validator avoids excessive backtracking on long
@@ -535,6 +537,9 @@ An import-save failure leaves the imported batch in memory and preserves the pre
 
 ![CSV export of the complete roster through an atomic file write](images/CsvExportSequenceDiagram.png)
 
+`ExportCommandParser` rejects double quotes in destination paths before any file is written, so exports do not
+produce filenames that `ImportCommandParser` cannot read. Spaces remain supported without surrounding quotes.
+
 The sequence shows a successful export after command parsing. `LogicManager` supplies the active roster and preferences
 paths to `ExportCommand`, which checks the destination against protected application files before
 calling `CsvAddressBookExporter`. Path resolution also applies the shared file-location restrictions.
@@ -572,7 +577,7 @@ selection narrowing, record replacement, ordering, and read-only execution.
 ### Find members by email
 
 `findemail KEYWORD [MORE_KEYWORDS]...` searches the full roster for email addresses containing any
-whitespace-separated keyword. It accepts a full address or a fragment such as `@example.com`.
+whitespace-separated keyword, including nonbreaking-space separators. It accepts a full address or a fragment such as `@example.com`.
 Matching lowercases the email and keywords with `Locale.ROOT` and uses literal substring matching,
 not regular expressions. Names and phone numbers are not searched. Blank input is rejected.
 
@@ -1585,6 +1590,16 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    Run `clear` again and confirm with `yes`. After saving, expect
    `Cleared 2 members. The roster is now empty.` and no members when `list` runs. Run `clear` again; after saving, expect
    `The roster is already empty. No changes were made.`
+
+### Pasted Unicode input
+
+* Add or edit a supplied address containing only a nonbreaking space (U+00A0), figure space (U+2007),
+  or narrow nonbreaking space (U+202F). Expect rejection and no changed member.
+* Use an address with visible Unicode text and internal nonbreaking spaces. Expect the text to be preserved.
+  `edit INDEX a/` must still clear the address.
+* With Alice and Bob in the roster, run `list`, then `find Alice Bob` (U+00A0 between the names).
+  Expect the same results as `find Alice Bob`. Repeat after `list` with their two email fragments and `findemail`.
+* A name or email search containing only those separators must report missing keywords.
 
 ### Email search
 
