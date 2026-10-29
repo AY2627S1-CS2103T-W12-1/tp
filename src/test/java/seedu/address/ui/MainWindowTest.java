@@ -277,13 +277,9 @@ public class MainWindowTest {
         onJavaFxThread(() -> {
             enter("find Alice");
             enter("delete 1");
-            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
 
-            removeChip(chips, 0);
-
-            assertTrue(feedback.getText().startsWith("Removed Name: Alice. 2 member(s) listed."));
-            assertTrue(feedback.getText().contains("Delete member 1, Alice Tan?"));
-            assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertFirstChipRemovalKeepsPrompt("Removed Name: Alice. 2 member(s) listed.",
+                    "Delete member 1, Alice Tan?");
             enter("yes");
             assertDisplayedNames("Bob Lee");
         });
@@ -297,13 +293,8 @@ public class MainWindowTest {
             enter("Y");
             assertTrue(feedback.getText().startsWith("To confirm, type yes exactly"));
             assertTrue(feedback.getText().contains("Delete member 1, Bob Lee?"));
-            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
 
-            removeChip(chips, 0);
-
-            assertTrue(feedback.getText().startsWith("Removed Name: Bob. 2 member(s) listed."));
-            assertTrue(feedback.getText().contains("Delete member 1, Bob Lee?"));
-            assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
+            assertFirstChipRemovalKeepsPrompt("Removed Name: Bob. 2 member(s) listed.", "Delete member 1, Bob Lee?");
             enter("yes");
             assertDisplayedNames("Alice Tan");
         });
@@ -1004,6 +995,23 @@ public class MainWindowTest {
     private List<String> chipLabels(FlowPane chips) {
         return chips.getChildren().stream()
                 .map(chip -> ((Label) ((HBox) chip).getChildren().get(0)).getText()).toList();
+    }
+
+    /** Returns the pane that holds the active filter boxes. */
+    private FlowPane getFilterChips() {
+        return (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+    }
+
+    /**
+     * Removes the first filter box while a deletion awaits confirmation, then checks that the feedback reports
+     * {@code removal} and still names the member in {@code prompt}, and that the prompt stays pending.
+     */
+    private void assertFirstChipRemovalKeepsPrompt(String removal, String prompt) {
+        removeChip(getFilterChips(), 0);
+
+        assertTrue(feedback.getText().startsWith(removal));
+        assertTrue(feedback.getText().contains(prompt));
+        assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
     }
 
     private void removeChip(FlowPane chips, int index) {
