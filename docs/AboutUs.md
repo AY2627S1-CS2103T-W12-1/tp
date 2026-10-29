@@ -21,7 +21,7 @@ We are a team based in the [School of Computing, National University of Singapor
 [[GitHub](https://github.com/CAYOPAN)]
 
 * Role: Testing & Code Quality Lead
-* Responsibilities: Exit, delete, and find commands.
+* Responsibilities: Exit, delete, and find commands; `tag` and `untag` commands.
 
 </section>
 
@@ -34,7 +34,7 @@ We are a team based in the [School of Computing, National University of Singapor
 [[GitHub](https://github.com/rondth)]
 
 * Role: Integration Lead
-* Responsibilities: Automatic saving and tag filtering (`filter`).
+* Responsibilities: Automatic saving and tag filtering (`filter`); `show` command and UI.
 
 </section>
 
@@ -47,7 +47,7 @@ We are a team based in the [School of Computing, National University of Singapor
 [[GitHub](https://github.com/glory-lion)]
 
 * Role: Documentation Lead
-* Responsibilities: Manual data-file editing and bulk tag editing (`tagall`, `untagall`).
+* Responsibilities: Manual data-file editing and bulk tag editing (`tagall`, `untagall`); tag renaming (`renametag`).
 
 </section>
 
@@ -60,7 +60,7 @@ We are a team based in the [School of Computing, National University of Singapor
 [[GitHub](https://github.com/Manutd1234)]
 
 * Role: Team Lead
-* Responsibilities: List members (`list`) and clear the roster (`clear`).
+* Responsibilities: List members (`list`) and clear the roster (`clear`); sorting (`sort`).
 
 </section>
 
@@ -73,7 +73,7 @@ We are a team based in the [School of Computing, National University of Singapor
 [[GitHub](https://github.com/Asdao)]
 
 * Role: Developer Lead
-* Responsibilities: CLI workflows for adding and editing member records, and command help.
+* Responsibilities: CLI workflows for adding and editing member records, and command help; partial-word name search.
 
 </section>
 </div>
