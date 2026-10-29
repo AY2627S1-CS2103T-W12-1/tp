@@ -35,9 +35,7 @@ public class DeleteCommandTest {
         Person personToDelete = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         DeleteCommand deleteCommand = new DeleteCommand(INDEX_FIRST_PERSON);
 
-        CommandResult expectedResult = new CommandResult(String.format(DeleteCommand.MESSAGE_CONFIRM_DELETE,
-                INDEX_FIRST_PERSON.getOneBased(), personToDelete.getName(), Messages.formatTags(personToDelete)),
-                new ConfirmDeleteCommand(personToDelete));
+        CommandResult expectedResult = createExpectedPrompt(INDEX_FIRST_PERSON, personToDelete);
 
         ModelManager expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
 
@@ -59,14 +57,21 @@ public class DeleteCommandTest {
         Person personToDelete = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         DeleteCommand deleteCommand = new DeleteCommand(INDEX_FIRST_PERSON);
 
-        CommandResult expectedResult = new CommandResult(String.format(DeleteCommand.MESSAGE_CONFIRM_DELETE,
-                INDEX_FIRST_PERSON.getOneBased(), personToDelete.getName(), Messages.formatTags(personToDelete)),
-                new ConfirmDeleteCommand(personToDelete));
+        CommandResult expectedResult = createExpectedPrompt(INDEX_FIRST_PERSON, personToDelete);
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         showPersonAtIndex(expectedModel, INDEX_FIRST_PERSON);
 
         assertCommandSuccess(deleteCommand, model, expectedResult, expectedModel);
+    }
+
+    /**
+     * Returns the result that asks the user to confirm deleting {@code personToDelete}, shown at {@code index}.
+     */
+    private static CommandResult createExpectedPrompt(Index index, Person personToDelete) {
+        return new CommandResult(String.format(DeleteCommand.MESSAGE_CONFIRM_DELETE, index.getOneBased(),
+                personToDelete.getName(), Messages.formatTags(personToDelete)),
+                new ConfirmDeleteCommand(personToDelete));
     }
 
     @Test

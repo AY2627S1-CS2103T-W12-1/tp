@@ -1,16 +1,56 @@
 package seedu.address.testutil;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
+import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
+import seedu.address.logic.commands.Command;
 import seedu.address.model.Model;
+import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
 
 /**
  * A utility class for building the expected model of tag commands.
  */
-public class TagTestUtil {
+public final class TagTestUtil {
+
+    private TagTestUtil() {
+        // Prevents instantiation of this utility class.
+    }
+
+    /**
+     * Returns a model of the typical members with all of them displayed.
+     */
+    public static Model createTypicalModel() {
+        return new ModelManager(getTypicalAddressBook(), new UserPrefs());
+    }
+
+    /**
+     * Returns a model of the typical members, displaying only those that match {@code displayed}.
+     */
+    public static Model createTypicalModel(Predicate<Person> displayed) {
+        Model model = createTypicalModel();
+        model.updateFilteredPersonList(displayed);
+        return model;
+    }
+
+    /**
+     * Asserts that {@code command} succeeds as described by {@link CommandTestUtil#assertCommandSuccess}
+     * and logs exactly {@code expectedLog} at the info level.
+     */
+    public static void assertCommandSuccessWithLog(Command command, Model model, String expectedMessage,
+            Model expectedModel, String expectedLog) {
+        try (LogCapture logs = new LogCapture(command.getClass())) {
+            assertCommandSuccess(command, model, expectedMessage, expectedModel);
+            assertEquals(List.of(expectedLog), logs.getInfoMessages());
+        }
+    }
 
     /**
      * Adds the tag named {@code tagName} to every member displayed in {@code model} who does not have it.

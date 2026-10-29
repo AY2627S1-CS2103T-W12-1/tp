@@ -72,14 +72,6 @@ public class FilterCommand extends Command {
         return String.format(MESSAGE_SUCCESS, displayedCount, tagLabel, formatTagNames(activeTags));
     }
 
-    /**
-     * Describes the displayed list after an update hid some of the updated members, so users know why they
-     * disappeared, for example {@code \n0 member(s) listed with tag "friends". Run list to show everyone.}
-     */
-    public static String describeHiddenUpdates(Model model) {
-        return "\n" + describeDisplayedMembers(model) + MESSAGE_RUN_LIST;
-    }
-
     private static String formatTagNames(List<Tag> tags) {
         return tags.stream()
                 .map(activeTag -> "\"" + activeTag.tagName + "\"")

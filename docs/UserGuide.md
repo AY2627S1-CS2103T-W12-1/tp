@@ -6,20 +6,21 @@ pageNav: 6
 
 # TrackCall User Guide {id="user-guide"}
 
-TrackCall helps a club's membership secretary maintain member contact details using typed commands.
+TrackCall is a desktop app for the **membership secretary of a student club or society** who keeps the
+contact details of tens to hundreds of members. Members often belong to several overlapping groups, such as
+the committee, a year of study, or an event team. If you type quickly, TrackCall lets you find a group and
+update it with a few short commands, instead of scrolling and clicking through a spreadsheet or contacts app.
 
-The full feature set includes AB3's core member workflows: `add`, `edit`, `delete`, `clear`, `list`,
-`find`, `help`, and `exit`, together with contact tags and local saving. TrackCall adds the membership,
-search, group-editing, and CSV tools documented below.
+With TrackCall, you can:
 
-This guide covers the **v1.5 preparation build (unreleased)** and its nineteen available commands.
-Tag filtering, bulk tag editing, CSV import/export, and name sorting are available.
+* keep each member's name, phone, email, address, and groups in one roster that is saved automatically;
+* narrow the roster by name, email, tag, or displayed number, and combine these conditions;
+* add, remove, or rename a tag for every displayed member in one command;
+* exchange member records with spreadsheets through CSV files;
+* confirm before deleting, so one mistyped number does not remove a member.
 
-The published download is still [v1.4 alpha](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/tag/v1.4).
-For that JAR, use the [version-matched User Guide](https://github.com/AY2627S1-CS2103T-W12-1/tp/blob/v1.4/docs/UserGuide.md).
-The source build adds single-instance protection, clearing an address with `edit INDEX a/`, preservation of the
-previous distinct backup, improved import-save recovery feedback, and less sensitive diagnostic logging.
-These changes are not yet in the v1.4 download.
+You need to be able to open a terminal, but no programming knowledge. Terms such as *CSV* and *JAR* are
+explained in the [Glossary](#glossary).
 
 Start with [Quick start](#quick-start), browse the [feature groups](#commands), or use the
 [command summary](#command-summary) to look up a command.
@@ -38,19 +39,18 @@ Start with [Quick start](#quick-start), browse the [feature groups](#commands), 
    java -jar trackcall.jar
    ```
 
-TrackCall opens with sample members and a welcome message on your first launch.
-In the v1.5 preparation build, only one instance can use a JAR folder at a time. If a second launch reports that TrackCall is already
-running, use the existing window or close it before restarting. The `.trackcall.lock` file may remain
-after exit; its presence alone does not block startup, and you do not need to delete it.
-The v1.4 JAR does not enforce this restriction; keep only one window open to avoid overwriting another session's changes.
-To run the preparation build from source, use `./gradlew run` after following the [Setting up guide](SettingUp.html).
-Screenshots show the existing interface; the preparation changes above affect the specified behaviour.
+TrackCall opens with six sample club members and a welcome message on your first launch.
+Try the examples in this guide on them, then use `clear` to remove them when you are ready to enter your own members.
+
+Only one TrackCall window can use a folder at a time. If a second launch reports
+`TrackCall is already running from this folder.`, use the existing window or close it before restarting.
+A `.trackcall.lock` file may remain in the folder after you exit; you do not need to delete it.
 
 ### Read the interface
 
 ![TrackCall showing the command box, compact roster, and selected member details](images/user-guide/interface.png)
 
-*TrackCall with one sample member selected. Your data-file path will depend on where you placed the JAR.*
+*TrackCall with sample member 2 selected. The status bar shows where your data file is saved.*
 
 From top to bottom:
 
@@ -161,6 +161,11 @@ are green. The boxes appear left to right in the order applied. With an unchange
 does not change who matches:
 `filter t/committee` then `find Alice` gives the same final members as `find Alice` then
 `filter t/committee`. Select a box's **X** to remove only that condition, or use `list` to show everyone again.
+
+![Two active conditions, Tag: year1 and Name: David, shown as boxes under the command box](images/user-guide/filter-boxes.png)
+
+*After `filter t/year1` and then `find David`, both conditions appear as boxes and only David Li is shown.*
+
 Long filter labels are shortened with an ellipsis; hover over a label to read the complete condition.
 When many conditions are active, scroll within the filter area to reach the remaining boxes.
 You can also press Tab or Shift+Tab to move between their removal buttons; the focused box scrolls into view.
@@ -262,7 +267,7 @@ so `a/Block A/12` is accepted. Other uppercase or unknown field prefixes remain 
 | Phone | At least three ASCII digits, with an optional leading `+` and spaces between digits. Formatting is preserved. Hyphens, parentheses, and internal tabs are rejected. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text when provided; Unicode-space-only values are rejected. `edit INDEX a/` clears an address. |
-| Tag | 1 to 30 ASCII letters or digits with optional internal hyphens. Matching ignores letter case. |
+| Tag | 1 to 30 ASCII letters or digits with optional internal hyphens, such as `year-1`. Spaces, underscores, other symbols such as `@ # $ % .`, and accented letters are not allowed. Matching ignores letter case. |
 
 Names such as `Anne-Marie`, `José Garcia`, and `O'Connor` keep their entered spelling,
 including combining accents. Phone examples include `+6591234567` and `9123 4567`.
@@ -337,7 +342,15 @@ and contact fields. For example:
 
 ```text
 tag 2 t/committee
-untag 2 t/friends
+untag 2 t/year1
+```
+
+With the sample members, the first command reports:
+
+```text
+Added tag "committee" to member 2.
+Name: Bernice Yu
+Tags: batch2026, committee, year1
 ```
 
 Check the displayed number after searching, filtering, showing selected members, or sorting. The
@@ -347,7 +360,7 @@ Adding `t/student` to a member who already has `Student` does not add a second t
 If one `add` or `edit` command supplies both spellings, the first `t/` spelling is kept.
 
 If the member already has the tag (for `tag`) or lacks it (for `untag`), TrackCall reports that
-no change was made. A valid no-op still attempts to save. Searches, filters, sorting, and a `show`
+no change was made, for example `Member 2 already has tag "committee". No changes were made.` A valid no-op still attempts to save. Searches, filters, sorting, and a `show`
 selection remain active after the command. Removing a tag required by an active filter may hide the
 member from that view; use `list` to show everyone again.
 
@@ -358,7 +371,7 @@ file stays unchanged. Follow [Correcting errors](#correcting-errors) before exit
 
 `tagall t/TAG` adds one tag to every member in the **currently displayed list**.
 `untagall t/TAG` removes one tag from every displayed member.
-Members hidden by a search or filter are not changed, and each member's other tags are kept.
+Members hidden by `find`, `findemail`, `filter`, or `show` are not changed, and each member's other tags are kept.
 
 1. Use `find` or `filter` to show the group, then check the displayed members.
 2. Run `tagall` or `untagall` with one tag.
@@ -373,17 +386,19 @@ tagall t/event2026
 
 Every displayed committee member now also has the `event2026` tag.
 
-To export the roster afterwards, run `export members.csv`. This exports **every member in the roster**,
-including those hidden by the committee filter.
+![The committee filter box is active and both displayed members now have the event2026 tag](images/user-guide/tag-group.png)
+
+*With the sample members, `tagall t/event2026` tags the two committee members and reports
+`Added tag "event2026" to 2 member(s).`*
 
 Members who already have the tag (for `tagall`) or do not have it (for `untagall`) are skipped.
 The result reports both counts:
 
-* `Added tag "committee" to 9 member(s). 3 already had this tag.`
-* `Removed tag "committee" (any letter case) from 12 member(s).`
+* `Added tag "event2026" to 9 member(s). 3 already had this tag (any letter case).`
+* `Removed tag "committee" (any letter case) from 9 member(s). 3 did not have this tag.`
 
 When every displayed member is skipped, the result ends with `No changes were made.`, for example
-`Added tag "committee" to 0 member(s). 12 already had this tag. No changes were made.`
+`Added tag "committee" to 0 member(s). 12 already had this tag (any letter case). No changes were made.`
 
 The current search, filters, and sorting stay applied after the update.
 If you remove the tag used by the active filter, the updated members disappear from view
@@ -394,7 +409,8 @@ The result then also reports the current list, for example
 Supply exactly one tag of 1 to 30 ASCII letters or digits with optional internal hyphens. Spaces around the tag
 are ignored, and matching ignores letter case. Missing `t/`, empty tags, invalid tags, more than one tag, and
 other field prefixes such as `n/` are rejected without changing any member. If no members are displayed, TrackCall reports
-`There are no members in the current list to update.` and changes nothing.
+`There are no members in the current list to update. Run list to show everyone, or use find or filter to choose a group.`
+and changes nothing.
 
 There is no confirmation or undo. A valid command saves the roster, even when every member is skipped.
 
@@ -418,20 +434,27 @@ Tags match regardless of letter case. To standardize capitalization across the r
 `renametag t/committee t/Committee`. Members already using `Committee` are skipped and the result
 counts only members whose spelling changed. If every matching member already uses the new spelling,
 TrackCall reports `Every displayed member with this tag already uses "Committee". No changes were made.`
-Supplying identical spellings is rejected.
+Supplying identical spellings is rejected with `The new tag must be different from the current tag.`
+If a member already has the new tag in another letter case, that member keeps the spelling you typed in the
+command.
+
+If hidden members still have the current tag after the update, the result says so, for example
+`2 hidden member(s) still have "friends". Run list, then renametag again to rename it for everyone.`
 
 The current search, filters, and sorting stay applied after the update.
 If you rename the tag used by the active filter, the renamed members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
 The result then also reports the current list, for example
-`0 member(s) listed with tag "friends". Run list to show everyone.`
+`0 member(s) listed with tag "batch2026". Run list to show everyone.`
 
 Supply exactly two tags, each after `t/`, with 1 to 30 characters using ASCII letters or digits and
 optional internal hyphens.
 The two tags must be different. If no member in the current list has the current tag, TrackCall reports
 `No member in the current list has the tag "CURRENT_TAG".` and changes nothing, even if hidden members
-have it. Other invalid input is rejected without
-changing any member.
+have it. When hidden members do have it, the message adds how many and suggests running `list` first:
+`3 hidden member(s) have it; run list first.`
+If an invalid tag is given, the error starts with `Current tag:` or `New tag:`, so you can see which one to fix.
+Other invalid input is rejected without changing any member.
 
 There is no confirmation or undo. A valid command saves the roster.
 
@@ -534,22 +557,28 @@ Remove one member or the whole roster with confirmation.
 `delete INDEX` removes one member using a positive number from the **currently displayed list**,
 after you confirm the deletion.
 
-1. Run `list`, then `find Alice`, and check the results. Select the intended member to check their contact details.
-2. Use `delete 1`. TrackCall names the first match with its displayed number and tags, then asks you to confirm:
+1. Run `list`, or a search such as `find Bernice`, and check the displayed numbers. Select the intended member
+   to check their contact details.
+2. Use `delete 2`. TrackCall names the member at that displayed number with their tags, then asks you to
+   confirm. With the sample members, the prompt is:
 
    ```text
-   Delete member 1, Alice Tan?
-   Tags: (none)
-   Type yes and press Enter to confirm, or type no to cancel the deletion.
+   Delete member 2, Bernice Yu?
+   Tags: batch2026, year1
+   Type yes and press Enter to confirm, or type anything else to cancel (except yes or y in any letter case).
    ```
 
-   The tags shown depend on the member; Alice from the quick start has none.
-   The command box is highlighted until you answer. Asking for confirmation does not change or save the roster.
+   The command box is highlighted until you answer:
+
+   ![A delete prompt naming member 2, Bernice Yu, with the command box highlighted until the user answers](images/user-guide/delete-confirmation.png)
+
+   Asking for confirmation does not change or save the roster.
 3. Type `yes` and press Enter to delete that member.
 
-Only `yes`, typed exactly in lowercase, confirms. `y`, `Y`, `YES`, or `Yes` does not confirm or cancel: it keeps
+Only `yes`, typed exactly in lowercase, confirms. `y`, or `yes` in any other letter case (such as `Y`, `YES`, or `Yes`),
+does not confirm or cancel: it keeps
 the prompt pending and reminds you:
-`To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.`
+`To confirm, type yes exactly, in lowercase, and press Enter, or type anything else to cancel (except yes or y in any letter case).`
 The reminder is followed by the original prompt, so the member to be deleted (or, for `clear`, the total member
 count) stays visible, including after you remove a filter box.
 
@@ -557,8 +586,8 @@ Any other input, such as `no` or another command, cancels the deletion with
 `Deletion cancelled. No member was removed.` That input is not run, so enter it again if you need it.
 When the input is a command, such as `list`, the result also says `"list" was not run. Enter it again to run it.`
 
-After you confirm, other records remain, and the remaining matches are renumbered.
-The result identifies the removed member without displaying their phone, email, or address.
+After you confirm, TrackCall reports `Deleted member` with the member's name and tags. Phone, email, and address
+are not displayed. Other records remain, and the remaining members are renumbered.
 
 **There is no undo after you confirm.** Back up records you may need later.
 
@@ -569,8 +598,9 @@ It saves the empty roster and resets the search after a successful save.
 
 1. Run `clear`. TrackCall shows the total number of stored members, including anyone hidden by searches or filters.
 2. Type `yes` and press Enter to clear and save the entire roster.
-   As for `delete`, `y`, `Y`, `YES`, or `Yes` keeps the prompt pending and reminds you to type `yes` exactly.
-   Any other input, such as `no`, cancels without running that input as a command.
+   As for `delete`, `y` or `yes` in another letter case keeps the prompt pending and reminds you to type `yes` exactly.
+   Any other input, such as `no`, cancels with `Clear cancelled. No members were removed.` That input is not run;
+   if it is a command, the result also says it was not run.
 
 The roster, current view, and saved file stay unchanged while the prompt is pending or when you cancel.
 An already-empty roster saves immediately without prompting, so `clear` can still retry an unsaved empty roster.
@@ -689,10 +719,13 @@ start from the same folder to keep using the same roster.
 
 ### Editing the file manually
 
-Close TrackCall and make a backup first. If you edit the file while TrackCall is open, the next save is
+Close TrackCall and make a backup first. If you make a valid edit while TrackCall is open, the next save is
 refused with a warning so your edits are not silently replaced. To keep your edits, exit and restart
-TrackCall. To replace them with the roster shown in TrackCall, retry the save; your edited version is
-then kept in `data/addressbook.json.bak`.
+TrackCall; this session's unsaved changes are discarded. To replace your edits with the roster shown in
+TrackCall instead, run any command that changes the roster, such as `edit` with the displayed number and an
+existing field value (see [A save fails after changing records](#a-save-fails-after-add-edit-delete-tag-untag-tagall-untagall-renametag-or-import));
+your edited version is then kept in `data/addressbook.json.bak`. If your edit made the file invalid, every save is
+refused until you restart TrackCall and choose a recovery action.
 
 Keep the existing JSON structure:
 
@@ -702,6 +735,10 @@ Keep the existing JSON structure:
 * Use `tags` for each member's group assignments.
 * Save the file as UTF-8. A byte order mark (BOM) at the start of the file, which some editors such as
   Windows Notepad add, is accepted.
+* Every value must follow the same rules as in the [add](#add-a-member-add) command, and two members cannot have
+  identical contact details. An address of only spaces is invalid. One invalid value makes the whole file invalid.
+
+If the file cannot be loaded, the recovery dialog explains why.
 
 ### Missing or invalid files
 
@@ -722,8 +759,16 @@ If the backup cannot be written, the roster save fails and the existing roster s
 
 If the roster cannot be loaded, TrackCall first preserves its exact contents in a uniquely named
 `data/addressbook.json.corrupt-....json` file. It then shows why the roster could not be loaded,
-for example `Reason: Tag names should be 1 to 30 characters long, using ASCII letters or digits with optional
-internal hyphens`, and offers:
+after `Reason:`. Examples:
+
+* `The data file is not saved as UTF-8 text. Save it again with UTF-8 encoding in your text editor, then restart TrackCall.`
+* `The data file is not valid JSON near line L, column C. Check the quotes, commas and brackets there.`
+  (L and C are numbers.)
+* `The data file must contain a "persons" list.`
+* `Addresses must be on one line. Remove the line break from the address.`
+* `Tag names should be 1 to 30 characters long, using ASCII letters or digits with optional internal hyphens`
+
+The dialog offers:
 
 * **Restore backup**, when the backup is valid: restore the previous saved roster.
 * **Start empty**: explicitly replace the unreadable roster with an empty roster.
@@ -779,7 +824,7 @@ in memory.
 | Sort by name | `sort` | Sorts the current view from A to Z, ignoring letter case. |
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
 | Add one tag | `tag INDEX t/TAG` | `tag 2 t/committee` adds one tag to displayed member 2. |
-| Remove one tag | `untag INDEX t/TAG` | `untag 2 t/friends` removes one tag from displayed member 2. |
+| Remove one tag | `untag INDEX t/TAG` | `untag 2 t/year1` removes one tag from displayed member 2. |
 | Find by name | `find KEYWORD [MORE_KEYWORDS]...` | `find Alice Tan` shows names containing Alice or Tan. |
 | Find by email | `findemail KEYWORD [MORE_KEYWORDS]...` | `findemail @example.com` shows emails containing that fragment. |
 | Filter by tag | `filter t/TAG` | `filter t/committee` narrows the displayed members. |
@@ -800,3 +845,18 @@ See [Commands](#commands) for parameter rules and expected results.
 TrackCall writes operation diagnostics to `trackcall.log.*` beside the JAR. Routine command,
 result, and model-initialization logs omit member contact values. Older logs from previous versions
 may still contain contact data; check them before sharing diagnostic files.
+
+## Glossary
+
+| Term | Meaning |
+| --- | --- |
+| CSV | A plain-text table file (comma-separated values) that spreadsheet apps such as Excel and Google Sheets can open and save. |
+| Displayed list | The members currently shown in the roster after any `find`, `findemail`, `filter`, or `show`. |
+| Index | The number shown beside a member in the displayed list, such as `2` in `edit 2 p/91234567`. |
+| JAR | The single `trackcall.jar` file you download and run with Java. |
+| JSON | The text format of TrackCall's data file, `data/addressbook.json`. |
+| Prefix | The short label before a value in a command, such as `n/` for a name or `t/` for a tag. |
+| Roster | Every member stored in TrackCall, including members hidden from the displayed list. |
+| Tag | A short group label on a member, such as `committee` or `year1`. A member can have several tags. |
+| Terminal | The app where you type commands to your computer: Terminal on macOS and Linux, or Command Prompt or PowerShell on Windows. |
+| UTF-8 | The standard text encoding that most spreadsheet apps can use when saving CSV files. |

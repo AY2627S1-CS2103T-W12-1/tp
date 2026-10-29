@@ -35,11 +35,14 @@ public class RenameTagCommandParserTest {
 
     @Test
     public void parse_invalidTagValue_rejectsCommand() {
-        assertParseFailure(parser, " t/ t/alumni", MESSAGE_EMPTY_TAG);
-        assertParseFailure(parser, " t/batch2026 t/", MESSAGE_EMPTY_TAG);
-        assertParseFailure(parser, " t/two words t/alumni", MESSAGE_INVALID_TAG);
-        assertParseFailure(parser, " t/batch2026 t/hello!", MESSAGE_INVALID_TAG);
-        assertParseFailure(parser, " t/batch2026 t/" + "a".repeat(31), MESSAGE_INVALID_TAG);
+        String current = RenameTagCommandParser.MESSAGE_CURRENT_TAG_PREFIX;
+        String added = RenameTagCommandParser.MESSAGE_NEW_TAG_PREFIX;
+        assertParseFailure(parser, " t/ t/alumni", current + MESSAGE_EMPTY_TAG);
+        assertParseFailure(parser, " t/batch2026 t/", added + MESSAGE_EMPTY_TAG);
+        assertParseFailure(parser, " t/two words t/alumni", current + MESSAGE_INVALID_TAG);
+        assertParseFailure(parser, " t/batch2026 t/hello!", added + MESSAGE_INVALID_TAG);
+        assertParseFailure(parser, " t/batch2026 t/" + "a".repeat(31), added + MESSAGE_INVALID_TAG);
+        assertParseFailure(parser, " t/batch_2026 t/alumni", current + MESSAGE_INVALID_TAG);
     }
 
     @Test

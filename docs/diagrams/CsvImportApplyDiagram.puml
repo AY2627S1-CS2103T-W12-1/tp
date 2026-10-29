@@ -12,6 +12,7 @@ note over Command : Resolve the source path with FileUtil.
 Command -> Importer : read(resolvedPath)
 activate Importer
 note over Importer
+Enforce 10 MiB and 10,000 non-blank rows.
 Validate the header, CSV syntax
 and every member before returning.
 An error stops this flow before mutation.

@@ -1,9 +1,13 @@
 package seedu.address;
 
 import java.io.IOException;
+import java.nio.charset.CharacterCodingException;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -37,6 +41,26 @@ public class MainApp extends Application {
 
     /** Version reported by the application and its startup log. */
     public static final String VERSION = "v1.5";
+
+    static final String REASON_NOT_UTF8 = "The data file is not saved as UTF-8 text. "
+            + "Save it again with UTF-8 encoding in your text editor, then restart TrackCall.";
+    static final String REASON_MISSING_PERSONS = "The data file must contain a \"persons\" list.";
+    static final String REASON_NOT_JSON_FORMAT = "The data file is not valid JSON near line %s, column %s. "
+            + "Check the quotes, commas and brackets there.";
+    static final String REASON_UNEXPECTED_FORMAT = "The data file is not in the expected format near line %s, "
+            + "column %s. It must be an object with a \"persons\" list, and each member's \"tags\" must be a list "
+            + "of text values.";
+
+    /** Exception types that Jackson throws for text that is not valid JSON. */
+    private static final Set<String> JSON_SYNTAX_ERRORS =
+            Set.of("JsonParseException", "JsonEOFException", "UnrecognizedTokenException");
+
+    /** The exception type that Jackson throws when the {@code persons} list is missing or null. */
+    private static final String MISSING_LIST_ERROR = "ValueInstantiationException";
+
+    /** Matches the position and exception type that {@code JsonUtil} reports for a file it cannot parse. */
+    private static final Pattern JSON_ERROR_PATTERN =
+            Pattern.compile("Invalid JSON data at line (\\d+), column (\\d+) \\((\\w+)\\)");
 
     private static final Logger logger = LogsCenter.getLogger(MainApp.class);
     private static final Path USER_PREFS_FILE_PATH = FileUtil.getHomeFolder().resolve("preferences.json");
@@ -123,7 +147,7 @@ public class MainApp extends Application {
             model.setAddressBook(saved.orElseGet(SampleDataUtil::getSampleAddressBook));
         } catch (DataLoadingException e) {
             logger.warning("The saved roster could not be loaded. Recovery is required: " + e.getMessage());
-            if (!recoverRoster(primaryStage, getLoadingFailureReason(e))) {
+            if (!canStartAfterRecovery(primaryStage, getLoadingFailureReason(e))) {
                 Platform.exit();
                 return;
             }
@@ -131,17 +155,44 @@ public class MainApp extends Application {
         ui.start(primaryStage);
     }
 
-    /** Returns the message of the error that stopped the roster from loading, for display to the user. */
+    /**
+     * Returns why the roster could not be loaded, in words for the user. Failures to read the file as UTF-8 text
+     * or as JSON in the expected format are explained without Java class names; other messages are kept as they are.
+     */
     static String getLoadingFailureReason(DataLoadingException e) {
-        return e.getCause() == null ? e.getMessage() : e.getCause().getMessage();
+        Throwable cause = e.getCause() == null ? e : e.getCause();
+        if (cause instanceof CharacterCodingException) {
+            return REASON_NOT_UTF8;
+        }
+        String message = cause.getMessage();
+        Matcher jsonError = message == null ? null : JSON_ERROR_PATTERN.matcher(message);
+        if (jsonError == null || !jsonError.find()) {
+            return message;
+        }
+        return describeJsonFailure(jsonError.group(3), jsonError.group(1), jsonError.group(2));
+    }
+
+    /**
+     * Returns the reason for a JSON failure of {@code exceptionType} at {@code line} and {@code column}.
+     */
+    private static String describeJsonFailure(String exceptionType, String line, String column) {
+        if (JSON_SYNTAX_ERRORS.contains(exceptionType)) {
+            return String.format(REASON_NOT_JSON_FORMAT, line, column);
+        }
+        if (exceptionType.equals(MISSING_LIST_ERROR)) {
+            return REASON_MISSING_PERSONS;
+        }
+        return String.format(REASON_UNEXPECTED_FORMAT, line, column);
     }
 
     /**
      * Preserves the damaged file and requires an explicit choice before exposing the editable roster.
      *
      * @param reason Why the roster could not be loaded, shown in the recovery dialog.
+     * @return True if the user chose to restore the backup or start empty and the roster was recovered,
+     *         or false if they chose to close TrackCall or recovery failed.
      */
-    boolean recoverRoster(Stage owner, String reason) {
+    boolean canStartAfterRecovery(Stage owner, String reason) {
         JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(storage.getAddressBookFilePath());
         try {
             Path preservedFile = addressBookStorage.preserveDamagedFile();

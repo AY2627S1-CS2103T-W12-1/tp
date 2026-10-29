@@ -16,7 +16,7 @@ public class TagAllCommand extends BulkTagCommand {
             + "Parameters: t/TAG\n"
             + "Example: " + COMMAND_WORD + " t/committee";
     public static final String MESSAGE_SUCCESS = "Added tag \"%1$s\" to %2$d member(s).";
-    public static final String MESSAGE_ALREADY_TAGGED = " %1$d already had this tag.";
+    public static final String MESSAGE_ALREADY_TAGGED = " %1$d already had this tag (any letter case).";
 
     /**
      * Creates a command that adds {@code tag} to every displayed member.
