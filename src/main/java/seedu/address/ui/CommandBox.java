@@ -17,7 +17,7 @@ public class CommandBox extends UiPart<Region> {
     public static final String ERROR_STYLE_CLASS = "error";
     public static final String CONFIRMATION_STYLE_CLASS = "confirmation-pending";
     public static final String DEFAULT_PROMPT = "Enter command here...";
-    public static final String CONFIRMATION_PROMPT = "Type y and press Enter to delete, or anything else to cancel";
+    public static final String CONFIRMATION_PROMPT = "Type yes and press Enter to confirm, or anything else to cancel";
     private static final String FXML = "CommandBox.fxml";
 
     private final CommandExecutor commandExecutor;

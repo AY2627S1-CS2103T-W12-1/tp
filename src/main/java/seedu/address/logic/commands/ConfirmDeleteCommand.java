@@ -15,9 +15,16 @@ import seedu.address.model.person.Person;
 public class ConfirmDeleteCommand extends Command {
 
     /** The only input that confirms a pending deletion. Any other input cancels it. */
-    public static final String CONFIRMATION_WORD = "y";
+    public static final String CONFIRMATION_WORD = "yes";
 
     public static final String MESSAGE_CANCELLED = "Deletion cancelled. No member was removed.";
+
+    /** Shown for a near miss such as {@code y} or {@code YES}, which keeps the confirmation pending. */
+    public static final String MESSAGE_CONFIRMATION_REMINDER = "To confirm, type " + CONFIRMATION_WORD
+            + " exactly, in lowercase, and press Enter. Any other input cancels.";
+
+    /** Appended to a cancellation when the cancelling input was a command, which is not run. */
+    public static final String MESSAGE_INPUT_NOT_RUN = "\n\"%1$s\" was not run. Enter it again to run it.";
 
     public static final String MESSAGE_MEMBER_NOT_FOUND =
             "The member to delete is no longer in the roster. No member was removed.";
@@ -29,6 +36,14 @@ public class ConfirmDeleteCommand extends Command {
      */
     public ConfirmDeleteCommand(Person target) {
         this.target = requireNonNull(target);
+    }
+
+    /**
+     * Returns true if {@code input} looks like an attempt to confirm but is not exactly the confirmation word.
+     */
+    public static boolean isNearMiss(String input) {
+        return !input.equals(CONFIRMATION_WORD)
+                && (input.equalsIgnoreCase(CONFIRMATION_WORD) || input.equalsIgnoreCase("y"));
     }
 
     @Override

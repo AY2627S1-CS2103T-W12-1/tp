@@ -26,7 +26,7 @@ public class DeleteCommand extends Command {
             + "Parameters: INDEX (must be a positive integer)\n"
             + "Example: " + COMMAND_WORD + " 1";
 
-    public static final String MESSAGE_CONFIRM_DELETE = "Delete member %1$s?\nTags: %2$s\n"
+    public static final String MESSAGE_CONFIRM_DELETE = "Delete member %1$d, %2$s?\nTags: %3$s\n"
             + "Type " + ConfirmDeleteCommand.CONFIRMATION_WORD
             + " and press Enter to confirm. Any other input cancels the deletion.";
 
@@ -56,7 +56,7 @@ public class DeleteCommand extends Command {
         }
 
         Person personToDelete = lastShownList.get(targetIndex.getZeroBased());
-        String prompt = String.format(MESSAGE_CONFIRM_DELETE, personToDelete.getName(),
+        String prompt = String.format(MESSAGE_CONFIRM_DELETE, targetIndex.getOneBased(), personToDelete.getName(),
                 Messages.formatTags(personToDelete));
         return new CommandResult(prompt, new ConfirmDeleteCommand(personToDelete));
     }

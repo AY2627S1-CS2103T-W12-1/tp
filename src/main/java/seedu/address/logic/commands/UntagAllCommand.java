@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
@@ -51,9 +52,12 @@ public class UntagAllCommand extends Command {
         }
 
         int untaggedCount = 0;
+        List<Person> untaggedPersons = new ArrayList<>();
         for (Person target : targets) {
             if (target.getTags().contains(tag)) {
-                model.setPerson(target, createUntaggedPerson(target));
+                Person untaggedPerson = createUntaggedPerson(target);
+                model.setPerson(target, untaggedPerson);
+                untaggedPersons.add(untaggedPerson);
                 untaggedCount++;
             }
         }
@@ -64,6 +68,11 @@ public class UntagAllCommand extends Command {
         String message = String.format(MESSAGE_SUCCESS, tag.tagName, untaggedCount);
         if (skippedCount > 0) {
             message += String.format(MESSAGE_NOT_TAGGED, skippedCount);
+        }
+        if (untaggedCount == 0) {
+            message += Messages.MESSAGE_NO_CHANGES;
+        } else if (!model.getFilteredPersonList().containsAll(untaggedPersons)) {
+            message += FilterCommand.describeHiddenUpdates(model);
         }
         return new CommandResult(message);
     }
