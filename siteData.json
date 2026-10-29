@@ -161,7 +161,8 @@
         "can-i-update-a-whole-groups-tags": "Can I update a whole group's tags?",
         "what-should-i-do-after-a-save-error": "What should I do after a save error?",
         "command-summary": "Command summary",
-        "diagnostic-logs": "Diagnostic logs"
+        "diagnostic-logs": "Diagnostic logs",
+        "glossary": "Glossary"
       },
       "headingKeywords": {}
     },
