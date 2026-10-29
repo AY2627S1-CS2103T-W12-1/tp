@@ -107,7 +107,16 @@ public interface Model {
      */
     void filterFilteredPersonListByTag(Tag tag);
 
-    /** Returns the distinct active tag filters in the order they were applied. */
+    /**
+     * Adds one removable tag condition that a person satisfies by having any one of {@code tags}.
+     * Earlier conditions still apply, so this narrows the list further.
+     *
+     * @return True if added; false if a condition over exactly the same tags is already active.
+     * @throws IllegalArgumentException If {@code tags} is empty.
+     */
+    boolean filterFilteredPersonListByTags(List<Tag> tags);
+
+    /** Returns the tags of every active tag condition, in the order they were applied. */
     List<Tag> getActiveTagFilters();
 
     /** Returns removable display conditions in the order they were applied. */

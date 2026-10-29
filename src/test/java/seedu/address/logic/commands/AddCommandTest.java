@@ -190,6 +190,11 @@ public class AddCommandTest {
         }
 
         @Override
+        public boolean filterFilteredPersonListByTags(List<Tag> tags) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public List<Tag> getActiveTagFilters() {
             throw new AssertionError("This method should not be called.");
         }
