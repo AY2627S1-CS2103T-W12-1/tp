@@ -140,6 +140,11 @@ public class AddCommandTest {
         }
 
         @Override
+        public void removeDeletedPersonsFromSelections(List<Person> deletedPersons) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
         public void deletePerson(Person target) {
             throw new AssertionError("This method should not be called.");
         }

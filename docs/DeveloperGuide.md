@@ -77,9 +77,9 @@ for command syntax and the sections below for implementation decisions and failu
 
 ### AI-assisted development {id="ai-assisted-development"}
 
-OpenAI Codex was used to assist Ian's TrackCall contributions, including implementing and refactoring
-Java code, writing regression tests, debugging, addressing PR feedback, resolving merge conflicts,
-rewriting guide sections and generating PlantUML diagram sources. Requests included scoped clearing
+OpenAI Codex was used to assist contributions to TrackCall, including implementing and refactoring
+Java code, writing regression tests, debugging, reviewing pull requests, addressing review feedback,
+resolving merge conflicts, rewriting guide sections and generating PlantUML diagram sources. Requests included scoped clearing
 (`clear` and `clear /all`), persistent sorting, validation fixes and coverage improvements.
 
 AI-generated suggestions and outputs were adapted into the project and checked with JUnit, Checkstyle,
@@ -416,14 +416,11 @@ and navigable associations. Filled diamonds indicate composition.
 
 **Clear flow**
 
-This candidate behavior is implemented in [PR #322](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/322).
-Merge that implementation before publishing this guide as the current application behavior.
-
 1. `ClearCommandParser` accepts `clear` or exactly `clear /all`; other arguments are rejected.
 2. `prepareTargets(model)` snapshots displayed members for `clear`, or the full roster for `/all`.
    A nonempty target set prompts with its scope and count. Mention hidden survivors only when present.
-3. Only lowercase `yes` confirms. Near misses retain the original prompt; other input cancels without
-   executing it. Removing a filter while waiting cannot expand the captured target set.
+3. Only lowercase `yes`, ignoring surrounding spaces, confirms. Near misses retain the original prompt;
+   other input cancels without executing it. Removing a filter while waiting cannot expand the captured target set.
 4. Snapshot the complete roster, then remove only captured targets without changing selection metadata yet.
 5. Save the remaining roster. After a successful displayed clear, retain conditions and remove deleted
    members from Show selections; an emptied selection remains removable as `Show: 0 selected`.
@@ -1143,7 +1140,7 @@ Implementation details belong in [command parsing](#7-command-parsing),
 
 **Unicode address edits:** `EditCommandParser` preserves Unicode whitespace in supplied field values until
 validation. An `a/` containing only Unicode whitespace, including U+2003 (EM SPACE), is rejected;
-only an empty `a/` intentionally clears an address. The merged #319 regression tests cover this distinction.
+only an empty `a/` intentionally clears an address. The Unicode input regression tests cover this distinction.
 
 ### Use cases
 

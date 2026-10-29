@@ -117,6 +117,9 @@ public interface Model {
     /** Returns removable display conditions in the order they were applied. */
     List<ActiveFilter> getActiveFilters();
 
+    /** Removes successfully deleted members from Show descriptions after a transactional clear saves. */
+    void removeDeletedPersonsFromSelections(List<Person> deletedPersons);
+
     /** Removes exactly one active filter while retaining the others. */
     void removeActiveFilter(ActiveFilter filter);
 }

@@ -178,7 +178,7 @@ public class MainWindowTest {
             assertEquals(1, model.getAddressBook().getPersonList().size());
             enter("list");
             assertEquals("Showing 1 member.", feedback.getText());
-            enter("clear");
+            enter("clear /all");
             enter("yes");
             assertTrue(feedback.getText().startsWith(ClearCommand.MESSAGE_SAVE_FAILURE));
             assertTrue(feedback.getText().contains("Could not save data"));
@@ -225,7 +225,7 @@ public class MainWindowTest {
     public void enter_clearAwaitingConfirmation_preservesFilteredRosterUntilConfirmed() throws Exception {
         onJavaFxThread(() -> {
             enter("find Alice");
-            enter("clear");
+            enter("clear /all");
             assertEquals(String.format(ClearCommand.MESSAGE_CONFIRMATION, 2), feedback.getText());
             assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
             assertEquals(CommandBox.CONFIRMATION_PROMPT, input.getPromptText());
@@ -240,7 +240,7 @@ public class MainWindowTest {
             assertDisplayedNames("Alice Tan");
             assertEquals(2, model.getAddressBook().getPersonList().size());
 
-            enter("clear");
+            enter("clear /all");
             enter("yes");
             assertEquals("Cleared 2 members. The roster is now empty.", feedback.getText());
             assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
@@ -805,7 +805,7 @@ public class MainWindowTest {
             Stage guide = guide();
             assertTrue(guide.isShowing());
             Event.fireEvent(guide.getScene(), key(KeyCode.ESCAPE));
-            enter("clear");
+            enter("clear /all");
             enter("yes");
             enter("add n/Zara Tan p/90000001 e/zara@example.com a/Test Road t/committee");
             enter("add n/bob Lee p/90000002 e/bob@example.com a/Test Road t/year1");
@@ -829,7 +829,7 @@ public class MainWindowTest {
             enter("delete 2");
             enter("yes");
             assertDisplayedNames("Alice Tan", "Zara Tan");
-            enter("clear");
+            enter("clear /all");
             enter("yes");
             enter("import p/\"" + exported + "\"");
             assertTrue(feedback.getText().startsWith("Imported 3 member(s)"));
@@ -840,7 +840,7 @@ public class MainWindowTest {
             assertTrue(model.getFilteredPersonList().getFirst().getTags().stream()
                     .noneMatch(tag -> tag.tagName.equals("committee")));
             enter("find Alice");
-            enter("clear");
+            enter("clear /all");
             enter("yes");
             assertEquals("Cleared 3 members. The roster is now empty.", feedback.getText());
             enter("list");
@@ -1088,6 +1088,24 @@ public class MainWindowTest {
     private KeyEvent key(KeyCode code) {
         return new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false);
     }
+
+    @Test
+    public void clear_displayedMembers_updatesShowChipAndKeepsHiddenMembers() throws Exception {
+        onJavaFxThread(() -> {
+            int before = model.getAddressBook().getPersonList().size();
+            enter("show 1");
+            enter("clear");
+            assertTrue(feedback.getText().contains("1 displayed"));
+            enter("yes");
+            assertEquals(before - 1, model.getAddressBook().getPersonList().size());
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+            assertEquals(List.of("Show: 0 selected"), chipLabels(chips));
+            assertDisplayedNames();
+            enter("list");
+            assertEquals(before - 1, model.getFilteredPersonList().size());
+        });
+    }
+
     @Test
     public void keyboard_f2ThenEscape_returnsFocusToCommandAndClearsMemberDetails() throws Exception {
         onJavaFxThread(() -> {

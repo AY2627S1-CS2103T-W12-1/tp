@@ -198,18 +198,16 @@ public enum CommandHelp {
             "Supply one positive number shown in the current list. Zero, negative numbers and missing members "
                     + "are rejected. If saving fails, the deletion remains in this session and the command box clears; "
                     + "do not repeat the deletion to retry saving."),
-    CLEAR("Remove records", "clear", "Clear the whole roster", "clear", "clear",
-            "Permanently removes every member after confirmation, including members hidden by a search or filter.",
-            "For a non-empty roster, first shows the total member count and asks you to confirm with yes. "
-                    + "After confirmation and saving, the result reports how many members were cleared, "
-                    + "or confirms that an already empty roster needed no changes.",
-            "Only yes, in lowercase, confirms. y, Y or YES keeps the prompt and reminds you; "
-                    + "any other input cancels without running "
-                    + "that input. There is no undo after confirmation. "
-                    + "An already-empty roster saves immediately without confirmation. "
-                    + "Back up records you may need later.",
-            "Extra arguments are rejected. If saving fails, the previous roster and displayed list are restored. "
-                    + "No members were removed; fix the storage problem before retrying clear."),
+    CLEAR("Remove records", "clear", "Clear displayed members or everyone", "clear [/all]", "clear",
+            "Removes displayed members after confirmation. Use clear /all to remove the entire roster.",
+            "The prompt states the scope and count. Hidden members are kept unless /all is supplied. "
+                    + "After saving, conditions remain applied. Use list to see hidden survivors; "
+                    + "clear /all resets the view.",
+            "Only yes, in lowercase, confirms. y, Y or YES keeps the prompt pending; any other input cancels. "
+                    + "Targets stay fixed if a filter is removed while waiting. There is no undo. "
+                    + "An already-empty roster saves without a prompt. An empty view cannot clear hidden members.",
+            "Use clear or clear /all exactly. Other arguments are rejected. If saving fails, the original "
+                    + "roster and view are restored; resolve the storage problem before starting a fresh clear."),
     HELP("Help & session", "help", "Open this command guide", "help [COMMAND]", "help edit",
             "Opens the complete offline guide, or instructions for one available command.",
             "Shows the edit command's purpose, syntax, example and common errors.",

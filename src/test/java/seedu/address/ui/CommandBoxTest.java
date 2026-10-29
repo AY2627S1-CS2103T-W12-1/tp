@@ -84,7 +84,7 @@ public class CommandBoxTest {
                 field.fireEvent(new ActionEvent());
                 assertEquals("clear extra", field.getText());
                 assertEquals(1, field.getStyleClass().stream().filter(CommandBox.ERROR_STYLE_CLASS::equals).count());
-                field.setText("clear");
+                field.setText("clear /all");
                 assertFalse(field.getStyleClass().contains(CommandBox.ERROR_STYLE_CLASS));
             }
         });

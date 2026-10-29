@@ -71,10 +71,7 @@ public class AddressBookParser {
             case DeleteCommand.COMMAND_WORD -> new DeleteCommandParser().parse(arguments);
             case ExportCommand.COMMAND_WORD -> new ExportCommandParser().parse(arguments);
             case ImportCommand.COMMAND_WORD -> new ImportCommandParser().parse(arguments);
-            case ClearCommand.COMMAND_WORD -> {
-                requireNoArguments(arguments, ClearCommand.MESSAGE_USAGE);
-                yield new ClearCommand();
-            }
+            case ClearCommand.COMMAND_WORD -> new ClearCommandParser().parse(arguments);
             case FindCommand.COMMAND_WORD -> new FindCommandParser().parse(arguments);
             case FindEmailCommand.COMMAND_WORD -> new FindEmailCommandParser().parse(arguments);
             case FilterCommand.COMMAND_WORD -> new FilterCommandParser().parse(arguments);

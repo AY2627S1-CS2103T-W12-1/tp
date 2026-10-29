@@ -155,7 +155,7 @@ public class LogicManagerTest {
         model.addPerson(AMY);
         model.addPerson(BOB);
         String[] cancellingInputs = {"n", "no", "not-a-command", "", "yess", "yes please",
-            "clear", "delete 1", "  list  "};
+            "clear /all", "delete 1", "  list  "};
 
         for (String input : cancellingInputs) {
             logic.execute("delete 1");
@@ -163,7 +163,7 @@ public class LogicManagerTest {
 
             // Only inputs starting with a command word mention that the command was not run.
             String expected = ConfirmDeleteCommand.MESSAGE_CANCELLED;
-            if (List.of("clear", "delete 1", "  list  ").contains(input)) {
+            if (List.of("clear /all", "delete 1", "  list  ").contains(input)) {
                 expected += "\n\"" + input.strip() + "\" was not run. Enter it again to run it.";
             }
             assertEquals(expected, result.getFeedbackToUser(), input);
@@ -931,7 +931,7 @@ public class LogicManagerTest {
             AddressBook original = new AddressBook(model.getAddressBook());
             useFailingStorage(error);
             logic.execute("find Amy");
-            logic.execute("clear");
+            logic.execute("clear /all");
 
             SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
                     SaveFailureException.class, () -> logic.execute("yes"));
