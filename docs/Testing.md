@@ -27,6 +27,8 @@ For step-by-step application scenarios, see the [manual tests](DeveloperGuide.ht
 
 **Using IntelliJ**
 
+- Configure IDEA to run tests using Gradle so the build's JVM options and platform-specific JavaFX
+  classpath apply. This is needed for the project's Apple Silicon development configuration.
 - All tests: right-click `src/test/java` and choose **Run 'All Tests'**.
 - A subset: right-click a package, class, or test method and choose **Run**.
 

@@ -18,12 +18,17 @@ Follow the steps below precisely. The setup may fail if you skip or change a ste
 First, **fork** this repo, and **clone** the fork into your computer.
 
 If you plan to use IntelliJ IDEA (highly recommended):
-1. **Configure the JDK**: Follow the guide [_[se-edu/guides] IDEA: Configuring the JDK_](https://se-education.org/guides/tutorials/intellijJdk.html) to ensure IntelliJ is configured to use **JDK 25**.
+1. **Configure the JDK**: Follow the guide [_[se-edu/guides] IDEA: Configuring the JDK_](https://se-education.org/guides/tutorials/intellijJdk.html) to use **JDK 25** for both the project SDK and Gradle JVM.
 1. **Import the project as a Gradle project**: Follow the guide [_[se-edu/guides] IDEA: Importing a Gradle project_](https://se-education.org/guides/tutorials/intellijImportGradleProject.html) to import the project into IDEA.<br>
   :exclamation: Note: Importing a Gradle project is slightly different from importing a normal Java project.
 1. **Verify the setup**:
-   1. Run `seedu.address.Main` and try a few commands.
-   1. [Run the tests](Testing.html) to ensure they all pass.
+   1. Run the Gradle `run` task from IDEA's Gradle tool window, or run `./gradlew run` from the project root.
+      On Windows PowerShell, use `.\gradlew.bat run`. Try a few commands in the application.
+   1. [Run the tests](Testing.html) through Gradle to check the setup.
+
+Gradle applies the project's assertion settings and selects the matching JavaFX native libraries for
+local runs and tests on Apple Silicon. A plain IDEA Application run of `seedu.address.Main` does not
+automatically use the Gradle `run` task's adjusted classpath.
 
 ## Before writing code
 

@@ -562,10 +562,12 @@ the retained input is the answer `yes`; run `clear` again to start a fresh confi
 
 | Command | In-memory state | Retry behavior |
 | --- | --- | --- |
-| `clear` | Restore prior records and view. | Fix storage, run `clear` again, and confirm if prompted. A lone `yes` cannot retry. |
+| `clear` | Restore prior records and view. | Resolve the cause before running `clear` again; confirm if prompted. A lone `yes` cannot retry. |
 | Other data-changing commands | Keep the applied change. | Clear the input to prevent accidental repetition. |
 
 - `SaveFailureException` records whether the change remains applied.
+- `clear` currently reports a generic failure without the underlying cause, including outside-change warnings.
+  If external edits may exist, restart to load them; retry clear only when intentionally replacing them with an empty roster.
 - The previous roster file is unchanged. Exiting can lose unsaved in-memory changes.
 - After restoring access, inspect the list and use `edit` with an existing value to retry saving.
 - If no records remain, use `clear`. Exit never retries a roster save.
@@ -602,6 +604,8 @@ the retained input is the answer `yes`; run `clear` again to start a fresh confi
 - Before saving, compare the valid file with the last loaded or saved roster. The first save after
   detecting an outside edit is refused and records the outside version as the new baseline.
   Restart to load that version, or retry saving to replace it while keeping it in `.bak`.
+- Known gaps (pending PR #294): a roster file created externally after a missing-file start is not detected,
+  and a retry with matching session and outside data does not back up the outside file.
 - Invalid preferences fall back to defaults. Logger initialization failure falls back to the console.
 
 
@@ -620,7 +624,7 @@ the retained input is the answer `yes`; run `clear` again to start a fresh confi
 **Rules**
 
 - Add/edit accept fields in any order and reject repeated non-tag prefixes.
-- Reject unsupported standalone single-letter prefixes in add/edit, including wrong-case prefixes.
+- Reject unsupported whitespace-delimited ASCII single-letter prefixes in add/edit, including wrong-case prefixes.
 - Preserve the `c/o` address abbreviation, URLs, numeric slashes and slashes embedded within words in add/edit.
   `A/` followed by a digit is also literal within an address, as in `Block A/12`.
   A supported lowercase prefix still ends the address.
@@ -679,7 +683,8 @@ the retained input is the answer `yes`; run `clear` again to start a fresh confi
 - Require the five headers in any order; validate CSV quoting and every member field.
 - Trim surrounding field/tag whitespace. Reject embedded line breaks.
 - Skip blank records but include them when reporting physical row numbers.
-- Report missing sources and directories with the resolved path; reject repeated or unknown prefixes.
+- Report a missing source with its resolved path. Other read failures, including directories, use the
+  platform's I/O error text and do not always include the path. Reject repeated or unknown prefixes.
 - Read or validation errors leave records, the view and saved data unchanged. Never modify the source CSV.
 - A missing source reports the resolved path and asks the user to check its name and location.
 - Save failures keep the imported batch in memory and report retry guidance.
@@ -1076,6 +1081,10 @@ The [User Guide](UserGuide.html) specifies command syntax, field constraints and
 Implementation details belong in [command parsing](#7-command-parsing),
 [member details](#5-member-details-and-command-messages) and [offline help](#1-offline-command-help).
 
+**Current address-parser limitation:** trailing Java whitespace is stripped before validation, so
+`edit 1 a/` followed only by U+2003 (EM SPACE) can clear an existing address. This is a known defect
+tracked by [PR #319](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/319), not supported clear syntax.
+
 ### Use cases
 
 **System:** TrackCall.
@@ -1284,9 +1293,11 @@ alter the roster, view or JSON file.
 
 **Extensions**
 
-* **1a.** The file is edited while TrackCall is running. The next save is refused. Restart to load the
-  outside version and discard this session's unsaved changes, or deliberately run a roster-changing command
-  to replace it and retain it in `.bak`.
+* **1a.** After a valid roster was loaded or saved, an outside edit changes its member data.
+  The next save is refused. Restart to load the outside version and discard this session's unsaved changes,
+  or deliberately retry a roster-changing command to replace it. The retry updates `.bak` only if outside and
+  session data differ. Initially missing files and matching-roster retries have the limits described under
+  [storage safeguards](#startup-and-validation).
 * **3a.** The file is missing. TrackCall loads sample members and logs that the file was missing.
   It creates the file only after a valid data-changing command saves successfully. The use case ends.
 * **3b.** The file is invalid or unreadable. TrackCall preserves its bytes in a uniquely named
@@ -1470,6 +1481,9 @@ Start each subsection below from the baseline fixture and run its numbered steps
    **Expect:** all three records are removed, including hidden members.
 5. Run `clear` again. **Expect:** the already-empty message after saving, without confirmation.
    `.bak` still holds the previous distinct roster. Confirmed clear has no undo.
+
+The EM SPACE edit case in the [current parser limitation](#member-field-rules) is a known failure in
+this candidate. Record it separately from the nonbreaking-space cases above; rejection is pending #319.
 
 ### Email search
 
