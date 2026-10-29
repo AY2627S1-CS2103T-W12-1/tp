@@ -199,7 +199,7 @@ Keywords are literal text, not regular expressions; names and phone numbers are 
 Supply at least one keyword. No matches produce `0 members listed.` and an empty list.
 
 * Each `findemail` narrows the **currently displayed list**. Earlier name searches, email searches,
-  tag filters, and `show` selections stay active. Name sorting stays applied.
+  tag filters, and `show` selections stay active. The stored order stays the same.
 * Each distinct search adds an **Email:** box in command order. Use its **X** to remove only that email condition.
   Keywords within one command mean **or** and are joined with `/` in the box, for example
   `Email: @example.com / @school.edu`.
