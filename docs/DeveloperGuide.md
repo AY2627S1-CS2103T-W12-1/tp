@@ -595,6 +595,9 @@ cumulative and repeat-detection rules for names.
 5. Verify the original still matches its preserved copy before recovery replacement.
 6. Reload the recovered roster through the same storage instance to refresh its saved-data baseline.
 
+Malformed JSON diagnostics include a syntax hint to check nearby commas, quotes and brackets, without
+showing file contents. A missing or null `persons` list also explains the required JSON object/list shape.
+
 **Safeguards and limits**
 
 - Hold the instance lock through shutdown. A second instance is rejected; do not delete the lock file.
@@ -775,33 +778,32 @@ Commons CSV handles quoting instead of manual string splitting.
 
 ### 11. Tag filtering
 
-**Purpose:** narrow the view to members with one tag, ignoring letter case.
+**Purpose:** narrow the view to members matching at least one tag in a command, ignoring case.
 
-<span id="parsing"></span>
+**Flow and rules**
 
-**Input:** `FilterCommandParser` accepts exactly one `t/TAG`, trims surrounding whitespace and
-checks the shared 1–30-character rule: ASCII letters or digits with optional internal hyphens.
-A second `t/` reports that only one filter tag is allowed and suggests a separate command.
+1. `FilterCommandParser` accepts `filter t/TAG [t/MORE_TAGS]...` and validates every value with
+   `BulkTagArgumentParser#parseTagName`. An invalid value rejects the whole command before changing the view.
+2. `FilterCommand` deduplicates tags, retaining their first spelling and argument order.
+3. `ModelManager#filterFilteredPersonListByTags` adds one `ActiveFilter` for that alternative group.
+   Its predicate uses OR within the group. The model combines all active conditions using AND.
+   Thus `filter t/a t/b`, then `filter t/c`, means `(a OR b) AND c`.
+4. A repeated group, ignoring case and order, retains its original condition and reports that it is active.
+   Other name/email searches, Show selections and sorting stay applied. Zero matches are successful.
+5. The condition's X removes that entire group. Keep predicates active so later record edits re-evaluate matches.
 
-<span id="execution"></span>
+**Labels and results**
 
-**Flow**
+- `ActiveFilter#ALTERNATIVES_SEPARATOR` joins alternatives with `/`, avoiding ambiguity with a tag named `or`.
+  This also applies to name and email keyword labels: `Name: Alice / Tan`.
+- Tag labels show at most `ActiveFilter.MAX_SHOWN_TAGS` (4) values, then `+N more`.
+  `getFullLabel()` supplies every alternative to the tooltip and remove button's accessible text.
+- A comma between tag conditions means AND; `/` inside a condition means OR. When several conditions
+  appear, `FilterCommand#formatCondition` parenthesizes groups: `("a" / "b"), "c"`.
+- A member updated by a tag command remains visible if another alternative still matches.
 
-1. Check active tag conditions using case-insensitive `Tag` equality.
-2. If already active, keep the view and conditions unchanged. Report the existing tag spelling and current count.
-3. Otherwise call `ModelManager#filterFilteredPersonListByTag` to add a condition.
-4. Combine conditions with AND, refresh the observable view and report the result count.
-
-<span id="design-considerations"></span>
-
-**Rules and design**
-
-- Retain earlier name/email/tag conditions and sorting. A zero-match result is successful.
-- Keep predicates, not frozen matches, so edits re-evaluate membership automatically.
-- `committee` and `Committee` match the same tag. Repeating an active filter leaves the conditions
-  and their order unchanged, and explicitly reports that it was already active before giving the result count.
-- Show conditions in application order. Removing one retains the others.
-- Renumber visible records; later indexed commands use that new view. Filtering never saves.
+**Tests:** `FilterCommandParserTest`, `FilterCommandTest`, `ModelManagerTest` and `MainWindowTest`
+cover OR/AND combinations, repeated groups, invalid values, counts, truncated labels, tooltips and accessibility.
 
 
 <span id="individual-tag-editing"></span>
@@ -1077,7 +1079,7 @@ These contracts apply across commands. Feature sections explain their implementa
    `findemail` also narrows the displayed list with a literal email search. Keywords within
    one search use OR; successive conditions use AND. Repeating a search reports that it is already active,
    and a different query with unchanged results reports `Results unchanged.` Searches retain sorting.
-5. **Tag filtering:** each `filter` adds one tag condition. Repeating it, including with different case,
+5. **Tag filtering:** each `filter` adds one OR group of tags; separate groups combine with AND. Repeating it, including with different case,
    reports an already-active filter without changing conditions. Zero matches is a valid result.
 6. **Displayed indexes:** indexed commands use the current filtered and sorted display, numbered from 1.
    Accept ASCII positive integers and leading zeroes; reject signs, decimals, internal spaces and
@@ -1630,3 +1632,8 @@ Use the supplied release JAR for every check. Record pass/fail and evidence for:
 - Save failures, recovery, empty inputs, overlapping filters, hidden members, and restart persistence.
 
 Record unresolved failures with the release version and JAR checksum so they can be reproduced.
+
+For grouped tag filters, test `filter t/committee t/friends`, then `filter t/year1`. Verify OR within
+the first box and AND between boxes. Repeat with reordered/case-varied tags: no duplicate box should
+appear. Supply more than four alternatives: the short label must show `+N more`, while the tooltip
+and remove button's accessible text retain the complete list. Removing a group's X removes that group only.

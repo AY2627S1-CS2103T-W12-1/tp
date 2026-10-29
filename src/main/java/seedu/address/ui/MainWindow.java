@@ -249,9 +249,9 @@ public class MainWindow extends UiPart<Stage> {
     private HBox createFilterChip(ActiveFilter filter) {
         boolean isShow = filter.getKind() == ActiveFilter.Kind.SHOW;
         String showNames = isShow ? filter.getShowSelectionNames() : "";
-        String removeDescription = isShow ? "Remove this show selection" : "Remove " + filter.getLabel();
+        String removeDescription = isShow ? "Remove this show selection" : "Remove " + filter.getFullLabel();
         Label label = new Label(filter.getLabel());
-        label.setTooltip(new Tooltip(isShow ? "Selected members: " + showNames : filter.getLabel()));
+        label.setTooltip(new Tooltip(isShow ? "Selected members: " + showNames : filter.getFullLabel()));
         Button removeButton = new Button(REMOVE_BUTTON_TEXT);
         removeButton.getStyleClass().add("filter-chip-remove");
         removeButton.setAccessibleText(removeDescription);

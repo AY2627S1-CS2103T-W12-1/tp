@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.TagTestUtil.createCommitteeAlumniModel;
+import static seedu.address.testutil.TagTestUtil.displayedNames;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.DANIEL;
@@ -13,19 +15,128 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.ActiveFilter;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.tag.Tag;
+import seedu.address.testutil.AddressBookBuilder;
 import seedu.address.testutil.LogCapture;
+import seedu.address.testutil.PersonBuilder;
 
 public class FilterCommandTest {
     private final Tag friends = new Tag("friends");
+    private final FilterCommand committeeOrAlumni =
+            new FilterCommand(List.of(new Tag("committee"), new Tag("alumni")));
+
+    @Test
+    public void constructor_noTags_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new FilterCommand(List.of()));
+    }
+
+    @Test
+    public void execute_tagsInOneCommand_showsMembersWithAnyTag() {
+        Model model = clubModel();
+
+        CommandResult result = committeeOrAlumni.execute(model);
+
+        assertEquals("2 member(s) listed with tags \"committee\" / \"alumni\".", result.getFeedbackToUser());
+        assertEquals(List.of("Tag: committee / alumni"), activeLabels(model));
+        assertEquals(List.of("Pat Committee", "Lee Alumni"), displayedNames(model));
+    }
+
+    @Test
+    public void execute_tagsInSeparateCommands_requireEveryCondition() {
+        Model model = clubModel();
+
+        committeeOrAlumni.execute(model);
+        CommandResult result = new FilterCommand(new Tag("year1")).execute(model);
+
+        assertEquals("1 member(s) listed with tags (\"committee\" / \"alumni\"), \"year1\".",
+                result.getFeedbackToUser());
+        assertEquals(List.of("Tag: committee / alumni", "Tag: year1"), activeLabels(model));
+        assertEquals(List.of("Lee Alumni"), displayedNames(model));
+    }
+
+    @Test
+    public void execute_memberWithEveryAlternative_appearsOnce() {
+        Model model = createCommitteeAlumniModel();
+
+        CommandResult result = committeeOrAlumni.execute(model);
+
+        assertEquals("2 member(s) listed with tags \"committee\" / \"alumni\".", result.getFeedbackToUser());
+        assertEquals(List.of("Pat Both", "Lee Committee"), displayedNames(model));
+    }
+
+    @Test
+    public void execute_groupThenSameTagSeparately_listsEachConditionAndRequiresBoth() {
+        Model model = clubModel();
+        committeeOrAlumni.execute(model);
+
+        CommandResult result = new FilterCommand(new Tag("committee")).execute(model);
+
+        assertEquals("1 member(s) listed with tags (\"committee\" / \"alumni\"), \"committee\".",
+                result.getFeedbackToUser());
+        assertEquals(List.of("Tag: committee / alumni", "Tag: committee"), activeLabels(model));
+        assertEquals(List.of("Pat Committee"), displayedNames(model));
+    }
+
+    @Test
+    public void execute_manyTagsInOneCommand_capsBoxLabelButKeepsEveryTagElsewhere() {
+        Model model = clubModel();
+        FilterCommand sixTags = new FilterCommand(List.of(new Tag("t1"), new Tag("t2"), new Tag("t3"),
+                new Tag("t4"), new Tag("t5"), new Tag("t6")));
+
+        CommandResult result = sixTags.execute(model);
+
+        ActiveFilter box = model.getActiveFilters().getFirst();
+        assertEquals("Tag: t1 / t2 / t3 / t4 / +2 more", box.getLabel());
+        assertEquals("Tag: t1 / t2 / t3 / t4 / t5 / t6", box.getFullLabel());
+        assertEquals("0 member(s) listed with tags \"t1\" / \"t2\" / \"t3\" / \"t4\" / \"t5\" / \"t6\".",
+                result.getFeedbackToUser());
+    }
+
+    @Test
+    public void execute_exactlyMaxShownTags_keepsWholeLabel() {
+        Model model = clubModel();
+
+        new FilterCommand(List.of(new Tag("t1"), new Tag("t2"), new Tag("t3"), new Tag("t4"))).execute(model);
+
+        ActiveFilter box = model.getActiveFilters().getFirst();
+        assertEquals("Tag: t1 / t2 / t3 / t4", box.getLabel());
+        assertEquals(box.getLabel(), box.getFullLabel());
+    }
+
+    @Test
+    public void execute_sameTagsReordered_reportsExistingFilterWithoutChange() {
+        Model model = clubModel();
+        committeeOrAlumni.execute(model);
+
+        FilterCommand reordered = new FilterCommand(List.of(new Tag("ALUMNI"), new Tag("Committee")));
+
+        CommandResult result = reordered.execute(model);
+
+        assertEquals("A filter for the tags \"committee\" / \"alumni\" is already active. "
+                + "No changes were made.\n2 member(s) listed with tags \"committee\" / \"alumni\".",
+                result.getFeedbackToUser());
+        assertEquals(List.of("Tag: committee / alumni"), activeLabels(model));
+    }
+
+    @Test
+    public void equals_tagsInAnyOrderOrRepeated_matches() {
+        Tag committee = new Tag("committee");
+        Tag alumni = new Tag("alumni");
+
+        assertEquals(committeeOrAlumni, new FilterCommand(List.of(alumni, committee)));
+        assertEquals(new FilterCommand(committee),
+                new FilterCommand(List.of(committee, new Tag("COMMITTEE"))));
+        assertFalse(new FilterCommand(committee).equals(new FilterCommand(List.of(committee, alumni))));
+    }
 
     @Test
     public void constructor_nullTag_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> new FilterCommand(null));
+        assertThrows(NullPointerException.class, () -> new FilterCommand((Tag) null));
     }
 
     @Test
@@ -155,4 +266,19 @@ public class FilterCommandTest {
         assertFalse(command.equals(null));
         assertFalse(command.equals("filter"));
     }
+
+    /** Builds a roster where {@code Lee Alumni} is the only member with both alumni and year1. */
+    private static Model clubModel() {
+        return new ModelManager(new AddressBookBuilder()
+                .withPerson(new PersonBuilder().withName("Pat Committee").withTags("committee").build())
+                .withPerson(new PersonBuilder().withName("Lee Alumni").withTags("alumni", "year1").build())
+                .withPerson(new PersonBuilder().withName("Sam Student").withTags("year1").build())
+                .withPerson(new PersonBuilder().withName("Kim Untagged").withTags().build())
+                .build(), new UserPrefs());
+    }
+
+    private static List<String> activeLabels(Model model) {
+        return model.getActiveFilters().stream().map(ActiveFilter::getLabel).toList();
+    }
+
 }

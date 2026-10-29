@@ -19,6 +19,7 @@ note bottom of ActiveFilter
 Name, email, tag and show conditions.
 Each show wraps a PersonSelectionPredicate.
 Removing a chip removes only that condition.
-All predicates test a Person and combine with AND.
+TAG predicates match alternatives with OR.
+All conditions test a Person and combine with AND.
 end note
 @enduml

@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TagTestUtil.createCommitteeAlumniModel;
 import static seedu.address.testutil.TagTestUtil.createTypicalModel;
+import static seedu.address.testutil.TagTestUtil.displayedNames;
 import static seedu.address.testutil.TagTestUtil.renameTagForAll;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
@@ -176,6 +178,19 @@ public class RenameTagCommandTest {
                 + "0 member(s) listed with tag \"friends\". Run list to show everyone.", expectedModel);
         assertTrue(model.getFilteredPersonList().isEmpty());
         assertEquals(List.of(friends), model.getActiveTagFilters());
+    }
+
+    @Test
+    public void execute_renamingTagInFilterGroup_keepsMembersMatchingAnotherAlternative() throws Exception {
+        Model model = createCommitteeAlumniModel();
+        new FilterCommand(List.of(new Tag("committee"), new Tag("alumni"))).execute(model);
+
+        new RenameTagCommand(new Tag("committee"), new Tag("event")).execute(model);
+
+        // Pat still matches through alumni; Lee only had the renamed tag, so is hidden but stays stored.
+        assertEquals(List.of("Pat Both"), displayedNames(model));
+        assertEquals(2, model.getAddressBook().getPersonList().size());
+        assertEquals(List.of(new Tag("committee"), new Tag("alumni")), model.getActiveTagFilters());
     }
 
     @Test
