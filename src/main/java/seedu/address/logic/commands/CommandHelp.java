@@ -181,15 +181,15 @@ public enum CommandHelp {
             "Supply one positive number shown in the current list. Zero, negative numbers and missing members "
                     + "are rejected. If saving fails, the deletion remains in this session and the command box clears; "
                     + "do not repeat the deletion to retry saving."),
-    CLEAR("Remove records", "clear", "Clear displayed members or everyone", "clear [-all]", "clear",
-            "Removes displayed members after confirmation. Use clear -all to remove the entire roster.",
-            "The prompt states the scope and count. Hidden members are kept unless -all is supplied. "
+    CLEAR("Remove records", "clear", "Clear displayed members or everyone", "clear [/all]", "clear",
+            "Removes displayed members after confirmation. Use clear /all to remove the entire roster.",
+            "The prompt states the scope and count. Hidden members are kept unless /all is supplied. "
                     + "After saving, conditions remain applied. Use list to see hidden survivors; "
-                    + "clear -all resets the view.",
+                    + "clear /all resets the view.",
             "Only yes, in lowercase, confirms. y, Y or YES keeps the prompt pending; any other input cancels. "
                     + "Targets stay fixed if a filter is removed while waiting. There is no undo. "
                     + "An already-empty roster saves without a prompt. An empty view cannot clear hidden members.",
-            "Use clear or clear -all exactly. Other arguments are rejected. If saving fails, the original "
+            "Use clear or clear /all exactly. Other arguments are rejected. If saving fails, the original "
                     + "roster and view are restored; resolve the storage problem before starting a fresh clear."),
     HELP("Help & session", "help", "Open this command guide", "help [COMMAND]", "help edit",
             "Opens the complete offline guide, or instructions for one available command.",

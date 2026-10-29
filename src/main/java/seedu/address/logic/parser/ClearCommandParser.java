@@ -7,14 +7,14 @@ import seedu.address.logic.parser.exceptions.ParseException;
 
 /** Parses displayed clearing and the explicit whole-roster override. */
 public class ClearCommandParser implements Parser<ClearCommand> {
-    /** Accepts no argument or exactly one lowercase {@code -all} flag. */
+    /** Accepts no argument or exactly one lowercase {@code /all} flag. */
     @Override
     public ClearCommand parse(String args) throws ParseException {
         requireNonNull(args);
         String option = args.strip();
-        if (!option.isEmpty() && !option.equals("-all")) {
+        if (!option.isEmpty() && !option.equals("/all")) {
             throw new ParseException(ClearCommand.MESSAGE_USAGE);
         }
-        return new ClearCommand(option.equals("-all"));
+        return new ClearCommand(option.equals("/all"));
     }
 }

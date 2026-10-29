@@ -178,7 +178,7 @@ public class MainWindowTest {
             assertEquals(1, model.getAddressBook().getPersonList().size());
             enter("list");
             assertEquals("Showing 1 member.", feedback.getText());
-            enter("clear -all");
+            enter("clear /all");
             enter("yes");
             assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, feedback.getText());
             assertEquals("yes", input.getText());
@@ -224,7 +224,7 @@ public class MainWindowTest {
     public void enter_clearAwaitingConfirmation_preservesFilteredRosterUntilConfirmed() throws Exception {
         onJavaFxThread(() -> {
             enter("find Alice");
-            enter("clear -all");
+            enter("clear /all");
             assertEquals(String.format(ClearCommand.MESSAGE_CONFIRMATION, 2), feedback.getText());
             assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
             assertEquals(CommandBox.CONFIRMATION_PROMPT, input.getPromptText());
@@ -239,7 +239,7 @@ public class MainWindowTest {
             assertDisplayedNames("Alice Tan");
             assertEquals(2, model.getAddressBook().getPersonList().size());
 
-            enter("clear -all");
+            enter("clear /all");
             enter("yes");
             assertEquals("Cleared 2 members. The roster is now empty.", feedback.getText());
             assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
@@ -753,7 +753,7 @@ public class MainWindowTest {
             Stage guide = guide();
             assertTrue(guide.isShowing());
             Event.fireEvent(guide.getScene(), key(KeyCode.ESCAPE));
-            enter("clear -all");
+            enter("clear /all");
             enter("yes");
             enter("add n/Zara Tan p/90000001 e/zara@example.com a/Test Road t/committee");
             enter("add n/bob Lee p/90000002 e/bob@example.com a/Test Road t/year1");
@@ -777,7 +777,7 @@ public class MainWindowTest {
             enter("delete 2");
             enter("yes");
             assertDisplayedNames("Zara Tan", "Alice Tan");
-            enter("clear -all");
+            enter("clear /all");
             enter("yes");
             enter("import p/\"" + exported + "\"");
             assertTrue(feedback.getText().startsWith("Imported 3 member(s)"));
@@ -788,7 +788,7 @@ public class MainWindowTest {
             assertTrue(model.getFilteredPersonList().getFirst().getTags().stream()
                     .noneMatch(tag -> tag.tagName.equals("committee")));
             enter("find Alice");
-            enter("clear -all");
+            enter("clear /all");
             enter("yes");
             assertEquals("Cleared 3 members. The roster is now empty.", feedback.getText());
             enter("list");

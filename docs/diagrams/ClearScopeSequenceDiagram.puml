@@ -5,7 +5,7 @@ participant ":LogicManager" as Logic LOGIC_COLOR
 participant ":ClearCommand" as Clear LOGIC_COLOR
 participant ":Model" as Model MODEL_COLOR
 participant ":Storage" as Storage STORAGE_COLOR
-[-> Logic : execute("clear" or "clear -all")
+[-> Logic : execute("clear" or "clear /all")
 Logic -> Clear : prepareTargets(model)
 Clear -> Model : getFilteredPersonList() or getAddressBook()
 Model --> Clear : members

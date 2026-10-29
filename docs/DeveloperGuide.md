@@ -322,7 +322,7 @@ for only the selected member.
 
 #### Clear and save recovery
 
-`clear` snapshots displayed members; `clear -all` snapshots the complete roster. `LogicManager`
+`clear` snapshots displayed members; `clear /all` snapshots the complete roster. `LogicManager`
 retains the command and confirms the target count and scope before deleting any non-empty target set.
 Exactly `yes` confirms, near misses keep the prompt pending, and other replies cancel without executing them.
 The captured targets do not expand when a filter is removed while confirmation is pending.
@@ -356,8 +356,8 @@ These messages follow the list and clear feature specifications:
 | Clear zero members | `The roster is already empty. No changes were made.` |
 | Clear one member | `Cleared 1 member. The roster is now empty.` |
 | Clear multiple members | `Cleared N members. The roster is now empty.` |
-| Invalid clear arguments | `Invalid command format. Usage: clear [-all]. Use -all to remove hidden members too.` |
-| Failed clear save | `Unable to clear the roster because the changes could not be saved. No members were removed. Run clear or clear -all again to choose the scope and retry.` |
+| Invalid clear arguments | `Invalid command format. Usage: clear [/all]. Use /all to remove hidden members too.` |
+| Failed clear save | `Unable to clear the roster because the changes could not be saved. No members were removed. Run clear or clear /all again to choose the scope and retry.` |
 
 #### Test coverage {id="test-coverage-1"}
 
@@ -1039,10 +1039,10 @@ These rules describe the selected MVP and apply to the use cases below.
     removes it only after the next input is `yes`; `y` or another letter case of `yes` keeps the prompt pending
     with a reminder, and
     any other input cancels without running it. The
-    deletion retains the active search and filters. `clear` removes displayed records; `clear -all` also removes hidden ones,
+    deletion retains the active search and filters. `clear` removes displayed records; `clear /all` also removes hidden ones,
     resets the view, and preserves application settings. A non-empty roster requires a `yes` confirmation;
     near misses keep the prompt pending as for `delete`, and any other reply cancels without being run. An empty roster skips confirmation. Neither action has undo.
-    `clear` accepts only an optional `-all`; `list`, `sort`, and `exit` reject extra arguments. `exit` closes the
+    `clear` accepts only an optional `/all`; `list`, `sort`, and `exit` reject extra arguments. `exit` closes the
     app without a final save or another warning about unsaved changes.
 12. Startup reads the local `data/addressbook.json` relative to the JAR folder in packaged builds
     or the working directory in development. A missing file loads sample members and logs that
@@ -1307,7 +1307,7 @@ guidance; the deletion remains in memory, but the previous saved file is preserv
 
 **MSS**
 
-1. The secretary decides to remove all records and requests `clear -all` to clear the whole roster.
+1. The secretary decides to remove all records and requests `clear /all` to clear the whole roster.
 2. TrackCall validates the request and shows the total stored-member count, including hidden members.
 3. The secretary confirms with `yes`. TrackCall removes every member.
 4. TrackCall saves the empty roster, clears the search, tag, and selection filters, and reports the
@@ -1651,12 +1651,12 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
    `filter t/committee`, then run `untag 1 t/committee`; expect that member to disappear from the view
    but remain stored. Run `list` to verify. Try `tag 0 t/year1`,
    `untag 999 t/year1`, `tag 1 t/`, and `untag 1 t/a t/b`; each must fail without changing the roster.
-10. With two stored records and a search showing only one, run `clear -all`.
+10. With two stored records and a search showing only one, run `clear /all`.
    Check that the prompt counts both members and no records change. Reply with `n`; the view and saved file stay unchanged.
-   Run `clear -all` and reply `Y`; expect `To confirm, type yes exactly, in lowercase, and press Enter, or type anything else to cancel (except yes or y in any letter case).`
+   Run `clear /all` and reply `Y`; expect `To confirm, type yes exactly, in lowercase, and press Enter, or type anything else to cancel (except yes or y in any letter case).`
    followed by the clear prompt, with nothing removed.
-   Run `clear -all` again and confirm with `yes`. After saving, expect
-   `Cleared 2 members. The roster is now empty.` and no members when `list` runs. Run `clear -all` again; after saving, expect
+   Run `clear /all` again and confirm with `yes`. After saving, expect
+   `Cleared 2 members. The roster is now empty.` and no members when `list` runs. Run `clear /all` again; after saving, expect
    `The roster is already empty. No changes were made.`
 
 ### Pasted Unicode input
@@ -1809,7 +1809,7 @@ the release commit; passing unit tests alone does not establish release readines
 
 1. Launch the same JAR twice; confirm the second launch is rejected before it can read/write data.
    Close the first process and confirm a new launch works without deleting `.trackcall.lock`.
-2. Save a member, run `clear` and confirm with `yes`, then run `clear -all` again on the empty roster. Verify `.bak` still contains the removed member.
+2. Save a member, run `clear` and confirm with `yes`, then run `clear /all` again on the empty roster. Verify `.bak` still contains the removed member.
 3. Clear an address using `edit INDEX a/`, restart, and confirm the address remains absent.
 4. Make the save folder unwritable and import a valid CSV. Verify the imported members remain in
    memory, the error warns that exiting loses them, and retrying after restoring permissions saves them.
@@ -1824,8 +1824,8 @@ the release commit; passing unit tests alone does not establish release readines
 
 From the baseline fixture, run `filter t/committee`, `clear`, then `yes`. Expect only displayed
 committee members removed and hidden members retained and saved. Conditions stay applied; `list` reveals the survivors.
-Restore the fixture and repeat using `clear -all`: all records must be removed. Cancel each form and
+Restore the fixture and repeat using `clear /all`: all records must be removed. Cancel each form and
 try near-miss replies; no records or saved bytes change before exact confirmation. Remove a filter
 while a clear prompt is pending: the originally confirmed target set must stay fixed.
-With an empty result but stored members, `clear` must reject without saving; `clear -all` still prompts.
+With an empty result but stored members, `clear` must reject without saving; `clear /all` still prompts.
 Inject a failed displayed-clear save: records, saved bytes and Show selections must be restored.

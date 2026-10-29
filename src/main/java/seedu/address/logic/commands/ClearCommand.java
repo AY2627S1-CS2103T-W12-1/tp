@@ -18,7 +18,7 @@ public class ClearCommand extends Command {
 
     public static final String COMMAND_WORD = "clear";
     public static final String MESSAGE_USAGE =
-            "Invalid command format. Usage: clear [-all]. Use -all to remove hidden members too.";
+            "Invalid command format. Usage: clear [/all]. Use /all to remove hidden members too.";
     public static final String MESSAGE_CONFIRMATION =
             "Clear the entire roster? Total members: %d (including anyone hidden by searches or filters).\n"
             + "Type " + Confirmation.WORD
@@ -29,16 +29,16 @@ public class ClearCommand extends Command {
     public static final String MESSAGE_EMPTY = "The roster is already empty. No changes were made.";
     public static final String MESSAGE_SAVE_FAILURE =
             "Unable to clear the roster because the changes could not be saved. No members were removed. "
-            + "Run clear or clear -all again to choose the scope and retry.";
+            + "Run clear or clear /all again to choose the scope and retry.";
 
     public static final String MESSAGE_DISPLAY_CONFIRMATION =
-            "Clear the %d displayed member(s)? Hidden members will be kept. Use clear -all to remove everyone.\n"
+            "Clear the %d displayed member(s)? Hidden members will be kept. Use clear /all to remove everyone.\n"
             + "Type " + Confirmation.WORD
             + " and press Enter to confirm, or " + Confirmation.CANCEL_INSTRUCTION + ".";
     public static final String MESSAGE_DISPLAY_SUCCESS =
             "Cleared %d displayed member(s). %d member(s) remain in the roster.";
     public static final String MESSAGE_NO_DISPLAYED =
-            "No members in the displayed list. Run list to show everyone, or clear -all to remove the entire roster.";
+            "No members in the displayed list. Run list to show everyone, or clear /all to remove the entire roster.";
 
     private final boolean all;
     /** The exact members named by the prompt, retained even if a filter is removed while waiting. */
