@@ -39,7 +39,8 @@ public class AddressBookParser {
      * Used for initial separation of command word and args.
      */
     private static final Pattern BASIC_COMMAND_FORMAT = Pattern.compile(
-            "(?<commandWord>[^\\p{javaWhitespace}]+)(?<arguments>.*)", Pattern.DOTALL);
+            "[\\p{javaWhitespace}\\p{Zs}]*(?<commandWord>[^\\p{javaWhitespace}\\p{Zs}]+)"
+                    + "[\\p{javaWhitespace}\\p{Zs}]*(?<arguments>.*)", Pattern.DOTALL);
     private static final Logger logger = LogsCenter.getLogger(AddressBookParser.class);
 
     /**
