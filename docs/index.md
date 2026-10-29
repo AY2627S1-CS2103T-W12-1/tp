@@ -89,6 +89,7 @@ this is not a hard record limit.
 
 See what changed and browse screenshots of each release:
 
+* [v1.5 - TrackCall](releases/v1.5/RELEASE_NOTES.html)
 * [v1.4 - TrackCall](releases/v1.4/RELEASE_NOTES.html)
 * [v1.3 - TrackCall](releases/v1.3/RELEASE_NOTES.html)
 

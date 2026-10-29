@@ -55,6 +55,7 @@
   * [Appendix: Manual Testing]({{ baseUrl }}/DeveloperGuide.html#appendix-instructions-for-manual-testing)
 * [About Us]({{ baseUrl }}/AboutUs.html)
 * [Releases]({{ baseUrl }}/index.html#releases)
+  * [v1.5 - TrackCall]({{ baseUrl }}/releases/v1.5/RELEASE_NOTES.html)
   * [v1.4 - TrackCall]({{ baseUrl }}/releases/v1.4/RELEASE_NOTES.html)
   * [v1.3 - TrackCall]({{ baseUrl }}/releases/v1.3/RELEASE_NOTES.html)
 * [Development resources]({{ baseUrl }}/SettingUp.html)
