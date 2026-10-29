@@ -17,11 +17,13 @@ public class BulkTagArgumentParserTest {
     private static final String USAGE = "tagall: Adds one tag to every displayed member.";
 
     /**
-     * Asserts that parsing each of {@code inputs} throws a {@code ParseException} with {@code expectedMessage}.
+     * Asserts that parsing each of {@code inputs} throws a {@code ParseException}
+     * with {@code expectedMessage}.
      */
     private static void assertParseRejected(String expectedMessage, String... inputs) {
         for (String input : inputs) {
-            assertThrows(ParseException.class, expectedMessage, () -> BulkTagArgumentParser.parse(input, USAGE));
+            assertThrows(ParseException.class, expectedMessage, () ->
+                    BulkTagArgumentParser.parse(input, USAGE));
         }
     }
 
@@ -74,13 +76,17 @@ public class BulkTagArgumentParserTest {
 
     @Test
     public void parse_otherFieldPrefix_identifiesUnsupportedField() {
-        assertParseRejected("Field n/ is not supported. This command accepts only t/TAG parameters.\n" + USAGE,
+        assertParseRejected("Field n/ is not supported. This command accepts only t/TAG parameters.\n"
+                + USAGE,
                 " t/friend n/Bob", " t/friend\tn/Bob", " t/friend n/", " n/Bob t/friend", " t/a t/b n/Bob");
-        assertParseRejected("Field p/ is not supported. This command accepts only t/TAG parameters.\n" + USAGE,
+        assertParseRejected("Field p/ is not supported. This command accepts only t/TAG parameters.\n"
+                + USAGE,
                 " t/friend p/91234567");
-        assertParseRejected("Field e/ is not supported. This command accepts only t/TAG parameters.\n" + USAGE,
+        assertParseRejected("Field e/ is not supported. This command accepts only t/TAG parameters.\n"
+                + USAGE,
                 " t/year1 e/year1@gmail.com");
-        assertParseRejected("Field a/ is not supported. This command accepts only t/TAG parameters.\n" + USAGE,
+        assertParseRejected("Field a/ is not supported. This command accepts only t/TAG parameters.\n"
+                + USAGE,
                 " t/friend a/Clementi");
     }
 
@@ -127,4 +133,33 @@ public class BulkTagArgumentParserTest {
         assertParseRejected("Tag contains unsupported character \"/\"" + guidance, " t/onex/two");
         assertParseRejected("Tag contains unsupported character \"é\"" + guidance, " t/café");
     }
+
+    @Test
+    public void parse_nonBmpCharacters_reportsUnsupportedCharacterBeforeLength() {
+        String expected = "Tag contains unsupported character \"😀\". "
+                + "Use letters (A-Z, a-z), digits (0-9), or internal hyphens (-), e.g. year-1.";
+        assertParseRejected(expected, " t/" + "😀".repeat(20), " t/" + "😀".repeat(31));
+    }
+
+    @Test
+    public void parseTagName_controlCharacter_reportsVisibleCodePoint() {
+        String expected = "Tag contains unsupported character \"U+0000\". "
+                + "Use letters (A-Z, a-z), digits (0-9), or internal hyphens (-), e.g. year-1.";
+        assertThrows(ParseException.class, expected, () ->
+                BulkTagArgumentParser.parseTagName("year" + Character.toString(0) + "1"));
+    }
+
+    @Test
+    public void parseTagName_sampleValues_acceptsExactlyTheModelRule() throws Exception {
+        for (String value : new String[] {"", "a", "1", "year-1", "a-b-c", "A9", "a".repeat(30),
+            "a".repeat(31), "-a", "a-", "a--b", "-", "year_1", "two words", "café", "😀",
+            "😀".repeat(20), "a\nb", Character.toString(0)}) {
+            if (Tag.isValidTagName(value)) {
+                assertEquals(new Tag(value), BulkTagArgumentParser.parseTagName(value));
+            } else {
+                assertThrows(ParseException.class, () -> BulkTagArgumentParser.parseTagName(value));
+            }
+        }
+    }
+
 }

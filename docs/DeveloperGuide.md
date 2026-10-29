@@ -707,7 +707,11 @@ their tag argument.
 * Unsupported characters are named in the error, followed by the allowed ASCII letters, digits, and internal
   single hyphens. Internal whitespace is described as `whitespace`.
 * Leading, trailing, and consecutive hyphens each report a specific error with `year-1` as a valid example.
+* Unsupported characters are checked before length, so non-ASCII code points are not misreported as
+  overlong ASCII tags. Invisible control characters are shown as code points, for example `U+0000`.
 * Overlong tags report their actual length and the limit from `Tag.MAX_LENGTH`.
+* These argument errors give the reason followed by usage without a generic format-error header.
+  Existing index parsing in `tag` and `untag` retains its format-error header.
 
 #### Execution {id="execution-1"}
 

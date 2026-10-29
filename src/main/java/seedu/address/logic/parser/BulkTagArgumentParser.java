@@ -43,14 +43,16 @@ public final class BulkTagArgumentParser {
     }
 
     /**
-     * Parses {@code args} into exactly one tag of 1 to 30 ASCII letters or digits, with optional internal hyphens.
+     * Parses {@code args} into exactly one tag of 1 to 30 ASCII letters or digits,
+     * with optional internal hyphens.
      * Surrounding whitespace around the tag is ignored.
      *
      * @param args Arguments following the command word.
      * @param usage Usage message of the calling command, shown when the {@code t/} prefix is missing,
      *         other text appears before it, or another member field prefix is present.
      * @throws ParseException If the prefix is missing, other text appears before it,
-     *         another member field prefix is present, more than one tag is given, or the tag is empty or invalid.
+     *         another member field prefix is present, more than one tag is given,
+     *         or the tag is empty or invalid.
      */
     public static Tag parse(String args, String usage) throws ParseException {
         requireAllNonNull(args, usage);
@@ -87,12 +89,14 @@ public final class BulkTagArgumentParser {
     }
 
     /** Rejects member fields that cannot be used by tag commands. */
-    private static void validateFieldPrefixes(ArgumentMultimap arguments, String usage) throws ParseException {
+    private static void validateFieldPrefixes(ArgumentMultimap arguments, String usage)
+            throws ParseException {
         var unsupportedPrefix = Stream.of(PREFIX_NAME, PREFIX_PHONE, PREFIX_EMAIL, PREFIX_ADDRESS)
                 .filter(prefix -> arguments.getValue(prefix).isPresent())
                 .findFirst();
         if (unsupportedPrefix.isPresent()) {
-            throw new ParseException(String.format(MESSAGE_UNSUPPORTED_FIELD, unsupportedPrefix.get()) + "\n" + usage);
+            throw new ParseException(String.format(MESSAGE_UNSUPPORTED_FIELD, unsupportedPrefix.get())
+                    + "\n" + usage);
         }
     }
 
@@ -117,16 +121,17 @@ public final class BulkTagArgumentParser {
         if (tagName.isEmpty()) {
             throw new ParseException(MESSAGE_EMPTY_TAG);
         }
-        validateTagLength(tagName);
         validateSupportedCharacters(tagName);
+        validateTagLength(tagName);
         validateHyphenPlacement(tagName);
+        // Defensive guard: keep the model authoritative if its rule changes before these diagnostics.
         if (!Tag.isValidTagName(tagName)) {
             throw new ParseException(MESSAGE_INVALID_TAG);
         }
         return new Tag(tagName);
     }
 
-    /** Rejects overlong tags using the same limit as the model. */
+    /** Rejects overlong ASCII tags using the model limit; supported characters are checked first. */
     private static void validateTagLength(String tagName) throws ParseException {
         if (tagName.length() > Tag.MAX_LENGTH) {
             throw new ParseException(String.format(MESSAGE_TAG_TOO_LONG, tagName.length()));
@@ -139,11 +144,20 @@ public final class BulkTagArgumentParser {
                 .filter(character -> !isSupportedCharacter(character))
                 .findFirst();
         if (unsupportedCharacter.isPresent()) {
-            int character = unsupportedCharacter.getAsInt();
-            String description = Character.isWhitespace(character) || Character.isSpaceChar(character)
-                    ? "whitespace" : new String(Character.toChars(character));
+            String description = describeCharacter(unsupportedCharacter.getAsInt());
             throw new ParseException(String.format(MESSAGE_UNSUPPORTED_CHARACTER, description));
         }
+    }
+
+    /** Makes whitespace and invisible control characters readable in the error message. */
+    private static String describeCharacter(int character) {
+        if (Character.isWhitespace(character) || Character.isSpaceChar(character)) {
+            return "whitespace";
+        }
+        if (Character.isISOControl(character) || Character.getType(character) == Character.FORMAT) {
+            return String.format("U+%04X", character);
+        }
+        return new String(Character.toChars(character));
     }
 
     /** Returns whether a code point is an ASCII letter, digit or hyphen. */

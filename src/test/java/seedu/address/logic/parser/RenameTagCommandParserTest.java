@@ -66,8 +66,10 @@ public class RenameTagCommandParserTest {
         assertParseFailure(parser, " t/batch2026 t/", added + MESSAGE_EMPTY_TAG);
         assertParseFailure(parser, " t/two words t/alumni",
                 current + String.format(MESSAGE_UNSUPPORTED_CHARACTER, "whitespace"));
-        assertParseFailure(parser, " t/batch2026 t/hello!", added + String.format(MESSAGE_UNSUPPORTED_CHARACTER, "!"));
-        assertParseFailure(parser, " t/batch2026 t/" + "a".repeat(31), added + String.format(MESSAGE_TAG_TOO_LONG, 31));
+        assertParseFailure(parser, " t/batch2026 t/hello!",
+                added + String.format(MESSAGE_UNSUPPORTED_CHARACTER, "!"));
+        assertParseFailure(parser, " t/batch2026 t/" + "a".repeat(31),
+                added + String.format(MESSAGE_TAG_TOO_LONG, 31));
         assertParseFailure(parser, " t/batch_2026 t/alumni",
                 current + String.format(MESSAGE_UNSUPPORTED_CHARACTER, "_"));
     }
