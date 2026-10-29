@@ -13,7 +13,7 @@ public final class Confirmation {
 
     /** Shown for a near miss such as {@code y} or {@code YES}, which keeps the confirmation pending. */
     public static final String REMINDER = "To confirm, type " + WORD
-            + " exactly, in lowercase, and press Enter. To cancel, type no.";
+            + " exactly, in lowercase, and press Enter. To cancel, type anything else.";
 
     /** Appended to a cancellation when the cancelling input was a command, which is not run. */
     public static final String INPUT_NOT_RUN = "\n\"%1$s\" was not run. Enter it again to run it.";

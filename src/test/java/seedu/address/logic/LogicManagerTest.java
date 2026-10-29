@@ -132,7 +132,7 @@ public class LogicManagerTest {
 
         CommandResult prompt = logic.execute("delete 2");
         assertEquals("Delete member 2, " + BOB.getName() + "?\nTags: " + Messages.formatTags(BOB)
-                + "\nType yes and press Enter to confirm, or type no to cancel the deletion.",
+                + "\nType yes and press Enter to confirm, or type anything else to cancel the deletion.",
                 prompt.getFeedbackToUser());
         assertTrue(logic.isAwaitingConfirmation());
         // Asking for confirmation neither removes the member nor saves the roster.
@@ -177,7 +177,8 @@ public class LogicManagerTest {
 
         for (String nearMiss : List.of("y", "Y", "YES", " Yes ")) {
             // The reminder repeats the original prompt, so the member to be deleted stays named.
-            assertEquals("To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.\n\n"
+            assertEquals("To confirm, type yes exactly, in lowercase, and press Enter. "
+                    + "To cancel, type anything else.\n\n"
                     + prompt, logic.execute(nearMiss).getFeedbackToUser(), nearMiss);
             assertTrue(logic.isAwaitingConfirmation(), nearMiss);
         }

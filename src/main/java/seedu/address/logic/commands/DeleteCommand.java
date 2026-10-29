@@ -29,7 +29,7 @@ public class DeleteCommand extends Command {
 
     public static final String MESSAGE_CONFIRM_DELETE = "Delete member %1$d, %2$s?\nTags: %3$s\n"
             + "Type " + Confirmation.WORD
-            + " and press Enter to confirm, or type no to cancel the deletion.";
+            + " and press Enter to confirm, or type anything else to cancel the deletion.";
 
     public static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted member\n%1$s";
 

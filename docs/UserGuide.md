@@ -565,7 +565,7 @@ after you confirm the deletion.
    ```text
    Delete member 2, Bernice Yu?
    Tags: batch2026, year1
-   Type yes and press Enter to confirm, or type no to cancel the deletion.
+   Type yes and press Enter to confirm, or type anything else to cancel the deletion.
    ```
 
    The command box is highlighted until you answer:
@@ -578,7 +578,7 @@ after you confirm the deletion.
 Only `yes`, typed exactly in lowercase, confirms. `y`, or `yes` in any other letter case (such as `Y`, `YES`, or `Yes`),
 does not confirm or cancel: it keeps
 the prompt pending and reminds you:
-`To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.`
+`To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type anything else.`
 The reminder is followed by the original prompt, so the member to be deleted (or, for `clear`, the total member
 count) stays visible, including after you remove a filter box.
 
