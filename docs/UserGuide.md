@@ -161,6 +161,7 @@ are green. The boxes appear left to right in the order applied. With an unchange
 does not change who matches:
 `filter t/committee` then `find Alice` gives the same final members as `find Alice` then
 `filter t/committee`. Select a box's **X** to remove only that condition, or use `list` to show everyone again.
+
 ![Two active conditions, Tag: year1 and Name: David, shown as boxes under the command box](images/user-guide/filter-boxes.png)
 
 *After `filter t/year1` and then `find David`, both conditions appear as boxes and only David Li is shown.*
@@ -548,21 +549,20 @@ Remove one member or the whole roster with confirmation.
 `delete INDEX` removes one member using a positive number from the **currently displayed list**,
 after you confirm the deletion.
 
-1. Run `list`, then `find Alice`, and check the results. Select the intended member to check their contact details.
-2. Use `delete 1`. TrackCall names the first match with its displayed number and tags, then asks you to confirm:
+1. Run `list`, or a search such as `find Bernice`, and check the displayed numbers. Select the intended member
+   to check their contact details.
+2. Use `delete 2`. TrackCall names the member at that displayed number with their tags, then asks you to
+   confirm. With the sample members, the prompt is:
 
    ```text
-   Delete member 1, Alice Tan?
-   Tags: (none)
+   Delete member 2, Bernice Yu?
+   Tags: batch2026, year1
    Type yes and press Enter to confirm, or type no to cancel the deletion.
    ```
 
-   The tags shown depend on the member; Alice from the quick start has none.
    The command box is highlighted until you answer:
 
    ![A delete prompt naming member 2, Bernice Yu, with the command box highlighted until the user answers](images/user-guide/delete-confirmation.png)
-
-   *With the sample members, `delete 2` names Bernice Yu and her tags.*
 
    Asking for confirmation does not change or save the roster.
 3. Type `yes` and press Enter to delete that member.

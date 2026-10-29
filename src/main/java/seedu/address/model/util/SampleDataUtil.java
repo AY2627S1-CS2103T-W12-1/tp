@@ -17,6 +17,10 @@ import seedu.address.model.tag.Tag;
  * Contains utility methods for populating {@code AddressBook} with sample data.
  */
 public class SampleDataUtil {
+    /**
+     * Returns the members loaded on first launch. The User Guide examples and screenshots rely on these
+     * names, tags and emails, so update the guide whenever they change.
+     */
     public static Person[] getSamplePersons() {
         return new Person[] {
             new Person(new Name("Alex Yeoh"), new Phone("87438807"), new Email("alexyeoh@example.com"),
