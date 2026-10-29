@@ -942,7 +942,7 @@ in memory.
 | Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every displayed member. |
 | Delete one member | `delete INDEX`, then `yes` | `delete 1`, then `yes`, removes the first currently displayed member. |
 | Clear members | `clear [/all]` | `clear` removes displayed members; `clear /all` removes everyone. Confirm with `yes`. |
-| Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |
+| Export members | `export [FILEPATH]` | `export members.csv` writes the displayed members to CSV; run `list` first for everyone. |
 | Import members | `import p/FILE_PATH` | `import p/members.csv` appends unique valid records. |
 | Close the app | `exit` | `exit` ends the session. |
 
