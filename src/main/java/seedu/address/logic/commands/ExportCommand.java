@@ -27,10 +27,13 @@ public class ExportCommand extends Command {
     public static final String COMMAND_WORD = "export";
     public static final String DEFAULT_FILE_NAME = "addressbook.csv";
     public static final String MESSAGE_USAGE = COMMAND_WORD + " [FILEPATH]\n"
-            + "Exports all members to a CSV file. If FILEPATH is omitted, writes " + DEFAULT_FILE_NAME
+            + "Exports displayed members to CSV in displayed order. Run list first to export everyone. "
+            + "If FILEPATH is omitted, writes " + DEFAULT_FILE_NAME
             + " beside the JAR, or in the working directory during development. The path must end in .csv.";
     public static final String MESSAGE_SUCCESS = "Exported %1$d members to %2$s.";
     public static final String MESSAGE_SINGLE = "Exported 1 member to %1$s.";
+    public static final String MESSAGE_DISPLAYED =
+            "Exported %1$d displayed %2$s to %3$s (%4$d hidden %5$s not exported).";
     public static final String MESSAGE_FAILURE = "Could not export members to %1$s: %2$s";
     public static final String MESSAGE_PROTECTED_DESTINATION =
             "The export destination is used by TrackCall. Choose a different file.";
@@ -70,14 +73,15 @@ public class ExportCommand extends Command {
     /**
      * Exports without replacing the running application or files used by automatic storage.
      *
-     * @param model Model whose complete roster should be exported.
+     * @param model Model whose displayed members should be exported.
      * @param protectedFiles Active roster and preferences paths supplied by the logic layer.
      * @return Export feedback after the complete CSV has been saved.
      * @throws CommandException If the destination is protected or exporting fails.
      */
     public CommandResult execute(Model model, Path... protectedFiles) throws CommandException {
         requireNonNull(model);
-        List<Person> people = model.getAddressBook().getPersonList();
+        List<Person> people = List.copyOf(model.getFilteredPersonList());
+        int hiddenCount = model.getAddressBook().getPersonList().size() - people.size();
         Path targetPath = filePath;
         try {
             targetPath = FileUtil.resolvePath(filePath).toAbsolutePath().normalize();
@@ -115,6 +119,11 @@ public class ExportCommand extends Command {
             throw new CommandException(String.format(MESSAGE_FAILURE, targetPath, e.getMessage()), e);
         }
         logger.info(String.format("CSV export completed: %d member(s) written", people.size()));
+        if (hiddenCount > 0) {
+            return new CommandResult(String.format(MESSAGE_DISPLAYED, people.size(),
+                    people.size() == 1 ? "member" : "members", targetPath, hiddenCount,
+                    hiddenCount == 1 ? "member" : "members"));
+        }
         return new CommandResult(people.size() == 1 ? String.format(MESSAGE_SINGLE, targetPath)
                 : String.format(MESSAGE_SUCCESS, people.size(), targetPath));
     }

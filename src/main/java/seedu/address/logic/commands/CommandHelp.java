@@ -36,17 +36,23 @@ public enum CommandHelp {
     FIND("Browse members", "find", "Find a member by name", "find KEYWORD [MORE_KEYWORDS]", "find Alice Tan",
             "Narrows the displayed members by any complete or partial name word, ignoring letter case.",
             "Shows members whose names contain Alice or Tan. No match produces an empty list.",
-            "Each find adds a name filter. Boxes appear left to right in command order, but find and filter "
+            "Each distinct find adds a name filter. Boxes appear left to right in command order, but find and filter "
                     + "order does not change the final matches. Use X to remove one box or list to show everyone. "
-                    + "Jo and oh both match John.",
+                    + "Jo and oh both match John. Repeats ignore keyword case, repetition and order; "
+                    + "they keep the existing box and report that the search is already active. "
+                    + "A different query that keeps the same results adds its own box and reports Results unchanged.",
             "Supply at least one name word or part of one. Searches use names, not phone numbers or tags."),
     FINDEMAIL("Browse members", "findemail", "Find members by email",
             "findemail KEYWORD [MORE_KEYWORDS]...", "findemail @example.com",
-            "Searches all members for any literal email fragment, ignoring letter case.",
+            "Narrows displayed members by any literal email fragment, ignoring letter case.",
             "Shows members whose email contains @example.com. No match produces an empty list.",
             "Use a full email address or domain fragment. Whitespace separates keywords; any keyword can match. "
-                    + "A new search replaces previous searches, tag filters and show selections, keeping name sorting. "
-                    + "An Email box shows the query; use its X to remove only the email condition. "
+                    + "Each distinct search adds an Email box and retains earlier searches, tag filters, "
+                    + "show selections and name sorting. "
+                    + "Repeats ignore keyword case, repetition and order; they keep the existing box "
+                    + "and report that the search is already active. A different query with the same results "
+                    + "adds its own box and reports Results unchanged. "
+                    + "Use a box's X to remove only that email condition. "
                     + "Filter narrows these results; list shows everyone again. Check displayed numbers before "
                     + "editing or deleting. An edited member whose email no longer matches disappears from view.",
             "Supply at least one keyword. Matching uses literal text, not regular expressions, and searches "
@@ -58,7 +64,7 @@ public enum CommandHelp {
                     + "names all active tags. Repeating an active tag leaves the view unchanged and reports "
                     + "that no changes were made. Boxes appear left to right in command order, not matching priority. "
                     + "Use a filter's X to remove it, or list to show everyone. Find also narrows the current results. "
-                    + "Findemail searches email addresses across the whole roster and replaces previous filters. "
+                    + "Findemail also narrows the current results by email. "
                     + "Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
             "Supply exactly one tag. " + Tag.MESSAGE_CONSTRAINTS + ". "
@@ -142,12 +148,13 @@ public enum CommandHelp {
                     + "the changes remain in this session and the command box clears; follow the recovery "
                     + "guidance before exiting."),
     EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
-            "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
+            "Writes displayed members to a UTF-8 CSV file in their current displayed order.",
             "Creates members.csv with name, phone, email, address and tags columns.",
             "The default path is addressbook.csv beside the JAR, or in the working directory during development. "
                     + "Packaged builds use only paths inside the JAR folder. Existing destination files are "
                     + "overwritten. Tags are sorted and joined with semicolons. The roster and current search "
-                    + "stay unchanged.",
+                    + "stay unchanged. Run list first to export everyone. Hidden members are excluded and counted "
+                    + "in the result; an empty displayed list writes only the header.",
             "Use an output path ending in .csv (ignoring letter case), with an existing writable parent directory. "
                     + "Double quotes are not allowed in export paths; spaces need no surrounding quotes. "
                     + "The active roster, preferences, application lock, and running JAR "

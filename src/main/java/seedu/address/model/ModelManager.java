@@ -179,10 +179,25 @@ public class ModelManager implements Model {
     }
 
     @Override
-    public void filterFilteredPersonListByName(NameContainsKeywordsPredicate predicate) {
+    public boolean filterFilteredPersonListByName(NameContainsKeywordsPredicate predicate) {
         requireNonNull(predicate);
-        activeFilters.add(ActiveFilter.createNameFilter(predicate));
+        return addSearchFilter(ActiveFilter.createNameFilter(predicate));
+    }
+
+    @Override
+    public boolean filterFilteredPersonListByEmail(EmailContainsKeywordsPredicate predicate) {
+        requireNonNull(predicate);
+        return addSearchFilter(ActiveFilter.createEmailFilter(predicate));
+    }
+
+    /** Adds only distinct search conditions, keeping the first query's label and position. */
+    private boolean addSearchFilter(ActiveFilter filter) {
+        if (activeFilters.stream().anyMatch(existing -> existing.hasSameSearch(filter))) {
+            return false;
+        }
+        activeFilters.add(filter);
         refreshFilteredPersons();
+        return true;
     }
 
     @Override
@@ -218,19 +233,9 @@ public class ModelManager implements Model {
      * A person remains visible only when it satisfies every filter in both groups.
      */
     private void refreshFilteredPersons() {
-        filteredPersons.setPredicate(person -> {
-            for (Predicate<Person> filter : additionalFilters) {
-                if (!filter.test(person)) {
-                    return false;
-                }
-            }
-            for (ActiveFilter filter : activeFilters) {
-                if (!filter.test(person)) {
-                    return false;
-                }
-            }
-            return true;
-        });
+        filteredPersons.setPredicate(person ->
+                additionalFilters.stream().allMatch(filter -> filter.test(person))
+                        && activeFilters.stream().allMatch(filter -> filter.test(person)));
     }
 
     @Override

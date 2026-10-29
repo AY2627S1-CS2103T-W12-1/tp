@@ -72,6 +72,7 @@ public class MainAppTest {
 
     /**
      * Saves {@code content} as the data file and returns the reason shown when TrackCall cannot load it.
+     * Uses real storage and JsonUtil parsing so changes to their error format break these reason assertions.
      */
     private String loadFailureReasonOf(byte[] content) throws IOException {
         Files.write(roster.getAddressBookFilePath(), content);
@@ -244,9 +245,13 @@ public class MainAppTest {
 
     @Test
     public void getLoadingFailureReason_wrongValueType_explainsExpectedFormat() throws Exception {
-        for (String content : new String[] {"[]", "{\"persons\":{}}", "{\"persons\":[{\"tags\":\"a\"}]}", ""}) {
+        String trailingComma = "{\"persons\":[{\"name\":\"Alex\",\"phone\":\"91234567\",\"email\":\"a@b.co\","
+                + "\"address\":\"\",\"tags\":[]},]}";
+        for (String content : new String[] {"[]", "{\"persons\":{}}", "{\"persons\":[{\"tags\":\"a\"}]}", "",
+            trailingComma}) {
             String reason = loadFailureReasonOf(content.getBytes(StandardCharsets.UTF_8));
             assertTrue(reason.startsWith("The data file is not in the expected format near line "), content);
+            assertTrue(reason.contains("missing or extra comma"), content);
             assertFalse(reason.contains("Exception"), content);
         }
     }

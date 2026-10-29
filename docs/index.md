@@ -41,7 +41,7 @@ its membership features. The [release notes](#releases) identify what changed in
 * [**List all members: `list`**](UserGuide.html#show-all-members-list) — restore the complete roster and reset searches and filters.
 * [**Select a subset: `show`**](UserGuide.html#show-selected-members-show) — keep only selected members from the displayed list.
 * [**Search names: `find`**](UserGuide.html#find-members-find) — match partial name words, ignoring letter case.
-* [**Search email addresses: `findemail`**](UserGuide.html#find-members-by-email-findemail) — find a full address or an email fragment across the roster.
+* [**Search email addresses: `findemail`**](UserGuide.html#find-members-by-email-findemail) — narrow displayed members by a full address or an email fragment.
 * [**Filter by tag: `filter`**](UserGuide.html#filter-displayed-members-by-tag-filter) — narrow the displayed members; combine successive filters to find overlapping groups.
 * [**Sort by name: `sort`**](UserGuide.html#sort-members-by-name-sort) — show the current results in case-insensitive A–Z order.
 
@@ -63,7 +63,7 @@ with [keyboard shortcuts](UserGuide.html#read-the-interface) for selecting membe
 
 ### Exchange rosters with CSV
 
-* [**Export a roster: `export`**](UserGuide.html#export-members-to-csv-export) — write every member, including hidden members, to a CSV file.
+* [**Export members: `export`**](UserGuide.html#export-members-to-csv-export) — write displayed members to CSV in displayed order; run `list` first to include everyone.
 * [**Import member records: `import`**](UserGuide.html#import-members-from-csv-import) — validate a complete CSV file, append unique members, and report skipped duplicates.
 
 ### Remove member records

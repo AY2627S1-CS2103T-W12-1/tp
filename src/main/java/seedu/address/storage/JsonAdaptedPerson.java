@@ -106,7 +106,8 @@ class JsonAdaptedPerson {
         if (address == null) {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, Address.class.getSimpleName()));
         }
-        // An empty address means none was given, but an address of only spaces is rejected, as in commands.
+        // Trim surrounding whitespace, including line breaks, as commands do; reject internal line breaks.
+        // An empty address means none was given, but whitespace-only input remains invalid.
         final String trimmedAddress = address.trim();
         final boolean isSpacesOnlyAddress = trimmedAddress.isEmpty() && !address.isEmpty();
         final boolean hasLineBreak = trimmedAddress.contains("\n") || trimmedAddress.contains("\r");

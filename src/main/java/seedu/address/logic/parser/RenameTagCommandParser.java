@@ -1,7 +1,5 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-
 import java.util.List;
 
 import seedu.address.logic.commands.RenameTagCommand;
@@ -15,6 +13,9 @@ public class RenameTagCommandParser implements Parser<RenameTagCommand> {
 
     public static final String MESSAGE_CURRENT_TAG_PREFIX = "Current tag: ";
     public static final String MESSAGE_NEW_TAG_PREFIX = "New tag: ";
+
+    public static final String MESSAGE_TAG_COUNT =
+            "Expected two t/TAG parameters (current tag, then new tag), but received %d.";
 
     /** The current tag and the new tag. */
     private static final int REQUIRED_TAG_COUNT = 2;
@@ -30,7 +31,8 @@ public class RenameTagCommandParser implements Parser<RenameTagCommand> {
         List<String> tagValues = BulkTagArgumentParser.parseTagValues(args, RenameTagCommand.MESSAGE_USAGE);
 
         if (tagValues.size() != REQUIRED_TAG_COUNT) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, RenameTagCommand.MESSAGE_USAGE));
+            throw new ParseException(String.format(MESSAGE_TAG_COUNT, tagValues.size())
+                    + "\n" + RenameTagCommand.MESSAGE_USAGE);
         }
 
         Tag oldTag = parseTag(tagValues.get(0), MESSAGE_CURRENT_TAG_PREFIX);

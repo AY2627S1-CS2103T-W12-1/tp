@@ -44,7 +44,7 @@ The automated suite includes these types of tests:
 Expected results come from the [User Guide](UserGuide.html#import-members-from-csv-import) and
 [user stories](DeveloperGuide.html#user-stories), rather than from observed implementation behaviour.
 `UserCsvWorkflowTest` exercises typed commands, real CSV fixtures, saved files, and fresh storage sessions.
-It covers sharing the whole roster while searching, restoring exported data, hidden duplicates,
+It covers sharing only displayed members while searching, restoring exported data, hidden duplicates,
 documented field boundaries, rejected imports preserving the view and files, and retrying an unsaved batch.
 Its CSV expectations are written independently of the exporter, and its feedback expectations do not use
 production message constants. A failure against a documented promise must be investigated as a possible bug;
