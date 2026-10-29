@@ -349,6 +349,120 @@ header {
   margin-block: 24px;
 }
 
+/* Give the User Guide a clear reading hierarchy without changing other guides. */
+#content-wrapper:has(> #user-guide) {
+  line-height: 1.75;
+}
+
+#content-wrapper:has(> #user-guide) h2 {
+  margin-top: 56px;
+  padding: 14px 18px;
+  border: 0;
+  border-left: 3px solid #9a4a10;
+  background: #faf6f1;
+}
+
+#content-wrapper:has(> #user-guide) h3 {
+  margin-top: 36px;
+}
+
+#content-wrapper .ug-command {
+  margin-top: 36px;
+  padding-top: 22px;
+  border-top: 1px solid #cbd5e1;
+}
+
+#content-wrapper .ug-command h4 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.15rem;
+}
+
+#content-wrapper .ug-topic {
+  margin: 24px 0 10px;
+  color: #263244;
+  font-weight: 700;
+}
+
+#content-wrapper:has(> #user-guide) ul,
+#content-wrapper:has(> #user-guide) ol {
+  padding-left: 1.5rem;
+  margin-bottom: 22px;
+}
+
+#content-wrapper:has(> #user-guide) li {
+  padding-left: 0.2rem;
+}
+
+#content-wrapper:has(> #user-guide) li + li {
+  margin-top: 10px;
+}
+
+#content-wrapper:has(> #user-guide) li > p {
+  margin-bottom: 8px;
+}
+
+#content-wrapper:has(> #user-guide) li > :last-child {
+  margin-bottom: 0;
+}
+
+#content-wrapper:has(> #user-guide) li::marker {
+  color: #705036;
+  font-weight: 700;
+}
+
+#content-wrapper:has(> #user-guide) :not(pre) > code {
+  padding: 2px 4px;
+  border-radius: 3px;
+  background: #edf3f8;
+  color: #174e70;
+}
+
+#content-wrapper:has(> #user-guide) blockquote {
+  margin: 24px 0;
+  padding: 14px 18px;
+  border-left: 3px solid #ad712e;
+  background: #fff8ed;
+  color: #263244;
+}
+
+#content-wrapper:has(> #user-guide) blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+#content-wrapper:has(> #user-guide) table th {
+  background: #edf2f7;
+}
+
+#content-wrapper:has(> #user-guide) table td:first-child {
+  font-weight: 600;
+}
+
+#content-wrapper:has(> #user-guide) table tr:nth-child(even) td {
+  background: #f8fafc;
+}
+
+#content-wrapper:has(> #user-guide) p:has(> img) + p:has(> em) {
+  margin-top: -12px;
+  color: #526175;
+  font-size: 0.9rem;
+}
+
+@media screen and (max-width: 575.98px) {
+  #content-wrapper:has(> #user-guide) h2 {
+    padding: 12px;
+  }
+
+  #content-wrapper:has(> #user-guide) blockquote {
+    padding: 12px;
+  }
+
+  #content-wrapper:has(> #user-guide) th,
+  #content-wrapper:has(> #user-guide) td {
+    padding: 10px;
+  }
+}
+
 .team-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
