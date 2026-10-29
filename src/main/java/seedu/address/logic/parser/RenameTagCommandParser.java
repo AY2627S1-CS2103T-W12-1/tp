@@ -13,6 +13,9 @@ import seedu.address.model.tag.Tag;
  */
 public class RenameTagCommandParser implements Parser<RenameTagCommand> {
 
+    /** The current tag and the new tag. */
+    private static final int REQUIRED_TAG_COUNT = 2;
+
     /**
      * Parses {@code args} into a renametag command with exactly two valid tags.
      *
@@ -23,7 +26,7 @@ public class RenameTagCommandParser implements Parser<RenameTagCommand> {
     public RenameTagCommand parse(String args) throws ParseException {
         List<String> tagValues = BulkTagArgumentParser.parseTagValues(args, RenameTagCommand.MESSAGE_USAGE);
 
-        if (tagValues.size() != 2) {
+        if (tagValues.size() != REQUIRED_TAG_COUNT) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, RenameTagCommand.MESSAGE_USAGE));
         }
 

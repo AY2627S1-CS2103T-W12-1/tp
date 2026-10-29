@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
@@ -17,7 +18,7 @@ import seedu.address.model.tag.Tag;
 /**
  * Parses the single {@code t/TAG} argument shared by the bulk tag commands.
  */
-public class BulkTagArgumentParser {
+public final class BulkTagArgumentParser {
     public static final String MESSAGE_EMPTY_TAG = "Tag cannot be empty.";
     public static final String MESSAGE_INVALID_TAG = Tag.MESSAGE_CONSTRAINTS + ".";
     public static final String MESSAGE_MULTIPLE_TAGS = "Only one tag can be applied per command.";
@@ -81,7 +82,7 @@ public class BulkTagArgumentParser {
      * @throws ParseException If {@code tagName} is empty or invalid.
      */
     public static Tag parseTagName(String tagName) throws ParseException {
-        requireAllNonNull(tagName);
+        requireNonNull(tagName);
         if (tagName.isEmpty()) {
             throw new ParseException(MESSAGE_EMPTY_TAG);
         }

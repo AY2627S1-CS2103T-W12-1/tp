@@ -112,7 +112,7 @@ public class LogicManager implements Logic {
         String message = confirmation instanceof ClearCommand
                 ? ClearCommand.MESSAGE_CANCELLED
                 : ConfirmDeleteCommand.MESSAGE_CANCELLED;
-        String firstWord = input.split("\\s+", 2)[0];
+        String firstWord = input.split("\\s+")[0];
         if (CommandHelp.find(firstWord).isPresent()) {
             message += String.format(ConfirmDeleteCommand.MESSAGE_INPUT_NOT_RUN, input);
         }
