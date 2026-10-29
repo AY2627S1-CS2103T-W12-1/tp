@@ -2,9 +2,11 @@ package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -18,10 +20,12 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
+import seedu.address.storage.CsvAddressBookImporter;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -46,6 +50,74 @@ public class UserCsvWorkflowTest {
         logic = logicFor(model, rosterFile);
         logic.execute("add n/Zulu p/00123 e/zulu@example.com t/old");
         logic.execute("add n/Alice p/456 e/alice@example.com a/Block 1, \"Main\" Street t/z t/A");
+    }
+
+    @Test
+    public void import_corruptOrDisguisedFiles_preservesRosterViewAndSavedFiles() throws Exception {
+        logic.execute("filter t/old");
+        logic.execute("sort");
+        AddressBook before = new AddressBook(model.getAddressBook());
+        var displayed = List.copyOf(model.getFilteredPersonList());
+        var filters = List.copyOf(model.getActiveFilters());
+        byte[] saved = Files.readAllBytes(rosterFile);
+        Path backup = JsonAddressBookStorage.getBackupFilePath(rosterFile);
+        byte[] savedBackup = Files.readAllBytes(backup);
+        List<byte[]> corruptFiles = List.of(
+                new byte[] {(byte) 0x89, 'P', 'N', 'G', 13, 10, 26, 10},
+                "PK\u0003\u0004not a spreadsheet CSV".getBytes(StandardCharsets.UTF_8),
+                "<html><body>not CSV</body></html>".getBytes(StandardCharsets.UTF_8),
+                utf8(HEADER + "Bob,789,bob@example.com,Home,\n\"unterminated"),
+                utf8(HEADER + "Bob,789,bob@example.com,Home,\nBad,12,bad@example.com,Home,\n"));
+        for (int index = 0; index < corruptFiles.size(); index++) {
+            Path source = directory.resolve("disguised-" + index + ".csv");
+            byte[] input = corruptFiles.get(index);
+            Files.write(source, input);
+            CommandException error = assertThrows(CommandException.class, () ->
+                    logic.execute("import p/\"" + source + "\""));
+            assertTrue(error.getMessage().contains("No members were imported."));
+            assertEquals(before, model.getAddressBook());
+            assertEquals(displayed, model.getFilteredPersonList());
+            assertEquals(filters, model.getActiveFilters());
+            assertArrayEquals(saved, Files.readAllBytes(rosterFile));
+            assertArrayEquals(savedBackup, Files.readAllBytes(backup));
+            assertArrayEquals(input, Files.readAllBytes(source));
+        }
+        Path typo = directory.resolve("members.cvs");
+        Files.writeString(typo, HEADER);
+        assertThrows(ParseException.class, () -> logic.execute("import p/\"" + typo + "\""));
+        assertFalse(model.getFilteredPersonList().isEmpty());
+        assertArrayEquals(saved, Files.readAllBytes(rosterFile));
+    }
+
+    @Test
+    public void import_overLimit_preservesRosterFiltersAndSavedFiles() throws Exception {
+        logic.execute("filter t/old");
+        logic.execute("sort");
+        AddressBook before = new AddressBook(model.getAddressBook());
+        var displayed = List.copyOf(model.getFilteredPersonList());
+        var filters = List.copyOf(model.getActiveFilters());
+        byte[] saved = Files.readAllBytes(rosterFile);
+        Path backup = JsonAddressBookStorage.getBackupFilePath(rosterFile);
+        byte[] savedBackup = Files.readAllBytes(backup);
+        Path oversized = directory.resolve("oversized.csv");
+        try (java.io.RandomAccessFile output = new java.io.RandomAccessFile(oversized.toFile(), "rw")) {
+            output.setLength(CsvAddressBookImporter.MAX_FILE_BYTES + 1L);
+        }
+        Path tooManyRows = directory.resolve("many-rows.csv");
+        Files.writeString(tooManyRows, HEADER + "Bob,789,bob@example.com,Home,\n"
+                .repeat(CsvAddressBookImporter.MAX_MEMBER_ROWS + 1));
+        for (Path source : List.of(oversized, tooManyRows)) {
+            CommandException error = assertThrows(CommandException.class, () ->
+                    logic.execute("import p/\"" + source + "\""));
+            String reason = source.equals(oversized) ? CsvAddressBookImporter.MESSAGE_FILE_TOO_LARGE
+                    : CsvAddressBookImporter.MESSAGE_TOO_MANY_ROWS;
+            assertEquals("Could not import CSV: " + reason + " No members were imported.", error.getMessage());
+            assertEquals(before, model.getAddressBook());
+            assertEquals(displayed, model.getFilteredPersonList());
+            assertEquals(filters, model.getActiveFilters());
+            assertArrayEquals(saved, Files.readAllBytes(rosterFile));
+            assertArrayEquals(savedBackup, Files.readAllBytes(backup));
+        }
     }
 
     @Test
@@ -76,6 +148,7 @@ public class UserCsvWorkflowTest {
         // Updated UG explicitly includes clear on an already-empty roster in backup preservation.
         AddressBook original = new AddressBook(model.getAddressBook());
         logic.execute("clear");
+        logic.execute("yes");
         assertEquals(original, rosterStorage.readBackup().orElseThrow());
         byte[] previousDistinct = Files.readAllBytes(JsonAddressBookStorage.getBackupFilePath(rosterFile));
 
@@ -179,8 +252,8 @@ public class UserCsvWorkflowTest {
         // UG field rules and whole-file validation: no partial import and no view changes on rejection.
         List<String> invalidRows = List.of(
                 ",123,a@example.com,Home,", "Al!ce,123,a@example.com,Home,",
-                "\u674e,123,a@example.com,Home,", "Alice,12,a@example.com,Home,",
-                "Alice,\u0661\u0662\u0663,a@example.com,Home,", "Alice,123 456,a@example.com,Home,",
+                "\u0301,123,a@example.com,Home,", "Alice,12,a@example.com,Home,",
+                "Alice,\u0661\u0662\u0663,a@example.com,Home,", "Alice,123-456,a@example.com,Home,",
                 "Alice,123,a..b@example.com,Home,", "Alice,123,a@-example.com,Home,",
                 "Alice,123,a@example.c,Home,", "Alice,123,a@example.com,Home," + "x".repeat(31),
                 "Alice,123,a@example.com,Home,two words", "Alice,123,a@example.com,Home,tag;",
@@ -252,5 +325,9 @@ public class UserCsvWorkflowTest {
 
     private static Set<String> tags(Person person) {
         return person.getTags().stream().map(tag -> tag.tagName).collect(Collectors.toSet());
+    }
+
+    private static byte[] utf8(String value) {
+        return value.getBytes(StandardCharsets.UTF_8);
     }
 }

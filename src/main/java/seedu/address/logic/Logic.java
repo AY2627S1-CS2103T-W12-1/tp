@@ -24,21 +24,15 @@ public interface Logic {
     CommandResult execute(String commandText) throws CommandException, ParseException;
 
     /**
-     * Returns true if the next input confirms or cancels a pending deletion instead of running as a command.
+     * Returns true if the next input confirms or cancels a pending destructive command instead of running as a command.
      */
     boolean isAwaitingConfirmation();
 
     /** Returns an unmodifiable view of the filtered list of persons */
     ObservableList<Person> getFilteredPersonList();
 
-    /** Returns the removable name and tag filters in application order. */
+    /** Returns removable display conditions in application order. */
     List<ActiveFilter> getActiveFilters();
-
-    /** Returns the number of active {@code show} selections. */
-    int getActiveShowSelectionCount();
-
-    /** Clears all {@code show} selections without changing other filters or saved data. */
-    void clearShowSelections();
 
     /** Removes one active filter without changing the saved roster. */
     void removeActiveFilter(ActiveFilter filter);

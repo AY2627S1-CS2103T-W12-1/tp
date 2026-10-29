@@ -76,7 +76,8 @@ public class FilterCommandTest {
 
             assertEquals("1 member(s) listed with tags \"friends\", \"owesMoney\".",
                     stackedResult.getFeedbackToUser());
-            assertEquals(stackedResult.getFeedbackToUser(), repeatedResult.getFeedbackToUser());
+            assertEquals("Tag \"owesMoney\" is already an active filter. No changes were made.\n"
+                    + stackedResult.getFeedbackToUser(), repeatedResult.getFeedbackToUser());
             assertEquals(List.of(
                     "filter t/friends: 3 member(s) displayed; active tag filters (1): \"friends\"; "
                             + "name searches are not included",
@@ -87,6 +88,22 @@ public class FilterCommandTest {
                     logs.getInfoMessages());
         }
         assertEquals(List.of(BENSON), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_repeatedTagWithDifferentCase_reportsActiveSpellingAndPreservesView() {
+        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        new FilterCommand(friends).execute(model);
+        new FilterCommand(new Tag("owesMoney")).execute(model);
+        List<?> filtersBefore = model.getActiveFilters();
+        List<?> displayedBefore = List.copyOf(model.getFilteredPersonList());
+
+        CommandResult result = new FilterCommand(new Tag("OWESMONEY")).execute(model);
+
+        assertEquals("Tag \"owesMoney\" is already an active filter. No changes were made.\n"
+                + "1 member(s) listed with tags \"friends\", \"owesMoney\".", result.getFeedbackToUser());
+        assertEquals(filtersBefore, model.getActiveFilters());
+        assertEquals(displayedBefore, model.getFilteredPersonList());
     }
 
     @Test

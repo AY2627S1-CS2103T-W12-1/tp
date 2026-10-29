@@ -58,7 +58,7 @@ public class ConfirmDeleteCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_sameAndDifferentTargets_returnsCorrectResult() {
         ConfirmDeleteCommand deleteAlice = new ConfirmDeleteCommand(ALICE);
 
         assertTrue(deleteAlice.equals(deleteAlice));
@@ -70,7 +70,7 @@ public class ConfirmDeleteCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_validCommand_containsTarget() {
         String expected = ConfirmDeleteCommand.class.getCanonicalName() + "{target=" + ALICE + "}";
         assertEquals(expected, new ConfirmDeleteCommand(ALICE).toString());
     }
