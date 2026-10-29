@@ -687,7 +687,7 @@ their tag argument.
    copy of its tag set and call `Model#setPerson`. Other targets are skipped. Hidden members are never visited.
 4. Report the changed count, and the skipped count when it is non-zero, for example
    `Added tag "committee" to 9 member(s). 3 already had this tag.` or
-   `Removed tag "committee" from 0 member(s). 3 did not have this tag.`
+   `Removed tag "committee" (any letter case) from 0 member(s). 3 did not have this tag.`
 
 Neither command changes the search predicate or name sorting, so the current view stays applied after the
 batch. Tags are not part of a member's identity, so an update can never create a duplicate member.

@@ -754,7 +754,7 @@ public class MainWindowTest {
             enter("tagall t/year2");
             assertEquals("Added tag \"year2\" to 2 member(s).", feedback.getText());
             enter("untagall t/committee");
-            assertEquals("Removed tag \"committee\" from 2 member(s).", feedback.getText());
+            assertEquals("Removed tag \"committee\" (any letter case) from 2 member(s).", feedback.getText());
             assertDisplayedNames();
             enter("list");
             assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");

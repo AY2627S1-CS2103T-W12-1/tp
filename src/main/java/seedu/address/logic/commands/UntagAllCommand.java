@@ -25,7 +25,7 @@ public class UntagAllCommand extends Command {
             + "Members who do not have the tag are skipped.\n"
             + "Parameters: t/TAG\n"
             + "Example: " + COMMAND_WORD + " t/committee";
-    public static final String MESSAGE_SUCCESS = "Removed tag \"%1$s\" from %2$d member(s).";
+    public static final String MESSAGE_SUCCESS = "Removed tag \"%1$s\" (any letter case) from %2$d member(s).";
     public static final String MESSAGE_NOT_TAGGED = " %1$d did not have this tag.";
     public static final String MESSAGE_EMPTY_LIST = "There are no members in the current list to update.";
 

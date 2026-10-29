@@ -378,7 +378,7 @@ Members who already have the tag (for `tagall`) or do not have it (for `untagall
 The result reports both counts:
 
 * `Added tag "committee" to 9 member(s). 3 already had this tag.`
-* `Removed tag "committee" from 12 member(s).`
+* `Removed tag "committee" (any letter case) from 12 member(s).`
 
 The current search, filters, and sorting stay applied after the update.
 If you remove the tag used by the active filter, the updated members disappear from view
