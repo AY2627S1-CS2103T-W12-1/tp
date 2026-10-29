@@ -731,7 +731,8 @@ and `updateTags`, which adds or removes the tag.
 
 1. Copy `Model#getFilteredPersonList()` into a new list. This fixes the target set before any update.
    The copy matters because each update refreshes the displayed list. For example, removing the tag used by an
-   active filter hides the updated member immediately.
+   active single-tag filter hides the updated member immediately. A member stays visible if they still satisfy
+   every active condition, for example by matching another alternative in a `filter t/a t/b` group.
 2. Reject an empty target set with `There are no members in the current list to update. Run list to show everyone,
    or use find or filter to choose a group.`
 3. For each target that lacks the tag (`tagall`) or has it (`untagall`), build a new `Person` with an updated

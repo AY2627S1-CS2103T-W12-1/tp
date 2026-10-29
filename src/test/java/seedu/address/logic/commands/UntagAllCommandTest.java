@@ -10,13 +10,17 @@ import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.DANIEL;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.Model;
+import seedu.address.model.ModelManager;
+import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
+import seedu.address.testutil.AddressBookBuilder;
 import seedu.address.testutil.PersonBuilder;
 
 public class UntagAllCommandTest extends BulkTagCommandTest<UntagAllCommand> {
@@ -61,6 +65,23 @@ public class UntagAllCommandTest extends BulkTagCommandTest<UntagAllCommand> {
         // The filter stays applied, so the updated members are hidden but still stored.
         assertTrue(model.getFilteredPersonList().isEmpty());
         assertEquals(7, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
+    public void execute_removeTagUsedByFilterGroup_keepsMembersMatchingAnotherAlternative() throws Exception {
+        Model model = new ModelManager(new AddressBookBuilder()
+                .withPerson(new PersonBuilder().withName("Pat Both").withTags("committee", "alumni").build())
+                .withPerson(new PersonBuilder().withName("Lee Committee").withTags("committee").build())
+                .build(), new UserPrefs());
+        new FilterCommand(List.of(new Tag("committee"), new Tag("alumni"))).execute(model);
+
+        new UntagAllCommand(new Tag("committee")).execute(model);
+
+        // Pat still matches through alumni; Lee has no alternative left, so is hidden but stays stored.
+        assertEquals(List.of("Pat Both"),
+                model.getFilteredPersonList().stream().map(person -> person.getName().fullName).toList());
+        assertEquals(2, model.getAddressBook().getPersonList().size());
+        assertEquals(List.of(new Tag("committee"), new Tag("alumni")), model.getActiveTagFilters());
     }
 
     @Test

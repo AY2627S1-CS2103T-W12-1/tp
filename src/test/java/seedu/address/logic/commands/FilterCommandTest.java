@@ -57,6 +57,32 @@ public class FilterCommandTest {
     }
 
     @Test
+    public void execute_memberWithEveryAlternative_appearsOnce() {
+        Model model = new ModelManager(new AddressBookBuilder()
+                .withPerson(new PersonBuilder().withName("Pat Both").withTags("committee", "alumni").build())
+                .withPerson(new PersonBuilder().withName("Lee Committee").withTags("committee").build())
+                .build(), new UserPrefs());
+
+        CommandResult result = new FilterCommand(List.of(new Tag("committee"), new Tag("alumni"))).execute(model);
+
+        assertEquals("2 member(s) listed with tags \"committee\" / \"alumni\".", result.getFeedbackToUser());
+        assertEquals(List.of("Pat Both", "Lee Committee"), displayedNames(model));
+    }
+
+    @Test
+    public void execute_groupThenSameTagSeparately_listsEachConditionAndRequiresBoth() {
+        Model model = clubModel();
+        new FilterCommand(List.of(new Tag("committee"), new Tag("alumni"))).execute(model);
+
+        CommandResult result = new FilterCommand(new Tag("committee")).execute(model);
+
+        assertEquals("1 member(s) listed with tags \"committee\" / \"alumni\", \"committee\".",
+                result.getFeedbackToUser());
+        assertEquals(List.of("Tag: committee / alumni", "Tag: committee"), activeLabels(model));
+        assertEquals(List.of("Pat Committee"), displayedNames(model));
+    }
+
+    @Test
     public void execute_sameTagsReordered_reportsExistingFilterWithoutChange() {
         Model model = clubModel();
         new FilterCommand(List.of(new Tag("committee"), new Tag("alumni"))).execute(model);

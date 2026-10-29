@@ -469,6 +469,27 @@ public class MainWindowTest {
     }
 
     @Test
+    public void activeFilterChips_tagGroup_showsAlternativesAndRemovesTogetherKeepingOtherConditions()
+            throws Exception {
+        onJavaFxThread(() -> {
+            Person alice = model.getAddressBook().getPersonList().get(0);
+            Person bob = model.getAddressBook().getPersonList().get(1);
+            model.setPerson(alice, new PersonBuilder(alice).withTags("classA").build());
+            model.setPerson(bob, new PersonBuilder(bob).withTags("team").build());
+            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+
+            enter("filter t/classA t/team");
+            enter("find Alice");
+
+            assertEquals(List.of("Tag: classA / team", "Name: Alice"), chipLabels(chips));
+            assertDisplayedNames("Alice Tan");
+            removeChip(chips, 0);
+            assertEquals(List.of("Name: Alice"), chipLabels(chips));
+            assertDisplayedNames("Alice Tan");
+        });
+    }
+
+    @Test
     public void activeFilterChips_removeIndividualFiltersAndUpdateDisplayedMembers() throws Exception {
         onJavaFxThread(() -> {
             Person alice = model.getAddressBook().getPersonList().get(0);

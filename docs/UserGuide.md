@@ -246,9 +246,12 @@ stays the same, and their displayed numbers update.
   A new `findemail` also narrows these results by email, retaining previous conditions.
 
 The result reports `N member(s) listed with tag "TAG".` for one active tag filter. With multiple
-active tags, it names every distinct tag in the order applied, for example:
+active tags, it lists each active tag condition in the order applied, for example:
 `1 member(s) listed with tags "committee", "year1".` Tags that came from one command are joined with `/`,
-for example `2 member(s) listed with tags "committee" / "alumni".` Use `list` to clear all active conditions.
+for example `2 member(s) listed with tags "committee" / "alumni".` Repeats are removed within one condition
+only, so `filter t/committee t/alumni` followed by `filter t/committee` lists
+`"committee" / "alumni", "committee"`: both conditions are active and must hold. Use `list` to clear all
+active conditions.
 No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
 
 Check the displayed numbers before using `edit`, `tag`, `untag`, or `delete`. Editing keeps the active search and filters.
@@ -428,10 +431,13 @@ When every displayed member is skipped, the result ends with `No changes were ma
 `Added tag "committee" to 0 member(s). 12 already had this tag (any letter case). No changes were made.`
 
 The current search, filters, and sorting stay applied after the update.
-If you remove the tag used by the active filter, the updated members disappear from view
+If you remove the tag used by an active single-tag filter, the updated members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
 The result then also reports the current list, for example
 `0 member(s) listed with tag "committee". Run list to show everyone.`
+Updated members disappear only if they no longer satisfy **all** active conditions. With a filter group such as
+`filter t/committee t/alumni`, a member can stay visible by matching another alternative: after
+`untagall t/committee`, a member who also has `alumni` remains in the list.
 
 Supply exactly one tag of 1 to 30 ASCII letters or digits with optional internal hyphens. Spaces around the tag
 are ignored, and matching ignores letter case. Missing `t/`, empty tags, invalid tags, more than one tag, and
@@ -469,10 +475,12 @@ If hidden members still have the current tag after the update, the result says s
 `2 hidden member(s) still have "friends". Run list, then renametag again to rename it for everyone.`
 
 The current search, filters, and sorting stay applied after the update.
-If you rename the tag used by the active filter, the renamed members disappear from view
+If you rename the tag used by an active single-tag filter, the renamed members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
 The result then also reports the current list, for example
 `0 member(s) listed with tag "batch2026". Run list to show everyone.`
+Renamed members disappear only if they no longer satisfy **all** active conditions. With a filter group such as
+`filter t/batch2026 t/alumni`, a member who still matches another alternative stays visible.
 
 Supply exactly two tags, each after `t/`, with 1 to 30 characters using ASCII letters or digits and
 optional internal hyphens.

@@ -121,8 +121,10 @@ public enum CommandHelp {
             "Removes one tag from every member in the current list. Hidden members and other tags stay unchanged.",
             "Removes committee from each displayed member, skips members without it, and reports both counts "
                     + "after saving.",
-            "Use find or filter first to choose the group, then check the list. Removing the tag used by an active "
-                    + "filter hides the updated members; use list to show everyone again.",
+            "Use find or filter first to choose the group, then check the list. Updated members disappear only if "
+                    + "they no longer satisfy all active conditions. Removing the tag of a single-tag filter hides "
+                    + "them, but a member can stay visible by matching another tag in a filter group. Use list to "
+                    + "show everyone again.",
             "Supply exactly one tag after t/. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
@@ -143,8 +145,10 @@ public enum CommandHelp {
                     + "changed after saving.",
             "Tags match regardless of letter case. Run list first to rename for everyone, for example before "
                     + "renametag t/committee t/Committee to standardize capitalization. A member with both "
-                    + "distinct tags keeps only the replacement. Renaming the tag used by an active filter hides "
-                    + "the updated members; use list to show everyone again.",
+                    + "distinct tags keeps only the replacement. Updated members disappear only if they no longer "
+                    + "satisfy all active conditions: renaming the tag of a single-tag filter hides them, but a "
+                    + "member can stay visible by matching another tag in a filter group. Use list to show "
+                    + "everyone again.",
             "Supply exactly two tags, each after t/. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Their spellings must differ. "
                     + "A current tag that no displayed member has is rejected without changes. If saving fails, "
