@@ -705,7 +705,8 @@ their tag argument.
 * An empty tag reports `Tag cannot be empty.`
 * More than one `t/` reports `Only one tag can be applied per command. Run the command once for each tag.`
 * Unsupported characters are named in the error, followed by the allowed ASCII letters, digits, and internal
-  single hyphens. Internal whitespace is described as `whitespace`.
+  single hyphens. A space, tab or other whitespace inside a tag reports `Tag cannot contain spaces. Use a hyphen
+  instead, e.g. year-1.` A double quote is shown escaped as `\"`.
 * Leading, trailing, and consecutive hyphens each report a specific error with `year-1` as a valid example.
 * Unsupported characters are checked before length, so non-ASCII code points are not misreported as
   overlong ASCII tags. Invisible control characters are shown as code points, for example `U+0000`.

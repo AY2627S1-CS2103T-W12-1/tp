@@ -427,6 +427,7 @@ and changes nothing.
 Unsupported characters are identified in the error. For example, `tagall t/year_1` reports
 `Tag contains unsupported character "_". Use letters (A-Z, a-z), digits (0-9), or internal hyphens (-), e.g. year-1.`
 Use `tagall t/year-1` if you intended a hyphen.
+A space inside a tag, as in `tagall t/year 1`, reports `Tag cannot contain spaces. Use a hyphen instead, e.g. year-1.`
 A leading or trailing hyphen reports `Tag cannot start with a hyphen (-).` or
 `Tag cannot end with a hyphen (-).`, followed by an example. Consecutive hyphens such as `year--1`
 report `Tag cannot contain consecutive hyphens (--). Use a single hyphen, e.g. year-1.`

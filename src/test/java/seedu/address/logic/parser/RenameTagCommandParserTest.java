@@ -3,6 +3,7 @@ package seedu.address.logic.parser;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_EMPTY_TAG;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_TAG_TOO_LONG;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_UNSUPPORTED_CHARACTER;
+import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_WHITESPACE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -65,7 +66,7 @@ public class RenameTagCommandParserTest {
         assertParseFailure(parser, " t/ t/alumni", current + MESSAGE_EMPTY_TAG);
         assertParseFailure(parser, " t/batch2026 t/", added + MESSAGE_EMPTY_TAG);
         assertParseFailure(parser, " t/two words t/alumni",
-                current + String.format(MESSAGE_UNSUPPORTED_CHARACTER, "whitespace"));
+                current + MESSAGE_WHITESPACE);
         assertParseFailure(parser, " t/batch2026 t/hello!",
                 added + String.format(MESSAGE_UNSUPPORTED_CHARACTER, "!"));
         assertParseFailure(parser, " t/batch2026 t/" + "a".repeat(31),

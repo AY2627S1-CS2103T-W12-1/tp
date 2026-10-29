@@ -4,6 +4,7 @@ import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_EMPTY_TAG
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_MULTIPLE_TAGS;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_TAG_TOO_LONG;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_UNSUPPORTED_CHARACTER;
+import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_WHITESPACE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -67,7 +68,7 @@ public abstract class BulkTagCommandParserTest<T extends Command> {
     public void parse_invalidTagValue_rejectsCommand() {
         assertParseFailure(getParser(), " t/", MESSAGE_EMPTY_TAG);
         assertParseFailure(getParser(), " t/   ", MESSAGE_EMPTY_TAG);
-        assertParseFailure(getParser(), " t/two words", String.format(MESSAGE_UNSUPPORTED_CHARACTER, "whitespace"));
+        assertParseFailure(getParser(), " t/two words", MESSAGE_WHITESPACE);
         assertParseFailure(getParser(), " t/hello!", String.format(MESSAGE_UNSUPPORTED_CHARACTER, "!"));
         assertParseFailure(getParser(), " t/year_1", String.format(MESSAGE_UNSUPPORTED_CHARACTER, "_"));
         assertParseFailure(getParser(), " t/" + "a".repeat(31), String.format(MESSAGE_TAG_TOO_LONG, 31));

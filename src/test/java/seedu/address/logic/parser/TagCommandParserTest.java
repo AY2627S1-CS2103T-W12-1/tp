@@ -4,7 +4,7 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_EMPTY_TAG;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_MULTIPLE_TAGS;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_TAG_TOO_LONG;
-import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_UNSUPPORTED_CHARACTER;
+import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_WHITESPACE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -47,7 +47,7 @@ public class TagCommandParserTest {
     @Test
     public void parse_invalidTag_reportsTagError() {
         assertParseFailure(parser, "1 t/", MESSAGE_EMPTY_TAG);
-        assertParseFailure(parser, "1 t/two words", String.format(MESSAGE_UNSUPPORTED_CHARACTER, "whitespace"));
+        assertParseFailure(parser, "1 t/two words", MESSAGE_WHITESPACE);
         assertParseFailure(parser, "1 t/" + "a".repeat(31), String.format(MESSAGE_TAG_TOO_LONG, 31));
         assertParseFailure(parser, "1 t/a t/b", MESSAGE_MULTIPLE_TAGS);
     }

@@ -129,7 +129,7 @@ public class BulkTagArgumentParserTest {
         String guidance = ". Use letters (A-Z, a-z), digits (0-9), or internal hyphens (-), e.g. year-1.";
         assertParseRejected("Tag contains unsupported character \"_\"" + guidance, " t/year_1");
         assertParseRejected("Tag contains unsupported character \"!\"" + guidance, " t/hello!");
-        assertParseRejected("Tag contains unsupported character \"whitespace\"" + guidance, " t/year1 year2");
+        assertParseRejected("Tag contains unsupported character \"\\\"\"" + guidance, " t/year\"1");
         assertParseRejected("Tag contains unsupported character \"/\"" + guidance, " t/onex/two");
         assertParseRejected("Tag contains unsupported character \"é\"" + guidance, " t/café");
     }
@@ -139,6 +139,12 @@ public class BulkTagArgumentParserTest {
         String expected = "Tag contains unsupported character \"😀\". "
                 + "Use letters (A-Z, a-z), digits (0-9), or internal hyphens (-), e.g. year-1.";
         assertParseRejected(expected, " t/" + "😀".repeat(20), " t/" + "😀".repeat(31));
+    }
+
+    @Test
+    public void parse_spaceInsideTag_saysTagCannotContainSpaces() {
+        assertParseRejected(BulkTagArgumentParser.MESSAGE_WHITESPACE, " t/year1 year2", " t/year1\tyear2",
+                " t/year1\u00a0year2", " t/year1\u2003year2");
     }
 
     @Test

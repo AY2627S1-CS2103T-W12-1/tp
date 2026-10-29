@@ -23,6 +23,8 @@ public final class BulkTagArgumentParser {
     public static final String MESSAGE_INVALID_TAG = Tag.MESSAGE_CONSTRAINTS + ".";
     public static final String MESSAGE_UNSUPPORTED_CHARACTER = "Tag contains unsupported character \"%s\". "
             + "Use letters (A-Z, a-z), digits (0-9), or internal hyphens (-), e.g. year-1.";
+    public static final String MESSAGE_WHITESPACE =
+            "Tag cannot contain spaces. Use a hyphen instead, e.g. year-1.";
     public static final String MESSAGE_LEADING_HYPHEN =
             "Tag cannot start with a hyphen (-). Start with a letter or digit, e.g. year-1.";
     public static final String MESSAGE_TRAILING_HYPHEN =
@@ -144,18 +146,28 @@ public final class BulkTagArgumentParser {
                 .filter(character -> !isSupportedCharacter(character))
                 .findFirst();
         if (unsupportedCharacter.isPresent()) {
-            String description = describeCharacter(unsupportedCharacter.getAsInt());
-            throw new ParseException(String.format(MESSAGE_UNSUPPORTED_CHARACTER, description));
+            int character = unsupportedCharacter.getAsInt();
+            if (isSpace(character)) {
+                throw new ParseException(MESSAGE_WHITESPACE);
+            }
+            throw new ParseException(String.format(MESSAGE_UNSUPPORTED_CHARACTER, describeCharacter(character)));
         }
     }
 
-    /** Makes whitespace and invisible control characters readable in the error message. */
+    /** Returns whether a code point is a space, tab, line break or other whitespace. */
+    private static boolean isSpace(int character) {
+        return Character.isWhitespace(character) || Character.isSpaceChar(character);
+    }
+
+    /**
+     * Makes invisible control characters and the double quote readable inside the quoted error message.
+     */
     private static String describeCharacter(int character) {
-        if (Character.isWhitespace(character) || Character.isSpaceChar(character)) {
-            return "whitespace";
-        }
         if (Character.isISOControl(character) || Character.getType(character) == Character.FORMAT) {
             return String.format("U+%04X", character);
+        }
+        if (character == '"') {
+            return "\\\"";
         }
         return new String(Character.toChars(character));
     }
