@@ -7,11 +7,12 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TagTestUtil.addTagToDisplayed;
+import static seedu.address.testutil.TagTestUtil.assertCommandSuccessWithLog;
+import static seedu.address.testutil.TagTestUtil.createTypicalModel;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.CARL;
 import static seedu.address.testutil.TypicalPersons.DANIEL;
-import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -19,8 +20,6 @@ import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.Model;
-import seedu.address.model.ModelManager;
-import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.LogCapture;
@@ -50,8 +49,8 @@ public class TagAllCommandTest {
 
     @Test
     public void execute_noDisplayedMemberHasTag_addsTagToAll() {
-        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Model model = createTypicalModel();
+        Model expectedModel = createTypicalModel();
         addTagToDisplayed(expectedModel, "committee");
         String expectedMessage = "Added tag \"committee\" to 7 member(s).";
 
@@ -64,41 +63,31 @@ public class TagAllCommandTest {
 
     @Test
     public void execute_someDisplayedMembersHaveTag_skipsThem() {
-        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Model model = createTypicalModel();
+        Model expectedModel = createTypicalModel();
         addTagToDisplayed(expectedModel, "friends");
         String expectedMessage = "Added tag \"friends\" to 4 member(s). 3 already had this tag.";
 
-        try (LogCapture logs = new LogCapture(TagAllCommand.class)) {
-            assertCommandSuccess(new TagAllCommand(friends), model, expectedMessage, expectedModel);
-            assertEquals(List.of("tagall t/friends: updated 4 of 7 displayed member(s), skipped 3"),
-                    logs.getInfoMessages());
-        }
+        assertCommandSuccessWithLog(new TagAllCommand(friends), model, expectedMessage, expectedModel,
+                "tagall t/friends: updated 4 of 7 displayed member(s), skipped 3");
         assertTrue(model.getFilteredPersonList().contains(ALICE));
     }
 
     @Test
     public void execute_allDisplayedMembersHaveTag_changesNothing() {
-        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        model.filterFilteredPersonList(HAS_FRIENDS_TAG);
-        Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        expectedModel.filterFilteredPersonList(HAS_FRIENDS_TAG);
+        Model model = createTypicalModel(HAS_FRIENDS_TAG);
+        Model expectedModel = createTypicalModel(HAS_FRIENDS_TAG);
         String expectedMessage = "Added tag \"friends\" to 0 member(s). 3 already had this tag."
                 + " No changes were made.";
 
-        try (LogCapture logs = new LogCapture(TagAllCommand.class)) {
-            assertCommandSuccess(new TagAllCommand(friends), model, expectedMessage, expectedModel);
-            assertEquals(List.of("tagall t/friends: updated 0 of 3 displayed member(s), skipped 3"),
-                    logs.getInfoMessages());
-        }
+        assertCommandSuccessWithLog(new TagAllCommand(friends), model, expectedMessage, expectedModel,
+                "tagall t/friends: updated 0 of 3 displayed member(s), skipped 3");
     }
 
     @Test
     public void execute_filteredList_updatesOnlyDisplayedMembersAndKeepsFilter() {
-        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        model.filterFilteredPersonList(HAS_FRIENDS_TAG);
-        Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        expectedModel.filterFilteredPersonList(HAS_FRIENDS_TAG);
+        Model model = createTypicalModel(HAS_FRIENDS_TAG);
+        Model expectedModel = createTypicalModel(HAS_FRIENDS_TAG);
         addTagToDisplayed(expectedModel, "committee");
         String expectedMessage = "Added tag \"committee\" to 3 member(s).";
 
@@ -110,7 +99,7 @@ public class TagAllCommandTest {
 
     @Test
     public void execute_emptyDisplayedList_throwsCommandException() {
-        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Model model = createTypicalModel();
         model.updateFilteredPersonList(person -> false);
 
         try (LogCapture logs = new LogCapture(TagAllCommand.class)) {

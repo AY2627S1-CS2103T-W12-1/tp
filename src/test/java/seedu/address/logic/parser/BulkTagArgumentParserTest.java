@@ -17,6 +17,15 @@ import seedu.address.model.tag.Tag;
 public class BulkTagArgumentParserTest {
     private static final String USAGE = "tagall: Adds one tag to every displayed member.";
 
+    /**
+     * Asserts that parsing each of {@code inputs} throws a {@code ParseException} with {@code expectedMessage}.
+     */
+    private static void assertParseRejected(String expectedMessage, String... inputs) {
+        for (String input : inputs) {
+            assertThrows(ParseException.class, expectedMessage, () -> BulkTagArgumentParser.parse(input, USAGE));
+        }
+    }
+
     @Test
     public void parse_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> BulkTagArgumentParser.parse(null, USAGE));
@@ -53,30 +62,21 @@ public class BulkTagArgumentParserTest {
 
     @Test
     public void parse_missingPrefix_throwsUsageMessage() {
-        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, USAGE);
-        String[] inputs = {"", "   ", "committee", " x/committee", " T/committee"};
-        for (String input : inputs) {
-            assertThrows(ParseException.class, expected, () -> BulkTagArgumentParser.parse(input, USAGE));
-        }
+        assertParseRejected(String.format(MESSAGE_INVALID_COMMAND_FORMAT, USAGE),
+                "", "   ", "committee", " x/committee", " T/committee");
     }
 
     @Test
     public void parse_textBeforePrefix_throwsUsageMessage() {
-        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, USAGE);
-        String[] inputs = {" committee t/year1", " 1 t/year1", " x/a t/year1"};
-        for (String input : inputs) {
-            assertThrows(ParseException.class, expected, () -> BulkTagArgumentParser.parse(input, USAGE));
-        }
+        assertParseRejected(String.format(MESSAGE_INVALID_COMMAND_FORMAT, USAGE),
+                " committee t/year1", " 1 t/year1", " x/a t/year1");
     }
 
     @Test
     public void parse_otherFieldPrefix_throwsUsageMessage() {
-        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, USAGE);
-        String[] inputs = {" t/friend n/Bob", " t/friend p/91234567", " t/friend e/bob@example.com",
-            " t/friend a/Clementi", " t/friend\tn/Bob", " t/friend n/", " n/Bob t/friend", " t/a t/b n/Bob"};
-        for (String input : inputs) {
-            assertThrows(ParseException.class, expected, () -> BulkTagArgumentParser.parse(input, USAGE));
-        }
+        assertParseRejected(String.format(MESSAGE_INVALID_COMMAND_FORMAT, USAGE),
+                " t/friend n/Bob", " t/friend p/91234567", " t/friend e/bob@example.com", " t/friend a/Clementi",
+                " t/friend\tn/Bob", " t/friend n/", " n/Bob t/friend", " t/a t/b n/Bob");
     }
 
     @Test
@@ -87,18 +87,12 @@ public class BulkTagArgumentParserTest {
 
     @Test
     public void parse_multipleTags_throwsMultipleTagsMessage() {
-        for (String input : new String[] {" t/a t/b", " t/a t/", " t/ t/b", " t/a\tt/b"}) {
-            assertThrows(ParseException.class, MESSAGE_MULTIPLE_TAGS, () ->
-                    BulkTagArgumentParser.parse(input, USAGE));
-        }
+        assertParseRejected(MESSAGE_MULTIPLE_TAGS, " t/a t/b", " t/a t/", " t/ t/b", " t/a\tt/b");
     }
 
     @Test
     public void parse_emptyTag_throwsEmptyTagMessage() {
-        for (String input : new String[] {" t/", " t/   ", " t/\t"}) {
-            assertThrows(ParseException.class, MESSAGE_EMPTY_TAG, () ->
-                    BulkTagArgumentParser.parse(input, USAGE));
-        }
+        assertParseRejected(MESSAGE_EMPTY_TAG, " t/", " t/   ", " t/\t");
     }
 
     @Test
