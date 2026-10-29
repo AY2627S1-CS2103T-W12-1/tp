@@ -59,19 +59,23 @@ public enum CommandHelp {
                     + "editing or deleting. An edited member whose email no longer matches disappears from view.",
             "Supply at least one keyword. Matching uses literal text, not regular expressions, and searches "
                     + "email addresses only, not names or phone numbers. Searching does not save the roster."),
-    FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG", "filter t/committee",
-            "Shows currently displayed members with the specified tag without changing saved data.",
-            "Shows only members tagged committee, in their current order with new displayed numbers.",
-            "Matching ignores letter case. Adding another tag narrows the list further, and the result "
-                    + "names all active tags. Repeating an active tag leaves the view unchanged and reports "
-                    + "that no changes were made. Boxes appear left to right in command order, not matching priority. "
+    FILTER("Browse members", "filter", "Filter members by tag", "filter t/TAG [t/MORE_TAGS]...",
+            "filter t/committee t/alumni",
+            "Shows currently displayed members with any of the specified tags without changing saved data.",
+            "Shows only members tagged committee or alumni, in their current order with new numbers.",
+            "Matching ignores letter case. Tags in the same command mean or, and the box reads "
+                    + "Tag: committee / alumni. A separate filter command narrows the list further (and), "
+                    + "and the result names all active tags. Repeating an active filter leaves the view "
+                    + "unchanged and reports that no changes were made. A box names at most four tags, then "
+                    + "+N more; hover for the full list. In the result, a comma means and and a slash means "
+                    + "or. Boxes appear left to right in command order, not matching priority. "
                     + "Use a filter's X to remove it, or list to show everyone. Find also narrows the current results. "
                     + "Findemail also narrows the current results by email. "
                     + "Edit and delete use displayed numbers; "
                     + "editing keeps the active search and filters. Members that no longer match disappear from view.",
-            "Supply exactly one tag. " + Tag.MESSAGE_CONSTRAINTS + ". "
+            "Supply at least one tag, each after t/. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Empty tags, internal spaces, "
-                    + "multiple tags, and extra arguments are rejected."),
+                    + "and extra arguments are rejected, and one invalid tag rejects the whole command."),
     ADD("Manage members", "add", "Add a member",
             "add n/NAME p/PHONE e/EMAIL [a/ADDRESS] [t/TAG]...",
             "add n/Alice Tan p/91234567 e/alice@example.com a/12 Orchard Road t/committee",
@@ -120,8 +124,10 @@ public enum CommandHelp {
             "Removes one tag from every member in the current list. Hidden members and other tags stay unchanged.",
             "Removes committee from each displayed member, skips members without it, and reports both counts "
                     + "after saving.",
-            "Use find or filter first to choose the group, then check the list. Removing the tag used by an active "
-                    + "filter hides the updated members; use list to show everyone again.",
+            "Use find or filter first to choose the group, then check the list. Updated members disappear "
+                    + "only if they no longer satisfy all active conditions. Removing the tag of a single-tag "
+                    + "filter hides them, but a member can stay visible by matching another tag in a filter "
+                    + "group. Use list to show everyone again.",
             "Supply exactly one tag after t/. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
@@ -142,8 +148,10 @@ public enum CommandHelp {
                     + "changed after saving.",
             "Tags match regardless of letter case. Run list first to rename for everyone, for example before "
                     + "renametag t/committee t/Committee to standardize capitalization. A member with both "
-                    + "distinct tags keeps only the replacement. Renaming the tag used by an active filter hides "
-                    + "the updated members; use list to show everyone again.",
+                    + "distinct tags keeps only the replacement. Updated members disappear only if they no "
+                    + "longer satisfy all active conditions: renaming the tag of a single-tag filter hides "
+                    + "them, but a member can stay visible by matching another tag in a filter group. Use "
+                    + "list to show everyone again.",
             "Supply exactly two tags, each after t/. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Their spellings must differ. "
                     + "A current tag that no displayed member has is rejected without changes. If saving fails, "
