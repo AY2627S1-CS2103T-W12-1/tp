@@ -425,6 +425,9 @@ Every displayed committee member now also has the `event2026` tag.
 *With the sample members, `tagall t/event2026` tags the two committee members and reports
 `Added tag "event2026" to 2 member(s).`*
 
+To export the displayed committee members afterwards, run `export members.csv`.
+To export the entire roster, run `list` first.
+
 Members who already have the tag (for `tagall`) or do not have it (for `untagall`) are skipped.
 The result reports both counts:
 
@@ -512,11 +515,13 @@ There is no confirmation or undo. A valid command saves the roster.
 
 ### Exchange rosters with CSV {id="csv-files"}
 
-Export a complete roster or bring existing member records into TrackCall.
+Export displayed members or bring existing member records into TrackCall.
 
 #### Export members to CSV: `export`
 
-`export [FILEPATH]` writes every member to a UTF-8 CSV file, including members hidden by a search.
+`export [FILEPATH]` writes only the currently displayed members to a UTF-8 CSV file, in displayed order.
+Searches, tag filters, and `show` selections determine which members are exported; active `sort` determines
+their order. Run `list` first to export the complete roster in stored order.
 The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
 Tags for each member are sorted in case-sensitive ASCII order (hyphens, digits, uppercase letters, then lowercase letters)
 and joined with semicolons.
@@ -541,7 +546,10 @@ list and exports. On the next roster save, the other spellings are removed from 
 * A missing parent folder or a destination that is a folder produces an error explaining what to change.
   Create the parent folder first and choose a CSV filename. For write failures, check permissions and free disk space.
 * Export leaves the roster, current search, and automatic JSON data file unchanged.
-* An empty roster produces a file containing only the column headers.
+* An empty displayed list produces a file containing only the column headers, even if hidden members exist.
+* When members are hidden, feedback reports both counts, for example:
+  `Exported 3 displayed members to <path> (5 hidden members not exported).`
+  If all members are visible, the existing `Exported 8 members to <path>.` feedback is retained.
 
 Examples:
 
@@ -904,7 +912,7 @@ in memory.
 | Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every displayed member. |
 | Delete one member | `delete INDEX`, then `yes` | `delete 1`, then `yes`, removes the first currently displayed member. |
 | Clear the roster | `clear` | Run `clear`, then `yes` to remove all members, including hidden ones. `no` cancels. |
-| Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |
+| Export members | `export [FILEPATH]` | `export members.csv` writes displayed members to CSV in displayed order; run `list` first for everyone. |
 | Import members | `import p/FILE_PATH` | `import p/members.csv` appends unique valid records. |
 | Close the app | `exit` | `exit` ends the session. |
 

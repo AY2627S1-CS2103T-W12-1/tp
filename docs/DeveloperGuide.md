@@ -254,10 +254,10 @@ It depends on model classes because it saves and restores model objects.
 `ImportCommand` and `ExportCommand` use the CSV classes directly, not through `StorageManager`.
 `CsvAddressBookCsv` holds the CSV header and format shared by the importer and exporter.
 
-CSV export is implemented as a separate `CsvAddressBookExporter` in the `storage` package. `ExportCommand` supplies the
-complete roster and the destination path; the exporter writes a UTF-8 CSV file with a header row and
-one row per member. Apache Commons CSV handles RFC 4180 quoting and escaping. This export is a user-requested copy and
-does not replace or modify the JSON file used for automatic persistence.
+CSV export is implemented as a separate `CsvAddressBookExporter` in the `storage` package. `ExportCommand` supplies a
+snapshot of the currently displayed members, in displayed order, and the destination path; the exporter writes a
+UTF-8 CSV file with a header row and one row per member. Apache Commons CSV handles RFC 4180 quoting and escaping.
+This export is a user-requested copy and does not replace or modify the JSON file used for automatic persistence.
 
 `LogicManager` supplies the active roster and preferences paths to `ExportCommand`, which rejects destinations
 matching those files, their backups and recovery copies, the running JAR, or `.trackcall.lock`, including
@@ -544,7 +544,7 @@ An import-save failure leaves the imported batch in memory and preserves the pre
 
 ### CSV export
 
-![CSV export of the complete roster through an atomic file write](images/CsvExportSequenceDiagram.png)
+![CSV export of displayed members through an atomic file write](images/CsvExportSequenceDiagram.png)
 
 `ExportCommandParser` rejects double quotes in destination paths before any file is written, so exports do not
 produce filenames that `ImportCommandParser` cannot read. Spaces remain supported without surrounding quotes.
@@ -552,7 +552,10 @@ produce filenames that `ImportCommandParser` cannot read. Spaces remain supporte
 The sequence shows a successful export after command parsing. `LogicManager` supplies the active roster and preferences
 paths to `ExportCommand`, which checks the destination against protected application files before
 calling `CsvAddressBookExporter`. Path resolution also applies the shared file-location restrictions.
-The exporter writes every stored member, including those hidden by filters, in stored order.
+The command snapshots `model.getFilteredPersonList()` and exports only those members in displayed order,
+including active sorting. It counts hidden members against the complete roster and reports both counts when
+any are excluded. With everyone visible, existing success feedback is retained. An empty displayed list writes
+only the header. Run `list` first to export everyone in stored order.
 
 `FileUtil#writeAtomically` invokes the exporter's `FileWriter#write` callback with a sibling temporary file.
 Apache Commons CSV handles quoting and escaping; the writer closes before atomic replacement.
@@ -1746,14 +1749,15 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
    Run `filter t/committee`, then `sort`: only Alice and Zara appear. Try `sort date`; expect
    `Invalid command format. Usage: sort` with the view unchanged. The saved roster bytes and modification
    time must remain unchanged throughout these read-only checks.
-2. With the committee filter still active, run `export members.csv`. Expect three exported records,
-   including the hidden bob record, in stored order. Check the UTF-8 header and sorted semicolon-separated
-   tags, and confirm that automatic JSON storage and the displayed view are unchanged.
-3. Run `import p/members.csv` without clearing. Expect zero imported members and three skipped duplicates.
+2. With the committee filter still active, run `export members.csv`. Expect two exported records,
+   Alice then Zara in displayed sort order, with one hidden member reported as excluded. Check the UTF-8 header
+   and sorted semicolon-separated tags, and confirm that automatic JSON storage and the displayed view
+   are unchanged.
+3. Run `import p/members.csv` without clearing. Expect zero imported members and two skipped duplicates.
    The full roster is restored in stored order. Then run `clear`, confirm with `yes`, and run `import p/members.csv`.
-   Expect three imports and zero skipped duplicates. Restart and check every field and tag is retained.
+   Expect two imports and zero skipped duplicates, in Alice/Zara order. Restart and check every field and tag is retained.
 4. Copy `members.csv` to `member list.csv`, then run `import p/"member list.csv"`.
-   The quoted path must work and all three duplicates must be skipped. Try `import p/missing.csv`:
+   The quoted path must work and both duplicates must be skipped. Try `import p/missing.csv`:
    expect a file-not-found error that includes the resolved path, with the roster and view unchanged.
 5. Make a separate `invalid.csv` with the valid header, one valid member, and then a row with an invalid
    phone. Import it: expect a row-specific error, no partial import, and no saved-file or view change.
@@ -1761,6 +1765,8 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
 6. Test a destination in a missing directory with `export missing/members.csv`: expect a write error
    without creating that directory. In a disposable release folder, verify that CSV paths outside the JAR
    folder and symbolic-link paths are rejected. Test a header-only CSV and a zero-member export.
+   With a nonempty roster, run `find Nobody` then export: expect a header-only file and a message counting
+   every stored member as hidden. Use `list` before exporting again to include everyone.
    For an import-save failure, temporarily replace the automatic JSON file with a directory: expect the
    imported batch to remain in memory, a save error, and no modification to the source CSV. Restore storage
    access and retry saving with an existing field value before exiting.

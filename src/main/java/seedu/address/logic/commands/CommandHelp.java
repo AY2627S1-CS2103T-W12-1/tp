@@ -148,12 +148,13 @@ public enum CommandHelp {
                     + "the changes remain in this session and the command box clears; follow the recovery "
                     + "guidance before exiting."),
     EXPORT("Manage members", "export", "Export members to CSV", "export [FILEPATH]", "export members.csv",
-            "Writes all members to a UTF-8 CSV file, including members hidden by a search.",
+            "Writes displayed members to a UTF-8 CSV file in their current displayed order.",
             "Creates members.csv with name, phone, email, address and tags columns.",
             "The default path is addressbook.csv beside the JAR, or in the working directory during development. "
                     + "Packaged builds use only paths inside the JAR folder. Existing destination files are "
                     + "overwritten. Tags are sorted and joined with semicolons. The roster and current search "
-                    + "stay unchanged.",
+                    + "stay unchanged. Run list first to export everyone. Hidden members are excluded and counted "
+                    + "in the result; an empty displayed list writes only the header.",
             "Use an output path ending in .csv (ignoring letter case), with an existing writable parent directory. "
                     + "Double quotes are not allowed in export paths; spaces need no surrounding quotes. "
                     + "The active roster, preferences, application lock, and running JAR "
