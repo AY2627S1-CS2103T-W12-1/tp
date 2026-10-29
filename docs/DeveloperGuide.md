@@ -685,7 +685,9 @@ their tag argument.
 
 #### Execution {id="execution-1"}
 
-`TagAllCommand#execute` and `UntagAllCommand#execute` follow the same steps:
+`TagAllCommand` and `UntagAllCommand` extend the abstract `BulkTagCommand`, whose `execute` method
+follows the steps below. Each subclass supplies only `needsUpdate`, which decides whether a member changes,
+and `updateTags`, which adds or removes the tag.
 
 1. Copy `Model#getFilteredPersonList()` into a new list. This fixes the target set before any update.
    The copy matters because each update refreshes the displayed list. For example, removing the tag used by an
@@ -697,7 +699,8 @@ their tag argument.
    `Added tag "committee" to 9 member(s). 3 already had this tag.` A zero changed count adds
    `No changes were made.`, for example
    `Removed tag "committee" (any letter case) from 0 member(s). 3 did not have this tag. No changes were made.`
-   If `untagall` hides updated members, it also reports the displayed list using
+   If the active filters now hide updated members, which only `untagall` can cause, it also reports the
+   displayed list using
    `FilterCommand#describeHiddenUpdates`, for example
    `0 member(s) listed with tag "committee". Run list to show everyone.`
 
@@ -714,6 +717,8 @@ memory and the previous saved file is unchanged.
 * **One shared argument parser:** keeps `tagall` and `untagall` input rules and messages identical.
   It and `FilterCommandParser` use the shared `Tag` model rule, which also applies to `add`, `edit`,
   and loading saved data.
+* **Shared base class:** `BulkTagCommand` holds the steps both commands share, so the two commands
+  cannot drift apart in how they select targets, log results, or word their feedback.
 * **Skip instead of reject:** a member who already has (or lacks) the tag is skipped and counted, so one
   overlapping group does not block the rest of the batch (UC03 extension 6b).
 

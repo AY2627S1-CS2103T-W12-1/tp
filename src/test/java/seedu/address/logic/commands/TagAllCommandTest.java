@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TagTestUtil.addTagToDisplayed;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.CARL;
 import static seedu.address.testutil.TypicalPersons.DANIEL;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -52,7 +52,7 @@ public class TagAllCommandTest {
     public void execute_noDisplayedMemberHasTag_addsTagToAll() {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        addTagToAll(expectedModel, "committee");
+        addTagToDisplayed(expectedModel, "committee");
         String expectedMessage = "Added tag \"committee\" to 7 member(s).";
 
         assertCommandSuccess(new TagAllCommand(committee), model, expectedMessage, expectedModel);
@@ -66,7 +66,7 @@ public class TagAllCommandTest {
     public void execute_someDisplayedMembersHaveTag_skipsThem() {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        addTagToAll(expectedModel, "friends");
+        addTagToDisplayed(expectedModel, "friends");
         String expectedMessage = "Added tag \"friends\" to 4 member(s). 3 already had this tag.";
 
         try (LogCapture logs = new LogCapture(TagAllCommand.class)) {
@@ -99,7 +99,7 @@ public class TagAllCommandTest {
         model.filterFilteredPersonList(HAS_FRIENDS_TAG);
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         expectedModel.filterFilteredPersonList(HAS_FRIENDS_TAG);
-        addTagToAll(expectedModel, "committee");
+        addTagToDisplayed(expectedModel, "committee");
         String expectedMessage = "Added tag \"committee\" to 3 member(s).";
 
         assertCommandSuccess(new TagAllCommand(committee), model, expectedMessage, expectedModel);
@@ -136,24 +136,5 @@ public class TagAllCommandTest {
         TagAllCommand command = new TagAllCommand(committee);
         String expected = TagAllCommand.class.getCanonicalName() + "{tag=" + committee + "}";
         assertEquals(expected, command.toString());
-    }
-
-    /**
-     * Adds the tag named {@code tagName} to every member displayed in {@code model}.
-     */
-    private static void addTagToAll(Model model, String tagName) {
-        List<Person> displayedPersons = new ArrayList<>(model.getFilteredPersonList());
-        for (Person person : displayedPersons) {
-            List<String> tagNames = new ArrayList<>(person.getTags().stream()
-                    .map(tag -> tag.tagName)
-                    .toList());
-            if (!tagNames.contains(tagName)) {
-                tagNames.add(tagName);
-                Person taggedPerson = new PersonBuilder(person)
-                        .withTags(tagNames.toArray(new String[0]))
-                        .build();
-                model.setPerson(person, taggedPerson);
-            }
-        }
     }
 }

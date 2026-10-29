@@ -138,16 +138,14 @@ public class LogicManagerTest {
         assertTrue(logic.isAwaitingConfirmation());
         // Asking for confirmation neither removes the member nor saves the roster.
         assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
-        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertNothingSaved();
 
         CommandResult result = logic.execute(" yes ");
         assertEquals(String.format(DeleteCommand.MESSAGE_DELETE_PERSON_SUCCESS, Messages.format(BOB)),
                 result.getFeedbackToUser());
         assertFalse(logic.isAwaitingConfirmation());
         assertEquals(List.of(AMY), model.getAddressBook().getPersonList());
-        ReadOnlyAddressBook saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"))
-                .readAddressBook().orElseThrow();
-        assertEquals(List.of(AMY), saved.getPersonList());
+        assertModelSaved();
     }
 
     @Test
@@ -169,7 +167,7 @@ public class LogicManagerTest {
             assertFalse(logic.isAwaitingConfirmation(), input);
             assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList(), input);
         }
-        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertNothingSaved();
     }
 
     @Test
@@ -185,7 +183,7 @@ public class LogicManagerTest {
             assertTrue(logic.isAwaitingConfirmation(), nearMiss);
         }
         assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
-        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertNothingSaved();
 
         logic.execute("yes");
         assertFalse(logic.isAwaitingConfirmation());
@@ -684,9 +682,7 @@ public class LogicManagerTest {
         assertEquals("Added tag \"committee\" to 3 member(s).",
                 logic.execute("tagall t/committee").getFeedbackToUser());
 
-        ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
-                temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
-        assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+        assertModelSaved();
         Tag committee = new Tag("committee");
         for (Person person : model.getAddressBook().getPersonList()) {
             boolean wasDisplayed = person.isSamePerson(ALICE) || person.isSamePerson(BENSON)
@@ -736,7 +732,7 @@ public class LogicManagerTest {
         assertThrows(CommandException.class, TagAllCommand.MESSAGE_EMPTY_LIST, () ->
                 logic.execute("tagall t/committee"));
         assertEquals(getTypicalAddressBook(), model.getAddressBook());
-        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertNothingSaved();
     }
 
     @Test
@@ -754,9 +750,7 @@ public class LogicManagerTest {
         assertEquals(getTypicalAddressBook().getPersonList().size(), model.getAddressBook().getPersonList().size());
         assertTrue(model.getAddressBook().getPersonList().stream().noneMatch(person ->
                 person.getTags().contains(friends)));
-        ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
-                temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
-        assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+        assertModelSaved();
     }
 
     @Test
@@ -801,7 +795,7 @@ public class LogicManagerTest {
         assertThrows(CommandException.class, UntagAllCommand.MESSAGE_EMPTY_LIST, () ->
                 logic.execute("untagall t/friends"));
         assertEquals(getTypicalAddressBook(), model.getAddressBook());
-        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertNothingSaved();
     }
 
     @Test
@@ -818,9 +812,7 @@ public class LogicManagerTest {
                 new PersonBuilder(ALICE).withTags("buddies").build()));
         assertTrue(model.getAddressBook().getPersonList().contains(BENSON));
         assertTrue(model.getAddressBook().getPersonList().contains(DANIEL));
-        ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
-                temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
-        assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+        assertModelSaved();
     }
 
     @Test
@@ -845,7 +837,7 @@ public class LogicManagerTest {
         assertThrows(CommandException.class, String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "friends"), () ->
                 logic.execute("renametag t/friends t/buddies"));
         assertEquals(getTypicalAddressBook(), model.getAddressBook());
-        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertNothingSaved();
     }
 
     @Test
@@ -855,7 +847,7 @@ public class LogicManagerTest {
         assertThrows(CommandException.class, String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "committee"), () ->
                 logic.execute("renametag t/committee t/buddies"));
         assertEquals(getTypicalAddressBook(), model.getAddressBook());
-        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+        assertNothingSaved();
     }
 
     @Test
@@ -947,6 +939,22 @@ public class LogicManagerTest {
         CommandResult result = logic.execute(inputCommand);
         assertEquals(expectedMessage, result.getFeedbackToUser());
         assertEquals(expectedModel, model);
+    }
+
+    /**
+     * Asserts that the data file holds the same members as the model.
+     */
+    private void assertModelSaved() throws Exception {
+        ReadOnlyAddressBook savedAddressBook = new JsonAddressBookStorage(
+                temporaryFolder.resolve("addressBook.json")).readAddressBook().orElseThrow();
+        assertEquals(model.getAddressBook().getPersonList(), savedAddressBook.getPersonList());
+    }
+
+    /**
+     * Asserts that nothing has been saved to the data file.
+     */
+    private void assertNothingSaved() {
+        assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
     }
 
     /**

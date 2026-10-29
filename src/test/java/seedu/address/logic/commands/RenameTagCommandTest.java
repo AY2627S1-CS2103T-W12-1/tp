@@ -6,12 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TagTestUtil.renameTagForAll;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.CARL;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -189,26 +189,5 @@ public class RenameTagCommandTest {
         String expected = RenameTagCommand.class.getCanonicalName() + "{oldTag=" + friends + ", newTag=" + buddies
                 + "}";
         assertEquals(expected, command.toString());
-    }
-
-    /**
-     * Replaces the tag named {@code oldName} with {@code newName} for every member stored in {@code model}.
-     */
-    private static void renameTagForAll(Model model, String oldName, String newName) {
-        List<Person> storedPersons = new ArrayList<>(model.getAddressBook().getPersonList());
-        for (Person person : storedPersons) {
-            List<String> tagNames = new ArrayList<>(person.getTags().stream()
-                    .map(tag -> tag.tagName)
-                    .toList());
-            if (tagNames.remove(oldName)) {
-                if (!tagNames.contains(newName)) {
-                    tagNames.add(newName);
-                }
-                Person renamedPerson = new PersonBuilder(person)
-                        .withTags(tagNames.toArray(new String[0]))
-                        .build();
-                model.setPerson(person, renamedPerson);
-            }
-        }
     }
 }
