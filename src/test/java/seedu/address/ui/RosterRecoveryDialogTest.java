@@ -28,8 +28,9 @@ public class RosterRecoveryDialogTest {
     @Test
     public void recovery_noValidBackup_offersStartEmptyAndDefaultsToClose() throws Exception {
         onJavaFxThread(() -> {
-            RosterRecoveryDialog alert = new RosterRecoveryDialog(new Stage(), Path.of("preserved.json"),
+            RosterRecoveryDialog alert = new RosterRecoveryDialog(new Stage(), null, Path.of("preserved.json"),
                     Path.of("members.json.bak"), false);
+            assertFalse(alert.getContentText().contains("Reason:"));
             assertTrue(alert.getContentText().contains("No valid backup"));
             assertTrue(alert.getContentText().contains("preserved.json"));
             assertEquals(List.of(ButtonData.OTHER, ButtonData.CANCEL_CLOSE), alert.getButtonTypes().stream()
@@ -42,10 +43,20 @@ public class RosterRecoveryDialogTest {
     }
 
     @Test
+    public void recovery_withReason_showsReasonFirst() throws Exception {
+        onJavaFxThread(() -> {
+            RosterRecoveryDialog alert = new RosterRecoveryDialog(new Stage(), " Phone numbers are invalid. \n",
+                    Path.of("preserved.json"), Path.of("members.json.bak"), false);
+            assertTrue(alert.getContentText().startsWith("Reason: Phone numbers are invalid.\n\n"
+                    + "The original file has been preserved at:"));
+        });
+    }
+
+    @Test
     public void recovery_validBackup_returnsEachExplicitChoice() throws Exception {
         onJavaFxThread(() -> {
             for (ButtonData button : List.of(ButtonData.YES, ButtonData.OTHER, ButtonData.CANCEL_CLOSE)) {
-                RosterRecoveryDialog alert = new RosterRecoveryDialog(new Stage(),
+                RosterRecoveryDialog alert = new RosterRecoveryDialog(new Stage(), "Invalid JSON data",
                         Path.of("preserved.json"), Path.of("members.json.bak"), true);
                 Platform.runLater(() -> alert.getButtonTypes().stream()
                         .filter(type -> type.getButtonData() == button).findFirst()

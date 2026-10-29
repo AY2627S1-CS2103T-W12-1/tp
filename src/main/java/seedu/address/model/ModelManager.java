@@ -31,7 +31,7 @@ public class ModelManager implements Model {
     private final FilteredList<Person> filteredPersons;
     /** Extra predicates used internally by commands and tests, without removable UI boxes. */
     private final List<Predicate<Person>> additionalFilters = new ArrayList<>();
-    /** Removable name, email and tag conditions, kept in the order they were applied. */
+    /** Removable name, email, tag and show conditions, kept in the order they were applied. */
     private final List<ActiveFilter> activeFilters = new ArrayList<>();
     /** Live display ordering; the underlying roster retains its stored order. */
     private final SortedList<Person> sortedPersons;
@@ -93,6 +93,7 @@ public class ModelManager implements Model {
     @Override
     public void deletePerson(Person target) {
         addressBook.removePerson(target);
+        activeFilters.forEach(filter -> filter.removeSelectedPerson(target));
     }
 
     @Override
@@ -107,8 +108,8 @@ public class ModelManager implements Model {
 
         addressBook.setPerson(target, editedPerson);
         boolean selectionChanged = false;
-        for (Predicate<Person> filter : additionalFilters) {
-            if (filter instanceof PersonSelectionPredicate selection && selection.replacePerson(target, editedPerson)) {
+        for (ActiveFilter filter : activeFilters) {
+            if (filter.replaceSelectedPerson(target, editedPerson)) {
                 selectionChanged = true;
             }
         }
@@ -155,6 +156,8 @@ public class ModelManager implements Model {
             activeFilters.add(ActiveFilter.createNameFilter(namePredicate));
         } else if (predicate instanceof EmailContainsKeywordsPredicate emailPredicate) {
             activeFilters.add(ActiveFilter.createEmailFilter(emailPredicate));
+        } else if (predicate instanceof PersonSelectionPredicate selection) {
+            activeFilters.add(ActiveFilter.createShowFilter(selection));
         } else {
             additionalFilters.add(predicate);
         }
@@ -164,15 +167,37 @@ public class ModelManager implements Model {
     @Override
     public void filterFilteredPersonList(Predicate<Person> predicate) {
         requireNonNull(predicate);
-        additionalFilters.add(predicate);
+        if (predicate instanceof PersonSelectionPredicate selection) {
+            if (activeFilters.stream().anyMatch(filter -> filter.hasSameShowSelection(selection))) {
+                return;
+            }
+            activeFilters.add(ActiveFilter.createShowFilter(selection));
+        } else {
+            additionalFilters.add(predicate);
+        }
         refreshFilteredPersons();
     }
 
     @Override
-    public void filterFilteredPersonListByName(NameContainsKeywordsPredicate predicate) {
+    public boolean filterFilteredPersonListByName(NameContainsKeywordsPredicate predicate) {
         requireNonNull(predicate);
-        activeFilters.add(ActiveFilter.createNameFilter(predicate));
+        return addSearchFilter(ActiveFilter.createNameFilter(predicate));
+    }
+
+    @Override
+    public boolean filterFilteredPersonListByEmail(EmailContainsKeywordsPredicate predicate) {
+        requireNonNull(predicate);
+        return addSearchFilter(ActiveFilter.createEmailFilter(predicate));
+    }
+
+    /** Adds only distinct search conditions, keeping the first query's label and position. */
+    private boolean addSearchFilter(ActiveFilter filter) {
+        if (activeFilters.stream().anyMatch(existing -> existing.hasSameSearch(filter))) {
+            return false;
+        }
+        activeFilters.add(filter);
         refreshFilteredPersons();
+        return true;
     }
 
     @Override
@@ -193,18 +218,6 @@ public class ModelManager implements Model {
     @Override
     public List<ActiveFilter> getActiveFilters() {
         return List.copyOf(activeFilters);
-    }
-
-    @Override
-    public int getActiveShowSelectionCount() {
-        return (int) additionalFilters.stream().filter(PersonSelectionPredicate.class::isInstance).count();
-    }
-
-    @Override
-    public void clearShowSelections() {
-        if (additionalFilters.removeIf(PersonSelectionPredicate.class::isInstance)) {
-            refreshFilteredPersons();
-        }
     }
 
     @Override

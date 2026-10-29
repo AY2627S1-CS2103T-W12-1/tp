@@ -35,14 +35,16 @@ class JsonAdaptedTag {
 
     /**
      * Converts this Jackson-friendly adapted tag object into the model's {@code Tag} object.
+     * Leading and trailing whitespace around the tag name is trimmed.
      *
      * @throws IllegalValueException if there were any data constraints violated in the adapted tag.
      */
     public Tag toModelType() throws IllegalValueException {
-        if (!Tag.isValidTagName(tagName)) {
+        final String trimmedTagName = tagName.trim();
+        if (!Tag.isValidTagName(trimmedTagName)) {
             throw new IllegalValueException(Tag.MESSAGE_CONSTRAINTS);
         }
-        return new Tag(tagName);
+        return new Tag(trimmedTagName);
     }
 
 }

@@ -10,6 +10,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
+import seedu.address.logic.commands.CommandHelp;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ConfirmDeleteCommand;
 import seedu.address.logic.commands.ExportCommand;
@@ -44,8 +45,11 @@ public class LogicManager implements Logic {
     private final Storage storage;
     private final AddressBookParser addressBookParser;
 
-    /** The deletion awaiting confirmation by the next input, or null if none is pending. */
-    private ConfirmDeleteCommand pendingDeletion;
+    /** The destructive command awaiting confirmation by the next input, or null if none is pending. */
+    private Command pendingConfirmation;
+
+    /** The prompt that named the pending action and its scope, repeated after a near-miss reply. */
+    private String pendingConfirmationPrompt;
 
     /**
      * Constructs a {@code LogicManager} with the given {@code Model} and {@code Storage}.
@@ -60,27 +64,72 @@ public class LogicManager implements Logic {
     public CommandResult execute(String commandText) throws CommandException, ParseException {
         logger.info("User command received");
 
-        if (pendingDeletion != null) {
-            ConfirmDeleteCommand confirmation = pendingDeletion;
-            // The next input always ends the confirmation, so a later "y" cannot delete anyone.
-            pendingDeletion = null;
-            if (!commandText.strip().equals(ConfirmDeleteCommand.CONFIRMATION_WORD)) {
-                logger.info("Deletion cancelled; the cancelling input was not run as a command");
-                return new CommandResult(ConfirmDeleteCommand.MESSAGE_CANCELLED);
-            }
-            logger.info("Deletion confirmed");
-            return executeAndSave(confirmation);
+        if (pendingConfirmation != null) {
+            return handleConfirmationInput(commandText.strip());
         }
 
         Command command = addressBookParser.parseCommand(commandText);
+        int memberCount = model.getAddressBook().getPersonList().size();
+        if (command instanceof ClearCommand && memberCount > 0) {
+            // Delay execution and persistence until the next input explicitly confirms the entire roster.
+            String prompt = String.format(ClearCommand.MESSAGE_CONFIRMATION, memberCount);
+            requestConfirmation(command, prompt);
+            return new CommandResult(prompt);
+        }
         CommandResult commandResult = executeAndSave(command);
-        pendingDeletion = commandResult.getPendingDeletion().orElse(null);
+        commandResult.getPendingDeletion()
+                .ifPresent(deletion -> requestConfirmation(deletion, commandResult.getFeedbackToUser()));
         return commandResult;
+    }
+
+    /**
+     * Waits for the next input to confirm {@code command}, which {@code prompt} has described to the user.
+     */
+    private void requestConfirmation(Command command, String prompt) {
+        pendingConfirmation = command;
+        pendingConfirmationPrompt = prompt;
+    }
+
+    /**
+     * Runs the pending destructive command if {@code input} is the confirmation word. A near miss keeps
+     * the confirmation pending, and any other input cancels it without being run as a command.
+     */
+    private CommandResult handleConfirmationInput(String input) throws CommandException {
+        assert pendingConfirmation != null : "Confirmation input is handled only while a command is pending";
+        if (Confirmation.isNearMiss(input)) {
+            logger.info("Inexact confirmation word received; the confirmation stays pending");
+            return new CommandResult(Confirmation.REMINDER
+                    + "\n\n" + pendingConfirmationPrompt);
+        }
+        Command confirmation = pendingConfirmation;
+        // Any other input ends the confirmation, so a later "yes" cannot repeat a destructive action.
+        pendingConfirmation = null;
+        if (!input.equals(Confirmation.WORD)) {
+            logger.info("Confirmation cancelled; the cancelling input was not run as a command");
+            return new CommandResult(createCancellationMessage(confirmation, input));
+        }
+        logger.info("Destructive command confirmed");
+        return executeAndSave(confirmation);
+    }
+
+    /**
+     * Returns the message for cancelling {@code confirmation}. If {@code input} starts with a command word,
+     * the message also says that the command was not run.
+     */
+    private static String createCancellationMessage(Command confirmation, String input) {
+        String message = confirmation instanceof ClearCommand
+                ? ClearCommand.MESSAGE_CANCELLED
+                : ConfirmDeleteCommand.MESSAGE_CANCELLED;
+        String firstWord = input.split("\\s+")[0];
+        if (CommandHelp.find(firstWord).isPresent()) {
+            message += String.format(Confirmation.INPUT_NOT_RUN, input);
+        }
+        return message;
     }
 
     @Override
     public boolean isAwaitingConfirmation() {
-        return pendingDeletion != null;
+        return pendingConfirmation != null;
     }
 
     /**
@@ -105,7 +154,11 @@ public class LogicManager implements Logic {
             if (beforeClear != null) {
                 // Clear changes only the records, so restoring them also restores the prior filtered view.
                 model.setAddressBook(beforeClear);
-                throw new SaveFailureException(ClearCommand.MESSAGE_SAVE_FAILURE, ioe, false);
+                String errorFormat = ioe instanceof AccessDeniedException
+                        ? FILE_OPS_PERMISSION_ERROR_FORMAT : FILE_OPS_ERROR_FORMAT;
+                String details = ioe.getMessage() == null ? ioe.toString() : ioe.getMessage();
+                throw new SaveFailureException(ClearCommand.MESSAGE_SAVE_FAILURE + "\n"
+                        + String.format(errorFormat, details), ioe, false);
             }
             if (command instanceof ImportCommand) {
                 String details = ioe.getMessage() == null ? ioe.toString() : ioe.getMessage();
@@ -132,16 +185,6 @@ public class LogicManager implements Logic {
     @Override
     public List<ActiveFilter> getActiveFilters() {
         return model.getActiveFilters();
-    }
-
-    @Override
-    public int getActiveShowSelectionCount() {
-        return model.getActiveShowSelectionCount();
-    }
-
-    @Override
-    public void clearShowSelections() {
-        model.clearShowSelections();
     }
 
     @Override

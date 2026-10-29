@@ -5,7 +5,6 @@ import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_EMPTY_TAG
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_INVALID_TAG;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
-import static seedu.address.logic.parser.RenameTagCommandParser.MESSAGE_SAME_TAG;
 
 import org.junit.jupiter.api.Test;
 
@@ -36,15 +35,18 @@ public class RenameTagCommandParserTest {
 
     @Test
     public void parse_invalidTagValue_rejectsCommand() {
-        assertParseFailure(parser, " t/ t/alumni", MESSAGE_EMPTY_TAG);
-        assertParseFailure(parser, " t/batch2026 t/", MESSAGE_EMPTY_TAG);
-        assertParseFailure(parser, " t/two words t/alumni", MESSAGE_INVALID_TAG);
-        assertParseFailure(parser, " t/batch2026 t/hello!", MESSAGE_INVALID_TAG);
-        assertParseFailure(parser, " t/batch2026 t/" + "a".repeat(31), MESSAGE_INVALID_TAG);
+        String current = RenameTagCommandParser.MESSAGE_CURRENT_TAG_PREFIX;
+        String added = RenameTagCommandParser.MESSAGE_NEW_TAG_PREFIX;
+        assertParseFailure(parser, " t/ t/alumni", current + MESSAGE_EMPTY_TAG);
+        assertParseFailure(parser, " t/batch2026 t/", added + MESSAGE_EMPTY_TAG);
+        assertParseFailure(parser, " t/two words t/alumni", current + MESSAGE_INVALID_TAG);
+        assertParseFailure(parser, " t/batch2026 t/hello!", added + MESSAGE_INVALID_TAG);
+        assertParseFailure(parser, " t/batch2026 t/" + "a".repeat(31), added + MESSAGE_INVALID_TAG);
+        assertParseFailure(parser, " t/batch_2026 t/alumni", current + MESSAGE_INVALID_TAG);
     }
 
     @Test
     public void parse_sameTagTwice_rejectsCommand() {
-        assertParseFailure(parser, " t/alumni t/alumni", MESSAGE_SAME_TAG);
+        assertParseFailure(parser, " t/alumni t/alumni", RenameTagCommand.MESSAGE_SAME_TAG);
     }
 }

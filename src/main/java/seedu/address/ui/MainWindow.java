@@ -34,6 +34,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.FilterCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ActiveFilter;
@@ -63,8 +64,8 @@ public class MainWindow extends UiPart<Stage> {
     private ResultDisplay resultDisplay;
     private HelpWindow helpWindow;
 
-    /** The latest deletion prompt, shown again if a filter is removed before the user answers it. */
-    private String pendingDeletionPrompt = "";
+    /** The latest confirmation prompt, shown again if a filter is removed before the user answers it. */
+    private String pendingConfirmationPrompt = "";
 
     @FXML
     private StackPane commandBoxPlaceholder;
@@ -225,10 +226,6 @@ public class MainWindow extends UiPart<Stage> {
         for (ActiveFilter filter : logic.getActiveFilters()) {
             activeFiltersPane.getChildren().add(createFilterChip(filter));
         }
-        int showSelectionCount = logic.getActiveShowSelectionCount();
-        if (showSelectionCount > 0) {
-            activeFiltersPane.getChildren().add(createShowIndicator(showSelectionCount));
-        }
         boolean hasFilters = !activeFiltersPane.getChildren().isEmpty();
         activeFiltersPane.setVisible(hasFilters);
         activeFiltersPane.setManaged(hasFilters);
@@ -248,53 +245,29 @@ public class MainWindow extends UiPart<Stage> {
         }
     }
 
-    /** Shows that {@code show} still narrows the roster and lets the user clear every show selection. */
-    private HBox createShowIndicator(int showSelectionCount) {
-        Label label = new Label("Show: active");
-        label.setAccessibleText("Show selection active");
-        String times = showSelectionCount == 1 ? "once" : showSelectionCount + " times";
-        label.setTooltip(new Tooltip("Show has been applied " + times + ". X removes all show selections."));
-        Button removeButton = createRemoveButton("Remove all show selections", () -> {
-            logic.clearShowSelections();
-            showChipRemoval("Removed all show selections.");
-        });
-        HBox chip = new HBox(FILTER_CHIP_SPACING, label, removeButton);
-        chip.getStyleClass().addAll("filter-chip", "filter-chip-show");
-        configureFilterChip(chip, label, removeButton);
-        return chip;
-    }
-
     /** Creates a box whose X removes exactly the condition represented by {@code filter}. */
     private HBox createFilterChip(ActiveFilter filter) {
+        boolean isShow = filter.getKind() == ActiveFilter.Kind.SHOW;
+        String showNames = isShow ? filter.getShowSelectionNames() : "";
+        String removeDescription = isShow ? "Remove this show selection" : "Remove " + filter.getLabel();
         Label label = new Label(filter.getLabel());
-        label.setTooltip(new Tooltip(filter.getLabel()));
-        Button removeButton = createRemoveButton("Remove " + filter.getLabel(), () -> {
+        label.setTooltip(new Tooltip(isShow ? "Selected members: " + showNames : filter.getLabel()));
+        Button removeButton = new Button(REMOVE_BUTTON_TEXT);
+        removeButton.getStyleClass().add("filter-chip-remove");
+        removeButton.setAccessibleText(removeDescription);
+        if (!isShow) {
+            removeButton.setTooltip(new Tooltip(removeDescription));
+        }
+        removeButton.setOnAction(event -> {
+            personListPanel.clearSelection();
             logic.removeActiveFilter(filter);
-            showChipRemoval("Removed " + filter.getLabel() + ".");
+            showChipRemoval(isShow ? "Removed show selection." : "Removed " + filter.getLabel() + ".");
         });
         HBox chip = new HBox(FILTER_CHIP_SPACING, label, removeButton);
         chip.getStyleClass().add("filter-chip");
         chip.getStyleClass().add("filter-chip-" + filter.getKind().name().toLowerCase(java.util.Locale.ROOT));
         configureFilterChip(chip, label, removeButton);
         return chip;
-    }
-
-    /**
-     * Creates the X button of a filter box. Clicking it clears the list selection, then runs {@code onRemove}.
-     *
-     * @param description Accessible text and tooltip describing what the button removes.
-     * @param onRemove Action that removes the condition and reports the removal.
-     */
-    private Button createRemoveButton(String description, Runnable onRemove) {
-        Button removeButton = new Button(REMOVE_BUTTON_TEXT);
-        removeButton.getStyleClass().add("filter-chip-remove");
-        removeButton.setAccessibleText(description);
-        removeButton.setTooltip(new Tooltip(description));
-        removeButton.setOnAction(event -> {
-            personListPanel.clearSelection();
-            onRemove.run();
-        });
-        return removeButton;
     }
 
     /** Keeps long conditions compact while leaving their removal control reachable. */
@@ -329,7 +302,7 @@ public class MainWindow extends UiPart<Stage> {
 
     /**
      * Refreshes the filter controls and shows removal feedback with the updated member count.
-     * Restores focus after a focused chip is removed and repeats a pending deletion prompt if needed.
+     * Restores focus after a focused chip is removed and repeats a pending confirmation prompt if needed.
      *
      * @param message Description of the removal to include in the feedback.
      */
@@ -346,10 +319,11 @@ public class MainWindow extends UiPart<Stage> {
                 nextChip.getChildren().get(1).requestFocus();
             }
         }
-        String feedback = message + " " + logic.getFilteredPersonList().size() + " member(s) listed.";
+        String feedback = message + " "
+                + String.format(FilterCommand.MESSAGE_LISTED, logic.getFilteredPersonList().size());
         if (logic.isAwaitingConfirmation()) {
-            // Removing a view restriction keeps the deletion pending, so the member it names must stay visible.
-            feedback += "\n\n" + pendingDeletionPrompt;
+            // Removing a view restriction keeps confirmation pending, so repeat the action and its scope.
+            feedback += "\n\n" + pendingConfirmationPrompt;
         }
         resultDisplay.setFeedbackToUser(feedback);
     }
@@ -411,12 +385,14 @@ public class MainWindow extends UiPart<Stage> {
      */
     private CommandResult executeCommand(String commandText) throws CommandException, ParseException {
         personListPanel.clearSelection();
+        boolean wasAwaitingConfirmation = logic.isAwaitingConfirmation();
         try {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Command completed successfully");
             resultDisplay.setFeedbackToUser(hideContactDetails(commandResult.getFeedbackToUser()));
-            if (logic.isAwaitingConfirmation()) {
-                pendingDeletionPrompt = commandResult.getFeedbackToUser();
+            // A near-miss reply keeps the original prompt, so later filter removals still name the action.
+            if (logic.isAwaitingConfirmation() && !wasAwaitingConfirmation) {
+                pendingConfirmationPrompt = commandResult.getFeedbackToUser();
             }
 
             if (commandResult.isShowHelp()) {

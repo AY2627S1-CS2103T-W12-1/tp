@@ -12,7 +12,7 @@ TrackCall helps membership secretaries maintain contact details, find the right 
 overlapping groups using tags. A compact roster and a separate details panel keep the workspace easy to scan.
 
 <p class="d-flex flex-wrap gap-2 my-3">
-  <a class="btn btn-primary" href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/tag/v1.4">Download v1.4</a>
+  <a class="btn btn-primary" href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/latest">Download the latest release</a>
   <a class="btn btn-outline-primary" href="UserGuide.html#quick-start">Get started</a>
   <a class="btn btn-outline-secondary" href="UserGuide.html#commands">Explore features</a>
 </p>
@@ -21,11 +21,6 @@ Requires **Java 25**. TrackCall works with local files and includes offline help
 
 [![CI Status](https://github.com/AY2627S1-CS2103T-W12-1/tp/workflows/Java%20CI/badge.svg)](https://github.com/AY2627S1-CS2103T-W12-1/tp/actions)
 [![codecov](https://codecov.io/gh/AY2627S1-CS2103T-W12-1/tp/branch/master/graph/badge.svg)](https://app.codecov.io/gh/AY2627S1-CS2103T-W12-1/tp)
-
-This website describes the **v1.5 preparation build (unreleased)**. Its single-instance protection,
-address clearing, backup preservation, import-save guidance, and diagnostic logging improvements are
-not in the v1.4 download. Use the [v1.4 User Guide](https://github.com/AY2627S1-CS2103T-W12-1/tp/blob/v1.4/docs/UserGuide.md)
-with that release.
 
 ## Interface
 
@@ -46,7 +41,7 @@ its membership features. The [release notes](#releases) identify what changed in
 * [**List all members: `list`**](UserGuide.html#show-all-members-list) — restore the complete roster and reset searches and filters.
 * [**Select a subset: `show`**](UserGuide.html#show-selected-members-show) — keep only selected members from the displayed list.
 * [**Search names: `find`**](UserGuide.html#find-members-find) — match partial name words, ignoring letter case.
-* [**Search email addresses: `findemail`**](UserGuide.html#find-members-by-email-findemail) — find a full address or an email fragment across the roster.
+* [**Search email addresses: `findemail`**](UserGuide.html#find-members-by-email-findemail) — narrow displayed members by a full address or an email fragment.
 * [**Filter by tag: `filter`**](UserGuide.html#filter-displayed-members-by-tag-filter) — narrow the displayed members; combine successive filters to find overlapping groups.
 * [**Sort by name: `sort`**](UserGuide.html#sort-members-by-name-sort) — show the current results in case-insensitive A–Z order.
 
@@ -64,7 +59,7 @@ with [keyboard shortcuts](UserGuide.html#read-the-interface) for selecting membe
 * [**Remove one member's tag: `untag`**](UserGuide.html#add-or-remove-one-tag-tag-untag) — remove one assignment without replacing the rest.
 * [**Tag a displayed group: `tagall`**](UserGuide.html#tag-or-untag-a-group-tagall-untagall) — add a tag to every displayed member.
 * [**Untag a displayed group: `untagall`**](UserGuide.html#tag-or-untag-a-group-tagall-untagall) — remove a tag from every displayed member.
-* [**Rename a tag: `renametag`**](UserGuide.html#rename-a-tag-renametag) — replace a tag across the entire roster, including hidden members.
+* [**Rename a tag: `renametag`**](UserGuide.html#rename-a-tag-renametag) — replace a tag for every displayed member who has it.
 
 ### Exchange rosters with CSV
 
@@ -74,7 +69,8 @@ with [keyboard shortcuts](UserGuide.html#read-the-interface) for selecting membe
 ### Remove member records
 
 * [**Delete one member: `delete`**](UserGuide.html#delete-a-member-delete) — review a confirmation prompt before removing the selected record.
-* [**Clear the roster: `clear`**](UserGuide.html#clear-all-members-clear) — remove all members, including hidden records. Clearing is immediate and has no confirmation or undo.
+* [**Clear the roster: `clear`**](UserGuide.html#clear-all-members-clear) — remove all members, including hidden records,
+  after confirming with `yes`. An already-empty roster saves without prompting. There is no undo after confirming.
 
 ### Help and session
 

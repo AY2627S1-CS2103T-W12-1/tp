@@ -21,7 +21,7 @@ import seedu.address.model.tag.Tag;
 
 public class JsonAdaptedPersonTest {
     private static final String INVALID_NAME = "R@chel";
-    private static final String INVALID_PHONE = "+651234";
+    private static final String INVALID_PHONE = "+65x1234";
     private static final String INVALID_ADDRESS = " ";
     private static final String INVALID_EMAIL = "example.com";
     private static final String INVALID_TAG = "#friend";
@@ -41,6 +41,14 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_hyphenatedTag_preservesTag() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS,
+                List.of(new JsonAdaptedTag("year-1")));
+
+        assertEquals("year-1", person.toModelType().getTags().iterator().next().tagName);
+    }
+
+    @Test
     public void toModelType_emptyAddress_returnsPersonWithoutAddress() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, "", VALID_TAGS);
         assertEquals(Address.EMPTY_ADDRESS, person.toModelType().getAddress());
@@ -55,6 +63,20 @@ public class JsonAdaptedPersonTest {
         assertEquals(1, loaded.getTags().size());
         assertEquals(new Tag("STUDENT"), loaded.getTags().iterator().next());
         assertEquals("Student", loaded.getTags().iterator().next().tagName);
+    }
+
+    @Test
+    public void toModelType_valuesWithSurroundingSpaces_returnsTrimmedPerson() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(" " + VALID_NAME + " ", " " + VALID_PHONE + " ",
+                " " + VALID_EMAIL + " ", " " + VALID_ADDRESS + " ",
+                List.of(new JsonAdaptedTag(" owesMoney "), new JsonAdaptedTag("\tfriends\n")));
+        assertEquals(BENSON, person.toModelType());
+    }
+
+    @Test
+    public void toModelType_spacesOnlyAddress_throwsIllegalValueException() {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, "   ", VALID_TAGS);
+        assertThrows(IllegalValueException.class, Address.MESSAGE_CONSTRAINTS, person::toModelType);
     }
 
     @Test
@@ -100,6 +122,32 @@ public class JsonAdaptedPersonTest {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, null, VALID_ADDRESS, VALID_TAGS);
         String expectedMessage = String.format(MISSING_FIELD_MESSAGE_FORMAT, Email.class.getSimpleName());
         assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_addressWithSurroundingLineBreaks_returnsTrimmedAddress() throws Exception {
+        for (String address : new String[] {VALID_ADDRESS + "\n", "\r\n" + VALID_ADDRESS,
+            "\n" + VALID_ADDRESS + "\r\n"}) {
+            JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, address, VALID_TAGS);
+            assertEquals(BENSON, person.toModelType());
+        }
+    }
+
+    @Test
+    public void toModelType_lineBreakOnlyAddress_throwsBlankAddressMessage() {
+        for (String address : new String[] {"\n", "\r\n", " \n\r "}) {
+            JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, address, VALID_TAGS);
+            assertThrows(IllegalValueException.class, Address.MESSAGE_CONSTRAINTS, person::toModelType);
+        }
+    }
+
+    @Test
+    public void toModelType_addressWithLineBreak_throwsLineBreakMessage() {
+        for (String address : new String[] {"Blk 1\nClementi Rd", "Blk 1\r\nClementi Rd", "Blk 1\rClementi Rd"}) {
+            JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, address, VALID_TAGS);
+            assertThrows(IllegalValueException.class, JsonAdaptedPerson.MESSAGE_ADDRESS_LINE_BREAK,
+                    person::toModelType);
+        }
     }
 
     @Test

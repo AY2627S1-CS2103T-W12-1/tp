@@ -24,6 +24,7 @@ import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
+import seedu.address.model.person.EmailContainsKeywordsPredicate;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
@@ -169,7 +170,12 @@ public class AddCommandTest {
         }
 
         @Override
-        public void filterFilteredPersonListByName(NameContainsKeywordsPredicate predicate) {
+        public boolean filterFilteredPersonListByName(NameContainsKeywordsPredicate predicate) {
+            throw new AssertionError("This method should not be called.");
+        }
+
+        @Override
+        public boolean filterFilteredPersonListByEmail(EmailContainsKeywordsPredicate predicate) {
             throw new AssertionError("This method should not be called.");
         }
 
@@ -185,16 +191,6 @@ public class AddCommandTest {
 
         @Override
         public List<ActiveFilter> getActiveFilters() {
-            throw new AssertionError("This method should not be called.");
-        }
-
-        @Override
-        public int getActiveShowSelectionCount() {
-            throw new AssertionError("This method should not be called.");
-        }
-
-        @Override
-        public void clearShowSelections() {
             throw new AssertionError("This method should not be called.");
         }
 
