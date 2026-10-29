@@ -266,7 +266,8 @@ If an edited member no longer matches, they disappear from view but remain in th
 Supply at least one tag, each of 1 to 30 characters, using ASCII letters or digits with optional internal hyphens.
 For example, `year-1` is valid. Surrounding spaces are ignored. A missing `t/`, other parameters, and invalid
 or empty tags are rejected without changing the view. One invalid tag rejects the whole command, so
-`filter t/committee t/bad!` changes nothing.
+`filter t/committee t/bad!` changes nothing. The error names the problem, such as
+`Tag contains unsupported character "!"…`, exactly as it does for `tagall` and `renametag`.
 
 #### Sort members by name: `sort`
 

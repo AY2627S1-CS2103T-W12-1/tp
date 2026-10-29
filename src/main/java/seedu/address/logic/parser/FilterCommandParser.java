@@ -39,11 +39,8 @@ public class FilterCommandParser implements Parser<FilterCommand> {
         List<Tag> tags = new ArrayList<>();
         // A negative limit keeps empty trailing values, so "t/a t/" is rejected instead of ignored.
         for (String untrimmedName : TAG_SEPARATOR.split(tagArgument, -1)) {
-            String tagName = untrimmedName.trim();
-            if (!Tag.isValidTagName(tagName)) {
-                throw new ParseException(Tag.MESSAGE_CONSTRAINTS + ".");
-            }
-            tags.add(new Tag(tagName));
+            // Shares the tag commands' diagnostics, and rejects the whole command if any tag is invalid.
+            tags.add(BulkTagArgumentParser.parseTagName(untrimmedName.trim()));
         }
         return new FilterCommand(tags);
     }

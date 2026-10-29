@@ -626,7 +626,9 @@ Usage examples are in the [User Guide](UserGuide.html#filter-displayed-members-b
 `FilterCommandParser` accepts one or more `t/TAG` arguments. It splits them on whitespace followed by `t/`, trims
 each value, and requires 1 to 30 characters using ASCII letters or digits with optional internal hyphens.
 A missing `t/`, an unknown prefix, or any invalid or empty tag rejects the whole command before the view changes.
-The parser uses the shared `Tag` model rule before constructing each tag. A repeated tag, in any letter case,
+Each value is validated by `BulkTagArgumentParser#parseTagName`, the same method `tagall`, `untagall` and
+`renametag` use, so an invalid tag reports the same specific reason (unsupported character, hyphen placement,
+length, or empty) before any tag is added. A repeated tag, in any letter case,
 counts once because `FilterCommand` keeps its tags in a `LinkedHashSet`.
 
 #### Execution {id="execution"}

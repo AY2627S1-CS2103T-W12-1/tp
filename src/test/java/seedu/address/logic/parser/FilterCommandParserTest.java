@@ -33,13 +33,16 @@ public class FilterCommandParserTest {
 
     @Test
     public void parse_invalidTag_rejectsCommand() {
-        String expected = Tag.MESSAGE_CONSTRAINTS + ".";
-        String overlongTag = "t/" + "a".repeat(31);
-        String[] invalidInputs = {"t/", "t/   ", "t/two words", "t/hello!", "t/-year1", "t/year1-",
-            "t/year--1", overlongTag};
-        for (String input : invalidInputs) {
-            assertParseFailure(parser, input, expected);
-        }
+        assertParseFailure(parser, "t/", BulkTagArgumentParser.MESSAGE_EMPTY_TAG);
+        assertParseFailure(parser, "t/   ", BulkTagArgumentParser.MESSAGE_EMPTY_TAG);
+        assertParseFailure(parser, "t/two words", BulkTagArgumentParser.MESSAGE_WHITESPACE);
+        assertParseFailure(parser, "t/hello!",
+                String.format(BulkTagArgumentParser.MESSAGE_UNSUPPORTED_CHARACTER, "!"));
+        assertParseFailure(parser, "t/-year1", BulkTagArgumentParser.MESSAGE_LEADING_HYPHEN);
+        assertParseFailure(parser, "t/year1-", BulkTagArgumentParser.MESSAGE_TRAILING_HYPHEN);
+        assertParseFailure(parser, "t/year--1", BulkTagArgumentParser.MESSAGE_REPEATED_HYPHENS);
+        assertParseFailure(parser, "t/" + "a".repeat(31),
+                String.format(BulkTagArgumentParser.MESSAGE_TAG_TOO_LONG, 31));
     }
 
     @Test
@@ -61,12 +64,14 @@ public class FilterCommandParserTest {
 
     @Test
     public void parse_anyTagInvalid_rejectsWholeCommand() {
-        String expected = Tag.MESSAGE_CONSTRAINTS + ".";
-        String[] inputs = {"t/committee t/", "t/ t/year1", "t/invalid! t/year1", "t/committee t/bad!",
-            "t/year-1 t/-year2", "t/one t/" + "a".repeat(31)};
-        for (String input : inputs) {
-            assertParseFailure(parser, input, expected);
-        }
+        String unsupportedBang = String.format(BulkTagArgumentParser.MESSAGE_UNSUPPORTED_CHARACTER, "!");
+        assertParseFailure(parser, "t/committee t/", BulkTagArgumentParser.MESSAGE_EMPTY_TAG);
+        assertParseFailure(parser, "t/ t/year1", BulkTagArgumentParser.MESSAGE_EMPTY_TAG);
+        assertParseFailure(parser, "t/invalid! t/year1", unsupportedBang);
+        assertParseFailure(parser, "t/committee t/bad!", unsupportedBang);
+        assertParseFailure(parser, "t/year-1 t/-year2", BulkTagArgumentParser.MESSAGE_LEADING_HYPHEN);
+        assertParseFailure(parser, "t/one t/" + "a".repeat(31),
+                String.format(BulkTagArgumentParser.MESSAGE_TAG_TOO_LONG, 31));
     }
 
     @Test

@@ -46,6 +46,7 @@ import seedu.address.logic.commands.RenameTagCommand;
 import seedu.address.logic.commands.SortCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.commands.exceptions.SaveFailureException;
+import seedu.address.logic.parser.BulkTagArgumentParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
@@ -673,7 +674,7 @@ public class LogicManagerTest {
     public void execute_invalidFilter_preservesDisplayedList() throws Exception {
         model.setAddressBook(getTypicalAddressBook());
         logic.execute("filter t/friends");
-        String expectedMessage = Tag.MESSAGE_CONSTRAINTS + ".";
+        String expectedMessage = String.format(BulkTagArgumentParser.MESSAGE_UNSUPPORTED_CHARACTER, "!");
         assertThrows(ParseException.class, expectedMessage, () -> logic.execute("filter t/friends t/bad!"));
         assertEquals(List.of(ALICE, BENSON, DANIEL), logic.getFilteredPersonList());
         assertEquals(List.of(new Tag("friends")), model.getActiveTagFilters());
