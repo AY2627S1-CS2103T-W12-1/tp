@@ -465,7 +465,9 @@ An unchanged save still attempts to write the current roster but retains the pre
 `JsonAddressBookStorage` also remembers the roster it last read from or wrote to the data file. If the file
 now holds a different valid roster, it was changed outside TrackCall, so the first save is refused with a
 storage error and the change stays in memory. The refused save records the outside version, so a retry
-replaces it and keeps it in `.bak` through the normal backup rotation. Formatting-only edits are not refused.
+replaces it and keeps its exact bytes in `.bak`, even if its member values match the requested save.
+This backup requirement remains pending after a failed write and clears after a successful save or explicit reload.
+Formatting-only edits are not refused.
 Export protects both backup and recovery filenames. Null or invalid preferences fall back to defaults, which are saved
 through the usual preferences setup.
 

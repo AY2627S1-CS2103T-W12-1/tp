@@ -697,6 +697,8 @@ If an expected roster is missing, close the app and repair or restore the file f
 Before replacing an existing valid roster, TrackCall saves its previous contents to
 `data/addressbook.json.bak`. This is the previous distinct saved version. A save with unchanged member data retries persistence
 without replacing that backup, including `clear` on an already-empty roster.
+An explicit retry after an outside-change warning still backs up the outside file's exact contents,
+even if its members match the session's roster.
 If the backup cannot be written, the roster save fails and the existing roster stays unchanged.
 
 If the roster cannot be loaded, TrackCall first preserves its exact contents in a uniquely named

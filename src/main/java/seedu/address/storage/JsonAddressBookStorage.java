@@ -39,6 +39,8 @@ public class JsonAddressBookStorage {
     private ReadOnlyAddressBook lastKnownRoster;
     // Distinguishes an observed missing file from a storage instance that has not read or saved yet.
     private boolean hasObservedRoster;
+    /** Keeps the warning's backup promise until a save succeeds or the roster is explicitly reloaded. */
+    private boolean backupOutsideOnNextSave;
 
     public JsonAddressBookStorage(Path filePath) {
         this.filePath = filePath;
@@ -102,6 +104,7 @@ public class JsonAddressBookStorage {
         Optional<ReadOnlyAddressBook> loaded = readAddressBook(filePath);
         lastKnownRoster = loaded.map(AddressBook::new).orElse(null);
         hasObservedRoster = true;
+        backupOutsideOnNextSave = false;
         return loaded;
     }
 
@@ -142,11 +145,13 @@ public class JsonAddressBookStorage {
         if (changedOutside.isPresent()) {
             logger.warning("Refused to replace " + filePath + " because it was changed outside TrackCall");
             lastKnownRoster = changedOutside.get();
+            backupOutsideOnNextSave = true;
             throw new IOException(MESSAGE_CHANGED_OUTSIDE);
         }
-        saveAddressBook(addressBook, filePath);
+        saveAddressBook(addressBook, filePath, backupOutsideOnNextSave);
         lastKnownRoster = new AddressBook(addressBook);
         hasObservedRoster = true;
+        backupOutsideOnNextSave = false;
     }
 
     /**
@@ -155,6 +160,12 @@ public class JsonAddressBookStorage {
      * @param filePath location of the data. Cannot be null.
      */
     public void saveAddressBook(ReadOnlyAddressBook addressBook, Path filePath) throws IOException {
+        saveAddressBook(addressBook, filePath, false);
+    }
+
+    /** Backs up a warned-about outside file even when its member values match the requested save. */
+    private void saveAddressBook(ReadOnlyAddressBook addressBook, Path filePath, boolean backupOutside)
+            throws IOException {
         requireNonNull(addressBook);
         requireNonNull(filePath);
 
@@ -162,7 +173,7 @@ public class JsonAddressBookStorage {
         // Validate before rotating the backup: a damaged roster must never replace the last good copy.
         try {
             Optional<ReadOnlyAddressBook> saved = readAddressBook(target);
-            if (saved.isPresent() && !hasSameSavedData(saved.get(), addressBook)) {
+            if (saved.isPresent() && (backupOutside || !hasSameSavedData(saved.get(), addressBook))) {
                 Path backup = FileUtil.resolvePath(getBackupFilePath(target));
                 saveWithBackup(addressBook, target, backup);
                 return;
