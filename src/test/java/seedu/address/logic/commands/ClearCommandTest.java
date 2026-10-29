@@ -20,7 +20,7 @@ public class ClearCommandTest {
         Model model = new ModelManager();
         Model expectedModel = new ModelManager();
 
-        assertCommandSuccess(new ClearCommand(), model, ClearCommand.MESSAGE_EMPTY, expectedModel);
+        assertCommandSuccess(new ClearCommand(true), model, ClearCommand.MESSAGE_EMPTY, expectedModel);
     }
 
     @Test
@@ -31,7 +31,7 @@ public class ClearCommandTest {
 
         String expectedMessage = String.format(ClearCommand.MESSAGE_SUCCESS,
                 model.getAddressBook().getPersonList().size());
-        assertCommandSuccess(new ClearCommand(), model, expectedMessage, expectedModel);
+        assertCommandSuccess(new ClearCommand(true), model, expectedMessage, expectedModel);
     }
 
     @Test
@@ -43,7 +43,7 @@ public class ClearCommandTest {
         assertEquals(1, model.getFilteredPersonList().size());
 
         Model expectedModel = new ModelManager();
-        assertCommandSuccess(new ClearCommand(), model,
+        assertCommandSuccess(new ClearCommand(true), model,
                 String.format(ClearCommand.MESSAGE_SUCCESS, total), expectedModel);
     }
 

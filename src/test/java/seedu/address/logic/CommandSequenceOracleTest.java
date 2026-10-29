@@ -63,7 +63,7 @@ public class CommandSequenceOracleTest {
         Path blocker = backup.resolve("blocked.txt");
         Files.writeString(blocker, "Force the clear save to fail");
 
-        session.logic.execute("clear");
+        session.logic.execute("clear -all");
         SaveFailureException failure = assertThrows(SaveFailureException.class, () -> session.logic.execute("yes"));
 
         assertTrue(failure.getMessage().contains("No members were removed"));
@@ -128,7 +128,7 @@ public class CommandSequenceOracleTest {
             Files.createDirectories(folder);
             rosterFile = folder.resolve("members.json");
             restart();
-            command("clear");
+            command("clear -all");
         }
 
         private void restart() throws Exception {
@@ -375,7 +375,7 @@ public class CommandSequenceOracleTest {
 
         private Change clearRoster() throws Exception {
             if (random.nextInt(5) == 0) {
-                command("clear");
+                command("clear -all");
                 if (!roster.isEmpty()) {
                     command("yes");
                 }

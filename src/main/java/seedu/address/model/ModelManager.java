@@ -206,6 +206,13 @@ public class ModelManager implements Model {
     }
 
     @Override
+    public void removeDeletedPersonsFromSelections(List<Person> deletedPersons) {
+        requireNonNull(deletedPersons);
+        deletedPersons.forEach(person -> activeFilters.forEach(filter -> filter.removeSelectedPerson(person)));
+        refreshFilteredPersons();
+    }
+
+    @Override
     public void removeActiveFilter(ActiveFilter filter) {
         requireNonNull(filter);
         if (activeFilters.remove(filter)) {

@@ -147,12 +147,12 @@ public class UserCsvWorkflowTest {
     public void clear_alreadyEmpty_preservesRecoverableMembers() throws Exception {
         // Updated UG explicitly includes clear on an already-empty roster in backup preservation.
         AddressBook original = new AddressBook(model.getAddressBook());
-        logic.execute("clear");
+        logic.execute("clear -all");
         logic.execute("yes");
         assertEquals(original, rosterStorage.readBackup().orElseThrow());
         byte[] previousDistinct = Files.readAllBytes(JsonAddressBookStorage.getBackupFilePath(rosterFile));
 
-        logic.execute("clear");
+        logic.execute("clear -all");
 
         assertTrue(rosterStorage.readAddressBook().orElseThrow().getPersonList().isEmpty());
         assertArrayEquals(previousDistinct, Files.readAllBytes(JsonAddressBookStorage.getBackupFilePath(rosterFile)),

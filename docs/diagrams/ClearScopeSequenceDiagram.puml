@@ -1,0 +1,36 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+participant ":LogicManager" as Logic LOGIC_COLOR
+participant ":ClearCommand" as Clear LOGIC_COLOR
+participant ":Model" as Model MODEL_COLOR
+participant ":Storage" as Storage STORAGE_COLOR
+[-> Logic : execute("clear" or "clear -all")
+Logic -> Clear : prepareTargets(model)
+Clear -> Model : getFilteredPersonList() or getAddressBook()
+Model --> Clear : members
+Clear --> Logic : captured target count
+Logic -->[ : scope/count confirmation prompt
+[-> Logic : execute("yes")
+Logic -> Model : getAddressBook()
+Model --> Logic : beforeClear snapshot
+Logic -> Clear : execute(model)
+Clear -> Model : setAddressBook(non-target members)
+note right of Model : Preserve conditions until save succeeds
+Logic -> Storage : saveAddressBook(remaining roster)
+alt save succeeds
+Storage --> Logic : saved
+Logic -> Clear : finishSaving(model)
+alt displayed clearing
+Clear -> Model : removeDeletedPersonsFromSelections(targets)
+note right of Model : Retain conditions; update Show counts
+else whole-roster clearing
+Clear -> Model : updateFilteredPersonList(SHOW_ALL)
+end
+Logic -->[ : cleared count
+else save fails
+Storage --> Logic : IOException
+Logic -> Model : setAddressBook(beforeClear)
+Logic -->[ : save error; no members removed
+end
+@enduml

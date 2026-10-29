@@ -122,8 +122,8 @@ public class ListClearIntegrationTest {
         String saved = Files.readString(dataFile);
         storage.saveAttempts = 0;
 
-        for (String cancellation : List.of("", "n", "no", "not-a-command", "exit", "clear", "delete 1")) {
-            String prompt = logic.execute("clear").getFeedbackToUser();
+        for (String cancellation : List.of("", "n", "no", "not-a-command", "exit", "clear -all", "delete 1")) {
+            String prompt = logic.execute("clear -all").getFeedbackToUser();
             assertEquals(String.format(ClearCommand.MESSAGE_CONFIRMATION, before.getPersonList().size()), prompt);
             assertTrue(logic.isAwaitingConfirmation());
             assertEquals(before, model.getAddressBook());
@@ -132,7 +132,7 @@ public class ListClearIntegrationTest {
             assertEquals(0, storage.saveAttempts);
 
             String expectedCancellation = ClearCommand.MESSAGE_CANCELLED;
-            if (List.of("exit", "clear", "delete 1").contains(cancellation)) {
+            if (List.of("exit", "clear -all", "delete 1").contains(cancellation)) {
                 expectedCancellation += "\n\"" + cancellation + "\" was not run. Enter it again to run it.";
             }
             assertEquals(expectedCancellation, logic.execute(cancellation).getFeedbackToUser());
@@ -148,7 +148,7 @@ public class ListClearIntegrationTest {
     @Test
     public void clear_inexactConfirmation_remindsAndKeepsPromptPending() throws Exception {
         AddressBook before = new AddressBook(model.getAddressBook());
-        String prompt = logic.execute("clear").getFeedbackToUser();
+        String prompt = logic.execute("clear -all").getFeedbackToUser();
 
         assertEquals("To confirm, type yes exactly, in lowercase, and press Enter, or "
                 + "type anything else to cancel (except yes or y in any letter case).\n\n"
@@ -166,7 +166,7 @@ public class ListClearIntegrationTest {
     @Test
     public void clear_confirmationAfterFilterChange_removesEntireRosterOnlyOnce() throws Exception {
         int count = model.getAddressBook().getPersonList().size();
-        logic.execute("clear");
+        logic.execute("clear -all");
         model.updateFilteredPersonList(person -> false);
         assertEquals(String.format(ClearCommand.MESSAGE_SUCCESS, count),
                 logic.execute(" \tyes \t").getFeedbackToUser());
@@ -184,7 +184,7 @@ public class ListClearIntegrationTest {
         model.setGuiSettings(settings);
 
         String expected = String.format(ClearCommand.MESSAGE_SUCCESS, before.getPersonList().size());
-        logic.execute(" \tclear \t");
+        logic.execute(" \tclear -all \t");
         assertEquals(expected, logic.execute("yes").getFeedbackToUser());
         assertEquals(new AddressBook(), model.getAddressBook());
         assertEquals(List.of(), model.getFilteredPersonList());
@@ -201,7 +201,7 @@ public class ListClearIntegrationTest {
     public void clear_noSearchMatches_removesHiddenMembers() throws Exception {
         int total = model.getAddressBook().getPersonList().size();
         model.updateFilteredPersonList(person -> false);
-        logic.execute("clear");
+        logic.execute("clear -all");
         assertEquals(String.format(ClearCommand.MESSAGE_SUCCESS, total), logic.execute("yes").getFeedbackToUser());
         assertEquals(new AddressBook(), storage.readAddressBook().orElseThrow());
     }
@@ -209,9 +209,9 @@ public class ListClearIntegrationTest {
     @Test
     public void clear_singleMember_reportsSingularThenEmptyAndSavesBothTimes() throws Exception {
         model.setAddressBook(singleMemberRoster());
-        logic.execute("clear");
+        logic.execute("clear -all");
         assertEquals(ClearCommand.MESSAGE_SINGLE, logic.execute("yes").getFeedbackToUser());
-        assertEquals(ClearCommand.MESSAGE_EMPTY, logic.execute("clear").getFeedbackToUser());
+        assertEquals(ClearCommand.MESSAGE_EMPTY, logic.execute("clear -all").getFeedbackToUser());
         assertEquals(2, storage.saveAttempts);
         assertEquals(ListCommand.MESSAGE_EMPTY, logic.execute("list").getFeedbackToUser());
         assertEquals(2, storage.saveAttempts);
@@ -220,7 +220,7 @@ public class ListClearIntegrationTest {
     @Test
     public void clear_emptyRoster_createsValidEmptyFile() throws Exception {
         model.setAddressBook(new AddressBook());
-        assertEquals(ClearCommand.MESSAGE_EMPTY, logic.execute("clear").getFeedbackToUser());
+        assertEquals(ClearCommand.MESSAGE_EMPTY, logic.execute("clear -all").getFeedbackToUser());
         assertEquals(1, storage.saveAttempts);
         assertEquals(new AddressBook(), storage.readAddressBook().orElseThrow());
     }
@@ -238,7 +238,7 @@ public class ListClearIntegrationTest {
         for (IOException failure : List.of(new IOException("Disk full"),
                 new AccessDeniedException(dataFile.toString()))) {
             storage.failure = failure;
-            logic.execute("clear");
+            logic.execute("clear -all");
             CommandException exception = assertThrows(CommandException.class, () -> logic.execute("yes"));
             assertFalse(logic.isAwaitingConfirmation());
             assertThrows(ParseException.class, () -> logic.execute("yes"));
@@ -251,7 +251,7 @@ public class ListClearIntegrationTest {
         }
         assertEquals(2, storage.saveAttempts);
         storage.failure = null;
-        logic.execute("clear");
+        logic.execute("clear -all");
         assertEquals(String.format(ClearCommand.MESSAGE_SUCCESS, before.getPersonList().size()),
                 logic.execute("yes").getFeedbackToUser());
         assertEquals(new AddressBook(), storage.readAddressBook().orElseThrow());
@@ -262,7 +262,7 @@ public class ListClearIntegrationTest {
         model.setAddressBook(new AddressBook());
         model.updateFilteredPersonList(person -> false);
         storage.failure = new IOException("Disk full");
-        CommandException exception = assertThrows(CommandException.class, () -> logic.execute("clear"));
+        CommandException exception = assertThrows(CommandException.class, () -> logic.execute("clear -all"));
         assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, exception.getMessage());
         assertEquals(1, storage.saveAttempts);
         model.setAddressBook(getTypicalAddressBook());
@@ -279,6 +279,100 @@ public class ListClearIntegrationTest {
     /**
      * Counts persistence attempts and injects failures while retaining real JSON reads and successful writes.
      */
+    @Test
+    public void clear_displayedTargets_keepsHiddenMembersAndPersistsRemainingRoster() throws Exception {
+        List<Person> before = List.copyOf(model.getAddressBook().getPersonList());
+        logic.execute("show 1 3");
+        String prompt = logic.execute("clear").getFeedbackToUser();
+        assertTrue(prompt.contains("2 displayed"));
+        assertEquals(before, model.getAddressBook().getPersonList());
+        assertEquals(0, storage.saveAttempts);
+        logic.execute("Y");
+        assertTrue(logic.isAwaitingConfirmation());
+        logic.execute("yes");
+        List<Person> expected = before.stream()
+                .filter(p -> !List.of(before.get(0), before.get(2)).contains(p)).toList();
+        assertEquals(expected, model.getAddressBook().getPersonList());
+        assertEquals(List.of(), model.getFilteredPersonList());
+        assertEquals("Show: 0 selected", model.getActiveFilters().getFirst().getLabel());
+        logic.execute("list");
+        assertEquals(expected, model.getFilteredPersonList());
+        assertEquals(expected, storage.readAddressBook().orElseThrow().getPersonList());
+    }
+
+    @Test
+    public void clear_filterRemovedDuringPrompt_keepsOriginalTargets() throws Exception {
+        List<Person> before = List.copyOf(model.getAddressBook().getPersonList());
+        logic.execute("show 1");
+        logic.execute("clear");
+        logic.removeActiveFilter(logic.getActiveFilters().getFirst());
+        logic.execute("yes");
+        assertEquals(before.subList(1, before.size()), model.getAddressBook().getPersonList());
+    }
+
+    @Test
+    public void clear_noDisplayedMembers_doesNotSaveOrAskToClearHiddenRoster() throws Exception {
+        AddressBook before = new AddressBook(model.getAddressBook());
+        model.updateFilteredPersonList(person -> false);
+        assertEquals(ClearCommand.MESSAGE_NO_DISPLAYED,
+                assertThrows(CommandException.class, () -> logic.execute("clear")).getMessage());
+        assertFalse(logic.isAwaitingConfirmation());
+        assertEquals(0, storage.saveAttempts);
+        assertEquals(before, model.getAddressBook());
+        logic.execute("clear -all");
+        assertTrue(logic.isAwaitingConfirmation());
+        logic.execute("no");
+        assertEquals(before, model.getAddressBook());
+    }
+
+    @Test
+    public void clear_displayedSaveFailure_restoresShowSelectionsAndSavedBytes() throws Exception {
+        AddressBook before = new AddressBook(model.getAddressBook());
+        storage.saveAddressBook(before);
+        String saved = Files.readString(dataFile);
+        logic.execute("show 1 2");
+        var filters = model.getActiveFilters();
+        storage.failure = new IOException("Disk full");
+        logic.execute("clear");
+        assertThrows(CommandException.class, () -> logic.execute("yes"));
+        assertEquals(before, model.getAddressBook());
+        assertEquals(before.getPersonList().subList(0, 2), model.getFilteredPersonList());
+        assertEquals(filters, model.getActiveFilters());
+        assertEquals(saved, Files.readString(dataFile));
+        storage.failure = null;
+        logic.execute("clear");
+        logic.execute("yes");
+        assertEquals(before.getPersonList().subList(2, before.getPersonList().size()),
+                storage.readAddressBook().orElseThrow().getPersonList());
+    }
+
+    @Test
+    public void clear_options_rejectTyposAndRepeatedFlags() {
+        for (String input : List.of("clear all", "clear -ALL", "clear -all -all", "clear -all extra")) {
+            assertThrows(ParseException.class, () -> logic.execute(input));
+        }
+        assertEquals(0, storage.saveAttempts);
+    }
+
+    @Test
+    public void clear_searchAndTagConditions_retainConditionsAndHiddenMembers() throws Exception {
+        for (String restriction : List.of("find Alice", "findemail alice", "filter t/friends")) {
+            setUp();
+            List<Person> before = List.copyOf(model.getAddressBook().getPersonList());
+            logic.execute(restriction);
+            List<Person> targets = List.copyOf(model.getFilteredPersonList());
+            assertFalse(targets.isEmpty());
+            var conditions = model.getActiveFilters();
+            logic.execute("clear");
+            logic.execute("yes");
+            List<Person> expected = before.stream().filter(p -> !targets.contains(p)).toList();
+            assertEquals(expected, model.getAddressBook().getPersonList());
+            assertEquals(conditions, model.getActiveFilters());
+            assertEquals(List.of(), model.getFilteredPersonList());
+            assertEquals(expected, storage.readAddressBook().orElseThrow().getPersonList());
+        }
+    }
+
     private static class RecordingStorage extends JsonAddressBookStorage {
         private int saveAttempts;
         private IOException failure;
