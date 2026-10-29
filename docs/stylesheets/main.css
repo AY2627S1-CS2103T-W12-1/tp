@@ -384,6 +384,11 @@ header {
   font-weight: 700;
 }
 
+#content-wrapper .ug-topic > strong,
+#content-wrapper:has(> #user-guide) table td:first-child strong {
+  font-weight: inherit;
+}
+
 #content-wrapper:has(> #user-guide) ul,
 #content-wrapper:has(> #user-guide) ol {
   padding-left: 1.5rem;
