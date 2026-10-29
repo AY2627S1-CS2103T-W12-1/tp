@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 
@@ -25,6 +26,16 @@ public class MemberDetailsPanelTest {
     @BeforeAll
     public static void startJavaFx() throws InterruptedException {
         JavaFxTestUtil.start();
+    }
+
+    @Test
+    public void showPerson_nullPerson_throwsNullPointerException() throws Exception {
+        onJavaFxThread(() -> {
+            MemberDetailsPanel panel = new MemberDetailsPanel();
+            assertThrows(NullPointerException.class, () -> panel.showPerson(null, 1));
+            // A rejected call must not reveal any details.
+            assertFalse(panel.getRoot().lookup("#detailsScroll").isVisible());
+        });
     }
 
     @Test
