@@ -38,8 +38,8 @@ public class FilterCommandTest {
 
         CommandResult result = command.execute(model);
 
-        assertEquals("2 member(s) listed with tags \"committee\" or \"alumni\".", result.getFeedbackToUser());
-        assertEquals(List.of("Tag: committee or alumni"), activeLabels(model));
+        assertEquals("2 member(s) listed with tags \"committee\" / \"alumni\".", result.getFeedbackToUser());
+        assertEquals(List.of("Tag: committee / alumni"), activeLabels(model));
         assertEquals(List.of("Pat Committee", "Lee Alumni"), displayedNames(model));
     }
 
@@ -50,9 +50,9 @@ public class FilterCommandTest {
         new FilterCommand(List.of(new Tag("committee"), new Tag("alumni"))).execute(model);
         CommandResult result = new FilterCommand(new Tag("year1")).execute(model);
 
-        assertEquals("1 member(s) listed with tags \"committee\" or \"alumni\", \"year1\".",
+        assertEquals("1 member(s) listed with tags \"committee\" / \"alumni\", \"year1\".",
                 result.getFeedbackToUser());
-        assertEquals(List.of("Tag: committee or alumni", "Tag: year1"), activeLabels(model));
+        assertEquals(List.of("Tag: committee / alumni", "Tag: year1"), activeLabels(model));
         assertEquals(List.of("Lee Alumni"), displayedNames(model));
     }
 
@@ -65,10 +65,10 @@ public class FilterCommandTest {
 
         CommandResult result = reordered.execute(model);
 
-        assertEquals("A filter for the tags \"committee\" or \"alumni\" is already active. "
-                + "No changes were made.\n2 member(s) listed with tags \"committee\" or \"alumni\".",
+        assertEquals("A filter for the tags \"committee\" / \"alumni\" is already active. "
+                + "No changes were made.\n2 member(s) listed with tags \"committee\" / \"alumni\".",
                 result.getFeedbackToUser());
-        assertEquals(List.of("Tag: committee or alumni"), activeLabels(model));
+        assertEquals(List.of("Tag: committee / alumni"), activeLabels(model));
     }
 
     @Test

@@ -149,8 +149,8 @@ or save member data.
 * Matching ignores letter case and accepts any contiguous part of a name word.
   `Alice`, `Ali`, `lic`, and `ice` all match `Alice Tan`.
   For example, `find ali tan` shows names containing either `ali` or `tan`.
-* Keywords within one `find` mean **or**, so the box reads `Name: Alice or Tan`. `find Alice Tan Lee` shows
-  `Name: Alice or Tan or Lee`.
+* Keywords within one `find` mean **or**, and the box joins them with `/`, so it reads `Name: Alice / Tan`.
+  `find Alice Tan Lee` shows `Name: Alice / Tan / Lee`.
 * Each distinct `find` adds another name filter. For example, `find Alice Tan` followed by `find Tan`
   keeps members matching both searches.
 * Email addresses, phone numbers, and tags are not searched.
@@ -197,8 +197,8 @@ Supply at least one keyword. No matches produce `0 members listed.` and an empty
 * Each `findemail` narrows the **currently displayed list**. Earlier name searches, email searches,
   tag filters, and `show` selections stay active. Name sorting stays applied.
 * Each distinct search adds an **Email:** box in command order. Use its **X** to remove only that email condition.
-  Keywords within one command are joined with **or** in the box, for example
-  `Email: @example.com or @school.edu`.
+  Keywords within one command mean **or** and are joined with `/` in the box, for example
+  `Email: @example.com / @school.edu`.
 * For example, `filter t/committee` then `findemail example` keeps committee members whose emails contain
   `example`. Running `findemail zara` next keeps only those whose emails also contain `zara`.
 * Keywords within one command mean **any**; separate searches must **all** match.
@@ -231,8 +231,9 @@ stays the same, and their displayed numbers update.
 
 * Matching ignores letter case: `committee` and `Committee` identify the same tag.
 * **Tags in the same command mean or.** `filter t/committee t/alumni` keeps members who have `committee`,
-  `alumni`, or both. It adds one box that reads `Tag: committee or alumni`, and `filter t/a t/b t/c` shows
-  `Tag: a or b or c`. Its **X** removes the whole group. Repeating a tag in one command counts it once.
+  `alumni`, or both. It adds one box that reads `Tag: committee / alumni`, and `filter t/a t/b t/c` shows
+  `Tag: a / b / c`. The `/` stands for "or"; it is used instead of the word because a tag could itself be named
+  `or`. Its **X** removes the whole group. Repeating a tag in one command counts it once.
 * **Separate commands mean and.** Each filter narrows the current results. Run `filter t/year1` next to keep
   members with **both** conditions, here (`committee` or `alumni`) and `year1`.
 * Applying the same tags again, in any order or letter case, leaves the view unchanged. The result
@@ -240,14 +241,14 @@ stays the same, and their displayed numbers update.
   For example, repeating `filter t/committee` begins with
   `Tag "committee" is already an active filter. No changes were made.`
   Repeating `filter t/alumni t/committee` after `filter t/committee t/alumni` begins with
-  `A filter for the tags "committee" or "alumni" is already active. No changes were made.`
+  `A filter for the tags "committee" / "alumni" is already active. No changes were made.`
 * A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
   A new `findemail` also narrows these results by email, retaining previous conditions.
 
 The result reports `N member(s) listed with tag "TAG".` for one active tag filter. With multiple
 active tags, it names every distinct tag in the order applied, for example:
-`1 member(s) listed with tags "committee", "year1".` Tags that came from one command are joined with `or`,
-for example `2 member(s) listed with tags "committee" or "alumni".` Use `list` to clear all active conditions.
+`1 member(s) listed with tags "committee", "year1".` Tags that came from one command are joined with `/`,
+for example `2 member(s) listed with tags "committee" / "alumni".` Use `list` to clear all active conditions.
 No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
 
 Check the displayed numbers before using `edit`, `tag`, `untag`, or `delete`. Editing keeps the active search and filters.

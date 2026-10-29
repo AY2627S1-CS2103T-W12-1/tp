@@ -17,7 +17,7 @@ import seedu.address.model.tag.Tag;
 /** One removable condition in the displayed member list. */
 public final class ActiveFilter {
     /** Joins the alternatives of one condition in its label, since a member needs only one of them. */
-    public static final String ALTERNATIVES_SEPARATOR = " or ";
+    public static final String ALTERNATIVES_SEPARATOR = " / ";
 
     /** The kind of condition shown in the active filter row. */
     public enum Kind {

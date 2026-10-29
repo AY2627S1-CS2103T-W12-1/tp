@@ -81,7 +81,7 @@ public class FilterCommand extends Command {
     /**
      * Describes the displayed member count and, when tag filters are active, those tags,
      * for example {@code 2 member(s) listed with tag "friends".} Alternatives within one filter are joined
-     * with "or", for example {@code 3 member(s) listed with tags "friends" or "owesMoney", "year1".}
+     * with " / ", for example {@code 3 member(s) listed with tags "friends" / "owesMoney", "year1".}
      */
     public static String describeDisplayedMembers(Model model) {
         requireNonNull(model);
@@ -113,7 +113,7 @@ public class FilterCommand extends Command {
         return String.format(MESSAGE_ALREADY_FILTERED_ANY, formatAlternatives(existingTags));
     }
 
-    /** Quotes each tag name and joins them with "or", as they are in one filter. */
+    /** Quotes each tag name and joins them with " / ", as they are in one filter. */
     private static String formatAlternatives(List<Tag> alternatives) {
         return alternatives.stream()
                 .map(activeTag -> "\"" + activeTag.tagName + "\"")

@@ -635,9 +635,11 @@ So `filter t/a t/b` followed by `filter t/c` means (`a` or `b`) and `c`.
 `ActiveFilter#hasSameTags` compares tag sets ignoring order and letter case. If an equal filter is already active,
 `FilterCommand` leaves the conditions and displayed list unchanged and reports the active filter's stored
 spelling followed by the current result summary.
-The filter box label joins alternatives with `or`, for example `Tag: committee or alumni`. `find` and `findemail`
-boxes use the same wording, for example `Name: Alice or Tan` and `Email: @example.com or @school.edu`, because
-keywords within one of those commands are also alternatives.
+The filter box label joins alternatives with `/` (`ActiveFilter#ALTERNATIVES_SEPARATOR`), for example
+`Tag: committee / alumni`. `find` and `findemail` boxes use the same separator, for example `Name: Alice / Tan`
+and `Email: @example.com / @school.edu`, because keywords within one of those commands are also alternatives.
+The word "or" is not used as the separator because a tag can legally be named `or`, which would make
+`Tag: a or or or b` ambiguous; `/` cannot appear in a tag.
 The model keeps removable name, email, tag, and `show` conditions in application order, shown left to right in the UI.
 `find` adds a distinct name condition and `findemail` adds a distinct email condition; `list` clears all conditions.
 Applying name, email, and tag conditions in a different order gives the same matching
@@ -646,7 +648,7 @@ The observable filtered list updates automatically, and the command reports the 
 count and all active tag names.
 A single tag uses `N member(s) listed with tag "TAG".`; multiple tags use
 `N member(s) listed with tags "TAG1", "TAG2".` in application order. Tags that came from one command are
-joined with `or`, for example `N member(s) listed with tags "TAG1" or "TAG2", "TAG3".`
+joined with `/`, for example `N member(s) listed with tags "TAG1" / "TAG2", "TAG3".`
 A zero-match result is successful.
 
 Filtering preserves the current display order, including name sorting. Visible members are renumbered,

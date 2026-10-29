@@ -62,7 +62,7 @@ public enum CommandHelp {
             "Shows currently displayed members with any of the specified tags without changing saved data.",
             "Shows only members tagged committee or alumni, in their current order with new numbers.",
             "Matching ignores letter case. Tags in the same command mean or, and the box reads "
-                    + "Tag: committee or alumni. A separate filter command narrows the list further (and), "
+                    + "Tag: committee / alumni. A separate filter command narrows the list further (and), "
                     + "and the result names all active tags. Repeating an active filter leaves the view "
                     + "unchanged and reports that no changes were made. Boxes appear left to right in "
                     + "command order, not matching priority. "
