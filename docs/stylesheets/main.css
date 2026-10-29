@@ -290,6 +290,41 @@ header {
   margin-bottom: 18px;
 }
 
+/* Let MarkBind supply each callout's icon and keep its title/body aligned. */
+#content-wrapper .box-container {
+  margin-block: 20px;
+}
+
+#content-wrapper .box-container .box-header-wrapper {
+  align-items: baseline;
+  padding: 14px 18px 6px;
+}
+
+#content-wrapper .box-container .box-header-wrapper .icon-wrapper {
+  flex: 0 0 1em;
+  margin: 0 10px 0 0;
+  text-align: center;
+}
+
+#content-wrapper .box-container .box-header {
+  min-width: 0;
+  font-weight: 700;
+}
+
+#content-wrapper .box-container .box-body-wrapper-with-heading {
+  padding: 0 18px 16px calc(18px + 1em + 10px);
+}
+
+#content-wrapper .box-container .contents {
+  min-width: 0;
+  padding: 0;
+}
+
+#content-wrapper .box-container .box-header > :last-child,
+#content-wrapper .box-container .contents > :last-child {
+  margin-bottom: 0;
+}
+
 #content-wrapper img {
   max-width: 100%;
   height: auto;

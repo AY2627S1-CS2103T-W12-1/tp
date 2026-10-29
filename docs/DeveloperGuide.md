@@ -114,10 +114,11 @@ Refer to the guide [_Setting up and getting started_](SettingUp.html).
 
 ## Design
 
-<box type="tip">
+<box type="tip" header="Tip">
 
-:bulb: **Tip:** Diagram sources are in `docs/diagrams`. Wide diagrams shrink to fit the page; select one to open it at full size.
+Diagram sources are in `docs/diagrams`. Wide diagrams shrink to fit the page; select one to open it at full size.
 See the [PlantUML tutorial](https://se-education.org/guides/tutorials/plantUml.html) to create or edit a diagram.
+
 </box>
 
 ### Architecture
