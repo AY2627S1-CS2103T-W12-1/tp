@@ -125,6 +125,23 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_addressWithSurroundingLineBreaks_returnsTrimmedAddress() throws Exception {
+        for (String address : new String[] {VALID_ADDRESS + "\n", "\r\n" + VALID_ADDRESS,
+            "\n" + VALID_ADDRESS + "\r\n"}) {
+            JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, address, VALID_TAGS);
+            assertEquals(BENSON, person.toModelType());
+        }
+    }
+
+    @Test
+    public void toModelType_lineBreakOnlyAddress_throwsBlankAddressMessage() {
+        for (String address : new String[] {"\n", "\r\n", " \n\r "}) {
+            JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, address, VALID_TAGS);
+            assertThrows(IllegalValueException.class, Address.MESSAGE_CONSTRAINTS, person::toModelType);
+        }
+    }
+
+    @Test
     public void toModelType_addressWithLineBreak_throwsLineBreakMessage() {
         for (String address : new String[] {"Blk 1\nClementi Rd", "Blk 1\r\nClementi Rd", "Blk 1\rClementi Rd"}) {
             JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, address, VALID_TAGS);

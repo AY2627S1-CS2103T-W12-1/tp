@@ -127,6 +127,7 @@ public abstract class BulkTagCommand extends Command {
             return false;
         }
 
+        // Tag.equals ignores letter case; commands also distinguish the spelling they would apply.
         return tag.tagName.equals(((BulkTagCommand) other).tag.tagName);
     }
 
