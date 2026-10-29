@@ -355,7 +355,7 @@ These messages follow the list and clear feature specifications:
 | Clear one member | `Cleared 1 member. The roster is now empty.` |
 | Clear multiple members | `Cleared N members. The roster is now empty.` |
 | Invalid clear arguments | `Invalid command format. Usage: clear. This command removes all members.` |
-| Failed clear save | `Unable to clear the roster because the changes could not be saved. No members were removed. Run clear again to retry.` |
+| Failed clear save | `Unable to clear the roster because the changes could not be saved. No members were removed.` |
 
 #### Test coverage {id="test-coverage-1"}
 
@@ -469,7 +469,9 @@ An unchanged save still attempts to write the current roster but retains the pre
 `JsonAddressBookStorage` also remembers the roster it last read from or wrote to the data file. If the file
 now holds a different valid roster, it was changed outside TrackCall, so the first save is refused with a
 storage error and the change stays in memory. The refused save records the outside version, so a retry
-replaces it and keeps it in `.bak` through the normal backup rotation. Formatting-only edits are not refused.
+replaces it and keeps its exact bytes in `.bak`, even if its member values match the requested save.
+This backup requirement remains pending after a failed write and clears after a successful save or explicit reload.
+Formatting-only edits are not refused.
 
 Design considerations for outside-edit detection: comparing the parsed roster (the current choice) ignores
 formatting-only edits and unchanged files, at the cost of one extra read per save. Alternatives: a modification

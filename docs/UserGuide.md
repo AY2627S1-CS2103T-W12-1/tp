@@ -629,7 +629,7 @@ The count includes hidden members.
 Extra arguments produce `Invalid command format. Usage: clear. This command removes all members.`
 
 If saving fails, TrackCall restores the roster and previous view. It reports:
-`Unable to clear the roster because the changes could not be saved. No members were removed. Run clear again to retry.`
+`Unable to clear the roster because the changes could not be saved. No members were removed.`
 See [Correcting errors](#correcting-errors) for recovery steps.
 
 ### Help and session {id="help-and-session"}
@@ -710,7 +710,10 @@ Exiting before a successful retry loses unsaved changes.
 TrackCall restores every member and the previous view. It reports `No members were removed.`
 The submitted input stays in the command box (`yes` after confirmation, or `clear` for an already-empty roster).
 
-Fix the storage problem. Run `clear` again and confirm the new prompt only if you still want to remove the entire roster.
+The feedback includes the storage failure reason. If it says the file changed outside TrackCall,
+restart to load those outside changes. Retry only if you intend to replace them with the session's cleared roster;
+the outside version will be kept in the backup. For other failures, resolve the stated storage problem first.
+Run `clear` again and confirm the new prompt only if you still want to remove the entire roster.
 A second `yes` alone cannot repeat the action.
 
 ## Your data
@@ -768,6 +771,8 @@ If an expected roster is missing, close the app and repair or restore the file f
 Before replacing an existing valid roster, TrackCall saves its previous contents to
 `data/addressbook.json.bak`. This is the previous distinct saved version. A save with unchanged member data retries persistence
 without replacing that backup, including `clear` on an already-empty roster.
+An explicit retry after an outside-change warning still backs up the outside file's exact contents,
+even if its members match the session's roster.
 If the backup cannot be written, the roster save fails and the existing roster stays unchanged.
 
 If the roster cannot be loaded, TrackCall first preserves its exact contents in a uniquely named

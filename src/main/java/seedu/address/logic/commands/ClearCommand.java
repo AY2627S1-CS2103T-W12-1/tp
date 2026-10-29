@@ -24,8 +24,7 @@ public class ClearCommand extends Command {
     public static final String MESSAGE_SINGLE = "Cleared 1 member. The roster is now empty.";
     public static final String MESSAGE_EMPTY = "The roster is already empty. No changes were made.";
     public static final String MESSAGE_SAVE_FAILURE =
-            "Unable to clear the roster because the changes could not be saved. No members were removed. "
-            + "Run clear again to retry.";
+            "Unable to clear the roster because the changes could not be saved. No members were removed.";
 
     @Override
     public CommandResult execute(Model model) {

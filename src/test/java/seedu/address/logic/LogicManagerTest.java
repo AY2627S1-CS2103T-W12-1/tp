@@ -886,6 +886,40 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_clearAfterOutsideEdit_preservesFilesViewAndActionableWarning() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        AddressBook original = new AddressBook(model.getAddressBook());
+        Path file = temporaryFolder.resolve("outside-clear.json");
+        JsonAddressBookStorage sessionStorage = new JsonAddressBookStorage(file);
+        sessionStorage.saveAddressBook(original);
+        AddressBook outside = new AddressBook();
+        outside.addPerson(new PersonBuilder(AMY).withName("Outside Member").build());
+        new JsonAddressBookStorage(file).saveAddressBook(outside);
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        String outsideBytes = Files.readString(file);
+        String backupBytes = Files.readString(backup);
+        logic = new LogicManager(model, new StorageManager(sessionStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json"))));
+        logic.execute("find Amy");
+        logic.execute("show 1");
+        var filters = model.getActiveFilters();
+        logic.execute("clear");
+
+        SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
+                SaveFailureException.class, () -> logic.execute("yes"));
+
+        assertTrue(failure.getMessage().contains(JsonAddressBookStorage.MESSAGE_CHANGED_OUTSIDE));
+        assertFalse(failure.isChangeApplied());
+        assertEquals(original, model.getAddressBook());
+        assertEquals(List.of(AMY), model.getFilteredPersonList());
+        assertEquals(filters, model.getActiveFilters());
+        assertEquals(outsideBytes, Files.readString(file));
+        assertEquals(backupBytes, Files.readString(backup));
+        assertFalse(logic.isAwaitingConfirmation());
+    }
+
+    @Test
     public void execute_failedClear_restoresRosterAndExistingFilter() throws Exception {
         for (IOException error : List.of(DUMMY_IO_EXCEPTION, DUMMY_AD_EXCEPTION)) {
             model = new ModelManager();
@@ -903,6 +937,7 @@ public class LogicManagerTest {
             assertEquals(original, model.getAddressBook());
             assertEquals(List.of(AMY), model.getFilteredPersonList());
             assertTrue(failure.getMessage().contains("No members were removed."));
+            assertTrue(failure.getMessage().contains(error.getMessage()));
         }
     }
 

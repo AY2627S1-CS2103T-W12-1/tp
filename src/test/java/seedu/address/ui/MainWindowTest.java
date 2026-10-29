@@ -180,7 +180,8 @@ public class MainWindowTest {
             assertEquals("Showing 1 member.", feedback.getText());
             enter("clear");
             enter("yes");
-            assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, feedback.getText());
+            assertTrue(feedback.getText().startsWith(ClearCommand.MESSAGE_SAVE_FAILURE));
+            assertTrue(feedback.getText().contains("Could not save data"));
             assertEquals("yes", input.getText());
             assertEquals(1, model.getFilteredPersonList().size());
         });
