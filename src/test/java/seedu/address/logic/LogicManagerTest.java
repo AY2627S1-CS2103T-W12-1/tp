@@ -1,5 +1,6 @@
 package seedu.address.logic;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -66,7 +67,7 @@ public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
     private static final IOException DUMMY_AD_EXCEPTION = new AccessDeniedException("dummy access denied exception");
     private static final String[] READ_ONLY_COMMANDS = {
-        "list", "sort", "find Amy", "find m", "findemail @example.com", "findemail absent@", "filter t/friend",
+        "list", "find Amy", "find m", "findemail @example.com", "findemail absent@", "filter t/friend",
         "help", "help add", "help filter", "help findemail", "exit"
     };
 
@@ -345,7 +346,7 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_findEmail_retainsSortingAndUpdatesLiveResultsAfterEdits() throws Exception {
+    public void execute_findEmail_retainsStoredOrderAndUpdatesLiveResultsAfterEdits() throws Exception {
         model.addPerson(BOB);
         model.addPerson(AMY);
         logic.execute("sort");
@@ -354,7 +355,7 @@ public class LogicManagerTest {
 
         logic.execute("findemail @example.com");
         assertEquals(List.of(AMY, BOB), model.getFilteredPersonList());
-        assertEquals(List.of(BOB, AMY), model.getAddressBook().getPersonList());
+        assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
         logic.execute("filter t/husband");
         assertEquals(List.of(BOB), model.getFilteredPersonList());
         logic.execute("edit 1 p/9876543");
@@ -363,10 +364,10 @@ public class LogicManagerTest {
         logic.execute("edit 1 e/bob@another.org");
         Person changedEmail = new PersonBuilder(updatedBob).withEmail("bob@another.org").build();
         assertTrue(model.getFilteredPersonList().isEmpty());
-        assertEquals(List.of(changedEmail, AMY), model.getAddressBook().getPersonList());
+        assertEquals(List.of(AMY, changedEmail), model.getAddressBook().getPersonList());
 
         logic.execute("list");
-        assertEquals(List.of(changedEmail, AMY), model.getFilteredPersonList());
+        assertEquals(List.of(AMY, changedEmail), model.getFilteredPersonList());
     }
 
     @Test
@@ -377,13 +378,14 @@ public class LogicManagerTest {
         logic.execute("find Bob");
         logic.execute("filter t/husband");
         String expected = String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, FindEmailCommand.MESSAGE_USAGE);
+        byte[] savedRoster = Files.readAllBytes(temporaryFolder.resolve("addressBook.json"));
 
         for (String command : List.of("findemail", "findemail \t  ")) {
             assertThrows(ParseException.class, expected, () -> logic.execute(command));
             assertEquals(List.of(BOB), model.getFilteredPersonList());
             assertEquals(List.of(new Tag("husband")), model.getActiveTagFilters());
-            assertEquals(List.of(BOB, AMY), model.getAddressBook().getPersonList());
-            assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
+            assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
+            assertArrayEquals(savedRoster, Files.readAllBytes(temporaryFolder.resolve("addressBook.json")));
             assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json.bak")));
         }
     }
@@ -534,7 +536,7 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_sort_ordersFilteredViewIgnoringCaseAndListRestoresStoredOrder() throws Exception {
+    public void execute_sort_ordersEntireRosterIgnoringCaseAndListRetainsSortedOrder() throws Exception {
         Person amy = new PersonBuilder(AMY).withName("amy Bee").build();
         Person hidden = new PersonBuilder(AMY).withName("Hidden Member").build();
         model.addPerson(BOB);
@@ -542,31 +544,31 @@ public class LogicManagerTest {
         model.addPerson(hidden);
         model.updateFilteredPersonList(person -> !person.equals(hidden));
 
-        assertEquals(SortCommand.MESSAGE_SUCCESS, logic.execute("sort").getFeedbackToUser());
+        assertEquals(String.format(SortCommand.MESSAGE_SUCCESS, 3), logic.execute("sort").getFeedbackToUser());
         assertEquals(List.of(amy, BOB), model.getFilteredPersonList());
-        assertEquals(List.of(BOB, amy, hidden), model.getAddressBook().getPersonList());
+        assertEquals(List.of(amy, BOB, hidden), model.getAddressBook().getPersonList());
         logic.execute("sort");
         assertEquals(List.of(amy, BOB), model.getFilteredPersonList());
         logic.execute("list");
-        assertEquals(List.of(BOB, amy, hidden), model.getFilteredPersonList());
+        assertEquals(List.of(amy, BOB, hidden), model.getFilteredPersonList());
     }
 
     @Test
-    public void execute_sort_keepsLiveOrderingAndUsesDisplayedIndexes() throws Exception {
+    public void execute_sort_retainsPositionsForLaterAddsAndEditsAndUsesDisplayedIndexes() throws Exception {
         model.addPerson(BOB);
         model.addPerson(AMY);
         logic.execute("sort");
         logic.execute("add n/Aaron p/91234567 e/aaron@example.com a/Orchard Road");
-        Person aaron = model.getFilteredPersonList().get(0);
+        Person aaron = model.getFilteredPersonList().get(2);
         assertEquals("Aaron", aaron.getName().fullName);
-        assertEquals(List.of(aaron, AMY, BOB), model.getFilteredPersonList());
+        assertEquals(List.of(AMY, BOB, aaron), model.getFilteredPersonList());
 
-        logic.execute("edit 3 n/Abel");
+        logic.execute("edit 2 n/Abel");
         Person abel = new PersonBuilder(BOB).withName("Abel").build();
-        assertEquals(List.of(aaron, abel, AMY), model.getFilteredPersonList());
+        assertEquals(List.of(AMY, abel, aaron), model.getFilteredPersonList());
         logic.execute("delete 2");
         logic.execute("yes");
-        assertEquals(List.of(aaron, AMY), model.getFilteredPersonList());
+        assertEquals(List.of(AMY, aaron), model.getFilteredPersonList());
         assertEquals(List.of(AMY, aaron), model.getAddressBook().getPersonList());
         logic.execute("find Amy");
         assertEquals(List.of(AMY), model.getFilteredPersonList());
@@ -614,7 +616,7 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_filterAfterSort_retainsNameOrderWithoutChangingStoredOrder() throws Exception {
+    public void execute_filterAfterSort_retainsSortedStoredOrder() throws Exception {
         Person amy = new PersonBuilder(AMY).withTags("committee").build();
         Person bob = new PersonBuilder(BOB).withTags("committee").build();
         model.addPerson(bob);
@@ -625,7 +627,7 @@ public class LogicManagerTest {
         assertEquals("2 member(s) listed with tag \"committee\".",
                 logic.execute("filter t/committee").getFeedbackToUser());
         assertEquals(List.of(amy, bob), logic.getFilteredPersonList());
-        assertEquals(List.of(bob, ALICE, amy), model.getAddressBook().getPersonList());
+        assertEquals(List.of(ALICE, amy, bob), model.getAddressBook().getPersonList());
     }
 
     @Test

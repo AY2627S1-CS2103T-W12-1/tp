@@ -71,5 +71,5 @@ Command --> Logic : true
 deactivate Command
 [<-- Logic : CommandResult (no automatic JSON save)
 deactivate Logic
-note over Logic, Model: Export leaves the roster, filters, and sorting unchanged.
+note over Logic, Model: Export leaves the roster order and active filters unchanged.
 @enduml

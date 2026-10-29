@@ -25,7 +25,7 @@ import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 /**
- * Tests email-search feedback, full-roster searching, and preservation of stored records and display sorting.
+ * Tests email-search feedback, full-roster searching, and preservation of stored records and their order.
  */
 public class FindEmailCommandTest {
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
@@ -89,20 +89,20 @@ public class FindEmailCommandTest {
     }
 
     @Test
-    public void execute_activeSorting_preservesAlphabeticalDisplayAndStoredOrder() {
+    public void execute_sortedRoster_preservesAlphabeticalStoredOrder() {
         Person zara = new PersonBuilder().withName("Zara Tan").withEmail("zara@example.com").build();
         Person bob = new PersonBuilder().withName("Bob Tan").withEmail("bob@example.com").build();
         Person alice = new PersonBuilder().withName("Alice Tan").withEmail("alice@example.com").build();
         AddressBook roster = new AddressBook();
         roster.setPersons(List.of(zara, bob, alice));
         model.setAddressBook(roster);
-        model.setNameSorting(true);
+        model.sortPersonsByName();
 
         CommandResult result = new FindEmailCommand(predicate("@example.com")).execute(model);
 
         assertEquals("3 members listed.", result.getFeedbackToUser());
         assertEquals(List.of(alice, bob, zara), model.getFilteredPersonList());
-        assertEquals(List.of(zara, bob, alice), model.getAddressBook().getPersonList());
+        assertEquals(List.of(alice, bob, zara), model.getAddressBook().getPersonList());
     }
 
     @Test

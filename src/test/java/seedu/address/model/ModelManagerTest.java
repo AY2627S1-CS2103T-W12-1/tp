@@ -262,19 +262,19 @@ public class ModelManagerTest {
     }
 
     @Test
-    public void setNameSorting_extraSpaces_ignoresSpacingWithoutChangingRecords() {
+    public void sortPersonsByName_extraSpaces_sortsStoredOrderWithoutChangingNames() {
         Person later = new PersonBuilder(ALICE).withName("Alice  Zoe ").build();
         Person earlier = new PersonBuilder(BENSON).withName("alice Bob").build();
         modelManager.addPerson(later);
         modelManager.addPerson(earlier);
 
-        modelManager.setNameSorting(true);
+        modelManager.sortPersonsByName();
 
         assertEquals(List.of(earlier, later), modelManager.getFilteredPersonList());
         assertEquals("Alice  Zoe ", later.getName().fullName);
-        assertEquals(List.of(later, earlier), modelManager.getAddressBook().getPersonList());
-        modelManager.setNameSorting(false);
-        assertEquals(List.of(later, earlier), modelManager.getFilteredPersonList());
+        assertEquals(List.of(earlier, later), modelManager.getAddressBook().getPersonList());
+        modelManager.updateFilteredPersonList(unused -> true);
+        assertEquals(List.of(earlier, later), modelManager.getFilteredPersonList());
     }
 
     @Test

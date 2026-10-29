@@ -46,6 +46,11 @@ public class AddressBook implements ReadOnlyAddressBook {
         setPersons(newData.getPersonList());
     }
 
+    /** Sorts the stored roster by normalized name, preserving the current order of equal names. */
+    public void sortPersonsByName() {
+        persons.sortByName();
+    }
+
     //// person-level operations
 
     /**

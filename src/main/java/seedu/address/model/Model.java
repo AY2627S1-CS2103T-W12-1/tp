@@ -66,13 +66,8 @@ public interface Model {
     /** Returns an unmodifiable view of the filtered person list */
     ObservableList<Person> getFilteredPersonList();
 
-    /**
-     * Sets whether displayed persons are sorted by name, ignoring letter case.
-     * The filter and stored roster order are unchanged.
-     *
-     * @param enabled True for alphabetical order, false for stored order.
-     */
-    void setNameSorting(boolean enabled);
+    /** Stably sorts the complete stored roster by name while retaining all active display conditions. */
+    void sortPersonsByName();
 
     /**
      * Updates the filter of the filtered person list to filter by the given {@code predicate}.

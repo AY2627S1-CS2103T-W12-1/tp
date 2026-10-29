@@ -154,7 +154,7 @@ public class AddCommandTest {
         }
 
         @Override
-        public void setNameSorting(boolean enabled) {
+        public void sortPersonsByName() {
             throw new AssertionError("This method should not be called.");
         }
 

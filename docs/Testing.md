@@ -72,8 +72,8 @@ It generates 3,200 reproducible workflow steps across eight seeds, comparing a p
 with the application after each step. It checks stored order, displayed members, filters, show selections,
 CSV re-import, deletion confirmation/cancellation, tag changes, tag renaming, and process-session reloads.
 Read-only steps must also preserve the saved file's exact bytes. A separate failure-injection scenario
-checks that a failed clear restores a composed search/tag/show/sort view and that a later bulk tag command
-updates only its intended member. Filter-removal actions call the same model/logic methods as the UI;
+checks that a failed clear restores a composed search/tag/show view and the stored roster order, and that a later
+bulk tag command updates only its intended member. Filter-removal actions call the same model/logic methods as the UI;
 this oracle does not simulate native mouse clicks, window sizing, or keyboard focus.
 
 On Windows PowerShell, use `.\gradlew.bat` instead of `./gradlew`.

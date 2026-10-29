@@ -190,8 +190,9 @@ public class UserCsvWorkflowTest {
 
         logic.execute("export " + csv);
 
-        assertEquals("name,phone,email,address,tags\r\nZulu,00123,zulu@example.com,,old\r\n"
-                + "Alice,456,alice@example.com,\"Block 1, \"\"Main\"\" Street\",A;z\r\n", Files.readString(csv));
+        assertEquals("name,phone,email,address,tags\r\n"
+                + "Alice,456,alice@example.com,\"Block 1, \"\"Main\"\" Street\",A;z\r\n"
+                + "Zulu,00123,zulu@example.com,,old\r\n", Files.readString(csv));
         assertEquals(visible, model.getFilteredPersonList());
         assertEquals(filters, model.getActiveFilters());
         assertArrayEquals(saved, Files.readAllBytes(rosterFile));
@@ -217,8 +218,8 @@ public class UserCsvWorkflowTest {
         assertTrue(result.getFeedbackToUser().startsWith("Imported 1 member(s)"));
         assertTrue(result.getFeedbackToUser().endsWith("Skipped 3 duplicate record(s)."));
         List<Person> people = model.getFilteredPersonList();
-        assertEquals(List.of("Zulu", "Alice", "Bob"), people.stream().map(p -> p.getName().fullName).toList());
-        assertEquals(Set.of("old"), tags(people.get(0)));
+        assertEquals(List.of("Alice", "Zulu", "Bob"), people.stream().map(p -> p.getName().fullName).toList());
+        assertEquals(Set.of("old"), tags(people.get(1)));
         assertEquals(Set.of("first"), tags(people.get(2)));
         assertTrue(model.getActiveFilters().isEmpty());
         assertEquals(model.getAddressBook(), rosterStorage.readAddressBook().orElseThrow());

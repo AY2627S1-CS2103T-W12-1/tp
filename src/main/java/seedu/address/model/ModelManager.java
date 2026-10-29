@@ -11,7 +11,6 @@ import java.util.logging.Logger;
 
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
-import javafx.collections.transformation.SortedList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.person.EmailContainsKeywordsPredicate;
@@ -33,8 +32,6 @@ public class ModelManager implements Model {
     private final List<Predicate<Person>> additionalFilters = new ArrayList<>();
     /** Removable name, email, tag and show conditions, kept in the order they were applied. */
     private final List<ActiveFilter> activeFilters = new ArrayList<>();
-    /** Live display ordering; the underlying roster retains its stored order. */
-    private final SortedList<Person> sortedPersons;
 
     /**
      * Initializes a ModelManager with the given addressBook and userPrefs.
@@ -47,7 +44,6 @@ public class ModelManager implements Model {
         this.addressBook = new AddressBook(addressBook);
         this.userPrefs = new UserPrefs(userPrefs);
         filteredPersons = new FilteredList<>(this.addressBook.getPersonList());
-        sortedPersons = new SortedList<>(filteredPersons);
     }
 
     public ModelManager() {
@@ -126,25 +122,13 @@ public class ModelManager implements Model {
      */
     @Override
     public ObservableList<Person> getFilteredPersonList() {
-        return sortedPersons;
+        return filteredPersons;
     }
 
-    /** Orders names without changing the stored relative order of members whose normalized names match. */
+    /** Reorders the complete roster without resetting searches, tags or selected members. */
     @Override
-    public void setNameSorting(boolean enabled) {
-        sortedPersons.setComparator(enabled
-                ? (first, second) -> {
-                    String firstName = first.getName().fullName.trim().replaceAll(" +", " ");
-                    String secondName = second.getName().fullName.trim().replaceAll(" +", " ");
-                    int nameComparison = firstName.compareToIgnoreCase(secondName);
-                    if (nameComparison != 0) {
-                        return nameComparison;
-                    }
-                    // SortedList reinserts replacements; an explicit tie-breaker keeps their displayed numbers stable.
-                    List<Person> storedPersons = addressBook.getPersonList();
-                    return Integer.compare(storedPersons.indexOf(first), storedPersons.indexOf(second));
-                }
-                : null);
+    public void sortPersonsByName() {
+        addressBook.sortPersonsByName();
     }
 
     @Override
@@ -246,13 +230,13 @@ public class ModelManager implements Model {
 
         return addressBook.equals(otherModelManager.addressBook)
                 && userPrefs.equals(otherModelManager.userPrefs)
-                && sortedPersons.equals(otherModelManager.sortedPersons);
+                && filteredPersons.equals(otherModelManager.filteredPersons);
     }
 
     /** Hashes the current state used by equality; mutable model state is never cached. */
     @Override
     public int hashCode() {
-        return Objects.hash(addressBook, userPrefs, sortedPersons);
+        return Objects.hash(addressBook, userPrefs, filteredPersons);
     }
 
 }

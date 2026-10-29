@@ -13,7 +13,8 @@ import seedu.address.model.tag.Tag;
 public enum CommandHelp {
     LIST("Browse members", "list", "Show the full roster", "list", "list",
             "Displays every member and their current list number.",
-            "Shows the complete roster in stored order, clearing searches, tag filters, show selections and sorting.",
+            "Shows the complete roster in stored order, clearing searches, tag filters and show selections. "
+                    + "The saved roster order is retained.",
             "Use list before choosing a member by number. List numbers can change after an edit or deletion.",
             "Use the lowercase command list with no extra arguments."),
     SHOW("Browse members", "show", "Show only selected members", "show INDEX [MORE_INDEXES]...", "show 1 3",
@@ -28,11 +29,12 @@ public enum CommandHelp {
             "Supply space-separated positive displayed numbers. An invalid or missing number leaves the view "
                     + "unchanged."),
     SORT("Browse members", "sort", "Sort members by name", "sort", "sort",
-            "Orders the displayed members by full name from A to Z, ignoring letter case.",
-            "Shows the current search results alphabetically without changing the saved roster.",
-            "Sorting stays active until list, a successful import, or a restart. "
-                    + "Check list numbers again before editing or deleting.",
-            "Use sort with no extra arguments. Use list to restore the complete roster in stored order."),
+            "Sorts and saves all members by full name from A to Z, ignoring letter case and repeated spaces.",
+            "Reorders the whole roster while keeping searches, tag filters and show selections applied.",
+            "The saved order survives list and restart. Equal names keep their relative order. "
+                    + "New or imported members append at the end; edits keep their position until the next sort. "
+                    + "There is no command to restore insertion order. Check list numbers before editing or deleting.",
+            "Use sort with no extra arguments. Empty or already sorted rosters still attempt to save."),
     FIND("Browse members", "find", "Find a member by name", "find KEYWORD [MORE_KEYWORDS]", "find Alice Tan",
             "Narrows the displayed members by any complete or partial name word, ignoring letter case.",
             "Shows members whose names contain Alice or Tan. No match produces an empty list.",
@@ -45,7 +47,8 @@ public enum CommandHelp {
             "Searches all members for any literal email fragment, ignoring letter case.",
             "Shows members whose email contains @example.com. No match produces an empty list.",
             "Use a full email address or domain fragment. Whitespace separates keywords; any keyword can match. "
-                    + "A new search replaces previous searches, tag filters and show selections, keeping name sorting. "
+                    + "A new search replaces previous searches, tag filters and show selections "
+                    + "while keeping the stored order. "
                     + "An Email box shows the query; use its X to remove only the email condition. "
                     + "Filter narrows these results; list shows everyone again. Check displayed numbers before "
                     + "editing or deleting. An edited member whose email no longer matches disappears from view.",
@@ -92,7 +95,7 @@ public enum CommandHelp {
     TAG("Manage members", "tag", "Tag one member", "tag INDEX t/TAG", "tag 1 t/committee",
             "Adds one tag to the member at a displayed list number while retaining their other tags.",
             "Adds committee to member 1 and shows their name and updated tags after saving.",
-            "Check the current list number first. Existing tags, searches, filters and sorting remain in place. "
+            "Check the current list number first. Existing tags, searches, filters and stored order remain in place. "
                     + "A member who already has the tag, even with different capitalization, is left unchanged.",
             "Supply one current positive displayed number and one tag. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Invalid input or a missing member is rejected. If saving fails, the change remains in this "
@@ -102,7 +105,7 @@ public enum CommandHelp {
             "Adds committee to each displayed member, skips members who already have it, and reports both counts "
                     + "after saving.",
             "Use find or filter first to choose the group, then check the list. The current search, filters and "
-                    + "sorting stay applied.",
+                    + "stored order are retained.",
             "Supply exactly one tag after t/. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Empty tags, internal spaces, "
                     + "multiple tags and extra arguments are rejected. An empty list is rejected without changes. "
@@ -122,7 +125,7 @@ public enum CommandHelp {
     UNTAG("Manage members", "untag", "Untag one member", "untag INDEX t/TAG", "untag 1 t/friends",
             "Removes one tag from the member at a displayed list number while retaining their other tags.",
             "Removes friends from member 1 and shows their name and updated tags after saving.",
-            "Check the current list number first. Other tags, searches, filters and sorting remain in place. "
+            "Check the current list number first. Other tags, searches, filters and stored order remain in place. "
                     + "Removing a tag used by an active filter may hide the member from the current list.",
             "Supply one current positive displayed number and one tag. " + Tag.MESSAGE_CONSTRAINTS + ". "
                     + "Invalid input or a missing member is rejected. If the member lacks the tag, no change is "

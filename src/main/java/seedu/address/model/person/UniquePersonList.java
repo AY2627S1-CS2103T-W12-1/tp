@@ -3,6 +3,7 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -77,6 +78,12 @@ public class UniquePersonList implements Iterable<Person> {
         if (!internalList.remove(toRemove)) {
             throw new PersonNotFoundException();
         }
+    }
+
+    /** Sorts names ignoring case and repeated spaces, retaining the relative order of equal names. */
+    public void sortByName() {
+        FXCollections.sort(internalList, Comparator.comparing(
+                person -> person.getName().fullName.trim().replaceAll(" +", " "), String.CASE_INSENSITIVE_ORDER));
     }
 
     public void setPersons(UniquePersonList replacement) {
