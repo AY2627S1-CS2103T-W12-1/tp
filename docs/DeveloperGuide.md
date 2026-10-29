@@ -418,7 +418,9 @@ and navigable associations. Filled diamonds indicate composition.
 
 1. `ClearCommandParser` accepts `clear` or exactly `clear /all`; other arguments are rejected.
 2. `prepareTargets(model)` snapshots displayed members for `clear`, or the full roster for `/all`.
-   A nonempty target set prompts with its scope and count. Mention hidden survivors only when present.
+   A nonempty target set prompts with its scope and count. `clear /all`, and `clear` when every member
+   is displayed, use `Clear the entire roster? Total members: N.` When members are hidden, `clear` uses
+   `Clear the N displayed member(s)? Hidden members will be kept. Use clear /all to remove everyone.`
 3. Only lowercase `yes`, ignoring surrounding spaces, confirms. Near misses retain the original prompt;
    other input cancels without executing it. Removing a filter while waiting cannot expand the captured target set.
 4. Snapshot the complete roster, then remove only captured targets without changing selection metadata yet.
