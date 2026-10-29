@@ -29,8 +29,9 @@ public class JsonAddressBookStorage {
 
     public static final String MESSAGE_CHANGED_OUTSIDE = "The data file was changed outside TrackCall after it "
             + "was last loaded or saved, so it was not replaced. To keep those outside changes, exit and restart "
-            + "TrackCall. To replace them with this session's roster, retry the save; the outside version will "
-            + "be kept in the backup file.";
+            + "TrackCall; this session's unsaved changes are discarded. To replace them with this session's roster "
+            + "instead, run any command that changes the roster, such as edit with the displayed number and an "
+            + "existing field value; the outside version will be kept in the backup file.";
 
     private static final Logger logger = LogsCenter.getLogger(JsonAddressBookStorage.class);
 
