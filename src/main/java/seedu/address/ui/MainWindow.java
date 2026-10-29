@@ -34,6 +34,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.FilterCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ActiveFilter;
@@ -46,6 +47,9 @@ import seedu.address.model.person.Person;
 public class MainWindow extends UiPart<Stage> {
 
     private static final String FXML = "MainWindow.fxml";
+    private static final String REMOVE_BUTTON_TEXT = "×";
+    private static final double DIVIDER_POSITION = 0.22;
+    private static final int FILTER_CHIP_SPACING = 6;
 
     private final Logger logger = LogsCenter.getLogger(getClass());
 
@@ -178,7 +182,7 @@ public class MainWindow extends UiPart<Stage> {
 
         commandBox = new CommandBox(this::executeCommand);
         commandBoxPlaceholder.getChildren().add(commandBox.getRoot());
-        mainSplit.setDividerPositions(0.22);
+        mainSplit.setDividerPositions(DIVIDER_POSITION);
         refreshActiveFilters();
         primaryStage.getScene().focusOwnerProperty().addListener((observable, previous, focused) -> {
             if (focused != null && activeFiltersPane.getChildren().contains(focused.getParent())) {
@@ -204,7 +208,8 @@ public class MainWindow extends UiPart<Stage> {
         if (personListPanel.getSelectedPerson() == null || personListPanel.getSelectedIndex() < 0) {
             memberDetailsPanel.clear();
         } else {
-            memberDetailsPanel.showPerson(personListPanel.getSelectedPerson(), personListPanel.getSelectedIndex() + 1);
+            int displayedNumber = personListPanel.getSelectedIndex() + 1;
+            memberDetailsPanel.showPerson(personListPanel.getSelectedPerson(), displayedNumber);
         }
     }
 
@@ -247,7 +252,7 @@ public class MainWindow extends UiPart<Stage> {
         String removeDescription = isShow ? "Remove this show selection" : "Remove " + filter.getLabel();
         Label label = new Label(filter.getLabel());
         label.setTooltip(new Tooltip(isShow ? "Selected members: " + showNames : filter.getLabel()));
-        Button removeButton = new Button("×");
+        Button removeButton = new Button(REMOVE_BUTTON_TEXT);
         removeButton.getStyleClass().add("filter-chip-remove");
         removeButton.setAccessibleText(removeDescription);
         if (!isShow) {
@@ -258,7 +263,7 @@ public class MainWindow extends UiPart<Stage> {
             logic.removeActiveFilter(filter);
             showChipRemoval(isShow ? "Removed show selection." : "Removed " + filter.getLabel() + ".");
         });
-        HBox chip = new HBox(6, label, removeButton);
+        HBox chip = new HBox(FILTER_CHIP_SPACING, label, removeButton);
         chip.getStyleClass().add("filter-chip");
         chip.getStyleClass().add("filter-chip-" + filter.getKind().name().toLowerCase(java.util.Locale.ROOT));
         configureFilterChip(chip, label, removeButton);
@@ -314,7 +319,8 @@ public class MainWindow extends UiPart<Stage> {
                 nextChip.getChildren().get(1).requestFocus();
             }
         }
-        String feedback = message + " " + logic.getFilteredPersonList().size() + " member(s) listed.";
+        String feedback = message + " "
+                + String.format(FilterCommand.MESSAGE_LISTED, logic.getFilteredPersonList().size());
         if (logic.isAwaitingConfirmation()) {
             // Removing a view restriction keeps confirmation pending, so repeat the action and its scope.
             feedback += "\n\n" + pendingConfirmationPrompt;
@@ -379,11 +385,13 @@ public class MainWindow extends UiPart<Stage> {
      */
     private CommandResult executeCommand(String commandText) throws CommandException, ParseException {
         personListPanel.clearSelection();
+        boolean wasAwaitingConfirmation = logic.isAwaitingConfirmation();
         try {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Command completed successfully");
             resultDisplay.setFeedbackToUser(hideContactDetails(commandResult.getFeedbackToUser()));
-            if (logic.isAwaitingConfirmation()) {
+            // A near-miss reply keeps the original prompt, so later filter removals still name the action.
+            if (logic.isAwaitingConfirmation() && !wasAwaitingConfirmation) {
                 pendingConfirmationPrompt = commandResult.getFeedbackToUser();
             }
 

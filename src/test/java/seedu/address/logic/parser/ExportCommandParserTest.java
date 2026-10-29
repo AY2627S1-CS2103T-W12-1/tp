@@ -23,6 +23,14 @@ public class ExportCommandParserTest {
     private final ExportCommandParser parser = new ExportCommandParser();
 
     @Test
+    public void parse_quoteAnywhereInPath_rejectedBeforeExport() {
+        for (String path : new String[] {"members\"2026.csv", "back\"ups/members.csv", "\"members.csv\""}) {
+            ParseException error = assertThrows(ParseException.class, () -> parser.parse(path));
+            assertEquals(ExportCommandParser.MESSAGE_QUOTED_PATH, error.getMessage());
+        }
+    }
+
+    @Test
     public void parse_noPath_usesDefaultFilename() {
         for (String args : new String[] {"", " ", "\t  "}) {
             assertParseSuccess(parser, args, new ExportCommand(Path.of("addressbook.csv")));

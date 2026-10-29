@@ -148,7 +148,7 @@ public class UserCsvWorkflowTest {
         // Updated UG explicitly includes clear on an already-empty roster in backup preservation.
         AddressBook original = new AddressBook(model.getAddressBook());
         logic.execute("clear");
-        logic.execute("y");
+        logic.execute("yes");
         assertEquals(original, rosterStorage.readBackup().orElseThrow());
         byte[] previousDistinct = Files.readAllBytes(JsonAddressBookStorage.getBackupFilePath(rosterFile));
 

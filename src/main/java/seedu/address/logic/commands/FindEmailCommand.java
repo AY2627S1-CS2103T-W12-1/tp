@@ -8,16 +8,18 @@ import seedu.address.model.person.EmailContainsKeywordsPredicate;
 
 /**
  * Lists members whose email contains any given keyword, ignoring case.
- * A new email search replaces previous name searches and tag filters without changing stored records.
+ * Each email search narrows the displayed list without changing stored records or earlier conditions.
  */
 public class FindEmailCommand extends Command {
     public static final String COMMAND_WORD = "findemail";
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Finds members whose emails contain any specified keyword (case-insensitive).\n"
+            + ": Narrows displayed members to emails containing any specified keyword (case-insensitive).\n"
             + "Parameters: KEYWORD [MORE_KEYWORDS]...\n"
             + "Example: " + COMMAND_WORD + " @example.com alice";
     public static final String MESSAGE_SINGLE = "1 member listed.";
     public static final String MESSAGE_MULTIPLE = "%d members listed.";
+    public static final String MESSAGE_ALREADY_ACTIVE = "This email search is already active. ";
+    public static final String MESSAGE_UNCHANGED = "Results unchanged. ";
 
     private final EmailContainsKeywordsPredicate predicate;
 
@@ -39,14 +41,20 @@ public class FindEmailCommand extends Command {
     }
 
     /**
-     * Searches the full roster, replacing existing filters and preserving the active display ordering.
+     * Adds an email condition, preserving existing filters, selections and active display ordering.
      */
     @Override
     public CommandResult execute(Model model) {
         requireNonNull(model);
-        model.updateFilteredPersonList(predicate);
+        int previousCount = model.getFilteredPersonList().size();
+        boolean added = model.filterFilteredPersonListByEmail(predicate);
         int count = model.getFilteredPersonList().size();
-        return new CommandResult(count == 1 ? MESSAGE_SINGLE : String.format(MESSAGE_MULTIPLE, count));
+        String feedback = count == 1 ? MESSAGE_SINGLE : String.format(MESSAGE_MULTIPLE, count);
+        if (!added) {
+            return new CommandResult(MESSAGE_ALREADY_ACTIVE + feedback);
+        }
+        // A cumulative search can only remove members, so equal counts mean the view is unchanged.
+        return new CommandResult((count == previousCount ? MESSAGE_UNCHANGED : "") + feedback);
     }
 
     /**

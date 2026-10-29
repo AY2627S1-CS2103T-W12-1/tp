@@ -14,9 +14,6 @@ import seedu.address.model.person.Person;
  */
 public class ConfirmDeleteCommand extends Command {
 
-    /** The only input that confirms a pending deletion. Any other input cancels it. */
-    public static final String CONFIRMATION_WORD = "y";
-
     public static final String MESSAGE_CANCELLED = "Deletion cancelled. No member was removed.";
 
     public static final String MESSAGE_MEMBER_NOT_FOUND =

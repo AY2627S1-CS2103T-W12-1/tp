@@ -64,7 +64,7 @@ public class CommandSequenceOracleTest {
         Files.writeString(blocker, "Force the clear save to fail");
 
         session.logic.execute("clear");
-        SaveFailureException failure = assertThrows(SaveFailureException.class, () -> session.logic.execute("y"));
+        SaveFailureException failure = assertThrows(SaveFailureException.class, () -> session.logic.execute("yes"));
 
         assertTrue(failure.getMessage().contains("No members were removed"));
         assertArrayEquals(saved, Files.readAllBytes(session.rosterFile));
@@ -233,18 +233,21 @@ public class CommandSequenceOracleTest {
         private Change findByName() throws Exception {
             String query = "Team" + (char) ('A' + random.nextInt(4));
             command("find " + query);
-            filterKeys.add("name:" + query);
-            restrictions.add(member -> member.name().toLowerCase(Locale.ROOT)
-                    .contains(query.toLowerCase(Locale.ROOT)));
+            if (!filterKeys.contains("name:" + query)) {
+                filterKeys.add("name:" + query);
+                restrictions.add(member -> member.name().toLowerCase(Locale.ROOT)
+                        .contains(query.toLowerCase(Locale.ROOT)));
+            }
             return Change.NONE;
         }
 
         private Change findByEmail() throws Exception {
             String query = "@group" + random.nextInt(3);
             command("findemail " + query);
-            resetFilters();
-            filterKeys.add("email:" + query);
-            restrictions.add(member -> member.getEmail().contains(query));
+            if (!filterKeys.contains("email:" + query)) {
+                filterKeys.add("email:" + query);
+                restrictions.add(member -> member.getEmail().contains(query));
+            }
             return Change.NONE;
         }
 
@@ -318,7 +321,7 @@ public class CommandSequenceOracleTest {
             if (target != null) {
                 command("delete " + (index + 1));
                 boolean shouldConfirmDeletion = random.nextBoolean();
-                command(shouldConfirmDeletion ? "y" : "add n/Cancelled p/123 e/cancelled@example.com");
+                command(shouldConfirmDeletion ? "yes" : "add n/Cancelled p/123 e/cancelled@example.com");
                 if (shouldConfirmDeletion) {
                     roster.remove(target);
                     selections.forEach(selection -> selection.remove(target.id()));
@@ -377,7 +380,7 @@ public class CommandSequenceOracleTest {
             if (random.nextInt(5) == 0) {
                 command("clear");
                 if (!roster.isEmpty()) {
-                    command("y");
+                    command("yes");
                 }
                 roster.clear();
                 resetFilters();

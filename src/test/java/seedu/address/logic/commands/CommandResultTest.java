@@ -52,7 +52,7 @@ public class CommandResultTest {
     }
 
     @Test
-    public void getPendingDeletion() {
+    public void getPendingDeletion_withAndWithoutDeletion_returnsMatchingOptional() {
         assertEquals(Optional.empty(), new CommandResult("feedback").getPendingDeletion());
         assertEquals(Optional.of(new ConfirmDeleteCommand(ALICE)),
                 new CommandResult("feedback", new ConfirmDeleteCommand(ALICE)).getPendingDeletion());

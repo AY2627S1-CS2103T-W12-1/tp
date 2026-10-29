@@ -19,6 +19,28 @@ import seedu.address.testutil.PersonBuilder;
 public class PersonTest {
 
     @Test
+    public void isDuplicateContactOf_unicodeCaseVariants_matchesWithoutChangingStorageIdentity() {
+        String[][] variants = {{"ΟΣ", "οσ"}, {"Σ", "ς"}, {"Ipek", "ıpek"}, {"ΟΣ  Tan", "οσ tan"}};
+        for (String[] pair : variants) {
+            Person first = new PersonBuilder(ALICE).withName(pair[0]).build();
+            Person second = new PersonBuilder(ALICE).withName(pair[1]).build();
+            assertTrue(first.isDuplicateContactOf(second));
+            assertTrue(second.isDuplicateContactOf(first));
+            assertFalse(first.isSamePerson(second));
+            assertFalse(first.isDuplicateContactOf(new PersonBuilder(second).withPhone(VALID_PHONE_BOB).build()));
+            assertEquals(pair[0], first.getName().fullName);
+        }
+    }
+
+    @Test
+    public void isDuplicateContactOf_accentsAndPunctuation_remainDistinct() {
+        Person first = new PersonBuilder(ALICE).withName("Émile").build();
+        assertFalse(first.isDuplicateContactOf(new PersonBuilder(first).withName("Emile").build()));
+        assertFalse(first.isDuplicateContactOf(new PersonBuilder(first).withName("E\u0301mile").build()));
+        assertFalse(first.isDuplicateContactOf(new PersonBuilder(first).withName("Émile-Tan").build()));
+    }
+
+    @Test
     public void isSamePerson_trailingContactWhitespace_ignoresPaddingWithoutChangingValues() {
         Person padded = new PersonBuilder(BOB).withName(BOB.getName().fullName + " ")
                 .withAddress(BOB.getAddress().value + " \t").build();
