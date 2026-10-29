@@ -72,6 +72,7 @@
         "launch-and-shutdown": "Launch and shutdown",
         "offline-help-and-readable-feedback-1": "Offline help and readable feedback",
         "commands-and-displayed-indices": "Commands and displayed indices",
+        "pasted-unicode-input": "Pasted Unicode input",
         "email-search": "Email search",
         "sorting-and-csv-workflows": "Sorting and CSV workflows",
         "persistence-and-invalid-files": "Persistence and invalid files",
