@@ -66,8 +66,9 @@ npm run build
 
 - JaCoCo reports show which code ran during tests; they do not prove correctness.
 - Run `./gradlew coverage`, then open `build/reports/jacoco/coverage/html/index.html`.
-- Team-repository Linux CI uploads `build/reports/jacoco/coverage/coverage.xml` to Codecov using OIDC.
-  Upload errors fail that CI job. Fork repositories skip this upload.
+- Team master pushes and internal PRs upload on Linux using OIDC. Member-fork PRs use Codecov's
+  tokenless public-fork upload. The team repository is itself a fork, so its fork flag must not disable uploads.
+- Upload errors are reported without failing the Java build; inspect the Codecov step and dashboard.
 - Review uncovered behavior when adding or fixing features; avoid tests that only raise a percentage.
 - See the [SE-EDU Codecov guide](https://se-education.org/guides/tutorials/codecov.html) for background setup.
 

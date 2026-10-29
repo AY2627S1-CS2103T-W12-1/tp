@@ -50,12 +50,32 @@ jobs:
         run: ./gradlew check coverage
 
       - name: Upload coverage reports to Codecov
-        # Upstream PRs upload in the team repository; unregistered forks only run checks.
-        if: runner.os == 'Linux' && !github.event.repository.fork
+        # The team repository is itself a fork of the course repository, so github.event.repository.fork is
+        # always true here. Upload with the workflow's OIDC token from pushes to master and from pull requests
+        # whose branch is in this repository.
+        if: >-
+          runner.os == 'Linux' && github.repository == 'AY2627S1-CS2103T-W12-1/tp'
+          && ((github.event_name == 'push' && github.ref == 'refs/heads/master')
+          || (github.event_name == 'pull_request'
+          && github.event.pull_request.head.repo.full_name == github.repository))
         uses: codecov/codecov-action@v7
         with:
           use_oidc: true
-          fail_ci_if_error: true
+          # Report a failed upload without failing the build, until coverage is confirmed on codecov.io.
+          fail_ci_if_error: false
+          files: build/reports/jacoco/coverage/coverage.xml
+          disable_search: true
+
+      - name: Upload coverage reports to Codecov from a member fork
+        # Pull requests from member forks get no OIDC token or secrets, so they use Codecov's tokenless upload
+        # for forks of public repositories, which is how they uploaded before the fork check was added.
+        if: >-
+          runner.os == 'Linux' && github.repository == 'AY2627S1-CS2103T-W12-1/tp'
+          && github.event_name == 'pull_request'
+          && github.event.pull_request.head.repo.full_name != github.repository
+        uses: codecov/codecov-action@v7
+        with:
+          fail_ci_if_error: false
           files: build/reports/jacoco/coverage/coverage.xml
           disable_search: true
 
