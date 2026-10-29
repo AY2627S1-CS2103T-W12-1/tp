@@ -163,7 +163,8 @@
         "what-should-i-do-after-a-save-error": "What should I do after a save error?",
         "command-summary": "Command summary",
         "diagnostic-logs": "Diagnostic logs",
-        "glossary": "Glossary"
+        "glossary": "Glossary",
+        "trailing-unicode-whitespace-in-command-fields": "Trailing Unicode whitespace in command fields"
       },
       "headingKeywords": {}
     },
