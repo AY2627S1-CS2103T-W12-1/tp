@@ -59,7 +59,8 @@ public class EditCommandParser implements Parser<EditCommand> {
         }
         if (argMultimap.getValue(PREFIX_ADDRESS).isPresent()) {
             String address = argMultimap.getValue(PREFIX_ADDRESS).get();
-            editPersonDescriptor.setAddress(address.isBlank()
+            // Only an empty token requests clearing; supplied Unicode spaces still need validation.
+            editPersonDescriptor.setAddress(address.isEmpty()
                     ? Address.EMPTY_ADDRESS : ParserUtil.parseAddress(address));
         }
         parseTagsForEdit(argMultimap.getAllValues(PREFIX_TAG)).ifPresent(editPersonDescriptor::setTags);

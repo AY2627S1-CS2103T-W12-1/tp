@@ -146,13 +146,13 @@ public class FindEmailCommandTest {
         AddressBook roster = new AddressBook();
         roster.setPersons(List.of(zara, bob, alice));
         model.setAddressBook(roster);
-        model.setNameSorting(true);
+        model.sortPersonsByName();
 
         CommandResult result = new FindEmailCommand(predicate("@example.com")).execute(model);
 
         assertEquals("Results unchanged. 3 members listed.", result.getFeedbackToUser());
         assertEquals(List.of(alice, bob, zara), model.getFilteredPersonList());
-        assertEquals(List.of(zara, bob, alice), model.getAddressBook().getPersonList());
+        assertEquals(List.of(alice, bob, zara), model.getAddressBook().getPersonList());
     }
 
     @Test

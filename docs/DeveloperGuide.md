@@ -216,7 +216,7 @@ The Model component stores:
 
 * **Member data:** `Person` objects held in a `UniquePersonList`.
 * **Displayed data:** a filtered list, such as name-search results or an index selection.
-  A `SortedList` wraps it for optional name sorting while the stored roster keeps its original order.
+  A `FilteredList` follows the stored roster order, including changes made by `sort`.
   An unmodifiable `ObservableList<Person>` lets the UI observe changes and update its display.
 * **Removable filters:** `ModelManager` keeps `ActiveFilter` objects for name, email, tag, and
   `show` conditions in application order. Each `show` condition wraps one `PersonSelectionPredicate`,
@@ -229,9 +229,9 @@ The Model component stores:
 Model does not depend on UI, Logic, or Storage.
 Its data entities can be used independently of those components.
 
-`ModelManager#getFilteredPersonList()` exposes the `SortedList` backed by the `FilteredList`.
-`show` resolves indexes against the current sorted view and adds a selection predicate to narrow it.
-`list` clears the search, tag, and selection predicates and disables sorting, restoring every member in stored order.
+`ModelManager#getFilteredPersonList()` exposes the filtered roster in stored order.
+`show` resolves indexes against the current displayed view and adds a selection predicate to narrow it.
+`list` clears the search, tag, and selection predicates, restoring every member in the current stored order.
 
 <box type="info">
 
@@ -311,7 +311,7 @@ The layout uses two columns in a wide window and one in a narrow window.
 
 #### List behaviour
 
-`ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, disables name sorting,
+`ListCommand` resets the model predicate to `PREDICATE_SHOW_ALL_PERSONS`, preserves stored order,
 and reports the complete count using singular, plural, or empty-roster wording. `LogicManager`
 returns its result without invoking storage. Extra arguments are rejected by `AddressBookParser`
 before either the view or data changes.
@@ -406,12 +406,12 @@ also recover to usable bounds. This handles monitor changes between sessions.
 #### Save policy
 
 `LogicManager#execute(String)` parses and executes a command, then checks `Command#isReadOnly()`.
-`help`, `list`, `show`, `sort`, `find`, `findemail`, `filter`, `export`, and `exit` return without saving member data.
+`help`, `list`, `show`, `find`, `findemail`, `filter`, `export`, and `exit` return without saving member data.
+`sort` saves the reordered roster through the normal data-changing command path.
 `delete INDEX` and a non-empty `clear` return without saving while awaiting confirmation.
 Cancellation also returns without saving.
-Successful `add`, `edit`, `tag`, `untag`, confirmed `delete`, `tagall`, `untagall`, `renametag`, `clear`, and `import` commands
-pass the complete roster, including hidden members,
-to `Storage#saveAddressBook`.
+Successful `add`, `edit`, `tag`, `untag`, confirmed `delete`, `tagall`, `untagall`, `renametag`, `clear`, `import`,
+and `sort` commands pass the complete roster, including hidden members, to `Storage#saveAddressBook`.
 Parsing and execution failures do not save. Data-changing commands return normal success only after
 the save succeeds.
 
@@ -431,7 +431,7 @@ partial overwrite. An existing saved file remains intact on failure; temporary-f
 If saving fails, `LogicManager` reports a `SaveFailureException`, a `CommandException` subtype that
 also records whether the change remains applied.
 
-For `add`, `edit`, `tag`, `untag`, confirmed `delete`, `tagall`, `untagall`, `renametag`, and `import`, the model change
+For `add`, `edit`, `tag`, `untag`, confirmed `delete`, `tagall`, `untagall`, `renametag`, `import`, and `sort`, the model change
 remains in memory. `CommandBox` clears the already-applied input so pressing Enter cannot accidentally
 repeat an indexed edit or deletion. The result explains that the previous saved roster is unchanged.
 
@@ -529,8 +529,9 @@ but still contribute to reported row numbers.
 
 `ImportCommand` compares each valid candidate with the complete stored roster and earlier accepted rows
 using `Person#isDuplicateContactOf`. It appends only unique members in source order, then clears search, filter,
-and sort state. `LogicManager` performs the normal automatic save even for a header-only or duplicate-only
-import. If saving fails, the imported batch remains in memory. The import-specific save error is followed
+and selection state. Existing members retain their stored positions; new members stay at the end until the next `sort`.
+`LogicManager` performs the normal automatic save even for a header-only or duplicate-only import. If saving fails,
+the imported batch remains in memory. The import-specific save error is followed
 by the shared warning about unsaved changes, loss on exit, and retrying after storage access is restored.
 The source CSV is read-only throughout the workflow.
 
@@ -563,7 +564,7 @@ only the header. Run `list` first to export everyone in stored order.
 Apache Commons CSV handles quoting and escaping; the writer closes before atomic replacement.
 A write or replacement failure preserves the previous destination and attempts temporary-file cleanup.
 On success, `isReadOnly()` prevents the logic layer from saving the automatic JSON roster.
-Neither successful nor failed export changes the displayed filters or sorting.
+Neither successful nor failed export changes the displayed filters or stored roster order.
 
 ### Selecting members and sorting
 
@@ -580,13 +581,21 @@ other `show`, name, email, and tag conditions active.
 this does not change the displayed roster order.
 `list`, successful `add`, successful `clear`, and valid `import` clear the selections.
 
-`SortCommand` enables a comparator on `ModelManager`'s `SortedList`. It compares names ignoring case
-and repeated internal spaces, without modifying the stored names or roster order. Equal names retain
-their stored relative order. Filters and record edits preserve sorting; `list` and valid `import`
-disable it. Both `show` and `sort` are read-only and never save the roster.
+`SortCommand` stably reorders the complete stored roster by full name, ignoring case, surrounding
+spaces, and repeated internal spaces. It preserves stored name spellings and the current relative order
+of equal names. Active searches, tag filters, and `show` selections remain applied, including when
+only a subset of the roster is displayed. There is no separate display-sort mode.
+
+`sort` is data-changing (`isReadOnly()` is `false`), so `LogicManager` saves the reordered roster.
+An empty or already sorted roster still follows that save path. After saving, `list`, restart, and
+export retain the new order. Add and import append new members; edits retain each member
+in its current position until another `sort`. A failed save keeps the reordered session in memory
+and reports the standard save-failure guidance while preserving the previous saved file.
+`show` remains read-only and never saves the roster.
 
 `ShowCommandParserTest`, `ShowCommandTest`, `AddressBookParserTest`, and `LogicManagerTest` cover validation,
-selection narrowing, record replacement, ordering, and read-only execution.
+selection narrowing, record replacement, and read-only show execution. `SortOrderIntegrationTest`
+covers stored ordering, stable ties, active conditions, persistence, and subsequent changes.
 
 ### Find members by email
 
@@ -606,7 +615,7 @@ selection narrowing, record replacement, ordering, and read-only execution.
 * **Feedback:** a repeat reports that the search is already active. A different query that leaves the displayed
   count unchanged reports `Results unchanged.` and keeps its new condition. Because searches only narrow the list,
   equal counts mean the same members remain visible.
-* **Retained state:** keep earlier name searches, email searches, tag filters, `show` selections, and name sorting.
+* **Retained state:** keep earlier name searches, email searches, tag filters, `show` selections, and stored roster order.
 * **Filter boxes:** show one Email box per distinct search, in application order with name, tag, and `show` boxes.
   Its X removes only that condition. Remaining conditions still determine which members appear.
 * **Edits:** re-evaluate the email predicates when a member changes. A nonmatching member disappears
@@ -667,7 +676,7 @@ parentheses whenever more than one tag condition is listed, for example
 `N member(s) listed with tags ("TAG1" / "TAG2"), "TAG3".`; a lone group stays unparenthesized.
 A zero-match result is successful.
 
-Filtering preserves the current display order, including name sorting. Visible members are renumbered,
+Filtering preserves the stored roster order. Visible members are renumbered,
 and subsequent `edit` and `delete` commands use those displayed indices. The command is read-only, so
 `LogicManager` returns its result without saving the roster.
 
@@ -694,7 +703,7 @@ and subsequent `edit` and `delete` commands use those displayed indices. The com
   with its full-list label. `ModelManagerTest` and `MainWindowTest` cover the `A / B` box labels, including
   the capped box's tooltip and accessible text.
 * `LogicManagerTest` covers cumulative filters, case-insensitive matching, empty results, interactions with
-  `find`, `list`, and sorting, and execution without saving.
+  `find`, `list`, and sorting, and read-only filter execution.
 * `EditCommandTest` checks that edits retain search and tag conditions and hide members who no longer match.
 
 ### Individual tag editing
@@ -705,7 +714,7 @@ and the existing single-tag validation used by the bulk tag parsers.
 
 Each command reads the member from `Model#getFilteredPersonList()` at execution time. It copies the
 member's tag set, changes only the requested tag, constructs a new `Person` with the original
-contact fields, and calls `Model#setPerson`. This preserves active search and tag filters, sorting,
+contact fields, and calls `Model#setPerson`. This preserves active search and tag filters, roster order,
 and `show` selection. If removing a tag causes a member to fail an active filter, the member leaves
 the displayed list but remains in the roster.
 
@@ -772,7 +781,7 @@ and `updateTags`, which adds or removes the tag.
    `TagUpdateUtil#describeHiddenUpdates`, for example
    `0 member(s) listed with tag "committee". Run list to show everyone.`
 
-Neither command changes the search predicate or name sorting, so the current view stays applied after the
+Neither command changes the search predicate or roster order, so the current view stays applied after the
 batch. Tags are not part of a member's identity, so an update can never create a duplicate member.
 
 Both commands are data-changing (`isReadOnly()` is `false`). `LogicManager` therefore saves the complete
@@ -838,7 +847,7 @@ Case-only changes are allowed so a group can use one capitalization.
    hidden members still have the current tag, it adds `N hidden member(s) still have "CURRENT_TAG". Run list, then
    renametag again to rename it for everyone.`
 
-Like the other bulk commands, it keeps the current search, filters and sorting, and saves the complete roster
+Like the other bulk commands, it keeps the current search, filters and roster order, and saves the complete roster
 through the standard data-changing path.
 
 #### Design considerations {id="design-considerations-rename"}
@@ -924,7 +933,7 @@ The MVP includes these commands:
 * **Roster and search:** `list`, `show`, `find`, `findemail`, `clear`, `filter`.
 * **Individual and group tags:** `tag`, `untag`, `tagall`, `untagall`, `renametag`.
 * **CSV files:** `export`, `import`.
-* **Display order:** `sort`.
+* **Stored roster order:** `sort`.
 
 The MVP also includes automatic saving and manual editing of the local data file.
 Each member has a name, phone number, email address, an optional address, and zero or more tags.
@@ -940,7 +949,7 @@ The broader narrative must be read with these MVP decisions:
   deletions use the current displayed index, which the secretary must check first.
 * `find` matches complete or partial name words. `findemail` matches literal email substrings.
   Phone-number search is a considered idea, not current MVP search behaviour.
-* Name sorting is available through `sort`; `list` restores stored order.
+* `sort` saves the roster in name order; `list` and restart retain that order. New members append until the next sort.
 * vCard import/export, sorting by criteria other than name, archiving,
   bulk editing of non-tag fields, and an in-app handover/access feature are outside the
   selected MVP. The initial discussion also considered dedicated grade, class,
@@ -1067,13 +1076,14 @@ These rules describe the selected MVP and apply to the use cases below.
    matches and any active tag filters. Repeated keywords do not repeat records.
    `findemail KEYWORD [MORE_KEYWORDS]...` also narrows the displayed list. It matches literal email
    substrings using any whitespace-separated keyword, ignoring case. Each distinct email search adds a removable
-   condition; all conditions must match. Neither search clears earlier conditions or disables sorting.
+   condition; all conditions must match. Neither search clears earlier conditions or changes stored order.
 5. `filter t/TAG` narrows the currently displayed list using case-insensitive tag matching.
    Repeated filters retain the intersection of the tags and active name or email searches. A valid
    zero-match result is successful. Use `list` first to filter the whole roster.
 6. An index is an ASCII-digit integer from 1 through the current displayed count. Leading zeroes
    are accepted; signs, decimals, and internal whitespace are not. It refers to the list when
-   the command is submitted. Commands preserve roster order and renumber the displayed records.
+   the command is submitted. Index-based changes preserve roster order and renumber the displayed records.
+   `sort` deliberately reorders all members.
 7. `edit INDEX ...` changes only supplied fields. At least one field must be supplied.
    A lone `a/` clears the address. Supplied tags replace the full existing tag set. A lone `t/` clears all tags and cannot be
    combined with a non-empty tag. Reapply the active search and filters after an edit; an edited
@@ -1085,10 +1095,10 @@ These rules describe the selected MVP and apply to the use cases below.
    displayed when the command is submitted. Hidden members and unrelated tags are unchanged.
    Adding an existing tag or removing an absent tag skips that member. Reapply searches and
    filters after the whole batch. Changed and skipped counts refer to the original target set.
-9. Valid `add`, `edit`, `tag`, `untag`, confirmed `delete`, `clear`, `tagall`, `untagall`, `renametag`, and `import`
+9. Valid `add`, `edit`, `tag`, `untag`, confirmed `delete`, `clear`, `tagall`, `untagall`, `renametag`, `import`, and `sort`
    commands save the complete roster, including valid operations that make no change. An empty bulk
    target, or a `renametag` current tag that no displayed member has, is an error and does not save. `help`,
-   `list`, `show`, `sort`, `find`, `findemail`, `filter`, `export`, and `exit` do not save. Neither does `delete INDEX`
+   `list`, `show`, `find`, `findemail`, `filter`, `export`, and `exit` do not save. Neither does `delete INDEX`
    while it waits for confirmation, nor a cancelled deletion. A pending or cancelled non-empty `clear` does not save.
 10. Report data-changing command success only after saving succeeds. A failed save preserves
     the previous saved file and reports a storage error. Except for `clear`, changes remain in
@@ -1262,7 +1272,7 @@ but remains in the roster. The secretary can use `list` to see it again.
 
 The search command is `find KEYWORD [MORE_KEYWORDS]`. It accepts one or more whitespace-separated
 keywords, ignores case, matches complete or partial name words, and returns records matching any keyword
-in address-book order, or in name order while `sort` is active.
+in stored roster order, including any order saved by `sort`.
 
 A successful search reports `1 member listed.`, `N members listed.`, or
 `0 members listed.` and does not save the data file. A repeat prefixes the count with
@@ -1283,7 +1293,7 @@ It matches literal email substrings with case-insensitive OR matching within eac
 Successive distinct email searches are combined with AND; each adds its own removable Email box.
 Repeats keep the original box and prefix the count with `This email search is already active.`
 Different queries with unchanged results retain their own boxes and prefix the count with `Results unchanged.`
-For example, `findemail alice@example.com @school.edu` matches either fragment. It preserves name sorting
+For example, `findemail alice@example.com @school.edu` matches either fragment. It preserves stored roster order
 and does not save. Missing keywords report invalid command format and preserve the current view.
 
 #### UC03: Update a group's tags {id="uc03-update-a-groups-tags"}
@@ -1602,7 +1612,7 @@ such as incremental delivery, are also not product NFRs.
 | Persisted data | The roster successfully written to the local data file and available for a later session. |
 | Session | One period of use beginning when TrackCall starts and ending when the application closes. |
 | Exit command | The parameterless `exit` command that closes TrackCall without changing records or performing a final save. |
-| Data-changing command | `add`, `edit`, `tag`, `untag`, confirmed `delete`, `clear`, `import`, `tagall`, `untagall`, or `renametag`. An executed change attempts to save even if its values do not change; pending or cancelled confirmations do not save. |
+| Data-changing command | `add`, `edit`, `tag`, `untag`, confirmed `delete`, `clear`, `import`, `tagall`, `untagall`, `renametag`, or `sort`. An executed change attempts to save even if its values do not change; pending or cancelled confirmations do not save. |
 | Read-only command | A command that does not change member records or save the data file, such as `help`, `list`, `find`, or `filter`. It may change the displayed list. |
 | JSON | The structured text format of the local data file. It uses a `persons` array and each member's `tags` array. |
 | CSV | Comma-separated values, a tabular text format for exchanging member data with spreadsheets and other tools. `export [FILEPATH]` writes CSV; `import p/FILE_PATH` validates and imports it. |
@@ -1728,7 +1738,8 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
 ### Pasted Unicode input
 
 * Add or edit a supplied address containing only a nonbreaking space (U+00A0), figure space (U+2007),
-  or narrow nonbreaking space (U+202F). Expect rejection and no changed member.
+  narrow nonbreaking space (U+202F), or em space (U+2003). Expect rejection and no changed member;
+  in particular, `edit INDEX a/` followed by an em space must not clear the existing address.
 * Use an address with visible Unicode text and internal nonbreaking spaces. Expect the text to be preserved.
   `edit INDEX a/` must still clear the address.
 * With Alice and Bob in the roster, run `list`, then `find Alice Bob` (U+00A0 between the names).
@@ -1777,13 +1788,13 @@ add n/bob Lee p/90000002 e/bob@example.com a/Test Road t/year1
 add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
 ```
 
-1. Run `sort`. Expect `Sorted displayed members by name (A to Z).` and Alice, bob, Zara in that order.
-   Repeat `sort`: the order stays the same. Run `list`: expect `Showing 3 members.` and Zara, bob, Alice.
-   Run `filter t/committee`, then `sort`: only Alice and Zara appear. Try `sort date`; expect
-   `Invalid command format. Usage: sort` with the view unchanged. The saved roster bytes and modification
-   time must remain unchanged throughout these read-only checks.
+1. Run `filter t/committee`, then `sort`. Expect `Sorted all 3 members by name (A to Z).`, with the
+   filter still active and Alice then Zara displayed. Run `list`: expect `Showing 3 members.` and
+   Alice, bob, Zara, confirming that the hidden member was sorted too. Restart and verify that order
+   persists. Repeat `sort`: it succeeds without changing the order. Reapply `filter t/committee`, then
+   try `sort date`: expect `Invalid command format. Usage: sort` with the view and saved bytes unchanged.
 2. With the committee filter still active, run `export members.csv`. Expect two exported records,
-   Alice then Zara in displayed sort order, with one hidden member reported as excluded. Check the UTF-8 header
+   Alice then Zara in displayed order, with one hidden member reported as excluded. Check the UTF-8 header
    and sorted semicolon-separated tags, and confirm that automatic JSON storage and the displayed view
    are unchanged.
 3. Run `import p/members.csv` without clearing. Expect zero imported members and two skipped duplicates.
@@ -1806,7 +1817,17 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
 7. In a separate disposable roster, add two members with the same name and distinct phone/email fields.
    After `sort`, run `tagall t/year1` and `renametag t/year1 t/year2`: their relative displayed order
    must remain the stored roster order. Repeat with four tied members and a phone-only `edit` or
-   individual `tag`; also test names differing only in case or repeated spaces.
+   individual `tag`; also test names differing only in case or repeated spaces. Run `sort` again and
+   restart to confirm that the tied members retain their relative order.
+8. Restore the three-member setup and run `sort`. Add a new member whose name sorts before Alice:
+   the member must appear at the end. Import one more new member and verify it also appends at the end.
+   Edit Alice's name to Zoe: that member must stay in the first stored position until another `sort`.
+   Run `sort` again, then `list` and restart; verify that the new name order persists.
+9. With a search, tag filter, and `show` selection active, run `sort`. The same condition boxes and
+   selected members must remain, displayed in the reordered roster's order. In a disposable folder,
+   provoke a save failure and run `sort`: expect the standard unsaved-change warning, the reordered
+   in-memory roster, and unchanged saved data. Restore storage access and retry. Also sort an empty
+   roster: expect success and a saved empty roster.
 
 ### Persistence and invalid files
 
@@ -1824,7 +1845,7 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
    default preferences. The normal preferences setup may replace that file with valid defaults.
 5. In a disposable folder, start with a valid roster, then make the data directory unwritable or replace
    the data file with a directory while the app is open.
-   Test `add`, `edit`, `tag`, `untag`, `delete` (confirmed with `yes`), `tagall`, `untagall`, `renametag`, and `import` separately:
+   Test `add`, `edit`, `tag`, `untag`, `delete` (confirmed with `yes`), `tagall`, `untagall`, `renametag`, `import`, and `sort` separately:
    * Expect a save error and recovery guidance instead of success.
    * Check that the change remains visible and the command box clears the already-applied input.
    * Press Enter again. It must not repeat the edit or deletion.

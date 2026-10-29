@@ -89,7 +89,7 @@ retained and adapted for TrackCall. Each group explains the relevant commands, e
 
 | I want to… | Feature group | Commands |
 | --- | --- | --- |
-| Find members and organise the view | [Browse and find members](#browse-members) | `list`, `show`, `find`, `findemail`, `filter`, `sort` |
+| Find members and organise the roster | [Browse and find members](#browse-members) | `list`, `show`, `find`, `findemail`, `filter`, `sort` |
 | Maintain contact details | [Add and update members](#manage-members) | `add`, `edit` |
 | Manage overlapping groups | [Organise member groups](#manage-tags) | `tag`, `untag`, `tagall`, `untagall`, `renametag` |
 | Move records between rosters | [Exchange rosters with CSV](#csv-files) | `export`, `import` |
@@ -115,8 +115,8 @@ Find the right members, narrow the displayed roster, or change its order.
 
 #### Show all members: `list`
 
-`list` clears name searches, email searches, tag filters, and `show` selections. It also turns off name sorting
-and shows the full roster in stored order. It does not change or save records.
+`list` clears name searches, email searches, tag filters, and `show` selections, then shows the full roster
+in its stored order, retaining any order saved by `sort`. `list` does not change or save records.
 
 The result is `Showing 1 member.`, `Showing N members.`, or `No members in the roster.`
 Extra arguments produce `Invalid command format. Usage: list` without changing the current view.
@@ -232,8 +232,8 @@ Format: `filter t/TAG [t/MORE_TAGS]...`
    filter t/committee
    ```
 
-This keeps only committee members in the current view. Their order, including active name sorting,
-stays the same, and their displayed numbers update.
+This keeps only committee members in the current view. Their stored order stays the same,
+and their displayed numbers update.
 
 * Matching ignores letter case: `committee` and `Committee` identify the same tag.
 * **Tags in the same command mean or.** `filter t/committee t/alumni` keeps members who have `committee`,
@@ -277,16 +277,16 @@ or empty tags are rejected without changing the view. One invalid tag rejects th
 
 #### Sort members by name: `sort`
 
-`sort` orders the currently displayed members by full name from A to Z, ignoring letter case.
-It preserves the current search restriction and does not change or save the stored roster order.
+`sort` reorders and saves the **entire roster** by full name from A to Z, ignoring letter case,
+surrounding spaces, and repeated spaces. It includes hidden members while keeping your current searches,
+tag filters, and `show` selections applied. Names that compare equally keep their current relative order.
 
-Names that compare equally, including differences only in case or repeated spaces, keep their stored
-relative order after tag or contact-detail updates.
-
-Sorting stays active as members are added, edited, deleted, or searched. Use `list` to restore
-the complete roster in stored order, or restart the app to return to stored order.
-A successful `import` also restores the complete roster in stored order.
-
+The result reports `Sorted all N members by name (A to Z).` The saved order survives `list` and a restart
+and is used by `export`. An empty or already sorted roster also reports success and attempts to save.
+New members added with `add` or `import` go at the end. Editing a name keeps that member in the same
+roster position; run `sort` again when you want to reorder the updated roster. There is no command to
+restore the earlier insertion order. Sorting changes order rather than removing member records, so it saves immediately without a deletion confirmation; inspect the roster before running it. If saving fails, the new order remains in the current session but
+the previous saved file is preserved; resolve the storage problem and retry before exiting.
 Check the displayed member numbers again before using `edit` or `delete`.
 Extra arguments such as `sort date` produce `Invalid command format. Usage: sort`.
 
@@ -368,8 +368,8 @@ Tag-only and unchanged-contact edits to those existing records remain available.
 
 This changes the first displayed member's phone and email. Omitted fields stay unchanged.
 Use `edit INDEX a/` to remove an address that is no longer known; the details panel then shows `(none)`.
-
-After saving, TrackCall confirms the member's name and tags and keeps the active search, tag filters, and sorting.
+After saving, TrackCall confirms the member's name and tags and keeps the active search, tag filters, and roster order.
+Changing a name does not move the member; run `sort` again to reorder the roster.
 The details panel stays hidden until you select a member again to inspect the changed contact fields.
 
 If the updated member no longer matches the search or filters, they disappear from view but remain
@@ -417,10 +417,8 @@ If one `add` or `edit` command supplies both spellings, the first `t/` spelling 
 
 If the member already has the tag (for `tag`) or lacks it (for `untag`), TrackCall reports that
 no change was made, for example `Member 2 already has tag "committee". No changes were made.`
-
-A valid no-op still attempts to save. Searches, filters, sorting, and a `show`
-selection remain active after the command. Removing a tag required by an active filter may hide the
-member from that view; use `list` to show everyone again.
+A valid no-op still attempts to save. Searches, filters, and a `show` selection remain active after the command,
+and the stored roster order is preserved. Removing a tag required by an active filter may hide the member from that view; use `list` to show everyone again.
 
 If saving fails, the member change remains visible in the current session while the previous saved
 file stays unchanged. Follow [Correcting errors](#correcting-errors) before exiting.
@@ -461,7 +459,7 @@ The result reports both counts:
 When every displayed member is skipped, the result ends with `No changes were made.`, for example
 `Added tag "committee" to 0 member(s). 12 already had this tag (any letter case). No changes were made.`
 
-The current search, filters, and sorting stay applied after the update.
+The current search and filters stay applied; stored roster order is preserved.
 If you remove the tag used by an active single-tag filter, the updated members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
 
@@ -521,7 +519,7 @@ command.
 If hidden members still have the current tag after the update, the result says so, for example
 `2 hidden member(s) still have "friends". Run list, then renametag again to rename it for everyone.`
 
-The current search, filters, and sorting stay applied after the update.
+The current search and filters stay applied; stored roster order is preserved.
 If you rename the tag used by an active single-tag filter, the renamed members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
 
@@ -549,8 +547,8 @@ Export displayed members or bring existing member records into TrackCall.
 #### Export members to CSV: `export`
 
 `export [FILEPATH]` writes only the currently displayed members to a UTF-8 CSV file, in displayed order.
-Searches, tag filters, and `show` selections determine which members are exported; active `sort` determines
-their order. Run `list` first to export the complete roster in stored order.
+Searches, tag filters, and `show` selections determine which members are exported; their current stored
+order determines the export order. Run `list` first to export the complete roster in stored order.
 The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
 Tags for each member are sorted in case-sensitive ASCII order (hyphens, digits, uppercase letters, then lowercase letters)
 and joined with semicolons.
@@ -778,7 +776,7 @@ ideas for later versions in its requirements appendix.
 
 ### A save fails after changing records {id="a-save-fails-after-add-edit-delete-tag-untag-tagall-untagall-renametag-or-import"}
 
-This applies to `add`, `edit`, `delete`, `tag`, `untag`, `tagall`, `untagall`, `renametag`, and `import`.
+This applies to `add`, `edit`, `delete`, `tag`, `untag`, `tagall`, `untagall`, `renametag`, `import`, and `sort`.
 
 The change remains visible in this session, but the previous saved file stays unchanged.
 The command box clears the input to avoid repeating an already-applied change.
@@ -808,8 +806,8 @@ A second `yes` alone cannot repeat the action.
 ## Your data
 
 TrackCall automatically saves after successful `add`, `edit`, confirmed `delete`, `tag`, `untag`, `tagall`, `untagall`,
-`renametag`, `clear`, and `import` commands.
-`help`, `list`, `show`, `sort`, `find`, `findemail`, `filter`, `export`, and `exit` do not save the roster.
+`renametag`, `clear`, `import`, and `sort` commands.
+`help`, `list`, `show`, `find`, `findemail`, `filter`, `export`, and `exit` do not save the roster.
 
 ### Locate or back up your roster
 
@@ -921,7 +919,7 @@ To rename a tag for the displayed members, use `renametag`. See [Rename a tag](#
 
 Follow [Correcting errors](#correcting-errors) before exiting.
 A failed `clear` save restores the roster.
-Unsaved changes from `add`, `edit`, `delete`, `tag`, `untag`, `tagall`, `untagall`, `renametag`, and `import` remain visible
+Unsaved changes from `add`, `edit`, `delete`, `tag`, `untag`, `tagall`, `untagall`, `renametag`, `import`, and `sort` remain visible
 in memory.
 
 ## Command summary
@@ -932,7 +930,7 @@ in memory.
 | Add a member | `add n/NAME p/PHONE e/EMAIL [a/ADDRESS] [t/TAG]...` | The quick-start example adds Alice. |
 | Show everyone | `list` | `list` restores the complete roster. |
 | Show selected members | `show INDEX [MORE_INDEXES]...` | `show 1 3` shows only members 1 and 3 from the current list. |
-| Sort by name | `sort` | Sorts the current view from A to Z, ignoring letter case. |
+| Sort by name | `sort` | Reorders and saves the entire roster from A to Z, ignoring letter case. |
 | Update a member | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
 | Add one tag | `tag INDEX t/TAG` | `tag 2 t/committee` adds one tag to displayed member 2. |
 | Remove one tag | `untag INDEX t/TAG` | `untag 2 t/year1` removes one tag from displayed member 2. |
@@ -971,3 +969,10 @@ may still contain contact data; check them before sharing diagnostic files.
 | Tag | A short group label on a member, such as `committee` or `year1`. A member can have several tags. |
 | Terminal | The app where you type commands to your computer: Terminal on macOS and Linux, or Command Prompt or PowerShell on Windows. |
 | UTF-8 | The standard text encoding that most spreadsheet apps can use when saving CSV files. |
+
+### Trailing Unicode whitespace in command fields
+
+Ordinary surrounding ASCII spaces and tabs are trimmed from field values. Other Unicode spaces
+remain subject to each field validator, including at the end of a command. For example, an EM SPACE
+after a name, phone, email or tag is rejected rather than silently removed. This also ensures that
+a Unicode-space-only address is rejected instead of being interpreted as an explicit clear.

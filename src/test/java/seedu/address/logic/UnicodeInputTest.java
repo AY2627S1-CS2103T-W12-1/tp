@@ -48,18 +48,30 @@ public class UnicodeInputTest {
     }
 
     @Test
-    public void address_onlyUnicodeSpaces_rejectsAddEditAndCsv() throws Exception {
+    public void address_onlyUnicodeSpaces_rejectsAddAndEdit() throws Exception {
         Model model = new ModelManager();
         AddressBookParser parser = new AddressBookParser();
         parser.parseCommand("add n/Alice p/123 e/alice@example.com a/原宿通り").execute(model);
-        Path csv = directory.resolve("members.csv");
-        for (String blank : List.of("\u00a0", "\u2007", "\u202f", "\u00a0 \u202f")) {
+        for (String blank : List.of("\u00a0", "\u2007", "\u202f", "\u1680", "\u2003", "\u3000",
+                "\u00a0 \u202f", " \u2003\t")) {
             assertThrows(ParseException.class, () -> parser.parseCommand(
                     "add n/Bob p/456 e/bob@example.com a/" + blank + " t/test"));
-            assertThrows(ParseException.class, () -> parser.parseCommand("edit 1 a/" + blank));
-            Files.writeString(csv, "name,phone,email,address,tags\nBob,456,bob@example.com," + blank + ",\n");
-            assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(csv));
+            for (String suffix : List.of("", " t/test")) {
+                ParseException editFailure = assertThrows(ParseException.class, () ->
+                        parser.parseCommand("edit 1 a/" + blank + suffix));
+                assertEquals(Address.MESSAGE_CONSTRAINTS, editFailure.getMessage());
+            }
             assertEquals("原宿通り", model.getFilteredPersonList().getFirst().getAddress().value);
+        }
+    }
+
+    @Test
+    public void csv_onlyUnicodeSpaces_rejectsSuppliedAddressValues() throws Exception {
+        Path csv = directory.resolve("members.csv");
+        for (String value : List.of("\u00a0", "\u2007", "\u202f", "\u00a0 \u202f",
+                "\"\u1680\"", "\"\u2003\"", "\"\u3000\"", "\" \u2003\t\"")) {
+            Files.writeString(csv, "name,phone,email,address,tags\nBob,456,bob@example.com," + value + ",\n");
+            assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(csv));
         }
     }
 
@@ -70,7 +82,25 @@ public class UnicodeInputTest {
         String address = "日本\u00a0通り 12";
         parser.parseCommand("add n/Alice p/123 e/alice@example.com a/" + address).execute(model);
         assertEquals(address, model.getFilteredPersonList().getFirst().getAddress().value);
-        parser.parseCommand("edit 1 a/").execute(model);
-        assertEquals(Address.EMPTY_ADDRESS, model.getFilteredPersonList().getFirst().getAddress());
+        for (String emptyValue : List.of("", " ", "\t")) {
+            parser.parseCommand("edit 1 a/" + address).execute(model);
+            parser.parseCommand("edit 1 a/" + emptyValue).execute(model);
+            assertEquals(Address.EMPTY_ADDRESS, model.getFilteredPersonList().getFirst().getAddress());
+        }
     }
+    @Test
+    public void edit_trailingUnicodeWhitespaceInOtherFields_rejectsInsteadOfSilentlyTrimming() throws Exception {
+        Model model = new ModelManager();
+        AddressBookParser parser = new AddressBookParser();
+        parser.parseCommand("add n/Alice p/123 e/alice@example.com a/Home").execute(model);
+        var before = List.copyOf(model.getAddressBook().getPersonList());
+        for (String field : List.of("n/Alice", "p/456", "e/alice@example.com", "t/team")) {
+            assertThrows(ParseException.class, () -> parser.parseCommand("edit 1 " + field + "\u2003"));
+        }
+        assertEquals(before, model.getAddressBook().getPersonList());
+        parser.parseCommand("edit 1 n/Alice \t").execute(model);
+        parser.parseCommand("list\u2003").execute(model);
+        assertEquals(before, model.getAddressBook().getPersonList());
+    }
+
 }
