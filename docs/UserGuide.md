@@ -177,7 +177,8 @@ Search by a full email address or any part of an email address:
 * `findemail @example.com` finds emails containing that domain fragment.
 * `findemail @example.com @school.edu` finds emails containing **either** fragment.
 
-Matching ignores letter case. Whitespace separates keywords, and any keyword can match.
+Matching ignores letter case. Whitespace, including pasted nonbreaking spaces, separates keywords;
+any keyword can match.
 Keywords are literal text, not regular expressions; names and phone numbers are not searched.
 Supply at least one keyword. No matches produce `0 members listed.` and an empty list.
 
@@ -260,7 +261,7 @@ so `a/Block A/12` is accepted. Other uppercase or unknown field prefixes remain 
 | Name | Start with a Unicode letter or ASCII digit. Unicode letters, combining marks, ASCII digits, spaces, hyphens, and straight or curly apostrophes are accepted. |
 | Phone | At least three ASCII digits, with an optional leading `+` and spaces between digits. Formatting is preserved. Hyphens, parentheses, and internal tabs are rejected. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
-| Address | Non-blank text when adding; `edit INDEX a/` clears an existing address. |
+| Address | Non-blank text when provided; Unicode-space-only values are rejected. `edit INDEX a/` clears an address. |
 | Tag | 1 to 30 ASCII letters or digits with optional internal hyphens. Matching ignores letter case. |
 
 Names such as `Anne-Marie`, `José Garcia`, and `O'Connor` keep their entered spelling,
