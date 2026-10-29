@@ -21,10 +21,15 @@ note over Logic, Command: Parsing has produced an ExportCommand; this trace show
 activate Logic
 Logic -> Command : execute(m, rosterPath, preferencesPath)
 activate Command
+Command -> Model : getFilteredPersonList()
+activate Model
+Model --> Command : displayed members in displayed order
+deactivate Model
 Command -> Model : getAddressBook()
 activate Model
-Model --> Command : complete stored roster (including hidden members)
+Model --> Command : roster (for total member count)
 deactivate Model
+Command -> Command : snapshot displayed members and count hidden members
 Command -> Command : resolve target path and check protected destinations
 activate Command
 Command --> Command
@@ -46,7 +51,7 @@ FileUtil -> Exporter : writer callback: writeCsv(people, temporary)
 activate Exporter
 note right of Exporter
 The callback writes a UTF-8 header and
-all members in stored order using Commons CSV.
+displayed members in displayed order using Commons CSV.
 It closes the writer before returning.
 end note
 Exporter --> FileUtil
@@ -63,7 +68,7 @@ FileUtil --> Exporter
 deactivate FileUtil
 Exporter --> Command
 deactivate Exporter
-Command --> Logic : CommandResult(exported count and path)
+Command --> Logic : CommandResult(exported count, path, and hidden count if any)
 deactivate Command
 Logic -> Command : isReadOnly()
 activate Command

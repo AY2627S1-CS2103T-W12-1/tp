@@ -179,8 +179,8 @@ public class UserCsvWorkflowTest {
     }
 
     @Test
-    public void export_filteredSortedRoster_sharesAllMembersAndCanRestoreThemInStoredOrder() throws Exception {
-        // UG: export includes hidden members, preserves the current view, and sorts tags in the CSV.
+    public void export_filteredSortedRoster_sharesOnlyDisplayedMembersAndRestoresTheirOrder() throws Exception {
+        // UG: export shares displayed members, preserves the current view, and sorts tags in the CSV.
         logic.execute("find Alice");
         logic.execute("sort");
         List<Person> visible = List.copyOf(model.getFilteredPersonList());
@@ -191,16 +191,15 @@ public class UserCsvWorkflowTest {
         logic.execute("export " + csv);
 
         assertEquals("name,phone,email,address,tags\r\n"
-                + "Alice,456,alice@example.com,\"Block 1, \"\"Main\"\" Street\",A;z\r\n"
-                + "Zulu,00123,zulu@example.com,,old\r\n", Files.readString(csv));
+                + "Alice,456,alice@example.com,\"Block 1, \"\"Main\"\" Street\",A;z\r\n", Files.readString(csv));
         assertEquals(visible, model.getFilteredPersonList());
         assertEquals(filters, model.getActiveFilters());
         assertArrayEquals(saved, Files.readAllBytes(rosterFile));
         ModelManager restored = new ModelManager();
         Path restoredFile = directory.resolve("restored.json");
         logicFor(restored, restoredFile).execute("import p/\"" + csv + "\"");
-        assertEquals(model.getAddressBook(), restored.getAddressBook());
-        assertEquals(model.getAddressBook(), new JsonAddressBookStorage(restoredFile).readAddressBook().orElseThrow());
+        assertEquals(visible, restored.getAddressBook().getPersonList());
+        assertEquals(visible, new JsonAddressBookStorage(restoredFile).readAddressBook().orElseThrow().getPersonList());
     }
 
     @Test

@@ -1,8 +1,9 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_EMPTY_TAG;
-import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_INVALID_TAG;
+import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_TAG_TOO_LONG;
+import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_UNSUPPORTED_CHARACTER;
+import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_WHITESPACE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -24,13 +25,38 @@ public class RenameTagCommandParserTest {
     }
 
     @Test
-    public void parse_wrongTagCountOrPreamble_showsRenameTagUsage() {
-        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, RenameTagCommand.MESSAGE_USAGE);
-        for (String input : new String[] {"", "   ", " t/batch2026", " t/a t/b t/c", " batch2026 alumni",
-            " x/batch2026 t/alumni", " 1 t/batch2026 t/alumni", " t/batch2026 n/Bob t/alumni",
-            " t/batch2026 t/alumni a/Clementi", " p/91234567 t/batch2026 t/alumni"}) {
-            assertParseFailure(parser, input, expected);
+    public void parse_wrongTagCount_reportsReceivedCount() {
+        for (String input : new String[] {"", "   "}) {
+            assertParseFailure(parser, input, String.format(RenameTagCommandParser.MESSAGE_TAG_COUNT, 0)
+                    + "\n" + RenameTagCommand.MESSAGE_USAGE);
         }
+        assertParseFailure(parser, " t/batch2026", String.format(RenameTagCommandParser.MESSAGE_TAG_COUNT, 1)
+                + "\n" + RenameTagCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, " t/a t/b t/c", String.format(RenameTagCommandParser.MESSAGE_TAG_COUNT, 3)
+                + "\n" + RenameTagCommand.MESSAGE_USAGE);
+    }
+
+    @Test
+    public void parse_missingPrefixOrPreamble_identifiesReason() {
+        assertParseFailure(parser, " batch2026 alumni", BulkTagArgumentParser.MESSAGE_MISSING_PREFIX
+                + "\n" + RenameTagCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, " x/batch2026 t/alumni",
+                "Unexpected text before t/: \"x/batch2026\".\n" + RenameTagCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, " 1 t/batch2026 t/alumni",
+                "Unexpected text before t/: \"1\".\n" + RenameTagCommand.MESSAGE_USAGE);
+    }
+
+    @Test
+    public void parse_otherField_identifiesUnsupportedField() {
+        assertParseFailure(parser, " t/batch2026 n/Bob t/alumni",
+                "Field n/ is not supported. This command accepts only t/TAG parameters.\n"
+                        + RenameTagCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, " t/batch2026 t/alumni a/Clementi",
+                "Field a/ is not supported. This command accepts only t/TAG parameters.\n"
+                        + RenameTagCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, " p/91234567 t/batch2026 t/alumni",
+                "Field p/ is not supported. This command accepts only t/TAG parameters.\n"
+                        + RenameTagCommand.MESSAGE_USAGE);
     }
 
     @Test
@@ -39,10 +65,14 @@ public class RenameTagCommandParserTest {
         String added = RenameTagCommandParser.MESSAGE_NEW_TAG_PREFIX;
         assertParseFailure(parser, " t/ t/alumni", current + MESSAGE_EMPTY_TAG);
         assertParseFailure(parser, " t/batch2026 t/", added + MESSAGE_EMPTY_TAG);
-        assertParseFailure(parser, " t/two words t/alumni", current + MESSAGE_INVALID_TAG);
-        assertParseFailure(parser, " t/batch2026 t/hello!", added + MESSAGE_INVALID_TAG);
-        assertParseFailure(parser, " t/batch2026 t/" + "a".repeat(31), added + MESSAGE_INVALID_TAG);
-        assertParseFailure(parser, " t/batch_2026 t/alumni", current + MESSAGE_INVALID_TAG);
+        assertParseFailure(parser, " t/two words t/alumni",
+                current + MESSAGE_WHITESPACE);
+        assertParseFailure(parser, " t/batch2026 t/hello!",
+                added + String.format(MESSAGE_UNSUPPORTED_CHARACTER, "!"));
+        assertParseFailure(parser, " t/batch2026 t/" + "a".repeat(31),
+                added + String.format(MESSAGE_TAG_TOO_LONG, 31));
+        assertParseFailure(parser, " t/batch_2026 t/alumni",
+                current + String.format(MESSAGE_UNSUPPORTED_CHARACTER, "_"));
     }
 
     @Test

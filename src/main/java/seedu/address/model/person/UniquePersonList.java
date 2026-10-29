@@ -83,7 +83,7 @@ public class UniquePersonList implements Iterable<Person> {
     /** Sorts names ignoring case and repeated spaces, retaining the relative order of equal names. */
     public void sortByName() {
         FXCollections.sort(internalList, Comparator.comparing(
-                person -> person.getName().fullName.trim().replaceAll(" +", " "), String.CASE_INSENSITIVE_ORDER));
+                person -> person.getName().getComparisonKey(), String.CASE_INSENSITIVE_ORDER));
     }
 
     public void setPersons(UniquePersonList replacement) {

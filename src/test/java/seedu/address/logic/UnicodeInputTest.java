@@ -88,4 +88,19 @@ public class UnicodeInputTest {
             assertEquals(Address.EMPTY_ADDRESS, model.getFilteredPersonList().getFirst().getAddress());
         }
     }
+    @Test
+    public void edit_trailingUnicodeWhitespaceInOtherFields_rejectsInsteadOfSilentlyTrimming() throws Exception {
+        Model model = new ModelManager();
+        AddressBookParser parser = new AddressBookParser();
+        parser.parseCommand("add n/Alice p/123 e/alice@example.com a/Home").execute(model);
+        var before = List.copyOf(model.getAddressBook().getPersonList());
+        for (String field : List.of("n/Alice", "p/456", "e/alice@example.com", "t/team")) {
+            assertThrows(ParseException.class, () -> parser.parseCommand("edit 1 " + field + "\u2003"));
+        }
+        assertEquals(before, model.getAddressBook().getPersonList());
+        parser.parseCommand("edit 1 n/Alice \t").execute(model);
+        parser.parseCommand("list\u2003").execute(model);
+        assertEquals(before, model.getAddressBook().getPersonList());
+    }
+
 }
