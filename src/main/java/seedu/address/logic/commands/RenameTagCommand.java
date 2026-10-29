@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
@@ -31,7 +32,7 @@ public class RenameTagCommand extends Command {
     public static final String MESSAGE_MERGED = " %1$d already had \"%2$s\".";
     public static final String MESSAGE_TAG_NOT_FOUND = "No member in the current list has the tag \"%1$s\".";
     public static final String MESSAGE_ALREADY_SPELLED =
-            "Every displayed member with this tag already uses \"%1$s\". No changes were made.";
+            "Every displayed member with this tag already uses \"%1$s\"." + Messages.MESSAGE_NO_CHANGES;
     public static final String MESSAGE_SAME_TAG = "The new tag must be different from the current tag.";
 
     private static final Logger logger = LogsCenter.getLogger(RenameTagCommand.class);
@@ -124,10 +125,7 @@ public class RenameTagCommand extends Command {
         if (mergedCount > 0) {
             feedback += String.format(MESSAGE_MERGED, mergedCount, newTag.tagName);
         }
-        if (!model.getFilteredPersonList().containsAll(renamedPersons)) {
-            feedback += FilterCommand.describeHiddenUpdates(model);
-        }
-        return feedback;
+        return feedback + TagUpdateUtil.describeHiddenUpdates(model, renamedPersons);
     }
 
     /**
@@ -140,8 +138,7 @@ public class RenameTagCommand extends Command {
         // Tags match regardless of letter case, so this also drops a different spelling of newTag.
         updatedTags.remove(newTag);
         updatedTags.add(newTag);
-        return new Person(person.getName(), person.getPhone(), person.getEmail(), person.getAddress(),
-                updatedTags);
+        return TagUpdateUtil.withTags(person, updatedTags);
     }
 
     @Override

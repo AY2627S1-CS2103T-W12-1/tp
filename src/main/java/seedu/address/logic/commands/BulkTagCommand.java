@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,7 +40,8 @@ public abstract class BulkTagCommand extends Command {
      * @param skippedMessage Format appended to the feedback, given the number of skipped members.
      */
     protected BulkTagCommand(Tag tag, String commandWord, String successMessage, String skippedMessage) {
-        this.tag = requireNonNull(tag);
+        requireAllNonNull(tag, commandWord, successMessage, skippedMessage);
+        this.tag = tag;
         this.commandWord = commandWord;
         this.successMessage = successMessage;
         this.skippedMessage = skippedMessage;
@@ -95,8 +97,7 @@ public abstract class BulkTagCommand extends Command {
     private Person createUpdatedPerson(Person person) {
         Set<Tag> updatedTags = new HashSet<>(person.getTags());
         updateTags(updatedTags);
-        return new Person(person.getName(), person.getPhone(), person.getEmail(), person.getAddress(),
-                updatedTags);
+        return TagUpdateUtil.withTags(person, updatedTags);
     }
 
     /**
@@ -109,11 +110,9 @@ public abstract class BulkTagCommand extends Command {
             feedback += String.format(skippedMessage, skippedCount);
         }
         if (updatedPersons.isEmpty()) {
-            feedback += Messages.MESSAGE_NO_CHANGES;
-        } else if (!model.getFilteredPersonList().containsAll(updatedPersons)) {
-            feedback += FilterCommand.describeHiddenUpdates(model);
+            return feedback + Messages.MESSAGE_NO_CHANGES;
         }
-        return feedback;
+        return feedback + TagUpdateUtil.describeHiddenUpdates(model, updatedPersons);
     }
 
     @Override
@@ -127,12 +126,12 @@ public abstract class BulkTagCommand extends Command {
             return false;
         }
 
-        return tag.equals(((BulkTagCommand) other).tag);
+        return tag.tagName.equals(((BulkTagCommand) other).tag.tagName);
     }
 
     @Override
     public int hashCode() {
-        return tag.hashCode();
+        return tag.tagName.hashCode();
     }
 
     @Override
