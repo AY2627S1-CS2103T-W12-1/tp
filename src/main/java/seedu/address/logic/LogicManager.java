@@ -69,10 +69,9 @@ public class LogicManager implements Logic {
         }
 
         Command command = addressBookParser.parseCommand(commandText);
-        int memberCount = model.getAddressBook().getPersonList().size();
-        if (command instanceof ClearCommand && memberCount > 0) {
-            // Delay execution and persistence until the next input explicitly confirms the entire roster.
-            String prompt = String.format(ClearCommand.MESSAGE_CONFIRMATION, memberCount);
+        if (command instanceof ClearCommand clear && clear.prepareTargets(model) > 0) {
+            // Capture the scope before asking; later filter changes cannot expand the deletion.
+            String prompt = clear.getConfirmationMessage();
             requestConfirmation(command, prompt);
             return new CommandResult(prompt);
         }
@@ -171,8 +170,8 @@ public class LogicManager implements Logic {
                     + UNSAVED_CHANGE_GUIDANCE, ioe, true);
         }
 
-        if (beforeClear != null) {
-            model.updateFilteredPersonList(Model.PREDICATE_SHOW_ALL_PERSONS);
+        if (command instanceof ClearCommand clear) {
+            clear.finishSaving(model);
         }
         return commandResult;
     }

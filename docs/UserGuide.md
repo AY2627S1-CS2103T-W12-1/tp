@@ -40,7 +40,7 @@ Start with [Quick start](#quick-start), browse the [feature groups](#commands), 
    ```
 
 TrackCall opens with six sample club members and a welcome message on your first launch.
-Try the examples in this guide on them, then use `clear` to remove them when you are ready to enter your own members.
+Try the examples in this guide on them, then use `clear /all` to remove them when you are ready to enter your own members.
 
 Only one TrackCall window can use a folder at a time. If a second launch reports
 `TrackCall is already running from this folder.`, use the existing window or close it before restarting.
@@ -670,8 +670,7 @@ Only `yes`, typed exactly in lowercase, confirms. `y`, or `yes` in any other let
 does not confirm or cancel: it keeps
 the prompt pending and reminds you:
 `To confirm, type yes exactly, in lowercase, and press Enter, or type anything else to cancel (except yes or y in any letter case).`
-
-The reminder is followed by the original prompt, so the member to be deleted (or, for `clear`, the total member
+The reminder is followed by the original prompt, so the member to be deleted (or, for clearing, the selected member
 count) stays visible, including after you remove a filter box.
 
 Any other input, such as `no` or another command, cancels the deletion with
@@ -684,33 +683,37 @@ are not displayed. Other records remain, and the remaining members are renumbere
 
 **There is no undo after you confirm.** Back up records you may need later.
 
-#### Clear all members: `clear`
+#### Clear members: `clear` or `clear /all` {id="clear-all-members-clear"}
 
-`clear` removes the entire roster, including members hidden by a search.
-It saves the empty roster and resets the search after a successful save.
+`clear` removes only the currently displayed members. Hidden members are kept.
+`clear /all` removes every stored member, including hidden members.
 
-1. Run `clear`. TrackCall shows the total number of stored members, including anyone hidden by searches or filters.
-2. Type `yes` and press Enter to clear and save the entire roster.
-   As for `delete`, `y` or `yes` in another letter case keeps the prompt pending and reminds you to type `yes` exactly.
-   Any other input, such as `no`, cancels with `Clear cancelled. No members were removed.` That input is not run;
-   if it is a command, the result also says it was not run.
+1. Search, filter or use `show` to select the members to remove, then run `clear`.
+   To remove everyone, run `clear /all` from any view.
+2. Check the scope and member count in the prompt. Type lowercase `yes` to confirm.
+   `y`, `Y` or another capitalization of `yes` keeps the prompt pending with a reminder.
+   Any other reply cancels and is consumed without running it as a command.
 
-The roster, current view, and saved file stay unchanged while the prompt is pending or when you cancel.
+The roster, view and saved file stay unchanged while confirmation is pending or cancelled.
+The targets are fixed when the prompt appears. Removing a filter while waiting does not add targets.
+After displayed clearing, conditions remain applied and Show counts update. Run `list` to see hidden survivors.
+Whole-roster clearing resets the view after saving. There is no undo.
+For example, `filter t/committee`, then `clear`, then `yes` removes committee members only;
+`clear /all`, then `yes` removes everyone instead.
 
-An already-empty roster saves immediately without prompting, so `clear` can still retry an unsaved empty roster.
-**There is no undo after confirmation.** Back up records you may need later.
+An empty displayed list with hidden records reports an error without saving or asking to delete them.
+An already-empty roster saves immediately without confirmation, allowing an unsaved empty roster to be retried.
 
 | Situation | Feedback after saving |
 | --- | --- |
-| One member removed | `Cleared 1 member. The roster is now empty.` |
-| Multiple members removed | `Cleared N members. The roster is now empty.` |
+| Hidden members remain | `Cleared N displayed member(s). M member(s) remain in the roster.` |
+| One member removed and none remain | `Cleared 1 member. The roster is now empty.` |
+| Multiple members removed and none remain | `Cleared N members. The roster is now empty.` |
 | Roster already empty | `The roster is already empty. No changes were made.` |
 
-The count includes hidden members.
-Extra arguments produce `Invalid command format. Usage: clear. This command removes all members.`
-
-If saving fails, TrackCall restores the roster and previous view. It reports:
-`Unable to clear the roster because the changes could not be saved. No members were removed.`
+Only the optional lowercase `/all` flag is accepted. Extra or repeated arguments leave records unchanged.
+If saving fails, the complete roster and previous view are restored. Resolve the storage problem,
+then run `clear` or `clear /all` again and confirm the new prompt for the intended scope.
 See [Correcting errors](#correcting-errors) for recovery steps.
 
 ### Help and session {id="help-and-session"}
@@ -794,10 +797,10 @@ Exiting before a successful retry loses unsaved changes.
 TrackCall restores every member and the previous view. It reports `No members were removed.`
 The submitted input stays in the command box (`yes` after confirmation, or `clear` for an already-empty roster).
 
-The feedback includes the storage failure reason. If it says the file changed outside TrackCall,
-restart to load those outside changes. Retry only if you intend to replace them with the session's cleared roster;
-the outside version will be kept in the backup. For other failures, resolve the stated storage problem first.
-Run `clear` again and confirm the new prompt only if you still want to remove the entire roster.
+The feedback includes the storage failure reason. If the file changed outside TrackCall, restart to
+load those outside changes. Retry only when deliberately replacing them with the session's cleared roster;
+the outside version is kept in the backup. Resolve other stated storage problems before retrying.
+Run `clear` for displayed members or `clear /all` for everyone, then confirm the new prompt.
 A second `yes` alone cannot repeat the action.
 
 ## Your data
@@ -938,8 +941,8 @@ in memory.
 | Untag a group | `untagall t/TAG` | `untagall t/committee` removes the tag from every displayed member. |
 | Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every displayed member. |
 | Delete one member | `delete INDEX`, then `yes` | `delete 1`, then `yes`, removes the first currently displayed member. |
-| Clear the roster | `clear` | Run `clear`, then `yes` to remove all members, including hidden ones. `no` cancels. |
-| Export members | `export [FILEPATH]` | `export members.csv` writes displayed members to CSV in displayed order; run `list` first for everyone. |
+| Clear members | `clear [/all]` | `clear` removes displayed members; `clear /all` removes everyone. Confirm with `yes`. |
+| Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |
 | Import members | `import p/FILE_PATH` | `import p/members.csv` appends unique valid records. |
 | Close the app | `exit` | `exit` ends the session. |
 
