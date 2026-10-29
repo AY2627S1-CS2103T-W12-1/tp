@@ -99,7 +99,7 @@ public class PartialNameSearchWorkflowTest {
         logic.removeActiveFilter(model.getActiveFilters().getLast());
         assertNames("Alice Tan", "Bob Tan");
         logic.execute("list");
-        assertNames("Bob Tan", "Alice Tan", "Alicia Lee");
+        assertNames("Alice Tan", "Alicia Lee", "Bob Tan");
         assertTrue(model.getActiveFilters().isEmpty());
     }
 
