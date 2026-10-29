@@ -620,4 +620,39 @@ public class JsonAddressBookStorageTest {
         assertThrows(IOException.class, () -> storage.saveAddressBook(new AddressBook()));
         assertTrue(Files.isDirectory(file));
     }
+    @Test
+    public void saveAddressBook_rollbackFails_retainsBackupCopyAndFailureReasons() throws Exception {
+        Path file = testFolder.resolve("double-failure.json");
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        JsonAddressBookStorage initial = new JsonAddressBookStorage(file);
+        initial.saveAddressBook(getTypicalAddressBook());
+        byte[] activeBefore = Files.readAllBytes(file);
+        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(new AddressBook()), backup);
+        byte[] previousBackup = Files.readAllBytes(backup);
+        JsonAddressBookStorage failing = new JsonAddressBookStorage(file) {
+            @Override
+            protected void writeActiveRoster(ReadOnlyAddressBook roster, Path target) throws IOException {
+                // Simulate storage changing again between backup rotation and rollback.
+                Files.delete(backup);
+                Files.createDirectory(backup);
+                Files.writeString(backup.resolve("blocked"), "Prevent replacing the backup directory");
+                throw new IOException("Active write failed");
+            }
+        };
+
+        IOException error = org.junit.jupiter.api.Assertions.assertThrows(IOException.class, () ->
+                failing.saveAddressBook(new AddressBook()));
+
+        assertEquals("Active write failed", error.getMessage());
+        assertEquals(1, error.getSuppressed().length);
+        assertTrue(error.getSuppressed()[0] instanceof IOException);
+        assertArrayEquals(activeBefore, Files.readAllBytes(file));
+        try (var siblings = Files.list(testFolder)) {
+            List<Path> preserved = siblings.filter(path -> path.getFileName().toString()
+                    .startsWith(".trackcall-backup-")).toList();
+            assertEquals(1, preserved.size());
+            assertArrayEquals(previousBackup, Files.readAllBytes(preserved.getFirst()));
+        }
+    }
+
 }
