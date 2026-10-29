@@ -43,7 +43,7 @@ its membership features. The [release notes](#releases) identify what changed in
 * [**Search names: `find`**](UserGuide.html#find-members-find) — match partial name words, ignoring letter case.
 * [**Search email addresses: `findemail`**](UserGuide.html#find-members-by-email-findemail) — narrow displayed members by a full address or an email fragment.
 * [**Filter by tag: `filter`**](UserGuide.html#filter-displayed-members-by-tag-filter) — narrow the displayed members; combine successive filters to find overlapping groups.
-* [**Sort by name: `sort`**](UserGuide.html#sort-members-by-name-sort) — show the current results in case-insensitive A–Z order.
+* [**Sort by name: `sort`**](UserGuide.html#sort-members-by-name-sort) — reorder and save the entire roster in case-insensitive A–Z order.
 
 ### Add and update members
 

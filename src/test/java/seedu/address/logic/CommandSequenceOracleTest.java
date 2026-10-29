@@ -68,7 +68,7 @@ public class CommandSequenceOracleTest {
 
         assertTrue(failure.getMessage().contains("No members were removed"));
         assertArrayEquals(saved, Files.readAllBytes(session.rosterFile));
-        assertEquals(List.of("Zulu", "Bob", "Alice"), session.model.getAddressBook().getPersonList().stream()
+        assertEquals(List.of("Alice", "Bob", "Zulu"), session.model.getAddressBook().getPersonList().stream()
                 .map(person -> person.getName().fullName).toList());
         assertEquals(List.of("Alice"), session.model.getFilteredPersonList().stream()
                 .map(person -> person.getName().fullName).toList());
@@ -118,7 +118,6 @@ public class CommandSequenceOracleTest {
         private final List<String> history = new ArrayList<>();
         private ModelManager model;
         private LogicManager logic;
-        private boolean isNameSortingEnabled;
         private int nextId;
 
         private Session(Path folder, int seed) throws Exception {
@@ -138,7 +137,6 @@ public class CommandSequenceOracleTest {
             logic = new LogicManager(model, new StorageManager(storage,
                     new JsonUserPrefsStorage(folder.resolve("preferences.json"))));
             resetFilters();
-            isNameSortingEnabled = false;
         }
 
         private void resetFilters() {
@@ -148,12 +146,8 @@ public class CommandSequenceOracleTest {
         }
 
         private List<Member> getVisibleMembers() {
-            var stream = roster.stream().filter(member -> restrictions.stream().allMatch(p -> p.test(member))
-                    && selections.stream().allMatch(ids -> ids.contains(member.id())));
-            if (isNameSortingEnabled) {
-                stream = stream.sorted(Comparator.comparing(member -> member.name().toLowerCase(Locale.ROOT)));
-            }
-            return stream.toList();
+            return roster.stream().filter(member -> restrictions.stream().allMatch(p -> p.test(member))
+                    && selections.stream().allMatch(ids -> ids.contains(member.id()))).toList();
         }
 
         private void command(String text) throws Exception {
@@ -220,14 +214,13 @@ public class CommandSequenceOracleTest {
         private Change listMembers() throws Exception {
             command("list");
             resetFilters();
-            isNameSortingEnabled = false;
             return Change.NONE;
         }
 
         private Change sortMembers() throws Exception {
             command("sort");
-            isNameSortingEnabled = true;
-            return Change.NONE;
+            roster.sort(Comparator.comparing(Member::name, String.CASE_INSENSITIVE_ORDER));
+            return Change.APPLIED;
         }
 
         private Change findByName() throws Exception {
@@ -339,7 +332,6 @@ public class CommandSequenceOracleTest {
             assertArrayEquals(before, Files.readAllBytes(rosterFile), describeStep(step));
             command("import p/\"" + csv + "\"");
             resetFilters();
-            isNameSortingEnabled = false;
             return Change.APPLIED;
         }
 

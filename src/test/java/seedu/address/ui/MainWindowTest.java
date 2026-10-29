@@ -822,18 +822,18 @@ public class MainWindowTest {
                     + "0 member(s) listed with tag \"committee\". Run list to show everyone.", feedback.getText());
             assertDisplayedNames();
             enter("list");
-            assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");
+            assertDisplayedNames("Alice Tan", "bob Lee", "Zara Tan");
             enter("edit 1 p/90000004");
             enter("export " + exported);
             assertTrue(feedback.getText().startsWith("Exported 3 members to "));
             enter("delete 2");
             enter("yes");
-            assertDisplayedNames("Zara Tan", "Alice Tan");
+            assertDisplayedNames("Alice Tan", "Zara Tan");
             enter("clear");
             enter("yes");
             enter("import p/\"" + exported + "\"");
             assertTrue(feedback.getText().startsWith("Imported 3 member(s)"));
-            assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");
+            assertDisplayedNames("Alice Tan", "bob Lee", "Zara Tan");
             assertEquals("90000004", model.getFilteredPersonList().getFirst().getPhone().value);
             assertTrue(model.getFilteredPersonList().getFirst().getTags().stream()
                     .anyMatch(tag -> tag.tagName.equals("year2")));
@@ -1088,4 +1088,50 @@ public class MainWindowTest {
     private KeyEvent key(KeyCode code) {
         return new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false);
     }
+    @Test
+    public void keyboard_f2ThenEscape_returnsFocusToCommandAndClearsMemberDetails() throws Exception {
+        onJavaFxThread(() -> {
+            ListView<?> roster = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+            roster.getSelectionModel().select(0);
+            Event.fireEvent(input, key(KeyCode.F2));
+            assertEquals(roster, window.getPrimaryStage().getScene().getFocusOwner());
+            Event.fireEvent(roster, key(KeyCode.ESCAPE));
+            assertNull(roster.getSelectionModel().getSelectedItem());
+            assertEquals(input, window.getPrimaryStage().getScene().getFocusOwner());
+            assertNull(window.getPersonListPanel().getSelectedPerson());
+        });
+    }
+
+    @Test
+    public void keyboard_removeLastFocusedFilter_returnsFocusToCommand() throws Exception {
+        onJavaFxThread(() -> {
+            enter("find Alice");
+            FlowPane chips = getFilterChips();
+            Button remove = (Button) ((HBox) chips.getChildren().getFirst()).getChildren().get(1);
+            remove.requestFocus();
+            remove.fire();
+            assertTrue(model.getActiveFilters().isEmpty());
+            assertFalse(chips.isVisible());
+            assertEquals(input, window.getPrimaryStage().getScene().getFocusOwner());
+            assertDisplayedNames("Alice Tan", "Bob Lee");
+        });
+    }
+
+    @Test
+    public void keyboard_escapeFromCommand_clearsSelectedDetailsButPreservesDraftInput() throws Exception {
+        onJavaFxThread(() -> {
+            ListView<?> roster = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+            roster.getSelectionModel().select(0);
+            input.requestFocus();
+            input.setText("find Alice");
+            Event.fireEvent(input, key(KeyCode.ESCAPE));
+            assertNull(roster.getSelectionModel().getSelectedItem());
+            assertEquals("find Alice", input.getText());
+            // With no selection and focus already in the input, Escape must not discard the draft.
+            Event.fireEvent(input, key(KeyCode.ESCAPE));
+            assertEquals("find Alice", input.getText());
+            assertEquals(input, window.getPrimaryStage().getScene().getFocusOwner());
+        });
+    }
+
 }

@@ -39,7 +39,7 @@ Command -> Model : getAddressBook()
 activate Model
 Model --> Command : roster
 deactivate Model
-note over Command: Compare candidates with all stored members\nand earlier accepted rows using isSamePerson().
+note over Command: Compare candidates with all stored members\nand earlier accepted rows using isDuplicateContactOf().
 loop each unique candidate
     Command -> Model : addPerson(candidate)
     activate Model
@@ -47,10 +47,6 @@ loop each unique candidate
     deactivate Model
 end
 Command -> Model : updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS)
-activate Model
-Model --> Command
-deactivate Model
-Command -> Model : setNameSorting(false)
 activate Model
 Model --> Command
 deactivate Model

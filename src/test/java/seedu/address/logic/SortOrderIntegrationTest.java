@@ -95,37 +95,40 @@ public class SortOrderIntegrationTest {
         assertDisplayOrder(1, 2, 3, 4);
         model.removeActiveFilter(model.getActiveFilters().getFirst());
         assertDisplayOrder(1, 2, 3, 4, 5, 0);
-        assertStoredOrder(0, 1, 2, 3, 4, 5);
+        assertStoredOrder(1, 2, 3, 4, 5, 0);
     }
 
     @Test
-    public void execute_addIntoEqualNameGroup_placesNewMemberAfterStoredPeers() throws Exception {
+    public void execute_addAfterSort_appendsUntilExplicitlySortedAgain() throws Exception {
         startWithNames("Bob", "Alice", "Alice", "Charlie");
         execute("sort");
 
         model.addPerson(member("aLiCe", 4));
 
+        assertDisplayOrder(1, 2, 0, 3, 4);
+        assertStoredOrder(1, 2, 0, 3, 4);
+        execute("sort");
         assertDisplayOrder(1, 2, 4, 0, 3);
-        assertStoredOrder(0, 1, 2, 3, 4);
+        assertStoredOrder(1, 2, 4, 0, 3);
     }
 
     @Test
-    public void execute_renameIntoEqualNameGroup_usesStoredPositionInsteadOfPreviousSortedPosition() throws Exception {
+    public void execute_renameIntoEqualNameGroup_retainsCurrentStoredPosition() throws Exception {
         startWithNames("Bob", "Alice", "Alice", "Zoe");
         execute("sort");
 
         execute("edit 3 n/ALICE");
-        assertDisplayOrder(0, 1, 2, 3);
+        assertDisplayOrder(1, 2, 0, 3);
         execute("edit 4 n/alice");
-        assertDisplayOrder(0, 1, 2, 3);
+        assertDisplayOrder(1, 2, 0, 3);
         execute("list");
-        assertDisplayOrder(0, 1, 2, 3);
+        assertDisplayOrder(1, 2, 0, 3);
         execute("sort");
-        assertDisplayOrder(0, 1, 2, 3);
+        assertDisplayOrder(1, 2, 0, 3);
     }
 
     @Test
-    public void execute_replaceRosterWhileSorting_preservesReplacementRosterTieOrder() throws Exception {
+    public void execute_replacePreviouslySortedRoster_preservesReplacementRosterTieOrder() throws Exception {
         startWithNames("Alice", "Alice", "Alice", "Alice");
         execute("sort");
         AddressBook replacement = new AddressBook();

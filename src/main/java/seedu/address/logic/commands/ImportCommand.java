@@ -77,7 +77,6 @@ public class ImportCommand extends Command {
 
         peopleToAdd.forEach(model::addPerson);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
-        model.setNameSorting(false);
         logger.info(String.format("CSV import processed: %d member(s) added, %d duplicate(s) skipped",
                 peopleToAdd.size(), duplicateCount));
         return new CommandResult(String.format(MESSAGE_SUCCESS, peopleToAdd.size(),
