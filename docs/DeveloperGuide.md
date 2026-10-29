@@ -352,7 +352,7 @@ Detail diagrams may introduce helper lifelines omitted from the overview. Open a
 1. For a non-empty roster, `LogicManager` stores the pending `ClearCommand` and prompts with the total count.
    No records change and no save occurs yet. An empty roster skips confirmation.
 2. The next input is consumed: lowercase `yes`, after stripping surrounding whitespace, confirms.
-   A near miss (`y`, or `yes` in another letter case) keeps the prompt pending with a reminder.
+   A near miss (`y`, `Y`, or `yes` in another letter case) keeps the prompt pending with a reminder.
    Any other reply cancels without running it as a command.
 3. Before executing the clear, snapshot the roster. Count and remove every record, including hidden ones.
 4. Retain predicates and sorting until the save outcome is known.
@@ -503,10 +503,12 @@ privacy and restored bounds. Manual tests check long values and real display sca
 
 | Command | In-memory state | Retry behavior |
 | --- | --- | --- |
-| `clear` | Restore prior records and view. | Fix storage, run `clear` again, and confirm if prompted. A lone `yes` cannot retry. |
+| `clear` | Restore prior records and view. | Resolve the cause before running `clear` again; confirm if prompted. A lone `yes` cannot retry. |
 | Other data-changing commands | Keep the applied change. | Clear the input to prevent accidental repetition. |
 
 - `SaveFailureException` records whether the change remains applied.
+- `clear` currently reports a generic failure without the underlying cause, including outside-change warnings.
+  If external edits may exist, restart to load them; retry clear only when intentionally replacing them with an empty roster.
 - The previous roster file is unchanged. Exiting can lose unsaved in-memory changes.
 - After restoring access, inspect the list and use `edit` with an existing value to retry saving.
 - If no records remain, use `clear`. Exit never retries a roster save.
@@ -538,15 +540,21 @@ privacy and restored bounds. Manual tests check long values and real display sca
 - Retain a temporary copy of the previous backup until the active roster is saved. If that write fails,
   restore the previous backup, or remove the newly created backup if none existed.
 - If backup rollback itself fails, retain the temporary copy and attach that failure to the original error.
-- After reading or saving a roster, remember its data. Refuse the first save if a different valid roster
+- After loading or saving a valid roster, remember its data. Refuse the first save if a different valid roster
   now occupies the file. Keep the session changes in memory, except for clear's rollback policy.
-- The refused save records the outside version. Restart to load it, or deliberately retry saving to
-  replace it and retain it in `.bak`. Restart discards this session's unsaved changes; retry with a valid
-  roster-changing command, such as `edit` with an existing field value. Formatting-only edits do not trigger this guard.
+  A file appearing after an initially missing-file read is not currently detected by this guard.
+- The refused save records the outside version. Restart to load it, or deliberately retry a valid roster-changing
+  command to replace it. Restart discards this session's unsaved changes. A retry rotates `.bak` only when the
+  outside and session member data differ; matching data leaves the previous backup, or no backup, unchanged.
+  Formatting-only edits do not trigger the outside-change guard.
 - Comparing parsed rosters avoids false alarms for formatting-only changes. File hashes would flag those changes,
   timestamps can be unreliable, and automatic file watching/reloading could discard unsaved session changes.
-- An outside edit that makes the file invalid blocks every save until restart and recovery.
+- An invalid on-disk roster blocks saves; the error directs the user to restart for recovery.
 - Invalid preferences fall back to defaults. Logger initialization failure falls back to the console.
+
+The intended safeguard is to warn before replacing outside data and preserve it on an intentional retry.
+Pending [PR #294](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/294) addresses the missing-file detection and
+matching-roster backup gaps, together with the generic clear failure message. These fixes are not yet merged.
 
 **Tests:** `JsonAddressBookStorageTest` and `LogicManagerTest` cover persistence and failure policies.
 See [manual recovery tests](#persistence-and-invalid-files) for packaged acceptance.
@@ -564,7 +572,7 @@ See [manual recovery tests](#persistence-and-invalid-files) for packaged accepta
 **Rules**
 
 - Add/edit accept fields in any order and reject repeated non-tag prefixes.
-- Reject unsupported standalone single-letter prefixes in add/edit, including wrong-case prefixes.
+- Reject unsupported whitespace-delimited ASCII single-letter prefixes in add/edit, including wrong-case prefixes.
 - Preserve the `c/o` address abbreviation, URLs, numeric slashes and slashes embedded within words in add/edit.
 - Within an `a/` field, allow `A/` followed by an ASCII digit, as in `Block A/12`.
   A supported lowercase prefix ends this address context; other unsupported prefixes still fail.
@@ -609,7 +617,8 @@ See [manual recovery tests](#persistence-and-invalid-files) for packaged accepta
 - Require the five headers in any order; validate CSV quoting and every member field.
 - Trim surrounding field/tag whitespace. Reject embedded line breaks.
 - Skip blank records but include them when reporting physical row numbers.
-- Report missing sources and directories with the resolved path; reject repeated or unknown prefixes.
+- Report a missing source with its resolved path. Other read failures, including directories, use the
+  platform's I/O error text and do not always include the path. Reject repeated or unknown prefixes.
 - Read or validation errors leave records, the view and saved data unchanged. Never modify the source CSV.
 - Save failures keep the imported batch in memory and report retry guidance.
 
@@ -969,7 +978,7 @@ not promised releases, in line with the
     - Backup rollback and outside-change detection follow the [storage safeguards](#startup-and-validation).
 11. **Add, delete, clear and exit**
     - Add appends the record and clears conditions. Delete retains conditions and requires the next input `yes`.
-    - `y` or another letter case of `yes` keeps the prompt pending with a reminder. Other replies cancel
+    - `y`, `Y`, or another letter case of `yes` keeps the prompt pending with a reminder. Other replies cancel
       and are consumed; command replies explicitly report that they were not run. Confirmed deletion has no undo.
     - Clear removes hidden records too and clears conditions after saving. A non-empty roster requires `yes`;
       the same near misses keep it pending, and other replies cancel without running them.
@@ -990,7 +999,7 @@ not promised releases, in line with the
 - Add requires name, phone and email. Address and tags are optional.
 - Edit requires at least one field. Omitted fields remain unchanged.
 - Reject repeated `n/`, `p/`, `e/` and `a/` prefixes. Validate structure, fields, then duplicates.
-- Unsupported single-letter prefixes are rejected by add/edit.
+- Unsupported whitespace-delimited ASCII single-letter prefixes are rejected by add/edit.
 - Tag commands reject `n/`, `p/`, `e/` and `a/` as unsupported member fields; `t/` remains their tag prefix.
 
 | Field | Accepted values |
@@ -998,8 +1007,16 @@ not promised releases, in line with the
 | Name | Start with a Unicode letter or ASCII digit. Allow Unicode letters, combining marks, ASCII digits, spaces, hyphens, and straight or curly apostrophes. Preserve spelling and internal spaces. |
 | Phone | At least three ASCII digits; optional leading `+` and internal ASCII spaces. After the optional `+`, begin and end with a digit. Reject hyphens, parentheses and internal tabs. |
 | Email | One `@`; no whitespace. Follow the local-part and domain rules below. |
-| Address | Optional, single-line text. Add rejects explicit blank `a/`; edit uses it to clear the value. Supplied Unicode-space-only values are invalid. |
+| Address | Optional, single-line text. Add rejects explicit blank `a/`; edit uses it to clear the value. The shared address validator rejects non-empty Unicode-space-only values; see the current parser limitation below. |
 | Tags | Rule 3 applies. Repeated tags collapse ignoring case; retain the first spelling. Only edit accepts lone `t/` to clear all tags. |
+
+**Current address-parser limitation**
+
+`AddressBookParser#parseCommand` strips trailing Java whitespace, and `EditCommandParser` treats `isBlank()`
+as a request to clear an address. Consequently, `edit 1 a/` followed by U+2003 (EM SPACE) can clear the
+existing address before validation. This is a known candidate defect tracked by
+[PR #319](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/319), not an additional supported clear syntax.
+Nonbreaking space, figure space and narrow nonbreaking space still reach validation and are rejected.
 
 **Preserved formatting**
 
@@ -1011,8 +1028,8 @@ not promised releases, in line with the
 
 **Email rules**
 
-- Local part: non-empty alphanumeric runs, separated by single `+`, `_`, `.`, `'`, or `-` characters.
-- Domain: dot-separated alphanumeric labels with optional single internal hyphens.
+- Local part: non-empty ASCII letter/digit runs, separated by single `+`, `_`, `.`, `'`, or `-` characters.
+- Domain: dot-separated ASCII letter/digit labels with optional single internal hyphens.
 - Final domain label: at least two characters.
 - Validation checks syntax, not mailbox existence. Phone validation does not verify reachability.
 
@@ -1157,7 +1174,7 @@ not delete them. Counts still refer to the target set fixed at step 6.
 * **2a.** The result is empty. No member can be selected. The use case ends without changes.
 * **4a.** The deletion command or index is invalid. TrackCall reports the error and removes nothing.
   The secretary checks the current list and retries step 3.
-* **5a.** The secretary enters `y` or another letter case of `yes`. TrackCall repeats the prompt with
+* **5a.** The secretary enters `y`, `Y`, or another letter case of `yes`. TrackCall repeats the prompt with
   a reminder to type `yes` exactly. The use case resumes at step 5.
 * **5b.** The secretary enters anything else. TrackCall cancels the deletion, removes
   nothing, does not run that input, and does not save. The use case ends.
@@ -1187,7 +1204,7 @@ Deletion has no undo after confirmation. It removes the underlying record, not j
   The secretary can retry step 1.
 * **2b.** The roster is already empty. TrackCall still attempts to save it and reports that no changes
   were needed only if saving succeeds. No confirmation is needed. The use case ends. If saving fails, extension 4a applies.
-* **3a.** A reply of `y` or another letter case of `yes` keeps confirmation pending with a reminder.
+* **3a.** A reply of `y`, `Y`, or another letter case of `yes` keeps confirmation pending with a reminder.
   The use case resumes at step 3.
 * **3b.** Any other reply cancels without running that input. Records, view and saved data stay unchanged.
   The use case ends.
@@ -1238,9 +1255,11 @@ such as the automatic previous-version backup.
 
 **Extensions**
 
-* **1a.** The file is edited while TrackCall is running. The next save is refused. Restart to load the
-  outside version and discard this session's unsaved changes, or deliberately run a roster-changing command
-  to replace it and retain it in `.bak`.
+* **1a.** After a valid roster was loaded or saved, an outside edit changes its member data.
+  The next save is refused. Restart to load the outside version and discard this session's unsaved changes,
+  or deliberately retry a roster-changing command to replace it. The retry updates `.bak` only if outside and
+  session data differ. Initially missing files and matching-roster retries have the limits described under
+  [storage safeguards](#startup-and-validation).
 * **3a.** The file is missing. TrackCall loads sample members and logs that the file was missing.
   It creates the file only after a valid data-changing command saves successfully. The use case ends.
 * **3b.** The file is invalid or unreadable. TrackCall preserves its bytes in a uniquely named
@@ -1385,8 +1404,8 @@ Validation, duplicates and filters are functional rules. Development-process rul
 | Partial-word matching | Matching any contiguous part of a name word, ignoring case. For example, `John`, `Jo`, and `oh` all match `John Tan`. |
 | Bulk tag update | Adding or removing one tag for the fixed set of members displayed when the command is submitted. |
 | Tag rename | Replacing one tag with another for every displayed member who has it (`renametag`). |
-| Confirmation prompt | Only `yes` confirms; `y` or another letter case of `yes` keeps the prompt pending; other input cancels. |
-| Outside edit | A valid change made to the data file while TrackCall is running; the next save is refused once. |
+| Confirmation prompt | Only `yes` confirms; `y`, `Y`, or another letter case of `yes` keeps the prompt pending; other input cancels. |
+| Outside edit | A change made to the data file while TrackCall is running. The guard refuses the next save when valid member data differs from a previously loaded or saved roster; formatting-only edits and initially missing-file baselines are excluded. |
 | Duplicate record | New input whose normalized name and trimmed phone, email and address match another record. Name case and repeated whitespace are ignored; tags are ignored. JSON loading retains the legacy exact-contact identity rule. |
 | No-op | A valid operation that leaves record values unchanged. A valid data-changing no-op can still retry saving; a bulk command with no targets is an error. |
 | In-memory data | The working roster held by the running app. After a save failure it can differ from the file and may be lost on exit. |
@@ -1527,6 +1546,9 @@ Reset the fixture within a subsection only when a step explicitly asks you to do
   Expect the same results as `find Alice Bob`. Repeat after `list` with their two email fragments and `findemail`.
 * A name or email search containing only those separators must report missing keywords.
 
+The EM SPACE edit case in the [current parser limitation](#member-field-rules) is a known failure in
+this candidate. Record it separately from the nonbreaking-space cases above; rejection is pending #319.
+
 ### Email search
 
 **Setup:** restore the fixture before each independent check.
@@ -1556,7 +1578,8 @@ Reset the fixture within a subsection only when a step explicitly asks you to do
    Run `clear`, confirm with `yes`, then import again. **Expect:** three imports, zero skipped duplicates, and persistence after restart.
 5. Copy the CSV to `member list.csv`; run `import p/"member list.csv"`.
    **Expect:** the path with spaces works. A missing source reports its resolved path without changes.
-   Try a directory named `folder.csv`; expect directory-specific guidance without changes.
+   Try a directory named `folder.csv`; expect an import failure without changes. The I/O error wording
+   is platform-dependent and may omit the resolved path.
 6. Create a CSV containing a valid row followed by an invalid-phone row. Import it.
    **Expect:** a row-specific error with no partial import, save, or view change.
    Repeat separately for a bad header, broken quoting, and a line break inside a quoted field.
@@ -1600,18 +1623,27 @@ Use a fresh fixture and backup for each failure scenario. Restore access before 
    - **Expect:** no members removed, restoration of the full roster and previous filtered view, and unchanged saved bytes.
    - Restore access, run `clear` again, and confirm the new prompt. A lone `yes` must not repeat the failed action.
    - **Expect:** successful removal of all members. Repeat with an already-empty roster.
+   - With a separate outside-edited valid file, the current clear error still omits the cause. Restart to preserve
+     those edits unless replacement with an empty roster is intentional; pending #294 addresses the missing detail.
 7. With the app closed, prepend one UTF-8 BOM to a valid roster and pad member fields/tags with spaces.
    **Expect:** successful loading with trimmed values. An empty address remains valid; a spaces-only address fails.
 8. Start from an existing valid saved roster, then edit that file externally while the app remains open.
-   Make a data-changing command. **Expect:** the first save refuses replacement and preserves outside bytes.
-   Restart to load the outside version, or retry deliberately with an existing field value to replace it and retain it in `.bak`.
-   Repeat with an invalid tag in the outside file. **Expect:** every save is refused until restart and recovery;
-   the recovery dialog explains the invalid tag after `Reason:`.
+   Change member values, not just JSON formatting, and make a data-changing command.
+   **Expect:** the first save refuses replacement and preserves outside bytes.
+   Restart to load the outside version, or retry deliberately with an existing field value to replace it.
+   **Expect:** the retry writes the outside file to `.bak` only when its member data differs from the session roster;
+   otherwise, the previous backup stays unchanged or absent.
+   Repeat with an invalid tag in the outside file. **Expect:** saves are refused while that file remains invalid.
+   Restart for recovery; the dialog explains the invalid tag after `Reason:`.
 9. Recover a damaged file using Restore backup or Start empty, then alter the recovered file externally.
    **Expect:** the next save detects the outside change using the refreshed recovery baseline.
 10. Inject failure after backup rotation but before active-roster replacement using `JsonAddressBookStorageTest`.
     **Expect:** both original roster and previous backup are preserved; a newly created backup is removed.
     Also check that a case-only tag rename rotates the previous distinct spelling into `.bak`.
+11. Check the current gaps tracked in pending #294 using separate temporary rosters:
+    - Start with a missing file, then create a valid roster externally. The next save currently has no outside-change refusal.
+    - After an outside-change refusal, retry with matching session/outside member data, with and without an older backup.
+      The backup currently stays unchanged or absent. Preserving the outside bytes in both cases is the pending fix.
 
 ### Release acceptance checks still required
 
