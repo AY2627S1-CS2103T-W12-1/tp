@@ -323,8 +323,9 @@ for only the selected member.
 
 For a non-empty roster, `LogicManager` stores `ClearCommand` as the pending confirmation and
 returns a prompt with the total stored-member count. It does not execute the command or save yet.
-The next input consumes the pending confirmation: stripped `yes` executes it; every other
-input cancels without being parsed as a command. An already-empty roster skips the prompt.
+The next input consumes the pending confirmation: stripped `yes` executes it; a near miss (`y`, or `yes`
+in another letter case) keeps it pending with a reminder; every other input cancels without being parsed
+as a command. An already-empty roster skips the prompt.
 
 Before executing the confirmed `ClearCommand`, `LogicManager` snapshots the roster. The command counts and
 removes all records while retaining the old predicate temporarily. After saving succeeds, the
@@ -1001,7 +1002,7 @@ These rules describe the selected MVP and apply to the use cases below.
     any other input cancels without running it. The
     deletion retains the active search and filters. `clear` removes all records, including hidden ones,
     resets the view, and preserves application settings. A non-empty roster requires a `yes` confirmation;
-    any other reply cancels without being run. An empty roster skips confirmation. Neither action has undo.
+    near misses keep the prompt pending as for `delete`, and any other reply cancels without being run. An empty roster skips confirmation. Neither action has undo.
     `list`, `sort`, `clear`, and `exit` reject extra arguments. `exit` closes the
     app without a final save or another warning about unsaved changes.
 12. Startup reads the local `data/addressbook.json` relative to the JAR folder in packaged builds

@@ -14,14 +14,14 @@ import seedu.address.model.person.Person;
  */
 public class ConfirmDeleteCommand extends Command {
 
-    /** The only input that confirms a pending deletion. Any other input cancels it. */
+    /** The only input that confirms a pending deletion. Near misses keep it pending; any other input cancels it. */
     public static final String CONFIRMATION_WORD = "yes";
 
     public static final String MESSAGE_CANCELLED = "Deletion cancelled. No member was removed.";
 
     /** Shown for a near miss such as {@code y} or {@code YES}, which keeps the confirmation pending. */
     public static final String MESSAGE_CONFIRMATION_REMINDER = "To confirm, type " + CONFIRMATION_WORD
-            + " exactly, in lowercase, and press Enter. Any other input cancels.";
+            + " exactly, in lowercase, and press Enter. To cancel, type no.";
 
     /** Appended to a cancellation when the cancelling input was a command, which is not run. */
     public static final String MESSAGE_INPUT_NOT_RUN = "\n\"%1$s\" was not run. Enter it again to run it.";

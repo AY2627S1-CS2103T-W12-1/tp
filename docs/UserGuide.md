@@ -536,18 +536,20 @@ after you confirm the deletion.
    ```text
    Delete member 1, Alice Tan?
    Tags: (none)
-   Type yes and press Enter to confirm. Any other input cancels the deletion.
+   Type yes and press Enter to confirm, or type no to cancel the deletion.
    ```
 
    The tags shown depend on the member; Alice from the quick start has none.
    The command box is highlighted until you answer. Asking for confirmation does not change or save the roster.
 3. Type `yes` and press Enter to delete that member.
 
-Any other input, including another command, cancels the deletion with
+Only `yes`, typed exactly in lowercase, confirms. `y`, `Y`, `YES`, or `Yes` does not confirm or cancel: it keeps
+the prompt pending and reminds you:
+`To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.`
+
+Any other input, such as `no` or another command, cancels the deletion with
 `Deletion cancelled. No member was removed.` That input is not run, so enter it again if you need it.
 When the input is a command, such as `list`, the result also says `"list" was not run. Enter it again to run it.`
-Only `yes`, typed exactly in lowercase, confirms. `y`, `Y`, `YES`, or `Yes` keeps the prompt pending and reminds you:
-`To confirm, type yes exactly, in lowercase, and press Enter. Any other input cancels.`
 
 After you confirm, other records remain, and the remaining matches are renumbered.
 The result identifies the removed member without displaying their phone, email, or address.
@@ -561,8 +563,8 @@ It saves the empty roster and resets the search after a successful save.
 
 1. Run `clear`. TrackCall shows the total number of stored members, including anyone hidden by searches or filters.
 2. Type `yes` and press Enter to clear and save the entire roster.
-   Any other input cancels without running that input as a command, as for `delete`. `y`, `Y`, `YES`, or `Yes`
-   keeps the prompt pending and reminds you to type `yes` exactly.
+   As for `delete`, `y`, `Y`, `YES`, or `Yes` keeps the prompt pending and reminds you to type `yes` exactly.
+   Any other input, such as `no`, cancels without running that input as a command.
 
 The roster, current view, and saved file stay unchanged while the prompt is pending or when you cancel.
 An already-empty roster saves immediately without prompting, so `clear` can still retry an unsaved empty roster.
@@ -779,7 +781,7 @@ in memory.
 | Untag a group | `untagall t/TAG` | `untagall t/committee` removes the tag from every displayed member. |
 | Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every displayed member. |
 | Delete one member | `delete INDEX`, then `yes` | `delete 1`, then `yes`, removes the first currently displayed member. |
-| Clear the roster | `clear` | Run `clear`, then `yes` to remove all members, including hidden ones. Any other reply cancels. |
+| Clear the roster | `clear` | Run `clear`, then `yes` to remove all members, including hidden ones. `no` cancels. |
 | Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |
 | Import members | `import p/FILE_PATH` | `import p/members.csv` appends unique valid records. |
 | Close the app | `exit` | `exit` ends the session. |

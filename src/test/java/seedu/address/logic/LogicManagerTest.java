@@ -133,7 +133,7 @@ public class LogicManagerTest {
 
         CommandResult prompt = logic.execute("delete 2");
         assertEquals("Delete member 2, " + BOB.getName() + "?\nTags: " + Messages.formatTags(BOB)
-                + "\nType yes and press Enter to confirm. Any other input cancels the deletion.",
+                + "\nType yes and press Enter to confirm, or type no to cancel the deletion.",
                 prompt.getFeedbackToUser());
         assertTrue(logic.isAwaitingConfirmation());
         // Asking for confirmation neither removes the member nor saves the roster.
@@ -179,7 +179,7 @@ public class LogicManagerTest {
         logic.execute("delete 2");
 
         for (String nearMiss : List.of("y", "Y", "YES", " Yes ")) {
-            assertEquals("To confirm, type yes exactly, in lowercase, and press Enter. Any other input cancels.",
+            assertEquals("To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.",
                     logic.execute(nearMiss).getFeedbackToUser(), nearMiss);
             assertTrue(logic.isAwaitingConfirmation(), nearMiss);
         }

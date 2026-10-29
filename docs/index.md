@@ -74,7 +74,8 @@ with [keyboard shortcuts](UserGuide.html#read-the-interface) for selecting membe
 ### Remove member records
 
 * [**Delete one member: `delete`**](UserGuide.html#delete-a-member-delete) — review a confirmation prompt before removing the selected record.
-* [**Clear the roster: `clear`**](UserGuide.html#clear-all-members-clear) — remove all members, including hidden records. Clearing is immediate and has no confirmation or undo.
+* [**Clear the roster: `clear`**](UserGuide.html#clear-all-members-clear) — remove all members, including hidden records,
+  after confirming with `yes`. An already-empty roster saves without prompting. There is no undo after confirming.
 
 ### Help and session
 

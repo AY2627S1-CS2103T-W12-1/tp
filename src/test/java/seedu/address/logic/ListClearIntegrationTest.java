@@ -150,7 +150,7 @@ public class ListClearIntegrationTest {
         AddressBook before = new AddressBook(model.getAddressBook());
         logic.execute("clear");
 
-        assertEquals("To confirm, type yes exactly, in lowercase, and press Enter. Any other input cancels.",
+        assertEquals("To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.",
                 logic.execute(" y ").getFeedbackToUser());
         assertTrue(logic.isAwaitingConfirmation());
         assertEquals(before, model.getAddressBook());
