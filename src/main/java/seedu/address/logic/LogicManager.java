@@ -48,6 +48,9 @@ public class LogicManager implements Logic {
     /** The destructive command awaiting confirmation by the next input, or null if none is pending. */
     private Command pendingConfirmation;
 
+    /** The prompt that named the pending action and its scope, repeated after a near-miss reply. */
+    private String pendingConfirmationPrompt;
+
     /**
      * Constructs a {@code LogicManager} with the given {@code Model} and {@code Storage}.
      */
@@ -65,7 +68,8 @@ public class LogicManager implements Logic {
             String input = commandText.strip();
             if (ConfirmDeleteCommand.isNearMiss(input)) {
                 logger.info("Inexact confirmation word received; the confirmation stays pending");
-                return new CommandResult(ConfirmDeleteCommand.MESSAGE_CONFIRMATION_REMINDER);
+                return new CommandResult(ConfirmDeleteCommand.MESSAGE_CONFIRMATION_REMINDER
+                        + "\n\n" + pendingConfirmationPrompt);
             }
             Command confirmation = pendingConfirmation;
             // Any other input ends the confirmation, so a later "yes" cannot repeat a destructive action.
@@ -88,10 +92,12 @@ public class LogicManager implements Logic {
         if (command instanceof ClearCommand && memberCount > 0) {
             // Delay execution and persistence until the next input explicitly confirms the entire roster.
             pendingConfirmation = command;
-            return new CommandResult(String.format(ClearCommand.MESSAGE_CONFIRMATION, memberCount));
+            pendingConfirmationPrompt = String.format(ClearCommand.MESSAGE_CONFIRMATION, memberCount);
+            return new CommandResult(pendingConfirmationPrompt);
         }
         CommandResult commandResult = executeAndSave(command);
         pendingConfirmation = commandResult.getPendingDeletion().orElse(null);
+        pendingConfirmationPrompt = commandResult.getFeedbackToUser();
         return commandResult;
     }
 

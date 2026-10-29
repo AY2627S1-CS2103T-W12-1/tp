@@ -148,10 +148,11 @@ public class ListClearIntegrationTest {
     @Test
     public void clear_inexactConfirmation_remindsAndKeepsPromptPending() throws Exception {
         AddressBook before = new AddressBook(model.getAddressBook());
-        logic.execute("clear");
+        String prompt = logic.execute("clear").getFeedbackToUser();
 
-        assertEquals("To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.",
-                logic.execute(" y ").getFeedbackToUser());
+        assertEquals("To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.\n\n"
+                + prompt, logic.execute(" y ").getFeedbackToUser());
+        assertTrue(prompt.contains("Total members: " + before.getPersonList().size()));
         assertTrue(logic.isAwaitingConfirmation());
         assertEquals(before, model.getAddressBook());
         assertEquals(0, storage.saveAttempts);

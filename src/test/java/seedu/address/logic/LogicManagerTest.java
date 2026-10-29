@@ -176,11 +176,12 @@ public class LogicManagerTest {
     public void execute_deleteThenInexactConfirmation_remindsAndKeepsPromptPending() throws Exception {
         model.addPerson(AMY);
         model.addPerson(BOB);
-        logic.execute("delete 2");
+        String prompt = logic.execute("delete 2").getFeedbackToUser();
 
         for (String nearMiss : List.of("y", "Y", "YES", " Yes ")) {
-            assertEquals("To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.",
-                    logic.execute(nearMiss).getFeedbackToUser(), nearMiss);
+            // The reminder repeats the original prompt, so the member to be deleted stays named.
+            assertEquals("To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.\n\n"
+                    + prompt, logic.execute(nearMiss).getFeedbackToUser(), nearMiss);
             assertTrue(logic.isAwaitingConfirmation(), nearMiss);
         }
         assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());

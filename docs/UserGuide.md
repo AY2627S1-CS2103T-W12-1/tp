@@ -546,6 +546,8 @@ after you confirm the deletion.
 Only `yes`, typed exactly in lowercase, confirms. `y`, `Y`, `YES`, or `Yes` does not confirm or cancel: it keeps
 the prompt pending and reminds you:
 `To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.`
+The reminder is followed by the original prompt, so the member to be deleted (or, for `clear`, the total member
+count) stays visible, including after you remove a filter box.
 
 Any other input, such as `no` or another command, cancels the deletion with
 `Deletion cancelled. No member was removed.` That input is not run, so enter it again if you need it.

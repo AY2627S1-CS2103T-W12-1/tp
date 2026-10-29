@@ -379,11 +379,13 @@ public class MainWindow extends UiPart<Stage> {
      */
     private CommandResult executeCommand(String commandText) throws CommandException, ParseException {
         personListPanel.clearSelection();
+        boolean wasAwaitingConfirmation = logic.isAwaitingConfirmation();
         try {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Command completed successfully");
             resultDisplay.setFeedbackToUser(hideContactDetails(commandResult.getFeedbackToUser()));
-            if (logic.isAwaitingConfirmation()) {
+            // A near-miss reply keeps the original prompt, so later filter removals still name the action.
+            if (logic.isAwaitingConfirmation() && !wasAwaitingConfirmation) {
                 pendingConfirmationPrompt = commandResult.getFeedbackToUser();
             }
 

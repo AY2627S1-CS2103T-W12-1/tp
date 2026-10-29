@@ -171,6 +171,7 @@ policies below.
    is ignored, `LogicManager` executes the `ConfirmDeleteCommand` and saves the roster as for other
    data-changing commands. A near miss (`y`, or `yes` in another letter case, checked by
    `ConfirmDeleteCommand#isNearMiss`) keeps the deletion pending and reminds the user to type `yes` exactly.
+   The reminder repeats the original prompt, and `MainWindow` keeps that prompt for later filter-box removals.
    Any other input cancels the deletion and is not run as a command; when it starts with a command word,
    the cancellation says that command was not run. Except for a near miss, the pending deletion is cleared.
 
