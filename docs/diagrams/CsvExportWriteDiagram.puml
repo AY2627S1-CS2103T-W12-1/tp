@@ -5,31 +5,26 @@ skinparam DefaultFontSize 15
 mainframe sd WriteCsvAtomically
 participant "<<class>>\nCsvAddressBookExporter" as Exporter STORAGE_COLOR
 participant "<<class>>\nFileUtil" as FileUtil STORAGE_COLOR
-participant "<<class>>\nFiles" as Files STORAGE_COLOR
-[-> Exporter : export(people, targetPath)
+[-> Exporter : export(people, ...)
 activate Exporter
-Exporter -> FileUtil : writeAtomically(targetPath, writer)
+Exporter -> FileUtil : writeAtomically(target, writer)
 activate FileUtil
-FileUtil -> Files : createTempFile(targetParent, prefix, suffix)
-Files --> FileUtil : temporary
-FileUtil -> Exporter : writer callback: writeCsv(people, temporary)
+FileUtil -> FileUtil : create temporary file
+FileUtil -> Exporter : writeCsv(people, temporary)
 activate Exporter
 note over Exporter
 Write the UTF-8 header and all records.
-Sort tags; use CSV quoting for field values.
 Close the writer before returning.
 end note
-Exporter --> FileUtil : return
+Exporter --> FileUtil
 deactivate Exporter
-FileUtil -> Files : move(temporary, target, ATOMIC_MOVE, REPLACE_EXISTING)
-Files --> FileUtil : return
-FileUtil --> Exporter : return
+FileUtil -> FileUtil : atomically replace target
+FileUtil --> Exporter
 deactivate FileUtil
-Exporter -->[ : return
+Exporter -->[
 deactivate Exporter
-note over FileUtil,Files
-Success path shown. On write/move failure,
-attempt temporary-file cleanup and rethrow.
-The previous destination is preserved.
+note over FileUtil
+On failure, clean up the temporary file
+and keep the previous destination.
 end note
 @enduml

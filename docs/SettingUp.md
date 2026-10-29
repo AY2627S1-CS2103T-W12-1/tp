@@ -8,7 +8,9 @@ pageNav: 6
 
 ## Setting up the project on your computer
 
-<box type="warning">:exclamation: **Caution:**
+<box type="warning">
+
+:exclamation: **Caution:**
 
 Follow the steps below precisely. The setup may fail if you skip or change a step.
 </box>
@@ -29,7 +31,9 @@ If you plan to use IntelliJ IDEA (highly recommended):
 
    If using IDEA, follow the guide [_[se-edu/guides] IDEA: Configuring the code style_](https://se-education.org/guides/tutorials/intellijCodeStyle.html) to set up IDEA's coding style to match ours.
 
-   <box type="tip">:bulb: **Tip:**
+   <box type="tip">
+
+   :bulb: **Tip:**
 
    Optionally, follow the guide [_[se-edu/guides] Using Checkstyle_](https://se-education.org/guides/tutorials/checkstyle.html) to learn how to use Checkstyle in IDEA, for example to report problems _as_ you write code.
    </box>

@@ -1,4 +1,5 @@
 @startuml
+!pragma layout smetana
 !include style.puml
 ' Straight segments retain readable relationship labels.
 skinparam linetype polyline
@@ -8,14 +9,16 @@ skinparam nodesep 35
 skinparam ranksep 40
 class ModelManager
 class ActiveFilter
-interface "Predicate<Person>" as Predicate <<interface>>
+interface Predicate
 class PersonSelectionPredicate
 ModelManager --> "0..*" ActiveFilter : activeFilters
-ModelManager --> "0..*" Predicate : additionalFilters
-ActiveFilter --> "1" Predicate : predicate
+ModelManager --> Predicate : additionalFilters
+ActiveFilter --> Predicate : predicate
 PersonSelectionPredicate ..|> Predicate
 note bottom of ActiveFilter
-Name, email and tag conditions.
-All active conditions are combined with AND.
+Name, email, tag and show conditions.
+Each show wraps a PersonSelectionPredicate.
+Removing a chip removes only that condition.
+All predicates test a Person and combine with AND.
 end note
 @enduml

@@ -15,9 +15,7 @@ activate Command
 ref over Command,Model : ValidateAndAppendCsv
 Command --> Logic : CommandResult(imported, skipped)
 deactivate Command
-Logic -> Command : isReadOnly()
-Command --> Logic : false
 ref over Logic,Storage : SaveImportedRoster
-Logic -->[ : result or SaveFailureException
+Logic -->[ : result or failure
 deactivate Logic
 @enduml

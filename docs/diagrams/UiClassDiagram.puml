@@ -1,7 +1,11 @@
 @startuml
+!pragma layout smetana
 !include style.puml
-' Straight segments retain readable relationship labels.
+' Two aligned rows of UiParts keep the diagram narrow.
 skinparam linetype polyline
+skinparam groupInheritance 2
+skinparam nodesep 40
+skinparam ranksep 55
 skinparam arrowThickness 1.1
 skinparam arrowColor UI_COLOR_T4
 skinparam classBackgroundColor UI_COLOR
@@ -18,8 +22,6 @@ Class MemberDetailsPanel
 Class PersonCard
 Class StatusBarFooter
 Class CommandBox
-Class WindowPlacement
-Class RosterRecoveryDialog
 }
 
 package Model <<Rectangle>> {
@@ -28,8 +30,7 @@ package Model <<Rectangle>> {
 package Logic <<Rectangle>> {
 }
 
-
-UiManager .left.|> Ui
+UiManager .up.|> Ui
 UiManager -down-> "1" MainWindow
 MainWindow *-down->  "1" CommandBox
 MainWindow *-down-> "1" ResultDisplay
@@ -40,7 +41,7 @@ MainWindow --> "1" HelpWindow
 
 PersonListPanel -down-> "*" PersonCard
 
-MainWindow -left-|> UiPart
+MainWindow --|> UiPart
 
 ResultDisplay --|> UiPart
 CommandBox --|> UiPart
@@ -52,23 +53,15 @@ HelpWindow --|> UiPart
 
 PersonCard ..> Model
 MemberDetailsPanel ..> Model
-MainWindow ..> WindowPlacement
 HelpWindow ..> Logic
-
-note bottom of RosterRecoveryDialog
-JavaFX Alert shown by MainApp
-when the saved roster cannot be loaded.
-end note
 UiManager -right-> Logic
 MainWindow -left-> Logic
 MainWindow ..> Model
 
-PersonListPanel -[hidden]left- HelpWindow
-HelpWindow -[hidden]left- CommandBox
-CommandBox -[hidden]left- ResultDisplay
-ResultDisplay -[hidden]left- StatusBarFooter
-PersonCard -[hidden]right- WindowPlacement
-WindowPlacement -[hidden]right- RosterRecoveryDialog
-
-MainWindow -[hidden]-|> UiPart
+' First row: HelpWindow, CommandBox, ResultDisplay. Second row: the remaining parts.
+HelpWindow -[hidden]right-> CommandBox
+CommandBox -[hidden]right-> ResultDisplay
+StatusBarFooter -[hidden]right-> MemberDetailsPanel
+MemberDetailsPanel -[hidden]right-> PersonListPanel
+CommandBox -[hidden]down-> MemberDetailsPanel
 @enduml

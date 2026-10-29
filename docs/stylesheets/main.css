@@ -290,6 +290,35 @@ header {
   height: auto;
 }
 
+/* Keep Developer Guide diagram labels readable without widening the page. */
+#content-wrapper .dg-diagram {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  margin: 24px auto;
+  overflow-x: auto;
+  padding: 12px;
+  border: 1px solid #000;
+  background: #fffdf8;
+}
+
+#content-wrapper .dg-diagram img {
+  display: block;
+  /* Each width scales the SVG's main labels to the surrounding text size.
+     A diagram wider than its box shrinks to fit instead of scrolling. */
+  width: min(var(--dg-diagram-width), 100%);
+  height: auto;
+  max-width: none;
+  max-height: none;
+  margin: 0 auto;
+}
+
+#content-wrapper .dg-diagram:focus-visible {
+  outline: 2px solid #005fcc;
+  outline-offset: 4px;
+}
+
 /* Reserve each screenshot's canvas while it loads, keeping section links in place. */
 #content-wrapper img[src$="images/Ui.png"],
 #content-wrapper img[src$="images/user-guide/interface.png"],

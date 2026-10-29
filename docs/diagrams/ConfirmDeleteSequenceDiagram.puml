@@ -16,8 +16,9 @@ end box
 [-> Logic : execute("yes")
 activate Logic
 note over Logic
-Clear pending deletion;
-do not parse "yes".
+Only exact "yes" confirms ("y" keeps waiting).
+The stored command runs directly;
+"yes" is not parsed as a command.
 end note
 Logic -> Command : execute(m)
 activate Command

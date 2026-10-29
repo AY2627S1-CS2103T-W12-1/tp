@@ -26,15 +26,19 @@ endif
 
 :Attempt to save the complete roster;
 note right
-Validate the existing roster and rotate its backup
-only when the member data differs. Write to a
-sibling temporary file, then replace atomically.
+Refuse the first save after detecting outside edits.
+Otherwise validate the roster and back it up when
+stored values differ, including tag spelling.
+Write to a sibling file and replace atomically.
 end note
 if (Save succeeded?) then (yes)
     :Show result;
     stop
 else (no)
 endif
+
+:Restore the previous backup if it was rotated;
+note right: If backup rollback fails,\nretain its temporary copy.
 
 if (Was the command clear?) then (yes)
     :Restore the previous roster and view;

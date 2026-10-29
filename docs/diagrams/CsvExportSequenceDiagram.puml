@@ -12,8 +12,8 @@ activate Logic
 note over Logic,Command : Parsing has produced an ExportCommand.
 Logic -> Command : execute(model, protectedFiles)
 activate Command
-Command -> Model : getAddressBook().getPersonList()
-Model --> Command : complete roster in stored order
+Command -> Model : getPersonList()
+Model --> Command : all members
 ref over Command : CheckExportDestination
 Command -> Exporter : export(people, targetPath)
 activate Exporter
@@ -22,8 +22,6 @@ Exporter --> Command : return
 deactivate Exporter
 Command --> Logic : CommandResult(count, path)
 deactivate Command
-Logic -> Command : isReadOnly()
-Command --> Logic : true
 Logic -->[ : CommandResult
 deactivate Logic
 note over Logic,Model : The roster, filters and sorting remain unchanged.

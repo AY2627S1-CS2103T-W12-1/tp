@@ -2,24 +2,35 @@
 !include style.puml
 skinparam ArrowFontStyle plain
 participant ":LogicManager" as logic LOGIC_COLOR
-participant "command:ClearCommand" as command LOGIC_COLOR
+participant "c:ClearCommand" as command LOGIC_COLOR
 participant "model:Model" as model MODEL_COLOR
 participant "storage:Storage" as storage STORAGE_COLOR
 
 [-> logic : execute("clear")
 activate logic
-note over logic, command: Parsing omitted; command is ClearCommand.
+note over logic, command: Non-empty roster; parsing omitted.
 logic -> model : getAddressBook()
 activate model
 model --> logic : currentRoster
 deactivate model
-note left of logic: beforeClear = new AddressBook(currentRoster)
+note left of logic: Keep ClearCommand pending.
+logic -->[ : prompt with full roster count
+deactivate logic
+
+[-> logic : execute("yes")
+activate logic
+note over logic, command: End pending confirmation before execution.
+logic -> model : getAddressBook()
+activate model
+model --> logic : currentRoster
+deactivate model
+note left of logic: beforeClear = copy of roster
 logic -> command : execute(model)
 activate command
 command -> model : getAddressBook()
 activate model
 model --> command : currentRoster
-note left of command: Count currentRoster.getPersonList().size()
+note left of command: Count the members.
 deactivate model
 command -> model : setAddressBook(new AddressBook())
 activate model
@@ -27,12 +38,7 @@ model --> command
 deactivate model
 command --> logic : result with count
 deactivate command
-note over logic, command: isReadOnly() is false.
-logic -> model : getAddressBook()
-activate model
-model --> logic : emptyRoster
-deactivate model
-logic -> storage : saveAddressBook(emptyRoster)
+logic -> storage : saveAddressBook(roster)
 activate storage
 storage --> logic : return or throw IOException
 deactivate storage
@@ -50,5 +56,6 @@ else IOException
     logic -->[ : throws SaveFailureException\n(changeApplied=false)
 end
 deactivate logic
-note over model: Predicates and comparator are retained during execution.\nSuccess clears predicates; failure restores records under the old view.
+note over model: Success clears predicates;\nfailure restores records and the old view.
+note over logic, command: Near misses such as "y" keep\nthe prompt pending. Other replies\ncancel without saving.
 @enduml
