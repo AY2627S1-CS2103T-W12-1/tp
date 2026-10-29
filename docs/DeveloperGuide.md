@@ -251,10 +251,10 @@ It depends on model classes because it saves and restores model objects.
 `ImportCommand` and `ExportCommand` use the CSV classes directly, not through `StorageManager`.
 `CsvAddressBookCsv` holds the CSV header and format shared by the importer and exporter.
 
-CSV export is implemented as a separate `CsvAddressBookExporter` in the `storage` package. `ExportCommand` supplies the
-complete roster and the destination path; the exporter writes a UTF-8 CSV file with a header row and
-one row per member. Apache Commons CSV handles RFC 4180 quoting and escaping. This export is a user-requested copy and
-does not replace or modify the JSON file used for automatic persistence.
+CSV export is implemented as a separate `CsvAddressBookExporter` in the `storage` package. `ExportCommand` supplies a
+snapshot of the currently displayed members, in displayed order, and the destination path; the exporter writes a
+UTF-8 CSV file with a header row and one row per member. Apache Commons CSV handles RFC 4180 quoting and escaping.
+This export is a user-requested copy and does not replace or modify the JSON file used for automatic persistence.
 
 `LogicManager` supplies the active roster and preferences paths to `ExportCommand`, which rejects destinations
 matching those files, their backups and recovery copies, the running JAR, or `.trackcall.lock`, including
@@ -1602,8 +1602,9 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
    `Invalid command format. Usage: sort` with the view unchanged. The saved roster bytes and modification
    time must remain unchanged throughout these read-only checks.
 2. With the committee filter still active, run `export members.csv`. Expect two exported records,
-   Alice then Zara in displayed sort order, with one hidden member reported as excluded. Check the UTF-8 header and sorted semicolon-separated
-   tags, and confirm that automatic JSON storage and the displayed view are unchanged.
+   Alice then Zara in displayed sort order, with one hidden member reported as excluded. Check the UTF-8 header
+   and sorted semicolon-separated tags, and confirm that automatic JSON storage and the displayed view
+   are unchanged.
 3. Run `import p/members.csv` without clearing. Expect zero imported members and two skipped duplicates.
    The full roster is restored in stored order. Then run `clear`, confirm with `y`, and run `import p/members.csv`.
    Expect two imports and zero skipped duplicates, in Alice/Zara order. Restart and check every field and tag is retained.

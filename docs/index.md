@@ -68,7 +68,7 @@ with [keyboard shortcuts](UserGuide.html#read-the-interface) for selecting membe
 
 ### Exchange rosters with CSV
 
-* [**Export a roster: `export`**](UserGuide.html#export-members-to-csv-export) — write displayed members to CSV in displayed order; run `list` first to include everyone.
+* [**Export members: `export`**](UserGuide.html#export-members-to-csv-export) — write displayed members to CSV in displayed order; run `list` first to include everyone.
 * [**Import member records: `import`**](UserGuide.html#import-members-from-csv-import) — validate a complete CSV file, append unique members, and report skipped duplicates.
 
 ### Remove member records
