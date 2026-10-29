@@ -4,12 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.TagTestUtil.assertCommandSuccessWithLog;
+import static seedu.address.testutil.TagTestUtil.createCommitteeAlumniModel;
 import static seedu.address.testutil.TagTestUtil.createTypicalModel;
+import static seedu.address.testutil.TagTestUtil.displayedNames;
 import static seedu.address.testutil.TagTestUtil.removeTagFromDisplayed;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.DANIEL;
 
+import java.util.List;
 import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
@@ -61,6 +64,19 @@ public class UntagAllCommandTest extends BulkTagCommandTest<UntagAllCommand> {
         // The filter stays applied, so the updated members are hidden but still stored.
         assertTrue(model.getFilteredPersonList().isEmpty());
         assertEquals(7, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
+    public void execute_removeTagUsedByFilterGroup_keepsMembersMatchingAnotherAlternative() throws Exception {
+        Model model = createCommitteeAlumniModel();
+        new FilterCommand(List.of(new Tag("committee"), new Tag("alumni"))).execute(model);
+
+        new UntagAllCommand(new Tag("committee")).execute(model);
+
+        // Pat still matches through alumni; Lee has no alternative left, so is hidden but stays stored.
+        assertEquals(List.of("Pat Both"), displayedNames(model));
+        assertEquals(2, model.getAddressBook().getPersonList().size());
+        assertEquals(List.of(new Tag("committee"), new Tag("alumni")), model.getActiveTagFilters());
     }
 
     @Test

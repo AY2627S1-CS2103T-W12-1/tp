@@ -151,6 +151,8 @@ or save member data.
 * Matching ignores letter case and accepts any contiguous part of a name word.
   `Alice`, `Ali`, `lic`, and `ice` all match `Alice Tan`.
   For example, `find ali tan` shows names containing either `ali` or `tan`.
+* Keywords within one `find` mean **or**, and the box joins them with `/`, so it reads `Name: Alice / Tan`.
+  `find Alice Tan Lee` shows `Name: Alice / Tan / Lee`.
 * Each distinct `find` adds another name filter. For example, `find Alice Tan` followed by `find Tan`
   keeps members matching both searches.
 * Email addresses, phone numbers, and tags are not searched.
@@ -199,6 +201,8 @@ Supply at least one keyword. No matches produce `0 members listed.` and an empty
 * Each `findemail` narrows the **currently displayed list**. Earlier name searches, email searches,
   tag filters, and `show` selections stay active. Name sorting stays applied.
 * Each distinct search adds an **Email:** box in command order. Use its **X** to remove only that email condition.
+  Keywords within one command mean **or** and are joined with `/` in the box, for example
+  `Email: @example.com / @school.edu`.
 * For example, `filter t/committee` then `findemail example` keeps committee members whose emails contain
   `example`. Running `findemail zara` next keeps only those whose emails also contain `zara`.
 * Keywords within one command mean **any**; separate searches must **all** match.
@@ -217,6 +221,8 @@ Use `help findemail` for the same instructions offline.
 
 #### Filter displayed members by tag: `filter`
 
+Format: `filter t/TAG [t/MORE_TAGS]...`
+
 `filter t/TAG` shows members with that tag from the **currently displayed list**.
 
 1. Use `list` to start with everyone, `find` for name-search results, or `findemail` for email-search results.
@@ -230,26 +236,44 @@ This keeps only committee members in the current view. Their order, including ac
 stays the same, and their displayed numbers update.
 
 * Matching ignores letter case: `committee` and `Committee` identify the same tag.
-* Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
-  Applying the same tag again, even with different letter case, leaves the view unchanged. The result
+* **Tags in the same command mean or.** `filter t/committee t/alumni` keeps members who have `committee`,
+  `alumni`, or both. It adds one box that reads `Tag: committee / alumni`, and `filter t/a t/b t/c` shows
+  `Tag: a / b / c`. The `/` stands for "or"; it is used instead of the word because a tag could itself be named
+  `or`. Its **X** removes the whole group. Repeating a tag in one command counts it once.
+* **Long groups are shortened.** A box names at most four tags. With more, the rest become `+N more`, so
+  `filter t/a t/b t/c t/d t/e t/f` shows `Tag: a / b / c / d / +2 more`. Hover over the box to read every tag;
+  the result message and the remove button's screen-reader text also list all of them.
+* **Separate commands mean and.** Each filter narrows the current results. Run `filter t/year1` next to keep
+  members with **both** conditions, here (`committee` or `alumni`) and `year1`.
+* Applying the same tags again, in any order or letter case, leaves the view unchanged. The result
   names the active spelling, says no changes were made, and shows the current count and active tags.
   For example, repeating `filter t/committee` begins with
   `Tag "committee" is already an active filter. No changes were made.`
+  Repeating `filter t/alumni t/committee` after `filter t/committee t/alumni` begins with
+  `A filter for the tags "committee" / "alumni" is already active. No changes were made.`
 * A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
   A new `findemail` also narrows these results by email, retaining previous conditions.
 
 The result reports `N member(s) listed with tag "TAG".` for one active tag filter. With multiple
-active tags, it names every distinct tag in the order applied, for example:
-`1 member(s) listed with tags "committee", "year1".` Use `list` to clear all active conditions.
+active tags, it lists each active tag condition in the order applied, for example:
+`1 member(s) listed with tags "committee", "year1".` Tags that came from one command are joined with `/`,
+for example `2 member(s) listed with tags "committee" / "alumni".` In the list, a comma means **and** and a
+slash means **or**. When a group is listed next to other conditions it is put in parentheses so the two cannot
+be confused: `filter t/committee t/alumni` followed by `filter t/year1` reports
+`1 member(s) listed with tags ("committee" / "alumni"), "year1".`, meaning (`committee` or `alumni`) and `year1`.
+Repeats are removed within one condition only, so `filter t/committee t/alumni` followed by
+`filter t/committee` lists `("committee" / "alumni"), "committee"`: both conditions are active and must hold.
+Use `list` to clear all active conditions.
 No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
 
 Check the displayed numbers before using `edit`, `tag`, `untag`, or `delete`. Editing keeps the active search and filters.
 If an edited member no longer matches, they disappear from view but remain in the roster.
 
-Supply exactly one tag of 1 to 30 characters, using ASCII letters or digits with optional internal hyphens.
-For example, `year-1` is valid. Surrounding spaces are ignored. Missing or extra parameters and invalid
-tags are rejected without changing the view.
-For example, `filter t/committee t/year1` is invalid; apply each tag in a separate command.
+Supply at least one tag, each of 1 to 30 characters, using ASCII letters or digits with optional internal hyphens.
+For example, `year-1` is valid. Surrounding spaces are ignored. A missing `t/`, other parameters, and invalid
+or empty tags are rejected without changing the view. One invalid tag rejects the whole command, so
+`filter t/committee t/bad!` changes nothing. The error names the problem, such as
+`Tag contains unsupported character "!"…`, exactly as it does for `tagall` and `renametag`.
 
 #### Sort members by name: `sort`
 
@@ -438,11 +462,14 @@ When every displayed member is skipped, the result ends with `No changes were ma
 `Added tag "committee" to 0 member(s). 12 already had this tag (any letter case). No changes were made.`
 
 The current search, filters, and sorting stay applied after the update.
-If you remove the tag used by the active filter, the updated members disappear from view
+If you remove the tag used by an active single-tag filter, the updated members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
 
 The result then also reports the current list, for example
 `0 member(s) listed with tag "committee". Run list to show everyone.`
+Updated members disappear only if they no longer satisfy **all** active conditions. With a filter group
+such as `filter t/committee t/alumni`, a member can stay visible by matching another alternative: after
+`untagall t/committee`, a member who also has `alumni` remains in the list.
 
 Supply exactly one tag of 1 to 30 ASCII letters or digits with optional internal hyphens. Spaces around the tag
 are ignored, and matching ignores letter case. Missing `t/`, empty tags, invalid tags, more than one tag, and
@@ -495,11 +522,13 @@ If hidden members still have the current tag after the update, the result says s
 `2 hidden member(s) still have "friends". Run list, then renametag again to rename it for everyone.`
 
 The current search, filters, and sorting stay applied after the update.
-If you rename the tag used by the active filter, the renamed members disappear from view
+If you rename the tag used by an active single-tag filter, the renamed members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
 
 The result then also reports the current list, for example
 `0 member(s) listed with tag "batch2026". Run list to show everyone.`
+Renamed members disappear only if they no longer satisfy **all** active conditions. With a filter group
+such as `filter t/batch2026 t/alumni`, a member who still matches another alternative stays visible.
 
 Supply exactly two tags, each after `t/`. If a different count is supplied, the error reports that count
 and asks for the current tag followed by the new tag. Each tag has 1 to 30 characters using ASCII letters or digits and
@@ -906,7 +935,7 @@ in memory.
 | Remove one tag | `untag INDEX t/TAG` | `untag 2 t/year1` removes one tag from displayed member 2. |
 | Find by name | `find KEYWORD [MORE_KEYWORDS]...` | `find Alice Tan` shows names containing Alice or Tan. |
 | Find by email | `findemail KEYWORD [MORE_KEYWORDS]...` | `findemail @example.com` shows emails containing that fragment. |
-| Filter by tag | `filter t/TAG` | `filter t/committee` narrows the displayed members. |
+| Filter by tag | `filter t/TAG [t/MORE_TAGS]...` | `filter t/committee t/alumni` shows members with either tag. |
 | Tag a group | `tagall t/TAG` | `tagall t/committee` adds the tag to every displayed member. |
 | Untag a group | `untagall t/TAG` | `untagall t/committee` removes the tag from every displayed member. |
 | Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every displayed member. |

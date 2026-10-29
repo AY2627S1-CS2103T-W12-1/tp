@@ -41,6 +41,24 @@ public final class TagTestUtil {
     }
 
     /**
+     * Returns a model with two members: {@code Pat Both} has the tags committee and alumni, and
+     * {@code Lee Committee} has only committee. Both are displayed.
+     */
+    public static Model createCommitteeAlumniModel() {
+        return new ModelManager(new AddressBookBuilder()
+                .withPerson(new PersonBuilder().withName("Pat Both").withTags("committee", "alumni").build())
+                .withPerson(new PersonBuilder().withName("Lee Committee").withTags("committee").build())
+                .build(), new UserPrefs());
+    }
+
+    /**
+     * Returns the full names of the displayed members, in the displayed order.
+     */
+    public static List<String> displayedNames(Model model) {
+        return model.getFilteredPersonList().stream().map(person -> person.getName().fullName).toList();
+    }
+
+    /**
      * Asserts that {@code command} succeeds as described by {@link CommandTestUtil#assertCommandSuccess}
      * and logs exactly {@code expectedLog} at the info level.
      */
