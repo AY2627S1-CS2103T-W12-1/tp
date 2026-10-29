@@ -293,11 +293,17 @@ header {
 /* Reserve each screenshot's canvas while it loads, keeping section links in place. */
 #content-wrapper img[src$="images/Ui.png"],
 #content-wrapper img[src$="images/user-guide/interface.png"],
-#content-wrapper img[src$="images/user-guide/validation.png"],
 #content-wrapper img[src*="/framed-"] {
   width: 100%;
   max-width: 960px;
   aspect-ratio: 4 / 3;
+  object-fit: contain;
+}
+
+#content-wrapper img[src$="images/user-guide/validation.png"] {
+  width: 100%;
+  max-width: 960px;
+  aspect-ratio: 1100 / 189;
   object-fit: contain;
 }
 
