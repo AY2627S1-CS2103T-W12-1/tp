@@ -26,6 +26,8 @@ public class AddressTest {
 
         // invalid addresses
         assertFalse(Address.isValidAddress(" ")); // spaces only
+        assertFalse(Address.isValidAddress("\u00a0")); // nonbreaking space
+        assertFalse(Address.isValidAddress("\u2007\u202f\u2003")); // mixed Unicode spaces
 
         // valid addresses
         assertTrue(Address.isValidAddress("")); // address not provided

@@ -13,11 +13,11 @@ box Storage STORAGE_COLOR_T1
 participant ":Storage" as Storage STORAGE_COLOR
 end box
 
-[-> Logic : execute("y")
+[-> Logic : execute("yes")
 activate Logic
 note over Logic
 Clear pending deletion;
-do not parse "y".
+do not parse "yes".
 end note
 Logic -> Command : execute(m)
 activate Command

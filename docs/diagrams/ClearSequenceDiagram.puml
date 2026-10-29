@@ -9,12 +9,13 @@ participant "storage:Storage" as storage STORAGE_COLOR
 
 note over logic, command
 A prior clear request stored the pending command and prompted for confirmation.
-This trace confirms it. Any other reply cancels without executing or saving.
+This trace confirms it with yes. A near miss keeps the prompt pending.
+Other replies cancel without executing or saving.
 An already-empty roster reaches the same execution flow directly from clear.
 end note
-[-> logic : execute("y")
+[-> logic : execute("yes")
 activate logic
-note over logic, command: Consume the pending command without parsing y as a new command.
+note over logic, command: Consume the pending command without parsing yes as a new command.
 logic -> model : getAddressBook()
 activate model
 model --> logic : currentRoster

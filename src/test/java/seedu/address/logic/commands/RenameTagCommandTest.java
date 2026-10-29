@@ -6,16 +6,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TagTestUtil.createTypicalModel;
+import static seedu.address.testutil.TagTestUtil.renameTagForAll;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.CARL;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -46,8 +48,8 @@ public class RenameTagCommandTest {
 
     @Test
     public void execute_tagUsedByMembers_renamesTagAndKeepsOtherTags() {
-        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Model model = createTypicalModel();
+        Model expectedModel = createTypicalModel();
         renameTagForAll(expectedModel, "friends", "buddies");
         String expectedMessage = "Renamed tag \"friends\" to \"buddies\" for 3 member(s).";
 
@@ -58,8 +60,8 @@ public class RenameTagCommandTest {
 
     @Test
     public void execute_memberAlreadyHasNewTag_keepsOneCopyAndReportsMerge() {
-        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Model model = createTypicalModel();
+        Model expectedModel = createTypicalModel();
         renameTagForAll(expectedModel, "owesMoney", "friends");
         String expectedMessage = "Renamed tag \"owesMoney\" to \"friends\" for 1 member(s). "
                 + "1 already had \"friends\".";
@@ -70,13 +72,26 @@ public class RenameTagCommandTest {
     }
 
     @Test
+    public void execute_memberHasNewTagInOtherCase_usesTypedSpelling() throws Exception {
+        Model model = createTypicalModel();
+        model.setPerson(BENSON, new PersonBuilder(BENSON).withTags("owesMoney", "FRIENDS").build());
+
+        new RenameTagCommand(owesMoney, friends).execute(model);
+
+        Person renamedBenson = model.getAddressBook().getPersonList().stream()
+                .filter(person -> person.isSamePerson(BENSON)).findFirst().orElseThrow();
+        assertEquals(List.of("friends"), renamedBenson.getTags().stream().map(tag -> tag.tagName).toList());
+    }
+
+    @Test
     public void execute_membersHiddenBySearch_renamesOnlyDisplayedMembers() {
-        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Model model = createTypicalModel();
         model.updateFilteredPersonList(person -> person.isSamePerson(ALICE));
-        Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Model expectedModel = createTypicalModel();
         expectedModel.updateFilteredPersonList(person -> person.isSamePerson(ALICE));
         expectedModel.setPerson(ALICE, new PersonBuilder(ALICE).withTags("buddies").build());
-        String expectedMessage = "Renamed tag \"friends\" to \"buddies\" for 1 member(s).";
+        String expectedMessage = "Renamed tag \"friends\" to \"buddies\" for 1 member(s)."
+                + String.format(RenameTagCommand.MESSAGE_HIDDEN_KEEP_TAG, 2, "friends");
 
         assertCommandSuccess(new RenameTagCommand(friends, buddies), model, expectedMessage, expectedModel);
         assertTrue(model.getAddressBook().getPersonList().contains(BENSON));
@@ -86,11 +101,25 @@ public class RenameTagCommandTest {
 
     @Test
     public void execute_tagOnlyOnHiddenMembers_throwsCommandException() {
-        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Model model = createTypicalModel();
         model.updateFilteredPersonList(person -> person.isSamePerson(CARL));
 
         assertCommandFailure(new RenameTagCommand(friends, buddies), model,
-                String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "friends"));
+                String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "friends")
+                        + String.format(RenameTagCommand.MESSAGE_HIDDEN_HAVE_TAG, 3));
+    }
+
+    @Test
+    public void execute_caseOnlyRenameWithHiddenOtherSpelling_mentionsHiddenMembers() throws Exception {
+        Model model = createTypicalModel();
+        model.setPerson(BENSON, new PersonBuilder(BENSON).withTags("FRIENDS").build());
+        model.updateFilteredPersonList(person -> person.isSamePerson(ALICE));
+
+        String feedback = new RenameTagCommand(new Tag("Friends"), new Tag("friends")).execute(model)
+                .getFeedbackToUser();
+
+        assertEquals("Every displayed member with this tag already uses \"friends\". No changes were made."
+                + String.format(RenameTagCommand.MESSAGE_HIDDEN_KEEP_TAG, 1, "Friends"), feedback);
     }
 
     @Test
@@ -120,6 +149,21 @@ public class RenameTagCommandTest {
     }
 
     @Test
+    public void execute_caseOnlyRenameAlreadySpelled_reportsNoChanges() throws Exception {
+        Model model = new ModelManager();
+        model.addPerson(new PersonBuilder().withName("Alice").withTags("Committee").build());
+        model.addPerson(new PersonBuilder().withName("Bob").withTags("Committee").build());
+        AddressBook before = new AddressBook(model.getAddressBook());
+
+        String feedback = new RenameTagCommand(new Tag("committee"), new Tag("Committee"))
+                .execute(model).getFeedbackToUser();
+
+        assertEquals("Every displayed member with this tag already uses \"Committee\". No changes were made.",
+                feedback);
+        assertEquals(before, model.getAddressBook());
+    }
+
+    @Test
     public void execute_renamingActiveFilterTag_keepsFilterAndHidesRenamedMembers() {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         model.filterFilteredPersonListByTag(friends);
@@ -128,14 +172,15 @@ public class RenameTagCommandTest {
         renameTagForAll(expectedModel, "friends", "buddies");
 
         assertCommandSuccess(new RenameTagCommand(friends, buddies), model,
-                "Renamed tag \"friends\" to \"buddies\" for 3 member(s).", expectedModel);
+                "Renamed tag \"friends\" to \"buddies\" for 3 member(s).\n"
+                + "0 member(s) listed with tag \"friends\". Run list to show everyone.", expectedModel);
         assertTrue(model.getFilteredPersonList().isEmpty());
         assertEquals(List.of(friends), model.getActiveTagFilters());
     }
 
     @Test
     public void execute_tagNotUsed_throwsCommandException() {
-        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Model model = createTypicalModel();
 
         assertCommandFailure(new RenameTagCommand(new Tag("committee"), buddies), model,
                 String.format(RenameTagCommand.MESSAGE_TAG_NOT_FOUND, "committee"));
@@ -143,7 +188,7 @@ public class RenameTagCommandTest {
 
     @Test
     public void execute_tagDiffersOnlyInCase_renamesMatchingMembers() {
-        Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
+        Model model = createTypicalModel();
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         renameTagForAll(expectedModel, "friends", "buddies");
 
@@ -172,26 +217,5 @@ public class RenameTagCommandTest {
         String expected = RenameTagCommand.class.getCanonicalName() + "{oldTag=" + friends + ", newTag=" + buddies
                 + "}";
         assertEquals(expected, command.toString());
-    }
-
-    /**
-     * Replaces the tag named {@code oldName} with {@code newName} for every member stored in {@code model}.
-     */
-    private static void renameTagForAll(Model model, String oldName, String newName) {
-        List<Person> storedPersons = new ArrayList<>(model.getAddressBook().getPersonList());
-        for (Person person : storedPersons) {
-            List<String> tagNames = new ArrayList<>(person.getTags().stream()
-                    .map(tag -> tag.tagName)
-                    .toList());
-            if (tagNames.remove(oldName)) {
-                if (!tagNames.contains(newName)) {
-                    tagNames.add(newName);
-                }
-                Person renamedPerson = new PersonBuilder(person)
-                        .withTags(tagNames.toArray(new String[0]))
-                        .build();
-                model.setPerson(person, renamedPerson);
-            }
-        }
     }
 }

@@ -122,7 +122,7 @@ public class ListClearIntegrationTest {
         String saved = Files.readString(dataFile);
         storage.saveAttempts = 0;
 
-        for (String cancellation : List.of("", "n", "Y", "yes", "exit", "clear", "delete 1")) {
+        for (String cancellation : List.of("", "n", "no", "not-a-command", "exit", "clear", "delete 1")) {
             String prompt = logic.execute("clear").getFeedbackToUser();
             assertEquals(String.format(ClearCommand.MESSAGE_CONFIRMATION, before.getPersonList().size()), prompt);
             assertTrue(logic.isAwaitingConfirmation());
@@ -131,14 +131,36 @@ public class ListClearIntegrationTest {
             assertEquals(saved, Files.readString(dataFile));
             assertEquals(0, storage.saveAttempts);
 
-            assertEquals(ClearCommand.MESSAGE_CANCELLED, logic.execute(cancellation).getFeedbackToUser());
+            String expectedCancellation = ClearCommand.MESSAGE_CANCELLED;
+            if (List.of("exit", "clear", "delete 1").contains(cancellation)) {
+                expectedCancellation += "\n\"" + cancellation + "\" was not run. Enter it again to run it.";
+            }
+            assertEquals(expectedCancellation, logic.execute(cancellation).getFeedbackToUser());
             assertFalse(logic.isAwaitingConfirmation());
             assertEquals(before, model.getAddressBook());
             assertEquals(List.of(shown), model.getFilteredPersonList());
             assertEquals(saved, Files.readString(dataFile));
             assertEquals(0, storage.saveAttempts);
-            assertThrows(ParseException.class, () -> logic.execute("y"));
+            assertThrows(ParseException.class, () -> logic.execute("yes"));
         }
+    }
+
+    @Test
+    public void clear_inexactConfirmation_remindsAndKeepsPromptPending() throws Exception {
+        AddressBook before = new AddressBook(model.getAddressBook());
+        String prompt = logic.execute("clear").getFeedbackToUser();
+
+        assertEquals("To confirm, type yes exactly, in lowercase, and press Enter, or "
+                + "type anything else to cancel (except yes or y in any letter case).\n\n"
+                + prompt, logic.execute(" y ").getFeedbackToUser());
+        assertTrue(prompt.contains("Total members: " + before.getPersonList().size()));
+        assertTrue(logic.isAwaitingConfirmation());
+        assertEquals(before, model.getAddressBook());
+        assertEquals(0, storage.saveAttempts);
+
+        logic.execute("yes");
+        assertFalse(logic.isAwaitingConfirmation());
+        assertTrue(model.getAddressBook().getPersonList().isEmpty());
     }
 
     @Test
@@ -147,10 +169,10 @@ public class ListClearIntegrationTest {
         logic.execute("clear");
         model.updateFilteredPersonList(person -> false);
         assertEquals(String.format(ClearCommand.MESSAGE_SUCCESS, count),
-                logic.execute(" \ty \t").getFeedbackToUser());
+                logic.execute(" \tyes \t").getFeedbackToUser());
         assertFalse(logic.isAwaitingConfirmation());
         assertEquals(new AddressBook(), storage.readAddressBook().orElseThrow());
-        assertThrows(ParseException.class, () -> logic.execute("y"));
+        assertThrows(ParseException.class, () -> logic.execute("yes"));
         assertEquals(1, storage.saveAttempts);
     }
 
@@ -163,7 +185,7 @@ public class ListClearIntegrationTest {
 
         String expected = String.format(ClearCommand.MESSAGE_SUCCESS, before.getPersonList().size());
         logic.execute(" \tclear \t");
-        assertEquals(expected, logic.execute("y").getFeedbackToUser());
+        assertEquals(expected, logic.execute("yes").getFeedbackToUser());
         assertEquals(new AddressBook(), model.getAddressBook());
         assertEquals(List.of(), model.getFilteredPersonList());
         assertEquals(settings, model.getGuiSettings());
@@ -180,7 +202,7 @@ public class ListClearIntegrationTest {
         int total = model.getAddressBook().getPersonList().size();
         model.updateFilteredPersonList(person -> false);
         logic.execute("clear");
-        assertEquals(String.format(ClearCommand.MESSAGE_SUCCESS, total), logic.execute("y").getFeedbackToUser());
+        assertEquals(String.format(ClearCommand.MESSAGE_SUCCESS, total), logic.execute("yes").getFeedbackToUser());
         assertEquals(new AddressBook(), storage.readAddressBook().orElseThrow());
     }
 
@@ -188,7 +210,7 @@ public class ListClearIntegrationTest {
     public void clear_singleMember_reportsSingularThenEmptyAndSavesBothTimes() throws Exception {
         model.setAddressBook(singleMemberRoster());
         logic.execute("clear");
-        assertEquals(ClearCommand.MESSAGE_SINGLE, logic.execute("y").getFeedbackToUser());
+        assertEquals(ClearCommand.MESSAGE_SINGLE, logic.execute("yes").getFeedbackToUser());
         assertEquals(ClearCommand.MESSAGE_EMPTY, logic.execute("clear").getFeedbackToUser());
         assertEquals(2, storage.saveAttempts);
         assertEquals(ListCommand.MESSAGE_EMPTY, logic.execute("list").getFeedbackToUser());
@@ -217,9 +239,9 @@ public class ListClearIntegrationTest {
                 new AccessDeniedException(dataFile.toString()))) {
             storage.failure = failure;
             logic.execute("clear");
-            CommandException exception = assertThrows(CommandException.class, () -> logic.execute("y"));
+            CommandException exception = assertThrows(CommandException.class, () -> logic.execute("yes"));
             assertFalse(logic.isAwaitingConfirmation());
-            assertThrows(ParseException.class, () -> logic.execute("y"));
+            assertThrows(ParseException.class, () -> logic.execute("yes"));
             assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, exception.getMessage());
             assertEquals(failure, exception.getCause());
             assertEquals(before, model.getAddressBook());
@@ -231,7 +253,7 @@ public class ListClearIntegrationTest {
         storage.failure = null;
         logic.execute("clear");
         assertEquals(String.format(ClearCommand.MESSAGE_SUCCESS, before.getPersonList().size()),
-                logic.execute("y").getFeedbackToUser());
+                logic.execute("yes").getFeedbackToUser());
         assertEquals(new AddressBook(), storage.readAddressBook().orElseThrow());
     }
 

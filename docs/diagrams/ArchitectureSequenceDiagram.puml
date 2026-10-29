@@ -26,10 +26,10 @@ deactivate logic
 ui--[UI_COLOR_T4]> user
 deactivate ui
 
-user -[USER_COLOR]> ui : "y"
+user -[USER_COLOR]> ui : "yes"
 activate ui UI_COLOR
 
-ui -[UI_COLOR_T4]> logic : execute("y")
+ui -[UI_COLOR_T4]> logic : execute("yes")
 activate logic LOGIC_COLOR
 
 logic -[LOGIC_COLOR_T4]> model : deletePerson(p)
