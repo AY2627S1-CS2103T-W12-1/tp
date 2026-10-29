@@ -822,18 +822,18 @@ public class MainWindowTest {
                     + "0 member(s) listed with tag \"committee\". Run list to show everyone.", feedback.getText());
             assertDisplayedNames();
             enter("list");
-            assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");
+            assertDisplayedNames("Alice Tan", "bob Lee", "Zara Tan");
             enter("edit 1 p/90000004");
             enter("export " + exported);
             assertTrue(feedback.getText().startsWith("Exported 3 members to "));
             enter("delete 2");
             enter("yes");
-            assertDisplayedNames("Zara Tan", "Alice Tan");
+            assertDisplayedNames("Alice Tan", "Zara Tan");
             enter("clear");
             enter("yes");
             enter("import p/\"" + exported + "\"");
             assertTrue(feedback.getText().startsWith("Imported 3 member(s)"));
-            assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");
+            assertDisplayedNames("Alice Tan", "bob Lee", "Zara Tan");
             assertEquals("90000004", model.getFilteredPersonList().getFirst().getPhone().value);
             assertTrue(model.getFilteredPersonList().getFirst().getTags().stream()
                     .anyMatch(tag -> tag.tagName.equals("year2")));

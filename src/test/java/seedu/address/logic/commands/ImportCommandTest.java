@@ -82,7 +82,7 @@ public class ImportCommandTest {
         Model model = new ModelManager();
         model.addPerson(existing);
         model.addPerson(another);
-        model.setNameSorting(true);
+        model.sortPersonsByName();
         model.updateFilteredPersonList(unused -> false);
         for (String invalidRow : List.of("Invalid,123,invalid@example.com,\"Unclosed address\n",
                 "Invalid,123,invalid@example.com,Unescaped\" address,\n")) {
@@ -94,7 +94,7 @@ public class ImportCommandTest {
 
             assertEquals("Could not import CSV: row 3: invalid CSV syntax. No members were imported.",
                     error.getMessage());
-            assertEquals(List.of(existing, another), model.getAddressBook().getPersonList());
+            assertEquals(List.of(another, existing), model.getAddressBook().getPersonList());
             assertEquals(List.of(), model.getFilteredPersonList());
             assertEquals(contents, Files.readString(file));
             model.updateFilteredPersonList(unused -> true);
@@ -103,7 +103,7 @@ public class ImportCommandTest {
     }
 
     @Test
-    public void execute_headerOnly_resetsFilteredAndSortedView() throws Exception {
+    public void execute_headerOnly_resetsFilterAndPreservesSortedStoredOrder() throws Exception {
         Person first = new PersonBuilder().withName("Zulu Member").withPhone("111")
                 .withEmail("zulu@example.com").withAddress("First address").build();
         Person second = new PersonBuilder().withName("Alpha Member").withPhone("222")
@@ -111,7 +111,7 @@ public class ImportCommandTest {
         Model model = new ModelManager();
         model.addPerson(first);
         model.addPerson(second);
-        model.setNameSorting(true);
+        model.sortPersonsByName();
         model.updateFilteredPersonList(unused -> false);
         Path file = write("name,phone,email,address,tags\n");
 
@@ -119,7 +119,7 @@ public class ImportCommandTest {
 
         assertEquals(String.format(ImportCommand.MESSAGE_SUCCESS, 0, file.toAbsolutePath().normalize(), 0),
                 result.getFeedbackToUser());
-        assertEquals(List.of(first, second), model.getFilteredPersonList());
+        assertEquals(List.of(second, first), model.getFilteredPersonList());
     }
 
     @Test

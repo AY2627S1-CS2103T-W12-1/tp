@@ -217,8 +217,8 @@ public class UserCsvWorkflowTest {
         assertTrue(result.getFeedbackToUser().startsWith("Imported 1 member(s)"));
         assertTrue(result.getFeedbackToUser().endsWith("Skipped 3 duplicate record(s)."));
         List<Person> people = model.getFilteredPersonList();
-        assertEquals(List.of("Zulu", "Alice", "Bob"), people.stream().map(p -> p.getName().fullName).toList());
-        assertEquals(Set.of("old"), tags(people.get(0)));
+        assertEquals(List.of("Alice", "Zulu", "Bob"), people.stream().map(p -> p.getName().fullName).toList());
+        assertEquals(Set.of("old"), tags(people.get(1)));
         assertEquals(Set.of("first"), tags(people.get(2)));
         assertTrue(model.getActiveFilters().isEmpty());
         assertEquals(model.getAddressBook(), rosterStorage.readAddressBook().orElseThrow());

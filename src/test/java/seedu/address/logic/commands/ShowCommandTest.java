@@ -57,7 +57,7 @@ public class ShowCommandTest {
         book.addPerson(BENSON);
         book.addPerson(ALICE);
         Model sortedModel = new ModelManager(book, new UserPrefs());
-        sortedModel.setNameSorting(true);
+        sortedModel.sortPersonsByName();
 
         new ShowCommand(List.of(index(1), index(3))).execute(sortedModel);
 
