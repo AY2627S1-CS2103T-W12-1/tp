@@ -18,7 +18,11 @@ import seedu.address.model.person.Person;
 /**
  * A utility class for building the expected model of tag commands.
  */
-public class TagTestUtil {
+public final class TagTestUtil {
+
+    private TagTestUtil() {
+        // Prevents instantiation of this utility class.
+    }
 
     /**
      * Returns a model of the typical members with all of them displayed.

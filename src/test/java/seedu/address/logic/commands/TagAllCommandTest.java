@@ -3,9 +3,7 @@ package seedu.address.logic.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
-import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TagTestUtil.addTagToDisplayed;
 import static seedu.address.testutil.TagTestUtil.assertCommandSuccessWithLog;
 import static seedu.address.testutil.TagTestUtil.createTypicalModel;
@@ -14,38 +12,14 @@ import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.CARL;
 import static seedu.address.testutil.TypicalPersons.DANIEL;
 
-import java.util.List;
-import java.util.function.Predicate;
-
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
-import seedu.address.testutil.LogCapture;
 import seedu.address.testutil.PersonBuilder;
 
-public class TagAllCommandTest {
-    private static final Predicate<Person> HAS_FRIENDS_TAG = person ->
-            person.getTags().contains(new Tag("friends"));
-
-    private final Tag committee = new Tag("committee");
-    private final Tag friends = new Tag("friends");
-
-    @Test
-    public void constructor_nullTag_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> new TagAllCommand(null));
-    }
-
-    @Test
-    public void isReadOnly_dataChangingCommand_returnsFalse() {
-        assertFalse(new TagAllCommand(committee).isReadOnly());
-    }
-
-    @Test
-    public void execute_nullModel_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> new TagAllCommand(committee).execute(null));
-    }
+public class TagAllCommandTest extends BulkTagCommandTest<TagAllCommand> {
 
     @Test
     public void execute_noDisplayedMemberHasTag_addsTagToAll() {
@@ -97,33 +71,18 @@ public class TagAllCommandTest {
         assertFalse(model.getAddressBook().getPersonList().contains(DANIEL));
     }
 
-    @Test
-    public void execute_emptyDisplayedList_throwsCommandException() {
-        Model model = createTypicalModel();
-        model.updateFilteredPersonList(person -> false);
-
-        try (LogCapture logs = new LogCapture(TagAllCommand.class)) {
-            assertCommandFailure(new TagAllCommand(committee), model, TagAllCommand.MESSAGE_EMPTY_LIST);
-            assertEquals(List.of("tagall rejected: no members in the current list"), logs.getInfoMessages());
-        }
+    @Override
+    protected TagAllCommand createCommand(Tag tag) {
+        return new TagAllCommand(tag);
     }
 
-    @Test
-    public void equals_sameAndDifferentTags_returnsCorrectResult() {
-        TagAllCommand command = new TagAllCommand(committee);
-
-        assertTrue(command.equals(command));
-        assertTrue(command.equals(new TagAllCommand(new Tag("committee"))));
-        assertEquals(command.hashCode(), new TagAllCommand(new Tag("committee")).hashCode());
-        assertFalse(command.equals(new TagAllCommand(friends)));
-        assertFalse(command.equals(null));
-        assertFalse(command.equals(1));
+    @Override
+    protected BulkTagCommand createOtherCommand(Tag tag) {
+        return new UntagAllCommand(tag);
     }
 
-    @Test
-    public void toString_validCommand_containsTag() {
-        TagAllCommand command = new TagAllCommand(committee);
-        String expected = TagAllCommand.class.getCanonicalName() + "{tag=" + committee + "}";
-        assertEquals(expected, command.toString());
+    @Override
+    protected String getCommandWord() {
+        return TagAllCommand.COMMAND_WORD;
     }
 }
