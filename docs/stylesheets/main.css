@@ -135,6 +135,11 @@ header {
 
 /* Preserve the full outline in MarkBind's mobile navigation menu. */
 @media screen and (max-width: 1299.98px) {
+  /* The mobile overlay owns scrolling; its full-height list must not trap wheel input. */
+  .mb-mobile-nav .nav-component {
+    overscroll-behavior: auto;
+  }
+
   #flex-body {
     grid-template-columns: 224px minmax(0, 1fr);
     column-gap: 24px;
