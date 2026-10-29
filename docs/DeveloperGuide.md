@@ -1660,7 +1660,8 @@ panel clears and the result area omits phone, email, and address. Repeat for `ad
 ### Pasted Unicode input
 
 * Add or edit a supplied address containing only a nonbreaking space (U+00A0), figure space (U+2007),
-  or narrow nonbreaking space (U+202F). Expect rejection and no changed member.
+  narrow nonbreaking space (U+202F), or em space (U+2003). Expect rejection and no changed member;
+  in particular, `edit INDEX a/` followed by an em space must not clear the existing address.
 * Use an address with visible Unicode text and internal nonbreaking spaces. Expect the text to be preserved.
   `edit INDEX a/` must still clear the address.
 * With Alice and Bob in the roster, run `list`, then `find Alice Bob` (U+00A0 between the names).
