@@ -1,5 +1,7 @@
 package seedu.address.ui;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Comparator;
 
 import javafx.fxml.FXML;
@@ -48,6 +50,7 @@ public class MemberDetailsPanel extends UiPart<Region> {
 
     /** Reveals the selected member's details and their current displayed index. */
     public void showPerson(Person person, int index) {
+        requireNonNull(person);
         selectedPerson = person;
         displayedIndex.setText("MEMBER " + index);
         name.setText(person.getName().fullName);
@@ -56,6 +59,15 @@ public class MemberDetailsPanel extends UiPart<Region> {
         String addressValue = person.getAddress().value;
         address.setText(addressValue.isEmpty() ? "(none)" : addressValue);
         copyAddressButton.setDisable(addressValue.isEmpty());
+        showTags(person);
+        emptyState.setVisible(false);
+        detailsScroll.setVisible(true);
+        detailsScroll.setManaged(true);
+        detailsScroll.setVvalue(0);
+    }
+
+    /** Lists the member's tags alphabetically, or "None" if the member has no tags. */
+    private void showTags(Person person) {
         tags.getChildren().clear();
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))
@@ -63,10 +75,6 @@ public class MemberDetailsPanel extends UiPart<Region> {
         if (tags.getChildren().isEmpty()) {
             tags.getChildren().add(new Label("None"));
         }
-        emptyState.setVisible(false);
-        detailsScroll.setVisible(true);
-        detailsScroll.setManaged(true);
-        detailsScroll.setVvalue(0);
     }
 
     /** Wraps long tag names within the details viewport instead of clipping their suffix. */
@@ -110,6 +118,7 @@ public class MemberDetailsPanel extends UiPart<Region> {
         copy(selectedPerson.getAddress().value);
     }
 
+    /** Places {@code value} on the system clipboard as plain text. */
     private void copy(String value) {
         ClipboardContent content = new ClipboardContent();
         content.putString(value);

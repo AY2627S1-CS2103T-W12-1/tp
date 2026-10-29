@@ -180,7 +180,8 @@ public class MainWindowTest {
             assertEquals("Showing 1 member.", feedback.getText());
             enter("clear");
             enter("yes");
-            assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, feedback.getText());
+            assertTrue(feedback.getText().startsWith(ClearCommand.MESSAGE_SAVE_FAILURE));
+            assertTrue(feedback.getText().contains("Could not save data"));
             assertEquals("yes", input.getText());
             assertEquals(1, model.getFilteredPersonList().size());
         });
@@ -321,7 +322,7 @@ public class MainWindowTest {
     }
 
     @Test
-    public void emailFilterChip_replacesSelectionAndCanBeRemovedWithoutSaving() throws Exception {
+    public void emailFilterChips_retainEarlierConditionsAndRemoveOnlyChosenSearchWithoutSaving() throws Exception {
         onJavaFxThread(() -> {
             enter("edit 1 e/alice@example.com t/committee");
             enter("edit 2 e/bob@school.edu t/committee");
@@ -330,24 +331,38 @@ public class MainWindowTest {
         String savedRoster = Files.readString(dataFile);
         onJavaFxThread(() -> {
             enter("sort");
-            enter("find Bob");
+            enter("find Alice Bob");
             enter("filter t/committee");
             enter("show 1");
-            enter("findemail @example.com");
+            enter("findemail @example.com @school.edu");
+            enter("findemail alice");
             FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
-            assertEquals(List.of("Email: @example.com"), chipLabels(chips));
+            assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Show: 1 selected",
+                    "Email: @example.com @school.edu", "Email: alice"), chipLabels(chips));
+            List<String> originalLabels = chipLabels(chips);
+            enter("find BOB ALICE alice");
+            assertEquals("This name search is already active. 1 member listed.", feedback.getText());
+            assertEquals(originalLabels, chipLabels(chips));
+            enter("findemail ALICE");
+            assertEquals("This email search is already active. 1 member listed.", feedback.getText());
+            assertEquals(originalLabels, chipLabels(chips));
             assertTrue(chips.isVisible());
-            assertTrue(((HBox) chips.getChildren().getFirst()).getStyleClass().contains("filter-chip-email"));
+            assertTrue(((HBox) chips.getChildren().get(3)).getStyleClass().contains("filter-chip-email"));
             assertDisplayedNames("Alice Tan");
 
-            enter("filter t/committee");
-            enter("find Bob");
+            enter("findemail bob");
             assertDisplayedNames();
-            removeChip(chips, 2);
+            removeChip(chips, 5);
             assertDisplayedNames("Alice Tan");
-            assertEquals(List.of("Email: @example.com", "Tag: committee"), chipLabels(chips));
-            removeChip(chips, 0);
-            assertEquals(List.of("Tag: committee"), chipLabels(chips));
+            removeChip(chips, 4);
+            assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Show: 1 selected",
+                    "Email: @example.com @school.edu"), chipLabels(chips));
+            assertDisplayedNames("Alice Tan");
+            removeChip(chips, 3);
+            assertDisplayedNames("Alice Tan");
+            assertEquals(List.of("Name: Alice Bob", "Tag: committee", "Show: 1 selected"), chipLabels(chips));
+            enter("list");
+            assertEquals(List.of(), chipLabels(chips));
             assertDisplayedNames("Alice Tan", "Bob Lee");
         });
         assertEquals(savedRoster, Files.readString(dataFile));

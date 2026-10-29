@@ -316,7 +316,7 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_findEmail_resetsSearchAndTagsWithoutChangingSavedFiles() throws Exception {
+    public void execute_findEmail_narrowsSearchAndTagsWithoutChangingSavedFiles() throws Exception {
         model.addPerson(AMY);
         model.addPerson(BOB);
         Path dataFile = temporaryFolder.resolve("addressBook.json");
@@ -331,11 +331,15 @@ public class LogicManagerTest {
         logic.execute("filter t/husband");
         assertEquals(List.of(BOB), model.getFilteredPersonList());
 
-        assertEquals("1 member listed.", logic.execute("findemail AMY@").getFeedbackToUser());
-        assertEquals(List.of(AMY), model.getFilteredPersonList());
-        assertTrue(model.getActiveTagFilters().isEmpty());
-        assertEquals("0 members listed.", logic.execute("findemail missing@").getFeedbackToUser());
-        assertEquals("2 members listed.", logic.execute("findemail @example.com").getFeedbackToUser());
+        assertEquals("0 members listed.", logic.execute("findemail AMY@").getFeedbackToUser());
+        assertTrue(model.getFilteredPersonList().isEmpty());
+        assertEquals(List.of(new Tag("husband")), model.getActiveTagFilters());
+        assertEquals("Results unchanged. 0 members listed.", logic.execute("findemail missing@").getFeedbackToUser());
+        assertEquals("Results unchanged. 0 members listed.",
+                logic.execute("findemail @example.com").getFeedbackToUser());
+        logic.execute("list");
+        assertEquals("Results unchanged. 2 members listed.",
+                logic.execute("findemail @example.com").getFeedbackToUser());
 
         assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
         assertEquals(originalData, Files.readString(dataFile));
@@ -349,8 +353,6 @@ public class LogicManagerTest {
         model.addPerson(BOB);
         model.addPerson(AMY);
         logic.execute("sort");
-        logic.execute("find Bob");
-        logic.execute("filter t/husband");
 
         logic.execute("findemail @example.com");
         assertEquals(List.of(AMY, BOB), model.getFilteredPersonList());
@@ -884,6 +886,40 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_clearAfterOutsideEdit_preservesFilesViewAndActionableWarning() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        AddressBook original = new AddressBook(model.getAddressBook());
+        Path file = temporaryFolder.resolve("outside-clear.json");
+        JsonAddressBookStorage sessionStorage = new JsonAddressBookStorage(file);
+        sessionStorage.saveAddressBook(original);
+        AddressBook outside = new AddressBook();
+        outside.addPerson(new PersonBuilder(AMY).withName("Outside Member").build());
+        new JsonAddressBookStorage(file).saveAddressBook(outside);
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        String outsideBytes = Files.readString(file);
+        String backupBytes = Files.readString(backup);
+        logic = new LogicManager(model, new StorageManager(sessionStorage,
+                new JsonUserPrefsStorage(temporaryFolder.resolve("prefs.json"))));
+        logic.execute("find Amy");
+        logic.execute("show 1");
+        var filters = model.getActiveFilters();
+        logic.execute("clear");
+
+        SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
+                SaveFailureException.class, () -> logic.execute("yes"));
+
+        assertTrue(failure.getMessage().contains(JsonAddressBookStorage.MESSAGE_CHANGED_OUTSIDE));
+        assertFalse(failure.isChangeApplied());
+        assertEquals(original, model.getAddressBook());
+        assertEquals(List.of(AMY), model.getFilteredPersonList());
+        assertEquals(filters, model.getActiveFilters());
+        assertEquals(outsideBytes, Files.readString(file));
+        assertEquals(backupBytes, Files.readString(backup));
+        assertFalse(logic.isAwaitingConfirmation());
+    }
+
+    @Test
     public void execute_failedClear_restoresRosterAndExistingFilter() throws Exception {
         for (IOException error : List.of(DUMMY_IO_EXCEPTION, DUMMY_AD_EXCEPTION)) {
             model = new ModelManager();
@@ -901,6 +937,7 @@ public class LogicManagerTest {
             assertEquals(original, model.getAddressBook());
             assertEquals(List.of(AMY), model.getFilteredPersonList());
             assertTrue(failure.getMessage().contains("No members were removed."));
+            assertTrue(failure.getMessage().contains(error.getMessage()));
         }
     }
 
