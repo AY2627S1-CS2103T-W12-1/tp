@@ -29,7 +29,8 @@ public final class RosterRecoveryDialog extends Alert {
         setHeaderText("Your saved roster could not be loaded.");
         String backupDetails = hasValidBackup ? "\n\nRestore the previous saved roster from:\n" + backupFile
                 : "\n\nNo valid backup is available.";
-        String reasonDetails = reason == null || reason.isBlank() ? "" : "Reason: " + reason.strip() + "\n\n";
+        boolean hasReason = reason != null && !reason.isBlank();
+        String reasonDetails = hasReason ? "Reason: " + reason.strip() + "\n\n" : "";
         setContentText(reasonDetails + "The original file has been preserved at:\n" + preservedFile + backupDetails
                 + "\n\nStart empty creates a new empty roster. Close leaves your files unchanged.");
         ButtonType close = new ButtonType("Close", ButtonData.CANCEL_CLOSE);

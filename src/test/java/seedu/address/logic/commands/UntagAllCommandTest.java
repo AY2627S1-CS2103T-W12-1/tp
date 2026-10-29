@@ -6,12 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.Assert.assertThrows;
+import static seedu.address.testutil.TagTestUtil.removeTagFromDisplayed;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.DANIEL;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -52,7 +52,7 @@ public class UntagAllCommandTest {
     public void execute_someDisplayedMembersHaveTag_removesTagAndSkipsOthers() {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        removeTagFromAll(expectedModel, "friends");
+        removeTagFromDisplayed(expectedModel, "friends");
         String expectedMessage = "Removed tag \"friends\" (any letter case)"
                 + " from 3 member(s). 4 did not have this tag.";
 
@@ -85,7 +85,7 @@ public class UntagAllCommandTest {
         model.updateFilteredPersonList(HAS_FRIENDS_TAG);
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         expectedModel.updateFilteredPersonList(HAS_FRIENDS_TAG);
-        removeTagFromAll(expectedModel, "friends");
+        removeTagFromDisplayed(expectedModel, "friends");
         String expectedMessage = "Removed tag \"friends\" (any letter case) from 3 member(s).\n"
                 + "0 member(s) listed. Run list to show everyone.";
 
@@ -106,7 +106,7 @@ public class UntagAllCommandTest {
         model.updateFilteredPersonList(IS_BENSON);
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         expectedModel.updateFilteredPersonList(IS_BENSON);
-        removeTagFromAll(expectedModel, "friends");
+        removeTagFromDisplayed(expectedModel, "friends");
         String expectedMessage = "Removed tag \"friends\" (any letter case) from 1 member(s).";
 
         assertCommandSuccess(new UntagAllCommand(friends), model, expectedMessage, expectedModel);
@@ -143,23 +143,5 @@ public class UntagAllCommandTest {
         UntagAllCommand command = new UntagAllCommand(committee);
         String expected = UntagAllCommand.class.getCanonicalName() + "{tag=" + committee + "}";
         assertEquals(expected, command.toString());
-    }
-
-    /**
-     * Removes the tag named {@code tagName} from every member displayed in {@code model}.
-     */
-    private static void removeTagFromAll(Model model, String tagName) {
-        List<Person> displayedPersons = new ArrayList<>(model.getFilteredPersonList());
-        for (Person person : displayedPersons) {
-            List<String> tagNames = new ArrayList<>(person.getTags().stream()
-                    .map(tag -> tag.tagName)
-                    .toList());
-            if (tagNames.remove(tagName)) {
-                Person untaggedPerson = new PersonBuilder(person)
-                        .withTags(tagNames.toArray(new String[0]))
-                        .build();
-                model.setPerson(person, untaggedPerson);
-            }
-        }
     }
 }

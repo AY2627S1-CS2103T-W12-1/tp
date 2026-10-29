@@ -106,7 +106,8 @@ class JsonAdaptedPerson {
         }
         // An empty address means none was given, but an address of only spaces is rejected, as in commands.
         final String trimmedAddress = address.trim();
-        if ((trimmedAddress.isEmpty() && !address.isEmpty()) || !Address.isValidAddress(trimmedAddress)) {
+        final boolean isSpacesOnlyAddress = trimmedAddress.isEmpty() && !address.isEmpty();
+        if (isSpacesOnlyAddress || !Address.isValidAddress(trimmedAddress)) {
             throw new IllegalValueException(Address.MESSAGE_CONSTRAINTS);
         }
         final Address modelAddress = new Address(trimmedAddress);

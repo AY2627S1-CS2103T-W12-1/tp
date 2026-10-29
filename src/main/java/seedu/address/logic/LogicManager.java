@@ -62,25 +62,7 @@ public class LogicManager implements Logic {
         logger.info("User command received");
 
         if (pendingConfirmation != null) {
-            String input = commandText.strip();
-            if (ConfirmDeleteCommand.isNearMiss(input)) {
-                logger.info("Inexact confirmation word received; the confirmation stays pending");
-                return new CommandResult(ConfirmDeleteCommand.MESSAGE_CONFIRMATION_REMINDER);
-            }
-            Command confirmation = pendingConfirmation;
-            // Any other input ends the confirmation, so a later "yes" cannot repeat a destructive action.
-            pendingConfirmation = null;
-            if (!input.equals(ConfirmDeleteCommand.CONFIRMATION_WORD)) {
-                logger.info("Confirmation cancelled; the cancelling input was not run as a command");
-                String cancelled = confirmation instanceof ClearCommand
-                        ? ClearCommand.MESSAGE_CANCELLED : ConfirmDeleteCommand.MESSAGE_CANCELLED;
-                if (CommandHelp.find(input.split("\\s+", 2)[0]).isPresent()) {
-                    cancelled += String.format(ConfirmDeleteCommand.MESSAGE_INPUT_NOT_RUN, input);
-                }
-                return new CommandResult(cancelled);
-            }
-            logger.info("Destructive command confirmed");
-            return executeAndSave(confirmation);
+            return handleConfirmationInput(commandText.strip());
         }
 
         Command command = addressBookParser.parseCommand(commandText);
@@ -93,6 +75,42 @@ public class LogicManager implements Logic {
         CommandResult commandResult = executeAndSave(command);
         pendingConfirmation = commandResult.getPendingDeletion().orElse(null);
         return commandResult;
+    }
+
+    /**
+     * Runs the pending destructive command if {@code input} is the confirmation word. A near miss keeps
+     * the confirmation pending, and any other input cancels it without being run as a command.
+     */
+    private CommandResult handleConfirmationInput(String input) throws CommandException {
+        assert pendingConfirmation != null : "Confirmation input is handled only while a command is pending";
+        if (ConfirmDeleteCommand.isNearMiss(input)) {
+            logger.info("Inexact confirmation word received; the confirmation stays pending");
+            return new CommandResult(ConfirmDeleteCommand.MESSAGE_CONFIRMATION_REMINDER);
+        }
+        Command confirmation = pendingConfirmation;
+        // Any other input ends the confirmation, so a later "yes" cannot repeat a destructive action.
+        pendingConfirmation = null;
+        if (!input.equals(ConfirmDeleteCommand.CONFIRMATION_WORD)) {
+            logger.info("Confirmation cancelled; the cancelling input was not run as a command");
+            return new CommandResult(createCancellationMessage(confirmation, input));
+        }
+        logger.info("Destructive command confirmed");
+        return executeAndSave(confirmation);
+    }
+
+    /**
+     * Returns the message for cancelling {@code confirmation}. If {@code input} starts with a command word,
+     * the message also says that the command was not run.
+     */
+    private static String createCancellationMessage(Command confirmation, String input) {
+        String message = confirmation instanceof ClearCommand
+                ? ClearCommand.MESSAGE_CANCELLED
+                : ConfirmDeleteCommand.MESSAGE_CANCELLED;
+        String firstWord = input.split("\\s+", 2)[0];
+        if (CommandHelp.find(firstWord).isPresent()) {
+            message += String.format(ConfirmDeleteCommand.MESSAGE_INPUT_NOT_RUN, input);
+        }
+        return message;
     }
 
     @Override

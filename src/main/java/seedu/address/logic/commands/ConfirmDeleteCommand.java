@@ -29,6 +29,9 @@ public class ConfirmDeleteCommand extends Command {
     public static final String MESSAGE_MEMBER_NOT_FOUND =
             "The member to delete is no longer in the roster. No member was removed.";
 
+    /** The short form of {@link #CONFIRMATION_WORD}, which is treated as a near miss rather than a cancellation. */
+    private static final String SHORT_CONFIRMATION_WORD = "y";
+
     private final Person target;
 
     /**
@@ -42,8 +45,9 @@ public class ConfirmDeleteCommand extends Command {
      * Returns true if {@code input} looks like an attempt to confirm but is not exactly the confirmation word.
      */
     public static boolean isNearMiss(String input) {
+        requireNonNull(input);
         return !input.equals(CONFIRMATION_WORD)
-                && (input.equalsIgnoreCase(CONFIRMATION_WORD) || input.equalsIgnoreCase("y"));
+                && (input.equalsIgnoreCase(CONFIRMATION_WORD) || input.equalsIgnoreCase(SHORT_CONFIRMATION_WORD));
     }
 
     @Override
