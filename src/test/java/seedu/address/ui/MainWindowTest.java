@@ -1051,6 +1051,7 @@ public class MainWindowTest {
     private KeyEvent key(KeyCode code) {
         return new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false);
     }
+
     @Test
     public void clear_displayedMembers_updatesShowChipAndKeepsHiddenMembers() throws Exception {
         onJavaFxThread(() -> {

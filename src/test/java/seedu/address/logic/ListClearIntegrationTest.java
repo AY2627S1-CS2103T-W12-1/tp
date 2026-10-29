@@ -277,15 +277,13 @@ public class ListClearIntegrationTest {
         return single;
     }
 
-    /**
-     * Counts persistence attempts and injects failures while retaining real JSON reads and successful writes.
-     */
     @Test
     public void clear_displayedTargets_keepsHiddenMembersAndPersistsRemainingRoster() throws Exception {
         List<Person> before = List.copyOf(model.getAddressBook().getPersonList());
         logic.execute("show 1 3");
         String prompt = logic.execute("clear").getFeedbackToUser();
         assertTrue(prompt.contains("2 displayed"));
+        assertTrue(prompt.contains("Hidden members will be kept"));
         assertEquals(before, model.getAddressBook().getPersonList());
         assertEquals(0, storage.saveAttempts);
         logic.execute("Y");
@@ -374,6 +372,18 @@ public class ListClearIntegrationTest {
         }
     }
 
+    @Test
+    public void clear_unfilteredPrompt_avoidsClaimingThereAreHiddenMembers() throws Exception {
+        String prompt = logic.execute("clear").getFeedbackToUser();
+        assertTrue(prompt.contains("Total members:"));
+        assertFalse(prompt.contains("Hidden members"));
+        assertFalse(prompt.contains("including anyone hidden"));
+        logic.execute("no");
+    }
+
+    /**
+     * Counts persistence attempts and injects failures while retaining real JSON reads and successful writes.
+     */
     private static class RecordingStorage extends JsonAddressBookStorage {
         private int saveAttempts;
         private IOException failure;

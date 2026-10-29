@@ -254,10 +254,10 @@ It depends on model classes because it saves and restores model objects.
 `ImportCommand` and `ExportCommand` use the CSV classes directly, not through `StorageManager`.
 `CsvAddressBookCsv` holds the CSV header and format shared by the importer and exporter.
 
-CSV export is implemented as a separate `CsvAddressBookExporter` in the `storage` package. `ExportCommand` supplies the
-complete roster and the destination path; the exporter writes a UTF-8 CSV file with a header row and
-one row per member. Apache Commons CSV handles RFC 4180 quoting and escaping. This export is a user-requested copy and
-does not replace or modify the JSON file used for automatic persistence.
+CSV export is implemented as a separate `CsvAddressBookExporter` in the `storage` package. `ExportCommand` supplies a
+snapshot of the currently displayed members, in displayed order, and the destination path; the exporter writes a
+UTF-8 CSV file with a header row and one row per member. Apache Commons CSV handles RFC 4180 quoting and escaping.
+This export is a user-requested copy and does not replace or modify the JSON file used for automatic persistence.
 
 `LogicManager` supplies the active roster and preferences paths to `ExportCommand`, which rejects destinations
 matching those files, their backups and recovery copies, the running JAR, or `.trackcall.lock`, including
@@ -546,7 +546,7 @@ An import-save failure leaves the imported batch in memory and preserves the pre
 
 ### CSV export
 
-![CSV export of the complete roster through an atomic file write](images/CsvExportSequenceDiagram.png)
+![CSV export of displayed members through an atomic file write](images/CsvExportSequenceDiagram.png)
 
 `ExportCommandParser` rejects double quotes in destination paths before any file is written, so exports do not
 produce filenames that `ImportCommandParser` cannot read. Spaces remain supported without surrounding quotes.
@@ -554,7 +554,10 @@ produce filenames that `ImportCommandParser` cannot read. Spaces remain supporte
 The sequence shows a successful export after command parsing. `LogicManager` supplies the active roster and preferences
 paths to `ExportCommand`, which checks the destination against protected application files before
 calling `CsvAddressBookExporter`. Path resolution also applies the shared file-location restrictions.
-The exporter writes every stored member, including those hidden by filters, in stored order.
+The command snapshots `model.getFilteredPersonList()` and exports only those members in displayed order,
+including active sorting. It counts hidden members against the complete roster and reports both counts when
+any are excluded. With everyone visible, existing success feedback is retained. An empty displayed list writes
+only the header. Run `list` first to export everyone in stored order.
 
 `FileUtil#writeAtomically` invokes the exporter's `FileWriter#write` callback with a sibling temporary file.
 Apache Commons CSV handles quoting and escaping; the writer closes before atomic replacement.
@@ -700,12 +703,21 @@ commands share one grammar and one set of error messages. It accepts exactly one
 1 to 30 characters using ASCII letters or digits with optional internal hyphens. Surrounding spaces are ignored. `tag` and `untag` use the same method for
 their tag argument.
 
-* Text before `t/`, a missing `t/`, or any `n/`, `p/`, `e/`, or `a/` prefix reports invalid command format
-  with the calling command's usage. These prefixes are tokenized only so that they are not read as part of
-  the tag.
+* A missing `t/` reports `Missing t/ prefix. Supply tags using t/TAG.`
+* Text before a supplied `t/` is named in an `Unexpected text before t/` error.
+* An `n/`, `p/`, `e/`, or `a/` prefix is named as an unsupported field.
+  Each of these errors includes the calling command's usage.
 * An empty tag reports `Tag cannot be empty.`
 * More than one `t/` reports `Only one tag can be applied per command. Run the command once for each tag.`
-* Other invalid tags, including internal spaces and unknown prefixes such as `x/`, report the tag-format message.
+* Unsupported characters are named in the error, followed by the allowed ASCII letters, digits, and internal
+  single hyphens. A space, tab or other whitespace inside a tag reports `Tag cannot contain spaces. Use a hyphen
+  instead, e.g. year-1.` A double quote is shown escaped as `\"`.
+* Leading, trailing, and consecutive hyphens each report a specific error with `year-1` as a valid example.
+* Unsupported characters are checked before length, so non-ASCII code points are not misreported as
+  overlong ASCII tags. Invisible control characters are shown as code points, for example `U+0000`.
+* Overlong tags report their actual length and the limit from `Tag.MAX_LENGTH`.
+* These argument errors give the reason followed by usage without a generic format-error header.
+  Existing index parsing in `tag` and `untag` retains its format-error header.
 
 #### Execution {id="execution-1"}
 
@@ -770,8 +782,9 @@ memory and the previous saved file is unchanged.
 `renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for every displayed member who has it.
 
 `RenameTagCommandParser` reads the `t/` values with `BulkTagArgumentParser#parseTagValues` and requires
-exactly two. A different count, text before the first `t/`, or an `n/`, `p/`, `e/`, or `a/` prefix reports
-invalid command format with the `renametag` usage. Each value is validated by
+exactly two. A different count reports the received count and explains that the current tag precedes the
+new tag. Text before the first `t/` and unsupported member field prefixes receive the shared specific
+errors, with the `renametag` usage. Each value is validated by
 `BulkTagArgumentParser#parseTagName`, so empty and invalid tags report the same messages as `tagall` and
 `untagall`. Identical spellings report `The new tag must be different from the current tag.`
 Case-only changes are allowed so a group can use one capitalization.
@@ -1738,14 +1751,15 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
    Run `filter t/committee`, then `sort`: only Alice and Zara appear. Try `sort date`; expect
    `Invalid command format. Usage: sort` with the view unchanged. The saved roster bytes and modification
    time must remain unchanged throughout these read-only checks.
-2. With the committee filter still active, run `export members.csv`. Expect three exported records,
-   including the hidden bob record, in stored order. Check the UTF-8 header and sorted semicolon-separated
-   tags, and confirm that automatic JSON storage and the displayed view are unchanged.
-3. Run `import p/members.csv` without clearing. Expect zero imported members and three skipped duplicates.
+2. With the committee filter still active, run `export members.csv`. Expect two exported records,
+   Alice then Zara in displayed sort order, with one hidden member reported as excluded. Check the UTF-8 header
+   and sorted semicolon-separated tags, and confirm that automatic JSON storage and the displayed view
+   are unchanged.
+3. Run `import p/members.csv` without clearing. Expect zero imported members and two skipped duplicates.
    The full roster is restored in stored order. Then run `clear`, confirm with `yes`, and run `import p/members.csv`.
-   Expect three imports and zero skipped duplicates. Restart and check every field and tag is retained.
+   Expect two imports and zero skipped duplicates, in Alice/Zara order. Restart and check every field and tag is retained.
 4. Copy `members.csv` to `member list.csv`, then run `import p/"member list.csv"`.
-   The quoted path must work and all three duplicates must be skipped. Try `import p/missing.csv`:
+   The quoted path must work and both duplicates must be skipped. Try `import p/missing.csv`:
    expect a file-not-found error that includes the resolved path, with the roster and view unchanged.
 5. Make a separate `invalid.csv` with the valid header, one valid member, and then a row with an invalid
    phone. Import it: expect a row-specific error, no partial import, and no saved-file or view change.
@@ -1753,6 +1767,8 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee
 6. Test a destination in a missing directory with `export missing/members.csv`: expect a write error
    without creating that directory. In a disposable release folder, verify that CSV paths outside the JAR
    folder and symbolic-link paths are rejected. Test a header-only CSV and a zero-member export.
+   With a nonempty roster, run `find Nobody` then export: expect a header-only file and a message counting
+   every stored member as hidden. Use `list` before exporting again to include everyone.
    For an import-save failure, temporarily replace the automatic JSON file with a directory: expect the
    imported batch to remain in memory, a save error, and no modification to the source CSV. Restore storage
    access and retry saving with an existing field value before exiting.

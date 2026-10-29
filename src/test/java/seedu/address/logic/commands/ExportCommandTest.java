@@ -124,7 +124,7 @@ public class ExportCommandTest {
     }
 
     @Test
-    public void execute_filteredList_exportsAllPeopleAndPreservesModel() throws Exception {
+    public void execute_emptyDisplayedList_exportsHeaderAndPreservesModel() throws Exception {
         Model model = new ModelManager();
         Person person = new PersonBuilder().withName("Alice").withAddress("Block 1").build();
         model.addPerson(person);
@@ -133,10 +133,9 @@ public class ExportCommandTest {
 
         CommandResult result = parser.parseCommand("export   " + destination + "   ").execute(model);
 
-        assertEquals("name,phone,email,address,tags\r\n"
-                + "Alice,85355255,amy@gmail.com,Block 1,\r\n", Files.readString(destination));
-        assertEquals(String.format(ExportCommand.MESSAGE_SINGLE, destination.toAbsolutePath().normalize()),
-                result.getFeedbackToUser());
+        assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
+        assertEquals("Exported 0 displayed members to " + destination.toAbsolutePath().normalize()
+                + " (1 hidden member not exported).", result.getFeedbackToUser());
         assertEquals(List.of(person), model.getAddressBook().getPersonList());
         assertTrue(model.getFilteredPersonList().isEmpty());
     }
@@ -188,7 +187,7 @@ public class ExportCommandTest {
     }
 
     @Test
-    public void execute_partialFilter_exportsVisibleAndHiddenPeopleInStoredOrder() throws Exception {
+    public void execute_partialFilter_exportsOnlyVisiblePeople() throws Exception {
         Model model = new ModelManager();
         Person alice = new PersonBuilder().withName("Alice").withAddress("Block 1").build();
         Person bob = new PersonBuilder().withName("Bob").withAddress("Block 2").build();
@@ -199,10 +198,10 @@ public class ExportCommandTest {
 
         CommandResult result = new ExportCommand(destination).execute(model);
 
-        assertEquals(List.of("name,phone,email,address,tags", "Bob,85355255,amy@gmail.com,Block 2,",
+        assertEquals(List.of("name,phone,email,address,tags",
                 "Alice,85355255,amy@gmail.com,Block 1,"), Files.readAllLines(destination));
-        assertEquals(String.format(ExportCommand.MESSAGE_SUCCESS, 2, destination.toAbsolutePath().normalize()),
-                result.getFeedbackToUser());
+        assertEquals("Exported 1 displayed member to " + destination.toAbsolutePath().normalize()
+                + " (1 hidden member not exported).", result.getFeedbackToUser());
         assertEquals(List.of(bob, alice), model.getAddressBook().getPersonList());
         assertEquals(List.of(alice), model.getFilteredPersonList());
     }

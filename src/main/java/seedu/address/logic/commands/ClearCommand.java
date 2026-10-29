@@ -2,7 +2,9 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import seedu.address.logic.Confirmation;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -20,7 +22,7 @@ public class ClearCommand extends Command {
     public static final String MESSAGE_USAGE =
             "Invalid command format. Usage: clear [/all]. Use /all to remove hidden members too.";
     public static final String MESSAGE_CONFIRMATION =
-            "Clear the entire roster? Total members: %d (including anyone hidden by searches or filters).\n"
+            "Clear the entire roster? Total members: %d.\n"
             + "Type " + Confirmation.WORD
             + " and press Enter to confirm, or " + Confirmation.CANCEL_INSTRUCTION + ".";
     public static final String MESSAGE_CANCELLED = "Clear cancelled. No members were removed.";
@@ -39,9 +41,11 @@ public class ClearCommand extends Command {
     public static final String MESSAGE_NO_DISPLAYED =
             "No members in the displayed list. Run list to show everyone, or clear /all to remove the entire roster.";
 
-    private final boolean all;
+    private final boolean isClearingAll;
     /** The exact members named by the prompt, retained even if a filter is removed while waiting. */
     private List<Person> targets;
+    /** Whether the captured prompt needs to explain that hidden members will remain. */
+    private boolean hasHiddenMembers;
 
     /** Creates a command that clears only displayed members. */
     public ClearCommand() {
@@ -49,14 +53,17 @@ public class ClearCommand extends Command {
     }
 
     /** Creates a command with an explicit whole-roster or displayed-list scope. */
-    public ClearCommand(boolean all) {
-        this.all = all;
+    public ClearCommand(boolean isClearingAll) {
+        this.isClearingAll = isClearingAll;
     }
 
     /** Captures the targets before confirmation and returns their count. */
     public int prepareTargets(Model model) throws CommandException {
+        requireNonNull(model);
         if (targets == null) {
-            targets = List.copyOf(all ? model.getAddressBook().getPersonList() : model.getFilteredPersonList());
+            hasHiddenMembers = model.getFilteredPersonList().size() < model.getAddressBook().getPersonList().size();
+            targets = List.copyOf(isClearingAll
+                    ? model.getAddressBook().getPersonList() : model.getFilteredPersonList());
         }
         if (targets.isEmpty() && !model.getAddressBook().getPersonList().isEmpty()) {
             throw new CommandException(MESSAGE_NO_DISPLAYED);
@@ -64,14 +71,19 @@ public class ClearCommand extends Command {
         return targets.size();
     }
 
-    /** Returns a confirmation prompt naming the scope and captured count. */
+    /** Returns a scope/count prompt after {@link #prepareTargets(Model)} has captured its targets. */
     public String getConfirmationMessage() {
-        return String.format(all ? MESSAGE_CONFIRMATION : MESSAGE_DISPLAY_CONFIRMATION, targets.size());
+        assert targets != null : "Targets must be captured before constructing the prompt";
+        if (isClearingAll || !hasHiddenMembers) {
+            return String.format(MESSAGE_CONFIRMATION, targets.size());
+        }
+        return String.format(MESSAGE_DISPLAY_CONFIRMATION, targets.size());
     }
 
     /** Updates selection descriptions only after saving, preserving rollback state until then. */
     public void finishSaving(Model model) {
-        if (all) {
+        assert targets != null : "Targets must be captured before finishing a save";
+        if (isClearingAll) {
             model.updateFilteredPersonList(Model.PREDICATE_SHOW_ALL_PERSONS);
         } else {
             model.removeDeletedPersonsFromSelections(targets);
@@ -82,9 +94,10 @@ public class ClearCommand extends Command {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
         int count = prepareTargets(model);
+        Set<Person> targetsToRemove = new HashSet<>(targets);
         AddressBook remaining = new AddressBook();
         remaining.setPersons(model.getAddressBook().getPersonList().stream()
-                .filter(person -> !targets.contains(person)).toList());
+                .filter(person -> !targetsToRemove.contains(person)).toList());
         // Do not mutate selection predicates before saving: a failed clear must restore the original view.
         model.setAddressBook(remaining);
         if (!remaining.getPersonList().isEmpty()) {
