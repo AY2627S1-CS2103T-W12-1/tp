@@ -7,6 +7,7 @@ import java.util.Objects;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.logic.Confirmation;
 import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -27,7 +28,7 @@ public class DeleteCommand extends Command {
             + "Example: " + COMMAND_WORD + " 1";
 
     public static final String MESSAGE_CONFIRM_DELETE = "Delete member %1$d, %2$s?\nTags: %3$s\n"
-            + "Type " + ConfirmDeleteCommand.CONFIRMATION_WORD
+            + "Type " + Confirmation.WORD
             + " and press Enter to confirm, or type no to cancel the deletion.";
 
     public static final String MESSAGE_DELETE_PERSON_SUCCESS = "Deleted member\n%1$s";

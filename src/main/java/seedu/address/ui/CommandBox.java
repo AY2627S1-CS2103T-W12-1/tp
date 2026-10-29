@@ -4,6 +4,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Region;
+import seedu.address.logic.Confirmation;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.commands.exceptions.SaveFailureException;
@@ -17,7 +18,8 @@ public class CommandBox extends UiPart<Region> {
     public static final String ERROR_STYLE_CLASS = "error";
     public static final String CONFIRMATION_STYLE_CLASS = "confirmation-pending";
     public static final String DEFAULT_PROMPT = "Enter command here...";
-    public static final String CONFIRMATION_PROMPT = "Type yes and press Enter to confirm, or no to cancel";
+    public static final String CONFIRMATION_PROMPT = "Type " + Confirmation.WORD
+            + " and press Enter to confirm, or no to cancel";
     private static final String FXML = "CommandBox.fxml";
 
     private final CommandExecutor commandExecutor;
