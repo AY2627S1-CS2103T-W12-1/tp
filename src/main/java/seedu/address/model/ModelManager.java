@@ -241,19 +241,9 @@ public class ModelManager implements Model {
      * A person remains visible only when it satisfies every filter in both groups.
      */
     private void refreshFilteredPersons() {
-        filteredPersons.setPredicate(person -> {
-            for (Predicate<Person> filter : additionalFilters) {
-                if (!filter.test(person)) {
-                    return false;
-                }
-            }
-            for (ActiveFilter filter : activeFilters) {
-                if (!filter.test(person)) {
-                    return false;
-                }
-            }
-            return true;
-        });
+        filteredPersons.setPredicate(person ->
+                additionalFilters.stream().allMatch(filter -> filter.test(person))
+                        && activeFilters.stream().allMatch(filter -> filter.test(person)));
     }
 
     @Override

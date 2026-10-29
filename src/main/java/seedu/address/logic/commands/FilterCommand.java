@@ -30,8 +30,6 @@ public class FilterCommand extends Command {
     public static final String MESSAGE_ALREADY_FILTERED_ANY = "A filter for the tags %s is already active. "
             + "No changes were made.\n";
 
-    private static final String ALTERNATIVES_SEPARATOR = " or ";
-
     private static final Logger logger = LogsCenter.getLogger(FilterCommand.class);
 
     /** The alternative tags, without repeats and in the order they were typed. */
@@ -119,7 +117,7 @@ public class FilterCommand extends Command {
     private static String formatAlternatives(List<Tag> alternatives) {
         return alternatives.stream()
                 .map(activeTag -> "\"" + activeTag.tagName + "\"")
-                .collect(Collectors.joining(ALTERNATIVES_SEPARATOR));
+                .collect(Collectors.joining(ActiveFilter.ALTERNATIVES_SEPARATOR));
     }
 
     private static String formatTagNames(List<Tag> tags) {
