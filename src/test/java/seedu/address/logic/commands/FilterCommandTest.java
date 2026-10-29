@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.TagTestUtil.createCommitteeAlumniModel;
+import static seedu.address.testutil.TagTestUtil.displayedNames;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.DANIEL;
@@ -25,6 +27,8 @@ import seedu.address.testutil.PersonBuilder;
 
 public class FilterCommandTest {
     private final Tag friends = new Tag("friends");
+    private final FilterCommand committeeOrAlumni =
+            new FilterCommand(List.of(new Tag("committee"), new Tag("alumni")));
 
     @Test
     public void constructor_noTags_throwsIllegalArgumentException() {
@@ -34,9 +38,8 @@ public class FilterCommandTest {
     @Test
     public void execute_tagsInOneCommand_showsMembersWithAnyTag() {
         Model model = clubModel();
-        FilterCommand command = new FilterCommand(List.of(new Tag("committee"), new Tag("alumni")));
 
-        CommandResult result = command.execute(model);
+        CommandResult result = committeeOrAlumni.execute(model);
 
         assertEquals("2 member(s) listed with tags \"committee\" / \"alumni\".", result.getFeedbackToUser());
         assertEquals(List.of("Tag: committee / alumni"), activeLabels(model));
@@ -47,7 +50,7 @@ public class FilterCommandTest {
     public void execute_tagsInSeparateCommands_requireEveryCondition() {
         Model model = clubModel();
 
-        new FilterCommand(List.of(new Tag("committee"), new Tag("alumni"))).execute(model);
+        committeeOrAlumni.execute(model);
         CommandResult result = new FilterCommand(new Tag("year1")).execute(model);
 
         assertEquals("1 member(s) listed with tags \"committee\" / \"alumni\", \"year1\".",
@@ -58,12 +61,9 @@ public class FilterCommandTest {
 
     @Test
     public void execute_memberWithEveryAlternative_appearsOnce() {
-        Model model = new ModelManager(new AddressBookBuilder()
-                .withPerson(new PersonBuilder().withName("Pat Both").withTags("committee", "alumni").build())
-                .withPerson(new PersonBuilder().withName("Lee Committee").withTags("committee").build())
-                .build(), new UserPrefs());
+        Model model = createCommitteeAlumniModel();
 
-        CommandResult result = new FilterCommand(List.of(new Tag("committee"), new Tag("alumni"))).execute(model);
+        CommandResult result = committeeOrAlumni.execute(model);
 
         assertEquals("2 member(s) listed with tags \"committee\" / \"alumni\".", result.getFeedbackToUser());
         assertEquals(List.of("Pat Both", "Lee Committee"), displayedNames(model));
@@ -72,7 +72,7 @@ public class FilterCommandTest {
     @Test
     public void execute_groupThenSameTagSeparately_listsEachConditionAndRequiresBoth() {
         Model model = clubModel();
-        new FilterCommand(List.of(new Tag("committee"), new Tag("alumni"))).execute(model);
+        committeeOrAlumni.execute(model);
 
         CommandResult result = new FilterCommand(new Tag("committee")).execute(model);
 
@@ -85,7 +85,7 @@ public class FilterCommandTest {
     @Test
     public void execute_sameTagsReordered_reportsExistingFilterWithoutChange() {
         Model model = clubModel();
-        new FilterCommand(List.of(new Tag("committee"), new Tag("alumni"))).execute(model);
+        committeeOrAlumni.execute(model);
 
         FilterCommand reordered = new FilterCommand(List.of(new Tag("ALUMNI"), new Tag("Committee")));
 
@@ -102,7 +102,6 @@ public class FilterCommandTest {
         Tag committee = new Tag("committee");
         Tag alumni = new Tag("alumni");
 
-        FilterCommand committeeOrAlumni = new FilterCommand(List.of(committee, alumni));
         assertEquals(committeeOrAlumni, new FilterCommand(List.of(alumni, committee)));
         assertEquals(new FilterCommand(committee),
                 new FilterCommand(List.of(committee, new Tag("COMMITTEE"))));
@@ -256,7 +255,4 @@ public class FilterCommandTest {
         return model.getActiveFilters().stream().map(ActiveFilter::getLabel).toList();
     }
 
-    private static List<String> displayedNames(Model model) {
-        return model.getFilteredPersonList().stream().map(person -> person.getName().fullName).toList();
-    }
 }

@@ -435,8 +435,8 @@ If you remove the tag used by an active single-tag filter, the updated members d
 because they no longer match. They are not deleted; run `list` to show everyone.
 The result then also reports the current list, for example
 `0 member(s) listed with tag "committee". Run list to show everyone.`
-Updated members disappear only if they no longer satisfy **all** active conditions. With a filter group such as
-`filter t/committee t/alumni`, a member can stay visible by matching another alternative: after
+Updated members disappear only if they no longer satisfy **all** active conditions. With a filter group
+such as `filter t/committee t/alumni`, a member can stay visible by matching another alternative: after
 `untagall t/committee`, a member who also has `alumni` remains in the list.
 
 Supply exactly one tag of 1 to 30 ASCII letters or digits with optional internal hyphens. Spaces around the tag
@@ -479,8 +479,8 @@ If you rename the tag used by an active single-tag filter, the renamed members d
 because they no longer match. They are not deleted; run `list` to show everyone.
 The result then also reports the current list, for example
 `0 member(s) listed with tag "batch2026". Run list to show everyone.`
-Renamed members disappear only if they no longer satisfy **all** active conditions. With a filter group such as
-`filter t/batch2026 t/alumni`, a member who still matches another alternative stays visible.
+Renamed members disappear only if they no longer satisfy **all** active conditions. With a filter group
+such as `filter t/batch2026 t/alumni`, a member who still matches another alternative stays visible.
 
 Supply exactly two tags, each after `t/`, with 1 to 30 characters using ASCII letters or digits and
 optional internal hyphens.
