@@ -7,26 +7,25 @@ TrackCall helps membership secretaries keep their organisation's member records 
 It is a desktop app designed for around 500 members, although this is not a hard limit.
 Type commands to find members and update their contact details quickly.
 
-## Features in v1.4 alpha
+## Features in v1.5
 
-* Add, edit, list, show selected members by index, find, delete, and clear member records.
-* Find members by a full email address or domain fragment with `findemail KEYWORD [MORE_KEYWORDS]...`.
-* Open offline instructions for all available commands with `help`, or one command with `help COMMAND`.
-* Read member cards and multiline feedback in a light beige interface, with wrapping and scrolling.
+* Add, edit, list, and find member records by name with `find`, by email with `findemail`, and show selected members by displayed number with `show`.
+* Narrow the displayed members by tag with `filter t/TAG [t/MORE_TAGS]...`. Tags in one command mean *or*, separate commands mean *and*, and each condition appears as a box under the command field that you can remove.
+* Sort the whole roster by name with `sort`. The order is saved and used by `export`.
+* Add or remove one member's tag with `tag INDEX t/TAG` or `untag INDEX t/TAG`, retaining their other tags.
+* Add or remove a tag for every displayed member with `tagall t/TAG` or `untagall t/TAG`, and rename a tag for them with `renametag t/CURRENT_TAG t/NEW_TAG`.
+* Confirm before removing members: `delete INDEX` asks for `yes`, `clear` removes the displayed members, and `clear /all` removes everyone.
+* Export the displayed members to CSV with `export`, and append members from a CSV file with `import p/FILE_PATH`.
+* Open offline instructions for all commands with `help`, or one command with `help COMMAND`.
 * Save data changes locally, with clear recovery guidance if saving fails and rollback for a failed clear.
 * Keep the previous valid saved roster as an automatic backup, and recover damaged files at startup.
 * Leave the roster file unchanged when running read-only commands.
-* Narrow the displayed members by an exact tag using `filter t/TAG`, then use their displayed numbers to edit, tag, untag, or delete.
-* Add or remove one member's tag with `tag INDEX t/TAG` or `untag INDEX t/TAG`, retaining their other tags.
-* Add or remove a tag for every displayed member with `tagall t/TAG` or `untagall t/TAG`.
-* Rename a tag for every member with `renametag t/CURRENT_TAG t/NEW_TAG`.
-* Import and export CSV member records, and sort the displayed list by name.
 
 ## Interface
 
-The current source build shows names and tags in the roster. Select a member to reveal their contact details
-in a separate panel, where each field can be copied. Press **F2** to focus the roster and **Escape** to hide
-the selected details and return to the command box. This interface is included in the v1.4 alpha release.
+Names and tags appear in the roster. Select a member to reveal their contact details in a separate panel,
+where each field can be copied. Press **F2** to focus the roster and **Escape** to hide the selected details
+and return to the command box. Search, filter, and `show` conditions appear as removable boxes under the command field.
 
 ![TrackCall showing a compact roster and one selected member's details](docs/images/Ui.png)
 
