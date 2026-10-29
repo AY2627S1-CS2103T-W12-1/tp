@@ -1,116 +1,110 @@
 ---
+layout: default.md
 title: Documentation guide
 pageNav: 6
 ---
 
 # Documentation guide
 
-TrackCall uses [MarkBind](https://markbind.org/) to build the project website from the Markdown files in `docs/`.
-Edit those source files and preview the result before submitting a documentation change.
-The [course guide to forked MarkBind sites](https://se-education.org/guides/tutorials/markbind-forked-sites.html) and
-[MarkBind user guide](https://markbind.org/userGuide/gettingStarted.html) explain the available features.
+- TrackCall uses [MarkBind](https://markbind.org/) to turn Markdown in `docs/` into the project website.
+- Edit source files, preview the rendered pages, and run the build before submitting a change.
+- See the [course setup guide](https://se-education.org/guides/tutorials/markbind-forked-sites.html)
+  and [MarkBind user guide](https://markbind.org/userGuide/gettingStarted.html) for further help.
 
 ## Previewing documentation locally
 
-Install Node.js 22.13 or later, then run the following commands from the project root:
+1. Install **Node.js 22.13 or later**.
+2. From the project root, install the locked dependencies and start the preview:
 
-```bash
-cd docs
-npm ci
-npm run serve
-```
+   ```bash
+   cd docs
+   npm ci
+   npm run serve
+   ```
 
-`npm ci` installs the exact dependency versions recorded in `package-lock.json`.
-`npm run serve` starts a local preview on port 8080 and refreshes it when documentation changes.
-Open the address printed in the terminal, normally `http://localhost:8080/`. Stop the preview with `Ctrl+C`.
-If a shared layout or site configuration change does not appear, restart the preview.
+3. Open the address printed in the terminal, normally `http://localhost:8080/`.
+   Edits refresh the preview. Restart it if a layout or site-setting change does not appear.
+4. Stop the preview with `Ctrl+C`. From `docs/`, validate the production site:
 
-`npm run build` starts from a clean output directory and verifies every documentation page,
-local link, and section target. A missing page or broken internal link fails the build.
-When updating published release notes or screenshots, refresh the matching release assets and SHA-256 manifest
-while preserving the executable and its original validation history. Legacy heading aliases for release notes
-are configured in `site.json` and added by `_markbind/plugins/legacyAnchors.js`.
-For other pages, preserve explicit heading IDs when editing headings so existing bookmarks keep working.
+   ```bash
+   npm test
+   npm run build
+   ```
 
-Before submitting changes, run this command from `docs/`:
+**What the checks do**
 
-```bash
-npm run build
-```
-
-This generates the production site in `docs/_site/` using the `/tp` base URL used by GitHub Pages.
-Following the course setup, keep `baseUrl` in `docs/site.json` empty for local previews;
-the production build supplies `/tp` separately.
-The generated site and `node_modules/` are build outputs; keep them out of version control.
-Keep `package.json` and `package-lock.json` together when updating dependencies.
+- `npm test` checks compatibility of the patched documentation dependencies.
+- `npm run build` cleans `docs/_site/`, generates all pages, and checks local links and section targets.
+  A missing page or broken internal link fails the build.
+- The production build supplies the `/tp` base URL. Keep `baseUrl` in `docs/site.json` empty for local preview.
+- Keep generated `_site/` and `node_modules/` out of version control.
+  Commit `package.json` and `package-lock.json` together when dependencies change.
 
 ## Maintaining the site
 
-* Edit the existing Markdown pages to update their content. Their published `.html` URLs remain the same.
-* Keep images in `docs/images/` and diagram sources in `docs/diagrams/`.
-* Update `docs/site.json` for site settings and page configuration.
-* Update `docs/_markbind/layouts/default.md` for the shared layout and navigation.
-* Update `docs/stylesheets/main.css` for styling; it starts from the course-provided MarkBind stylesheet.
-* Keep section headings stable when possible: changing a heading can break links to its section.
-* Link to generated pages with `.html`, for example `DeveloperGuide.html#limitations`.
-* Give headings containing apostrophes or dots an explicit stable ID when they are linked from elsewhere,
-  for example `### How do I add or remove one member's tag? {id="how-do-i-add-or-remove-one-members-tag"}`.
-* Start new pages with `layout: default.md` front matter and a `# Title` heading.
-* After updating your branch from `master`, run `npm run build` in `docs/` to check the combined pages.
-* Preview the User Guide, Developer Guide, and navigation at both desktop and phone widths after layout changes.
-* IntelliJ users can enable [soft wrapping for Markdown files](https://se-education.org/guides/tutorials/intellijUsefulSettings.html#enabling-soft-wrapping)
-  to make long paragraphs easier to edit.
+- **Page content:** edit the existing `docs/*.md` source. Its published URL ends in `.html`.
+- **Images and diagrams:** store images in `docs/images/` and editable sources in `docs/diagrams/`.
+- **Site settings:** update `docs/site.json`.
+- **Shared navigation:** update `docs/_markbind/layouts/default.md`.
+- **Shared styling:** update `docs/stylesheets/main.css`.
+- **New pages:** include `layout: default.md` in front matter and start with one `# Title`.
+- **Links:** use generated `.html` paths, such as `DeveloperGuide.html#limitations`.
+  Preserve existing heading IDs when renaming sections so bookmarks still work.
+- **Stable anchors:** give linked headings with punctuation an explicit ID,
+  for example `### Member's tags {id="member-tags"}`.
+  Release-note aliases are configured in `site.json` and generated by `_markbind/plugins/legacyAnchors.js`.
+- **Before submitting:** rebuild after integrating `master`; inspect changed pages and navigation at desktop
+  and phone widths. Check that headings, lists, code blocks, and images remain readable.
 
 ### Application screenshots
 
-Use a **1600 × 1200** white canvas for application screenshots, with a centered window, proportional
-scaling, and the same soft shadow. Keep the complete title bar and status bar visible; do not stretch
-the application window to fill the canvas. Keep original captures alongside their framed presentations.
-
-The framing recipe is in `docs/scripts/release-gallery-frames.json` and
-`docs/scripts/release-gallery-frames.html`. Save rendered assets as PNG files, check their dimensions,
-and update the release checksum manifest whenever a published asset changes. The website's release
-archive and the corresponding GitHub release must contain matching files.
+- Use a **1600 × 1200** white canvas, a centered window, proportional scaling, and the same soft shadow.
+- Keep the title bar and status bar visible. Keep original captures alongside framed images.
+- Use the framing recipe in `docs/scripts/release-gallery-frames.json` and `release-gallery-frames.html`.
+- Export PNG files and check their dimensions.
+- When updating published screenshots or release notes, keep website assets, GitHub release assets,
+  and the SHA-256 manifest in sync. Preserve the release executable and its original validation history.
 
 ## Publishing the site
 
-The **Documentation** workflow in `.github/workflows/docs.yml` builds documentation changes in pull requests.
-A failed documentation build fails that check. After documentation changes are merged into the team repository's
-`master` branch, the workflow publishes the generated site to
-[TrackCall's project website](https://ay2627s1-cs2103t-w12-1.github.io/tp/).
-Forks and pull requests build the site without publishing to the team website.
+- `.github/workflows/docs.yml` defines the **Documentation** workflow.
+- Pull requests build and validate the site; they do not publish it.
+- Documentation changes merged into the team's `master` branch trigger publication to `gh-pages`.
+- Only the deployment job has `contents: write`; the build job has read access.
+- The workflow uses Node.js 22 and the locked MarkBind dependencies.
+- Check the deployed [TrackCall website](https://ay2627s1-cs2103t-w12-1.github.io/tp/) after deployment.
 
-The workflow follows the [course's branch-based Pages setup](https://se-education.org/guides/tutorials/markbind-forked-sites.html#initiating-the-site):
-it publishes the generated website to the team repository's `gh-pages` branch using GitHub's built-in token.
-Only the deployment job receives `contents: write`; the build job and pull requests have read access.
-The locked MarkBind 7.2.1 build uses Node.js 22 instead of the starter action's older Node.js 18 runtime,
-then publishes the verified output using the same `gh-pages` publishing action as the starter.
+**One-time Pages setup**
 
-For the first deployment after migrating from Jekyll:
+1. Run **Actions → Documentation → Run workflow** on team `master` if `gh-pages` does not yet exist.
+2. A repository administrator opens **Settings → Pages → Build and deployment**.
+3. Select **Deploy from a branch**, **gh-pages**, and **/(root)**, then save.
+4. Wait for deployment and check the published guides. Rerun the workflow if needed.
 
-1. After the migration is merged, run **Actions → Documentation → Run workflow** on the team repository's `master`
-   branch if its workflow has not already run. The deployment creates `gh-pages`.
-2. A repository administrator must open the **team repository's Settings → Pages → Build and deployment**.
-3. Set **Source** to **Deploy from a branch**, select **gh-pages** and **/(root)**, then click **Save**.
-4. Wait for the Pages deployment to finish and check the published guides. If the first site does not appear
-   after selecting the branch, rerun the **Documentation** workflow on `master`.
-
-The website address stays the same. No personal access token or organization-wide permission change is needed
-when the repository allows the deployment job's explicit `contents: write` permission.
+The workflow uses GitHub's built-in token; it does not require a personal access token.
+See the [course Pages setup](https://se-education.org/guides/tutorials/markbind-forked-sites.html#initiating-the-site).
 
 ## Style guidance
 
-* Follow the [Google developer documentation style guide](https://developers.google.com/style).
-* Also follow the [SE-EDU Markdown coding standard](https://se-education.org/guides/conventions/markdown.html).
+- Use short paragraphs and descriptive headings.
+- Use bullets for related facts and numbered steps for actions that must happen in order.
+- Follow the [Google developer documentation style guide](https://developers.google.com/style)
+  and [SE-EDU Markdown standard](https://se-education.org/guides/conventions/markdown.html).
+- Enable [IntelliJ soft wrapping](https://se-education.org/guides/tutorials/intellijUsefulSettings.html#enabling-soft-wrapping)
+  if long Markdown lines are hard to edit.
 
 ## Diagrams
 
-See the [SE-EDU PlantUML guide](https://se-education.org/guides/tutorials/plantUml.html).
-Use Java 25 when running Java-based diagram tools or application build tasks.
-On macOS, select the project's Java version with `sdk use java 25.0.3.fx-zulu` if needed.
-Keep diagram sources and their exported images together so the diagrams can be updated later.
+- Edit the PlantUML source and regenerate its corresponding images together.
+- Use Java 25 for Java-based diagram tools. See the [PlantUML guide](https://se-education.org/guides/tutorials/plantUml.html).
+- Check labels, arrow direction, and relationships against the current implementation.
+- Split dense sequences into an overview and named detail diagrams linked with `ref` frames.
+- Preview diagrams at desktop and phone widths. Preserve proportions and readable labels.
 
 ## Converting documentation to PDF
 
-Open the generated page and use the browser's print preview to check page breaks, tables, and diagrams before saving.
-See the [SE-EDU guide to saving web documents as PDF files](https://se-education.org/guides/tutorials/savingPdf.html).
+1. Open the generated page in a browser and choose **Print → Save as PDF**.
+2. Inspect page breaks, tables, and diagrams in print preview before saving.
+3. Check the saved PDF for clipping or missing content.
+
+See the [SE-EDU PDF guide](https://se-education.org/guides/tutorials/savingPdf.html).

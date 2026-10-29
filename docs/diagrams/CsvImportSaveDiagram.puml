@@ -1,0 +1,28 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+skinparam DefaultFontSize 15
+mainframe sd SaveImportedRoster
+participant ":LogicManager" as Logic LOGIC_COLOR
+participant "model:Model" as Model MODEL_COLOR
+participant "storage:Storage" as Storage STORAGE_COLOR
+note over Logic : Continuation after ImportCommand.execute(model).
+activate Logic
+Logic -> Model : getAddressBook()
+Model --> Logic : complete updated roster
+Logic -> Storage : saveAddressBook(roster)
+activate Storage
+alt save succeeds
+Storage --> Logic : return
+Logic -->[ : CommandResult
+else IOException
+Storage --> Logic : IOException
+note over Logic,Model
+Keep the imported batch in memory.
+Report unsaved changes and retry guidance.
+end note
+Logic -->[ : SaveFailureException
+end
+deactivate Storage
+deactivate Logic
+@enduml

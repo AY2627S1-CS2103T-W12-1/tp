@@ -6,91 +6,97 @@ pageNav: 6
 
 # DevOps guide
 
+Use this guide to build TrackCall, understand CI checks, and prepare a verified release.
+
 ## Build automation
 
-This project uses Gradle for **build automation and dependency management**. **We recommend reading [this Gradle tutorial from se-edu/guides](https://se-education.org/guides/tutorials/gradle.html).**
+- Gradle manages Java dependencies, builds, tests, and packaging.
+- Use **Java 25** and run commands from the project root.
+- On Windows PowerShell, replace `./gradlew` with `.\gradlew.bat`.
+- For task basics, see the [SE-EDU Gradle tutorial](https://se-education.org/guides/tutorials/gradle.html).
 
-The following commands perform common Gradle tasks.
+**Common commands**
 
-* **`clean`**: Deletes the files created during the previous build tasks (e.g. files in the `build` folder).<br>
-  For example: `./gradlew clean`
-
-* **`shadowJar`**: Uses the Shadow plugin to create the fat JAR file `build/libs/trackcall.jar`.<br>
-  For example: `./gradlew shadowJar`
-
-* **`run`**: Builds and runs the application.<br>
-  **`runShadow`**: Builds the application as a fat JAR, then runs it.
-
-* **`checkstyleMain`**: Runs the code style check for the main code base.<br>
-  **`checkstyleTest`**: Runs the code style check for the test code base.
-
-* **`test`**
-  * `./gradlew test`: Runs all tests.
-  * `./gradlew clean test`: Cleans the project before running all tests
+- `./gradlew run`: build and launch the application.
+- `./gradlew test`: run automated tests.
+- `./gradlew check`: run tests and Checkstyle checks.
+- `./gradlew checkstyleMain checkstyleTest`: check production and test code style.
+- `./gradlew coverage`: run tests and generate JaCoCo HTML/XML coverage reports.
+- `./gradlew shadowJar`: create the self-contained `build/libs/trackcall.jar`.
+- `./gradlew runShadow`: build and launch the packaged application.
+- `./gradlew clean`: remove previous build outputs. Combine with another task when a clean build is needed.
 
 ### Local runs and release verification
 
-Use Java 25 for build tasks and application runs. On Apple Silicon, Gradle selects the ARM JavaFX
-libraries for `run` and `test`. The portable `shadowJar` bundles both macOS architectures in separate
-folders, and `Main` selects the matching native libraries at startup. Windows and Linux use their
-bundled JavaFX libraries.
-
-A passing local Gradle run does not verify the packaged release. Build with `./gradlew shadowJar`,
-copy `build/libs/trackcall.jar` into an empty writable folder, and run `java -jar trackcall.jar` using
-Java 25. Repeat the release smoke test on Windows, Linux, and macOS, including startup, commands,
-saving, and restart. Use synthetic contacts and follow the
-[manual testing instructions](DeveloperGuide.html#appendix-instructions-for-manual-testing).
+- Gradle selects ARM JavaFX libraries for development runs and tests on Apple Silicon.
+- The portable JAR bundles both macOS architectures separately; `Main` selects the matching native libraries.
+  Windows and Linux use their bundled JavaFX libraries.
+- Verify the packaged JAR separately from development runs. Use an empty writable folder and synthetic members.
+- Follow the [release checks](Testing.html#release-verification) and
+  [manual scenarios](DeveloperGuide.html#appendix-instructions-for-manual-testing) on each target OS.
 
 ## Continuous integration (CI)
 
+- **Java CI** (`.github/workflows/gradle.yml`) runs on pull requests, pushes to `master`, and tags.
+- It checks the Gradle wrapper, then runs `check coverage` with Java 25 on Linux, macOS, and Windows.
+- Linux runs the JavaFX tests through Xvfb and also runs repository-wide checks.
+- Failed jobs upload test reports and available crash diagnostics. Inspect these before retrying a failure.
+- **Documentation** (`.github/workflows/docs.yml`) checks documentation changes separately.
+  See the [publishing guide](Documentation.html#publishing-the-site) for its deployment rules.
+
 ### Documentation dependencies
 
-In `docs`, run `npm ci`, `npm test`, and `npm run build` to install the locked dependencies,
-check compatibility, and verify the generated site. `npm audit` checks the installed dependency tree.
+Run these commands from `docs/`:
 
-MarkBind 7.2.1 still requests older libraries with known vulnerabilities. `package.json` overrides
-select patched releases, and `patch-package` applies the small API adaptations in `docs/patches`
-during installation. These retain MarkBind's existing Cheerio and HTML parser behavior. The
-`lodash.pick` dependency is an alias for maintained Lodash; the Cheerio patch selects its `pick` function.
-Keep the overrides and patches together, and review them when upgrading MarkBind. Do not skip install
-scripts: the unpatched APIs are incompatible. CI runs the compatibility tests and builds every page.
+```shell
+npm ci
+npm test
+npm run build
+```
 
-This project uses GitHub Actions for CI. The necessary workflow configuration files are in `.github/workflows`. No further setup is required.
+- `npm ci` installs locked dependencies and applies the required patches.
+- `npm test` checks dependency compatibility; `npm run build` verifies the generated site and local links.
+- `npm audit` reports known vulnerabilities in the installed dependency tree.
+- MarkBind 7.2.1 uses dependency overrides in `package.json` and API adaptations in `docs/patches`.
+  Keep them together when upgrading dependencies.
+- Keep install scripts enabled: `patch-package` applies the adaptations during installation.
+  The unpatched APIs are incompatible with the selected dependency versions.
 
 ### Code coverage
 
-As part of CI, Gradle generates JaCoCo coverage reports from the tests, and CI uploads the coverage data to Codecov. Codecov then provides information about test coverage.
-
-CI uploads coverage from pushes to `master`, from pull requests branched inside the team repository (authenticated with the workflow's OIDC token), and from pull requests made from member forks (using Codecov's tokenless upload for forks of public repositories, since GitHub gives those runs no token). A failed upload is reported without failing the build, so developers are advised to check the code coverage levels periodically on Codecov and take corrective actions if the coverage level falls below desired levels.
-
-To enable Codecov for forks of this project, follow the steps given in [this se-edu guide](https://se-education.org/guides/tutorials/codecov.html).
+- JaCoCo reports show which code ran during tests; they do not prove correctness.
+- Run `./gradlew coverage`, then open `build/reports/jacoco/coverage/html/index.html`.
+- Team master pushes and internal PRs upload on Linux using OIDC. Member-fork PRs use Codecov's
+  tokenless public-fork upload. The team repository is itself a fork, so its fork flag must not disable uploads.
+- Upload errors are reported without failing the Java build; inspect the Codecov step and dashboard.
+- Review uncovered behavior when adding or fixing features; avoid tests that only raise a percentage.
+- See the [SE-EDU Codecov guide](https://se-education.org/guides/tutorials/codecov.html) for background setup.
 
 ### Repository-wide checks
 
-In addition to Gradle checks, CI runs repository-wide checks. Unlike Gradle checks, which cover files used in the build, these checks cover every repository file and enforce rules that are hard to apply on development machines, such as line-ending requirements.
+- These scripts check tracked text files for final newlines, line endings, and trailing whitespace.
+- They inspect the Git index. Stage intended changes before checking them.
+- On macOS or Linux, run from the project root:
 
-These checks are implemented as POSIX shell scripts, and thus can only be run on POSIX-compliant operating systems such as macOS and Linux. To run all checks locally on these operating systems, execute the following in the repository root directory:
+  ```shell
+  (cd .github && ./run-checks.sh)
+  ```
 
-`./.github/run-checks.sh`
-
-Any warnings or errors will be printed out to the console.
-
-**If adding new checks:**
-
-* Checks are implemented as executable `check-*` scripts within the `.github` directory. The `run-checks.sh` script will automatically pick up and run files named as such. That is, you can add more such files if you need and the CI will do the rest.
-
-* Check scripts should print out errors in the format `SEVERITY:FILENAME:LINE: MESSAGE`
-  * SEVERITY is either ERROR or WARN.
-  * FILENAME is the path to the file relative to the current directory.
-  * LINE is the line of the file where the error occurred and MESSAGE is the message explaining the error.
-
-* Check scripts must exit with a non-zero exit code if any errors occur.
+- Read warnings and errors in the console. CI runs the same scripts on Linux.
+- To add a check, create an executable `.github/check-*` script.
+  Print diagnostics as `SEVERITY:FILENAME:LINE: MESSAGE`, using `ERROR` or `WARN`.
+  Exit with a nonzero status when errors occur.
 
 ## Making a release
 
-Here are the steps to create a new release.
+1. **Select the revision:** integrate the intended changes and update the version in `MainApp.java`.
+   Check that guides and release notes describe that revision.
+2. **Build and verify:** run `./gradlew clean check coverage shadowJar` with Java 25.
+   Complete the [release checks](Testing.html#release-verification), including the packaged JAR on each target OS.
+3. **Record evidence:** capture the source commit, JAR SHA-256 checksum, test results, and any untested scenarios.
+   Prepare release notes and matching documentation assets.
+4. **Tag the verified commit:** create a lightweight version tag, such as `v1.5`, at that exact revision.
+5. **Publish:** create the GitHub release for that tag and attach the verified `build/libs/trackcall.jar`,
+   release notes, and supporting assets. Check the download against the recorded checksum.
 
-1. Update the version number in [`MainApp.java`](https://github.com/AY2627S1-CS2103T-W12-1/tp/tree/master/src/main/java/seedu/address/MainApp.java).
-1. Generate a fat JAR file using Gradle (i.e., `./gradlew shadowJar`).
-1. Tag the repo with the version number. e.g. `v0.1`
-1. [Create a new release using GitHub](https://help.github.com/articles/creating-releases/). Upload the JAR file you created.
+Keep the source revision, executable, checksum, and validation record together so others can reproduce the release.

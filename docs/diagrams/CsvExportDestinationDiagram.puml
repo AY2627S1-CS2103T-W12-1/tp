@@ -1,0 +1,28 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+skinparam DefaultFontSize 15
+mainframe sd CheckExportDestination
+participant ":ExportCommand" as Command LOGIC_COLOR
+participant "<<class>>\nFileUtil" as FileUtil STORAGE_COLOR
+Command -> FileUtil : resolvePath(filePath)
+FileUtil --> Command : path
+note over Command : Convert to an absolute, normalized target path.
+loop application, session lock, roster, preferences and backups
+Command -> Command : checkDestination(target, protectedFile)
+activate Command
+note over Command
+Reject equivalent normalized paths
+and existing aliases (Files.isSameFile).
+end note
+deactivate Command
+end
+note over Command
+Also reject reserved recovery-file names
+beside the protected roster/preferences file,
+and destinations that are existing directories.
+Require the parent to exist and be a directory.
+Any IOException becomes a CommandException;
+no CSV write starts on failure.
+end note
+@enduml

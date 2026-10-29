@@ -12,7 +12,7 @@ TrackCall helps membership secretaries maintain contact details, find the right 
 overlapping groups using tags. A compact roster and a separate details panel keep the workspace easy to scan.
 
 <p class="d-flex flex-wrap gap-2 my-3">
-  <a class="btn btn-primary" href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/latest">Download the latest release</a>
+  <a class="btn btn-primary" href="https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/tag/v1.5">Download v1.5</a>
   <a class="btn btn-outline-primary" href="UserGuide.html#quick-start">Get started</a>
   <a class="btn btn-outline-secondary" href="UserGuide.html#commands">Explore features</a>
 </p>
@@ -89,6 +89,7 @@ this is not a hard record limit.
 
 See what changed and browse screenshots of each release:
 
+* [v1.5 - TrackCall](releases/v1.5/RELEASE_NOTES.html)
 * [v1.4 - TrackCall](releases/v1.4/RELEASE_NOTES.html)
 * [v1.3 - TrackCall](releases/v1.3/RELEASE_NOTES.html)
 

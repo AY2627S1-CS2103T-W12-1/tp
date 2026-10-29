@@ -95,6 +95,13 @@
         },
         "pageNav": 6
       }
+    },
+    {
+      "src": "releases/v1.5/RELEASE_NOTES.md",
+      "title": "v1.5",
+      "frontmatter": {
+        "pageNav": 6
+      }
     }
   ],
   "timeZone": "Asia/Singapore",

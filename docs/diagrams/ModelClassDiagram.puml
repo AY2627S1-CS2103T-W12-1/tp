@@ -1,41 +1,24 @@
 @startuml
 !include style.puml
-skinparam arrowThickness 1.1
-skinparam arrowColor MODEL_COLOR_T4
+' Straight segments retain readable relationship labels.
+skinparam linetype polyline
+skinparam ArrowFontStyle plain
 skinparam classBackgroundColor MODEL_COLOR
-skinparam nodesep 30
+skinparam nodesep 35
 skinparam ranksep 40
-
-package Model as ModelPackage <<Rectangle>> {
-class "<<interface>>\nModel" as Model
-class "<<interface>>\nReadOnlyAddressBook" as ReadOnlyAddressBook
-class "<<interface>>\nReadOnlyUserPrefs" as ReadOnlyUserPrefs
+interface Model <<interface>>
+interface ReadOnlyAddressBook <<interface>>
+interface ReadOnlyUserPrefs <<interface>>
 class ModelManager
 class AddressBook
 class UserPrefs
 class UniquePersonList
 class Person
-class Name
-class Phone
-class Email
-class Address
-class Tag
-}
-
 ModelManager .up.|> Model
 AddressBook .up.|> ReadOnlyAddressBook
 UserPrefs .up.|> ReadOnlyUserPrefs
-ModelManager -left-> "1" AddressBook
-ModelManager -right-> "1" UserPrefs
-AddressBook *-down-> "1" UniquePersonList
-UniquePersonList -down-> "*" Person
-Person -down-> "1" Name
-Person -down-> "1" Phone
-Person -down-> "1" Email
-Person -down-> "1" Address
-Person -down-> "*" Tag
-Name -[hidden]right-> Phone
-Phone -[hidden]right-> Email
-Email -[hidden]right-> Address
-Address -[hidden]right-> Tag
+ModelManager -down-> "1" AddressBook : addressBook
+ModelManager -right-> "1" UserPrefs : userPrefs
+AddressBook *-down-> "1" UniquePersonList : persons
+UniquePersonList -down-> "0..*" Person : internalList
 @enduml

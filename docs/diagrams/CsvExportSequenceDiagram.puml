@@ -1,25 +1,16 @@
 @startuml
 !include style.puml
 skinparam ArrowFontStyle plain
-
-box Logic LOGIC_COLOR_T1
+skinparam DefaultFontSize 15
+mainframe sd ExportRoster
 participant ":LogicManager" as Logic LOGIC_COLOR
 participant ":ExportCommand" as Command LOGIC_COLOR
-end box
-box Model MODEL_COLOR_T1
-participant "m:Model" as Model MODEL_COLOR
-end box
-box Storage STORAGE_COLOR_T1
+participant "model:Model" as Model MODEL_COLOR
 participant "<<class>>\nCsvAddressBookExporter" as Exporter STORAGE_COLOR
-end box
-box Commons #FFFDF8
-participant "<<class>>\nFileUtil" as FileUtil
-end box
-
-note over Logic, Command: Parsing has produced an ExportCommand; this trace shows a successful export.
-[-> Logic : execute("export members.csv")
+[-> Logic : execute(commandText)
 activate Logic
-Logic -> Command : execute(m, rosterPath, preferencesPath)
+note over Logic,Command : Parsing has produced an ExportCommand.
+Logic -> Command : execute(model, protectedFiles)
 activate Command
 Command -> Model : getFilteredPersonList()
 activate Model
@@ -27,54 +18,18 @@ Model --> Command : displayed members in displayed order
 deactivate Model
 Command -> Model : getAddressBook()
 activate Model
-Model --> Command : roster (for total member count)
+Model --> Command : roster (total count)
 deactivate Model
-Command -> Command : snapshot displayed members and count hidden members
-Command -> Command : resolve target path and check protected destinations
-activate Command
-Command --> Command
-deactivate Command
-note over Command
-Invalid paths and protected files fail before writing.
-Protected files include the active roster, preferences,
-backup/recovery files, running JAR, and session lock.
-end note
+Command -> Command : snapshot displayed members; count hidden members
+ref over Command : CheckExportDestination
 Command -> Exporter : export(people, targetPath)
 activate Exporter
-Exporter -> FileUtil : writeAtomically(filePath, writer)
-activate FileUtil
-FileUtil -> FileUtil : create sibling temporary file
-activate FileUtil
-FileUtil --> FileUtil
-deactivate FileUtil
-FileUtil -> Exporter : writer callback: writeCsv(people, temporary)
-activate Exporter
-note right of Exporter
-The callback writes a UTF-8 header and
-displayed members in displayed order using Commons CSV.
-It closes the writer before returning.
-end note
-Exporter --> FileUtil
+ref over Exporter : WriteCsvAtomically
+Exporter --> Command : return
 deactivate Exporter
-FileUtil -> FileUtil : replace destination atomically
-activate FileUtil
-FileUtil --> FileUtil
-deactivate FileUtil
-note over Exporter, FileUtil
-If writing or replacement throws, attempt temporary-file cleanup
-and propagate the exception. The previous destination is preserved.
-end note
-FileUtil --> Exporter
-deactivate FileUtil
-Exporter --> Command
-deactivate Exporter
-Command --> Logic : CommandResult(exported count, path, and hidden count if any)
+Command --> Logic : CommandResult(exported count, path, hidden count if any)
 deactivate Command
-Logic -> Command : isReadOnly()
-activate Command
-Command --> Logic : true
-deactivate Command
-[<-- Logic : CommandResult (no automatic JSON save)
+Logic -->[ : CommandResult
 deactivate Logic
-note over Logic, Model: Export leaves the roster order and active filters unchanged.
+note over Logic,Model : The roster order and active filters remain unchanged.
 @enduml
