@@ -703,9 +703,12 @@ Rejected input leaves the roster and current list unchanged.
 ### Field prefix syntax {id="field-prefix-syntax"}
 
 Both `add` and `edit` reject unknown or uppercase single-letter field prefixes, including inside
-an address. For example, `edit 1 a/Main Road T/committee` reports invalid input; use lowercase `t/`
-to assign a tag. Standalone `c/o`, URLs, numeric slashes such as `12/3`, and slashes inside words
-remain valid address text.
+an address, except for uppercase `A/` immediately followed by a digit within an `a/` value.
+For example, `a/Block A/12` is valid address text in both commands.
+
+Other unsupported prefixes remain invalid. For example, `edit 1 a/Main Road T/committee` reports
+invalid input; use lowercase `t/` to assign a tag. Standalone `c/o`, URLs, numeric slashes such as
+`12/3`, and slashes inside words remain valid address text.
 
 The [Developer Guide](DeveloperGuide.html#limitations) explains current limitations and records
 ideas for later versions in its requirements appendix.
