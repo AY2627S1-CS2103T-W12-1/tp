@@ -12,7 +12,7 @@ TrackCall helps club secretaries maintain member contact details and organise ov
 Users can search by name or email, filter members by tags, update group tags in bulk, and import
 or export rosters as CSV files.
 
-This guide describes the **v1.5 candidate**. Use the [User Guide](UserGuide.html)
+This guide describes the **v1.5 release candidate**. Use the [User Guide](UserGuide.html)
 for command syntax and the sections below for implementation decisions and failure handling.
 
 ## Contents

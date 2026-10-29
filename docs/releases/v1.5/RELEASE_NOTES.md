@@ -13,7 +13,7 @@ TrackCall v1.5 makes searches, group changes, CSV export, and clearing follow th
 * **Handle names and pasted input consistently.** Names support Unicode letters, combining marks, hyphens, and apostrophes. Duplicate checks recognise names that differ only in letter case or whitespace. Tags ignore letter case and allow letters, digits, and internal hyphens. Whitespace-only addresses, including Unicode spaces, are rejected; an empty `a/` in `edit` explicitly clears an address.
 * **Protect saved rosters and improve guidance.** Outside edits are detected before overwriting a data file. Backups preserve the previous distinct saved roster, and unreadable data is preserved during recovery. Updated User and Developer Guides explain the current commands, confirmation steps, input rules, and recovery options.
 
-**Release status:** v1.5 release candidate; binary publication pending. Find published builds on the [team releases page](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases), and use **Java 25** with `trackcall.jar`.
+**Release:** v1.5 release candidate. Download **`trackcall.jar`** from the [v1.5 release page](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/tag/v1.5) and run it with **Java 25**.
 
 See the [User Guide](https://ay2627s1-cs2103t-w12-1.github.io/tp/UserGuide.html) for command instructions and the [Developer Guide](https://ay2627s1-cs2103t-w12-1.github.io/tp/DeveloperGuide.html) for design, implementation, and testing guidance.
 
@@ -74,7 +74,7 @@ With the committee filter active, `tagall t/event2026` adds the event tag to the
 ## Install and run
 
 1. Install **Java 25**. On macOS, use the compatible JDK+FX distribution described in the [User Guide](https://ay2627s1-cs2103t-w12-1.github.io/tp/UserGuide.html#quick-start).
-2. When available, download the v1.5 **`trackcall.jar`** from the [team releases page](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases). Keep this filename without spaces or additional special characters.
+2. Download the v1.5 **`trackcall.jar`** from the [v1.5 release page](https://github.com/AY2627S1-CS2103T-W12-1/tp/releases/tag/v1.5). Keep this filename without spaces or additional special characters.
 3. Place the JAR in an empty folder you can write to. Back up existing roster data before replacing an installation.
 4. Open a terminal in that folder and check the installed Java version:
 
