@@ -3,6 +3,8 @@
 !include <office/Concepts/documents>
 !include <office/Users/user>
 !include style.puml
+' Straight segments retain readable relationship labels.
+skinparam linetype polyline
 
 Package " "<<Rectangle>>{
     Class UI UI_COLOR

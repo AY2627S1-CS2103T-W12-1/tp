@@ -1,0 +1,33 @@
+@startuml
+!pragma layout smetana
+!include style.puml
+skinparam ArrowFontStyle plain
+skinparam state {
+    BackgroundColor MODEL_COLOR
+    BorderColor MODEL_COLOR_T3
+    FontColor USER_COLOR
+}
+hide empty description
+
+[*] --> AllMembers
+
+state "AllMembers\n(no active conditions)" as AllMembers
+state "Narrowed\n(one or more conditions)" as Narrowed
+
+AllMembers --> Narrowed : find / filter / show / findemail
+Narrowed --> AllMembers : remove last chip
+Narrowed --> AllMembers : list, successful add,\nsuccessful clear /all, valid import
+Narrowed --> Narrowed : add or remove a condition
+
+note left of Narrowed
+All conditions combine with AND.
+A repeated tag or identical show
+selection adds no new condition.
+end note
+
+note right of AllMembers
+sort, delete and displayed clear
+retain the active conditions.
+list preserves stored order.
+end note
+@enduml

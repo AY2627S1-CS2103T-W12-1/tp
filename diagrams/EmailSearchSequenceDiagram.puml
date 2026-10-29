@@ -1,0 +1,36 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+participant ":LogicManager" as logic LOGIC_COLOR
+participant "c:FindEmailCommand" as command LOGIC_COLOR
+participant ":ModelManager" as model MODEL_COLOR
+participant "filtered:\nFilteredList" as view MODEL_COLOR
+
+[-> logic : execute("findemail @example.com")
+activate logic
+note over logic, command: Parsing omitted; the command\nholds an email predicate.
+logic -> command : execute(model)
+activate command
+command -> model : filterFilteredPersonListByEmail(...)
+activate model
+note over model: Add a distinct email filter;\nkeep other conditions.
+model -> model : refreshFilteredPersons()
+activate model
+model -> view : setPredicate(...)
+activate view
+view --> model
+deactivate view
+model --> model
+deactivate model
+model --> command
+deactivate model
+command -> model : getFilteredPersonList()
+activate model
+model --> command : filteredPersons
+note left of command: Count the displayed members.
+deactivate model
+command --> logic : CommandResult with count
+deactivate command
+logic -->[ : result
+deactivate logic
+@enduml

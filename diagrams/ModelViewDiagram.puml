@@ -1,24 +1,19 @@
 @startuml
-!pragma layout smetana
 !include style.puml
-skinparam arrowThickness 1.1
-skinparam arrowColor MODEL_COLOR_T4
+' Straight segments retain readable relationship labels.
+skinparam linetype polyline
+skinparam ArrowFontStyle plain
 skinparam classBackgroundColor MODEL_COLOR
-skinparam nodesep 45
-skinparam ranksep 45
-title Live display state
-
+skinparam nodesep 35
+skinparam ranksep 40
 class ModelManager
-class ActiveFilter
-class PersonSelectionPredicate
 class "FilteredList<Person>" as Filtered <<JavaFX>>
-class "ObservableList<Person>" as Records <<JavaFX>>
-
-ModelManager --> "*" ActiveFilter : activeFilters
-ActiveFilter --> "0..1" PersonSelectionPredicate : show condition
-ModelManager --> "1" Filtered : filteredPersons
-Filtered --> "1" Records : source
-note bottom of Records: Unmodifiable live member list\nfrom AddressBook.getPersonList().\nsort reorders the complete roster.
-note bottom of ActiveFilter: Name, email, tag and show conditions.
-note bottom of PersonSelectionPredicate: Selected Person references are\nupdated after record replacement.
+interface "ObservableList<Person>" as Records <<JavaFX>>
+ModelManager -right-> "1" Filtered : filteredPersons
+Filtered -down-> "1" Records : source
+note bottom of Records
+Live roster list from AddressBook.
+Filtering preserves stored order.
+sort reorders the complete roster.
+end note
 @enduml

@@ -4,8 +4,6 @@ skinparam ArrowFontStyle plain
 
 box Logic LOGIC_COLOR_T1
 participant ":LogicManager" as LogicManager LOGIC_COLOR
-participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
-participant ":TagAllCommandParser" as TagAllCommandParser LOGIC_COLOR
 participant "t:TagAllCommand" as TagAllCommand LOGIC_COLOR
 end box
 box Model MODEL_COLOR_T1
@@ -17,25 +15,7 @@ end box
 
 [-> LogicManager : execute("tagall t/event")
 activate LogicManager
-LogicManager -> AddressBookParser : parseCommand("tagall t/event")
-activate AddressBookParser
-create TagAllCommandParser
-AddressBookParser -> TagAllCommandParser : TagAllCommandParser()
-activate TagAllCommandParser
-TagAllCommandParser --> AddressBookParser
-deactivate TagAllCommandParser
-AddressBookParser -> TagAllCommandParser : parse(" t/event")
-activate TagAllCommandParser
-note right of TagAllCommandParser : BulkTagArgumentParser#parse\nchecks exactly one valid tag.
-create TagAllCommand
-TagAllCommandParser -> TagAllCommand : TagAllCommand(tag)
-activate TagAllCommand
-TagAllCommand --> TagAllCommandParser
-deactivate TagAllCommand
-TagAllCommandParser --> AddressBookParser : t
-deactivate TagAllCommandParser
-AddressBookParser --> LogicManager : t
-deactivate AddressBookParser
+note over LogicManager, TagAllCommand: Parsing omitted; it checks exactly one\nvalid tag and creates TagAllCommand(tag).
 LogicManager -> TagAllCommand : execute(m)
 activate TagAllCommand
 TagAllCommand -> Model : getFilteredPersonList()

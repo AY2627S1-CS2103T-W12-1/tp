@@ -1,0 +1,25 @@
+@startuml
+!include style.puml
+skinparam ArrowFontStyle plain
+participant ":MainWindow" as ui UI_COLOR
+participant ":LogicManager" as logic LOGIC_COLOR
+participant "command:HelpCommand" as command LOGIC_COLOR
+participant ":HelpWindow" as help UI_COLOR
+
+ui -> logic : execute("help sort")
+activate ui
+activate logic
+note over logic, command: Parsing omitted; it creates\nHelpCommand("sort").
+logic -> command : execute(model)
+activate command
+command --> logic : result (help, "sort")
+deactivate command
+logic --> ui : result
+deactivate logic
+ui -> help : show("sort")
+activate help
+note right of help: Show the local\nCommandHelp card.
+help --> ui
+deactivate help
+deactivate ui
+@enduml

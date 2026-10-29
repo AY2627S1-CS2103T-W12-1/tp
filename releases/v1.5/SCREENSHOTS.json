@@ -1,0 +1,58 @@
+{
+  "canvas": {
+    "width": 1600,
+    "height": 1200,
+    "background": "#ffffff"
+  },
+  "maxWindow": {
+    "width": 1360,
+    "height": 1000
+  },
+  "provenance": "Existing real User Guide captures from commit 00c98393, checked against current implementation. Detail captures retain their original crops. SVG frames embed the unchanged PNG pixels on the same 1600-by-1200 white canvas, with proportional sizing and soft shadows, as the v1.3/v1.4 gallery.",
+  "items": [
+    {
+      "id": "roster-overview",
+      "source": "roster-overview.png",
+      "framed": "framed-roster-overview.svg",
+      "width": 2200,
+      "height": 1464,
+      "sourcePath": "docs/images/user-guide/interface.png",
+      "sourceCommit": "00c98393",
+      "sourceSha256": "b5b7ceb7bf3b23463a7cee024a8f4340fadfd4d239765dfa0f91db77116a8af6"
+    },
+    {
+      "id": "cumulative-search",
+      "source": "cumulative-search.png",
+      "framed": "framed-cumulative-search.svg",
+      "width": 2200,
+      "height": 688,
+      "sourcePath": "docs/images/user-guide/filter-boxes.png",
+      "sourceCommit": "00c98393",
+      "sourceSha256": "582fdb3c325efe709a75a937d0c175aac40b9d56302b7680b556e9b88ca82df4"
+    },
+    {
+      "id": "bulk-tag-update",
+      "source": "bulk-tag-update.png",
+      "framed": "framed-bulk-tag-update.svg",
+      "width": 1040,
+      "height": 858,
+      "sourcePath": "docs/images/user-guide/tag-group.png",
+      "sourceCommit": "00c98393",
+      "sourceSha256": "a579994cecdb3756f7dbd14f088725f19d98a890e05e90f70ef38c30b0fbbc9a"
+    },
+    {
+      "id": "field-validation",
+      "source": "field-validation.png",
+      "framed": "framed-field-validation.svg",
+      "width": 2200,
+      "height": 378,
+      "sourcePath": "docs/images/user-guide/validation.png",
+      "sourceCommit": "00c98393",
+      "sourceSha256": "cc5abf1be14d0f92c528f43c569728ef7c2a973817bd6058e9bc99f1a1189a64"
+    }
+  ],
+  "frameStyle": {
+    "cornerRadius": 14,
+    "shadow": "0 22px 36px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.12)"
+  }
+}

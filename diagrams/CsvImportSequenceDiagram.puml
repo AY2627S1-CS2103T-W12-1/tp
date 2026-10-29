@@ -1,78 +1,21 @@
 @startuml
 !include style.puml
 skinparam ArrowFontStyle plain
-
-box Logic LOGIC_COLOR_T1
+skinparam DefaultFontSize 15
+mainframe sd ImportRoster
 participant ":LogicManager" as Logic LOGIC_COLOR
 participant ":ImportCommand" as Command LOGIC_COLOR
-end box
-box Storage STORAGE_COLOR_T1
-participant "<<class>>\nCsvAddressBookImporter" as Importer STORAGE_COLOR
-end box
-box Model MODEL_COLOR_T1
-participant "m:Model" as Model MODEL_COLOR
-end box
-box Storage STORAGE_COLOR_T1
-participant ":Storage" as Storage STORAGE_COLOR
-end box
-
-note over Logic, Command: Parsing has produced an ImportCommand; this trace uses a valid file.
-[-> Logic : execute("import p/members.csv")
+participant "model:Model" as Model MODEL_COLOR
+participant "storage:Storage" as Storage STORAGE_COLOR
+[-> Logic : execute(commandText)
 activate Logic
-Logic -> Command : execute(m)
+note over Logic,Command : Parsing has produced an ImportCommand.
+Logic -> Command : execute(model)
 activate Command
-Command -> Command : resolve source path
-activate Command
-Command --> Command
+ref over Command,Model : ValidateAndAppendCsv
+Command --> Logic : CommandResult(imported, skipped)
 deactivate Command
-Command -> Importer : read(resolvedPath)
-activate Importer
-note right of Importer
-Read UTF-8 CSV and validate the header,
-CSV syntax, and every member's fields.
-Read/validation errors return before any
-model changes or automatic save.
-end note
-Importer --> Command : candidates
-deactivate Importer
-Command -> Model : getAddressBook()
-activate Model
-Model --> Command : roster
-deactivate Model
-note over Command: Compare candidates with all stored members\nand earlier accepted rows using isDuplicateContactOf().
-loop each unique candidate
-    Command -> Model : addPerson(candidate)
-    activate Model
-    Model --> Command
-    deactivate Model
-end
-Command -> Model : updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS)
-activate Model
-Model --> Command
-deactivate Model
-Command --> Logic : CommandResult(imported and skipped counts)
-deactivate Command
-Logic -> Command : isReadOnly()
-activate Command
-Command --> Logic : false
-deactivate Command
-Logic -> Model : getAddressBook()
-activate Model
-Model --> Logic : complete updated roster
-deactivate Model
-Logic -> Storage : saveAddressBook(roster)
-activate Storage
-Storage --> Logic : completes or throws IOException
-deactivate Storage
-alt save succeeds
-    [<-- Logic : CommandResult
-else save fails
-    [<-- Logic : SaveFailureException with retry guidance
-    note over Model, Storage
-    Imported members remain in memory.
-    The previous saved roster is unchanged.
-    Exiting loses unsaved changes.
-    end note
-end
+ref over Logic,Storage : SaveImportedRoster
+Logic -->[ : result or failure
 deactivate Logic
 @enduml

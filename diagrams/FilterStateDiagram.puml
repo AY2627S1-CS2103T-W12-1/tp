@@ -1,0 +1,25 @@
+@startuml
+!pragma layout smetana
+!include style.puml
+' Straight segments retain readable relationship labels.
+skinparam linetype polyline
+skinparam ArrowFontStyle plain
+skinparam classBackgroundColor MODEL_COLOR
+skinparam nodesep 35
+skinparam ranksep 40
+class ModelManager
+class ActiveFilter
+interface Predicate
+class PersonSelectionPredicate
+ModelManager --> "0..*" ActiveFilter : activeFilters
+ModelManager --> Predicate : additionalFilters
+ActiveFilter --> Predicate : predicate
+PersonSelectionPredicate ..|> Predicate
+note bottom of ActiveFilter
+Name, email, tag and show conditions.
+Each show wraps a PersonSelectionPredicate.
+Removing a chip removes only that condition.
+TAG predicates match alternatives with OR.
+All conditions test a Person and combine with AND.
+end note
+@enduml
