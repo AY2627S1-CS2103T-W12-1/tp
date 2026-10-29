@@ -146,7 +146,7 @@ public class RenameTagCommand extends Command {
      * {@code oldTag} in a spelling that this command would change.
      */
     private int countHiddenMembersWithOldTag(Model model) {
-        List<Person> displayedMembers = model.getFilteredPersonList();
+        Set<Person> displayedMembers = new HashSet<>(model.getFilteredPersonList());
         return (int) model.getAddressBook().getPersonList().stream()
                 .filter(person -> person.getTags().contains(oldTag) && !isAlreadyRenamed(person))
                 .filter(person -> !displayedMembers.contains(person))

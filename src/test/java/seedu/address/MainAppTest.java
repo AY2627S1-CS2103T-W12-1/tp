@@ -72,6 +72,7 @@ public class MainAppTest {
 
     /**
      * Saves {@code content} as the data file and returns the reason shown when TrackCall cannot load it.
+     * Uses real storage and JsonUtil parsing so changes to their error format break these reason assertions.
      */
     private String loadFailureReasonOf(byte[] content) throws IOException {
         Files.write(roster.getAddressBookFilePath(), content);
