@@ -11,6 +11,7 @@ import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -30,6 +31,8 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import seedu.address.commons.core.GuiSettings;
+import seedu.address.commons.exceptions.DataLoadingException;
+import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -67,6 +70,15 @@ public class MainAppTest {
         app.ui = unused -> opened = true;
     }
 
+    /**
+     * Saves {@code content} as the data file and returns the reason shown when TrackCall cannot load it.
+     */
+    private String loadFailureReasonOf(byte[] content) throws IOException {
+        Files.write(roster.getAddressBookFilePath(), content);
+        DataLoadingException failure = assertThrows(DataLoadingException.class, roster::readAddressBook);
+        return MainApp.getLoadingFailureReason(failure);
+    }
+
     @AfterEach
     public void closeWindows() throws Exception {
         onJavaFxThread(() -> List.copyOf(Window.getWindows()).forEach(Window::hide));
@@ -99,7 +111,7 @@ public class MainAppTest {
                 answerDialog("OK");
             });
             answerDialog("Start empty");
-            assertFalse(app.recoverRoster(owner, "Invalid JSON data"));
+            assertFalse(app.canStartAfterRecovery(owner, "Invalid JSON data"));
         });
 
         assertEquals("changed original", Files.readString(roster.getAddressBookFilePath()));
@@ -204,6 +216,51 @@ public class MainAppTest {
     }
 
     @Test
+    public void getLoadingFailureReason_notUtf8File_explainsEncoding() throws Exception {
+        assertEquals(MainApp.REASON_NOT_UTF8, loadFailureReasonOf("{\"persons\":[{\"name\":\"Jos\u00e9\"}]}"
+                .getBytes(StandardCharsets.ISO_8859_1)));
+        assertEquals(MainApp.REASON_NOT_UTF8, loadFailureReasonOf("{\"persons\":[]}"
+                .getBytes(StandardCharsets.UTF_16)));
+    }
+
+    @Test
+    public void getLoadingFailureReason_invalidJson_namesPositionWithoutJavaClassNames() throws Exception {
+        assertEquals(String.format(MainApp.REASON_NOT_JSON_FORMAT, 1, 15),
+                loadFailureReasonOf("{\"persons\":[] x".getBytes(StandardCharsets.UTF_8)));
+        for (String content : new String[] {"{persons:[]}", "{\"persons\":[]"}) {
+            String reason = loadFailureReasonOf(content.getBytes(StandardCharsets.UTF_8));
+            assertTrue(reason.startsWith("The data file is not valid JSON near line 1, column "), content);
+            assertFalse(reason.contains("Exception"), content);
+        }
+    }
+
+    @Test
+    public void getLoadingFailureReason_missingPersonsList_explainsExpectedList() throws Exception {
+        for (String content : new String[] {"{}", "{\"persons\":null}", "{\"Persons\":[]}"}) {
+            assertEquals(MainApp.REASON_MISSING_PERSONS, loadFailureReasonOf(content.getBytes(StandardCharsets.UTF_8)),
+                    content);
+        }
+    }
+
+    @Test
+    public void getLoadingFailureReason_wrongValueType_explainsExpectedFormat() throws Exception {
+        for (String content : new String[] {"[]", "{\"persons\":{}}", "{\"persons\":[{\"tags\":\"a\"}]}", ""}) {
+            String reason = loadFailureReasonOf(content.getBytes(StandardCharsets.UTF_8));
+            assertTrue(reason.startsWith("The data file is not in the expected format near line "), content);
+            assertFalse(reason.contains("Exception"), content);
+        }
+    }
+
+    @Test
+    public void getLoadingFailureReason_otherFailures_keepsOriginalMessage() {
+        assertEquals("The JSON file must contain exactly one root value.", MainApp.getLoadingFailureReason(
+                new DataLoadingException(new IOException("The JSON file must contain exactly one root value."))));
+        assertEquals(Tag.MESSAGE_CONSTRAINTS, MainApp.getLoadingFailureReason(
+                new DataLoadingException(new IllegalValueException(Tag.MESSAGE_CONSTRAINTS))));
+        assertEquals(null, MainApp.getLoadingFailureReason(new DataLoadingException(new IOException())));
+    }
+
+    @Test
     public void start_invalidTag_showsReasonInRecoveryDialog() throws Exception {
         Files.writeString(roster.getAddressBookFilePath(), "{\"persons\":[{\"name\":\"Alice\",\"phone\":\"123\","
                 + "\"email\":\"alice@example.com\",\"address\":\"\",\"tags\":[\"committee!\"]}]}");
@@ -224,7 +281,7 @@ public class MainAppTest {
         Files.writeString(roster.getAddressBookFilePath(), "damaged roster");
         onJavaFxThread(() -> {
             answerDialog("Close");
-            assertFalse(app.recoverRoster(new Stage(), "Invalid JSON data"));
+            assertFalse(app.canStartAfterRecovery(new Stage(), "Invalid JSON data"));
         });
 
         assertFalse(opened);
@@ -237,7 +294,7 @@ public class MainAppTest {
         Files.createDirectory(roster.getAddressBookFilePath());
         onJavaFxThread(() -> {
             answerDialog("OK");
-            assertFalse(app.recoverRoster(new Stage(), "Invalid JSON data"));
+            assertFalse(app.canStartAfterRecovery(new Stage(), "Invalid JSON data"));
         });
 
         assertFalse(opened);

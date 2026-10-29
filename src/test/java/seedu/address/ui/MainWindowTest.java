@@ -170,7 +170,7 @@ public class MainWindowTest {
         onJavaFxThread(() -> {
             enter("find Alice");
             enter("delete 1");
-            enter("y");
+            enter("yes");
             assertTrue(feedback.getText().contains("not saved"));
             assertEquals("", input.getText());
             assertEquals("Bob Lee", model.getAddressBook().getPersonList().getFirst().getName().fullName);
@@ -179,9 +179,9 @@ public class MainWindowTest {
             enter("list");
             assertEquals("Showing 1 member.", feedback.getText());
             enter("clear");
-            enter("y");
+            enter("yes");
             assertEquals(ClearCommand.MESSAGE_SAVE_FAILURE, feedback.getText());
-            assertEquals("y", input.getText());
+            assertEquals("yes", input.getText());
             assertEquals(1, model.getFilteredPersonList().size());
         });
     }
@@ -207,7 +207,7 @@ public class MainWindowTest {
             assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
             assertEquals(CommandBox.DEFAULT_PROMPT, input.getPromptText());
             assertDisplayedNames("Alice Tan", "Bob Lee");
-            enter("y");
+            enter("yes");
             assertEquals(Messages.MESSAGE_UNKNOWN_COMMAND, feedback.getText());
             assertEquals(2, model.getAddressBook().getPersonList().size());
             input.clear();
@@ -240,7 +240,7 @@ public class MainWindowTest {
             assertEquals(2, model.getAddressBook().getPersonList().size());
 
             enter("clear");
-            enter("y");
+            enter("yes");
             assertEquals("Cleared 2 members. The roster is now empty.", feedback.getText());
             assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
             assertDisplayedNames();
@@ -258,13 +258,14 @@ public class MainWindowTest {
             assertEquals(2, model.getAddressBook().getPersonList().size());
 
             enter("list");
-            assertEquals(ConfirmDeleteCommand.MESSAGE_CANCELLED, feedback.getText());
+            assertEquals(ConfirmDeleteCommand.MESSAGE_CANCELLED + "\n\"list\" was not run. Enter it again to run it.",
+                    feedback.getText());
             assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
             assertEquals(CommandBox.DEFAULT_PROMPT, input.getPromptText());
             assertEquals(2, model.getAddressBook().getPersonList().size());
 
             enter("delete 1");
-            enter("y");
+            enter("yes");
             assertTrue(feedback.getText().startsWith("Deleted member"));
             assertFalse(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
             assertEquals(1, model.getAddressBook().getPersonList().size());
@@ -276,15 +277,26 @@ public class MainWindowTest {
         onJavaFxThread(() -> {
             enter("find Alice");
             enter("delete 1");
-            FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
 
-            removeChip(chips, 0);
-
-            assertTrue(feedback.getText().startsWith("Removed Name: Alice. 2 member(s) listed."));
-            assertTrue(feedback.getText().contains("Delete member Alice Tan?"));
-            assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
-            enter("y");
+            assertFirstChipRemovalKeepsPrompt("Removed Name: Alice. 2 member(s) listed.",
+                    "Delete member 1, Alice Tan?");
+            enter("yes");
             assertDisplayedNames("Bob Lee");
+        });
+    }
+
+    @Test
+    public void removeFilterChip_afterNearMissReply_keepsOriginalPromptAndTarget() throws Exception {
+        onJavaFxThread(() -> {
+            enter("find Bob");
+            enter("delete 1");
+            enter("Y");
+            assertTrue(feedback.getText().startsWith("To confirm, type yes exactly"));
+            assertTrue(feedback.getText().contains("Delete member 1, Bob Lee?"));
+
+            assertFirstChipRemovalKeepsPrompt("Removed Name: Bob. 2 member(s) listed.", "Delete member 1, Bob Lee?");
+            enter("yes");
+            assertDisplayedNames("Alice Tan");
         });
     }
 
@@ -407,7 +419,7 @@ public class MainWindowTest {
             FlowPane chips = (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
             enter("show 1");
             enter("delete 1");
-            enter("y");
+            enter("yes");
 
             assertEquals(List.of("Show: 0 selected"), chipLabels(chips));
             Label showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
@@ -756,7 +768,7 @@ public class MainWindowTest {
             assertTrue(guide.isShowing());
             Event.fireEvent(guide.getScene(), key(KeyCode.ESCAPE));
             enter("clear");
-            enter("y");
+            enter("yes");
             enter("add n/Zara Tan p/90000001 e/zara@example.com a/Test Road t/committee");
             enter("add n/bob Lee p/90000002 e/bob@example.com a/Test Road t/year1");
             enter("add n/Alice Tan p/90000003 e/alice@example.com a/Test Road t/committee");
@@ -768,7 +780,8 @@ public class MainWindowTest {
             enter("tagall t/year2");
             assertEquals("Added tag \"year2\" to 2 member(s).", feedback.getText());
             enter("untagall t/committee");
-            assertEquals("Removed tag \"committee\" from 2 member(s).", feedback.getText());
+            assertEquals("Removed tag \"committee\" (any letter case) from 2 member(s).\n"
+                    + "0 member(s) listed with tag \"committee\". Run list to show everyone.", feedback.getText());
             assertDisplayedNames();
             enter("list");
             assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");
@@ -776,10 +789,10 @@ public class MainWindowTest {
             enter("export " + exported);
             assertTrue(feedback.getText().startsWith("Exported 3 members to "));
             enter("delete 2");
-            enter("y");
+            enter("yes");
             assertDisplayedNames("Zara Tan", "Alice Tan");
             enter("clear");
-            enter("y");
+            enter("yes");
             enter("import p/\"" + exported + "\"");
             assertTrue(feedback.getText().startsWith("Imported 3 member(s)"));
             assertDisplayedNames("Zara Tan", "bob Lee", "Alice Tan");
@@ -790,7 +803,7 @@ public class MainWindowTest {
                     .noneMatch(tag -> tag.tagName.equals("committee")));
             enter("find Alice");
             enter("clear");
-            enter("y");
+            enter("yes");
             assertEquals("Cleared 3 members. The roster is now empty.", feedback.getText());
             enter("list");
             assertEquals("No members in the roster.", feedback.getText());
@@ -838,10 +851,10 @@ public class MainWindowTest {
             assertFalse(feedback.getText().contains("carol@example.com"));
 
             enter("delete 3");
-            assertTrue(feedback.getText().startsWith("Delete member Carol Wong?"));
+            assertTrue(feedback.getText().startsWith("Delete member 3, Carol Wong?"));
             assertFalse(feedback.getText().contains("90000002"));
             assertFalse(feedback.getText().contains("carol@example.com"));
-            enter("y");
+            enter("yes");
             assertTrue(feedback.getText().contains("Deleted member"));
             assertFalse(feedback.getText().contains("90000002"));
         });
@@ -996,6 +1009,23 @@ public class MainWindowTest {
     private List<String> chipLabels(FlowPane chips) {
         return chips.getChildren().stream()
                 .map(chip -> ((Label) ((HBox) chip).getChildren().get(0)).getText()).toList();
+    }
+
+    /** Returns the pane that holds the active filter boxes. */
+    private FlowPane getFilterChips() {
+        return (FlowPane) window.getPrimaryStage().getScene().lookup("#activeFiltersPane");
+    }
+
+    /**
+     * Removes the first filter box while a deletion awaits confirmation, then checks that the feedback reports
+     * {@code removal} and still names the member in {@code prompt}, and that the prompt stays pending.
+     */
+    private void assertFirstChipRemovalKeepsPrompt(String removal, String prompt) {
+        removeChip(getFilterChips(), 0);
+
+        assertTrue(feedback.getText().startsWith(removal));
+        assertTrue(feedback.getText().contains(prompt));
+        assertTrue(input.getStyleClass().contains(CommandBox.CONFIRMATION_STYLE_CLASS));
     }
 
     private void removeChip(FlowPane chips, int index) {

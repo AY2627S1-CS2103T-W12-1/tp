@@ -15,6 +15,8 @@ public class Messages {
     public static final String MESSAGE_INVALID_COMMAND_FORMAT = "Invalid command format.\n\n%1$s";
     public static final String MESSAGE_INVALID_PERSON_DISPLAYED_INDEX =
             "No member has that displayed index. Use list, then choose a number shown beside a member.";
+    /** Appended to bulk tag and renametag feedback when no member was updated. */
+    public static final String MESSAGE_NO_CHANGES = " No changes were made.";
     public static final String MESSAGE_DUPLICATE_FIELDS =
                 "Multiple values specified for the following single-valued field(s): ";
 

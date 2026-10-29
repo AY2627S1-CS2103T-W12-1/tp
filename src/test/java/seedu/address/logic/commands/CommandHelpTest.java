@@ -23,6 +23,14 @@ import seedu.address.model.tag.Tag;
 public class CommandHelpTest {
 
     @Test
+    public void tagCommands_fieldRules_includeCurrentModelConstraints() {
+        for (CommandHelp entry : new CommandHelp[] {CommandHelp.FILTER, CommandHelp.TAG, CommandHelp.UNTAG,
+            CommandHelp.TAGALL, CommandHelp.UNTAGALL, CommandHelp.RENAMETAG}) {
+            assertTrue(entry.getErrors().contains(Tag.MESSAGE_CONSTRAINTS), entry.getKeyword());
+        }
+    }
+
+    @Test
     public void catalogue_supportedCommands_coversEveryAvailableCommand() {
         Set<String> keywords = Arrays.stream(CommandHelp.values()).map(CommandHelp::getKeyword)
                 .collect(Collectors.toSet());

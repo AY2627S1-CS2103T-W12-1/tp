@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
@@ -15,12 +16,14 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.tag.Tag;
 
 /**
- * Parses the single {@code t/TAG} argument shared by the bulk tag commands.
+ * Parses and validates the {@code t/TAG} arguments of the tag commands: {@code tag}, {@code untag},
+ * {@code tagall}, {@code untagall} and {@code renametag}.
  */
-public class BulkTagArgumentParser {
+public final class BulkTagArgumentParser {
     public static final String MESSAGE_EMPTY_TAG = "Tag cannot be empty.";
     public static final String MESSAGE_INVALID_TAG = Tag.MESSAGE_CONSTRAINTS + ".";
-    public static final String MESSAGE_MULTIPLE_TAGS = "Only one tag can be applied per command.";
+    public static final String MESSAGE_MULTIPLE_TAGS =
+            "Only one tag can be applied per command. Run the command once for each tag.";
 
     private BulkTagArgumentParser() {
         // Prevents instantiation of this utility class.
@@ -81,7 +84,7 @@ public class BulkTagArgumentParser {
      * @throws ParseException If {@code tagName} is empty or invalid.
      */
     public static Tag parseTagName(String tagName) throws ParseException {
-        requireAllNonNull(tagName);
+        requireNonNull(tagName);
         if (tagName.isEmpty()) {
             throw new ParseException(MESSAGE_EMPTY_TAG);
         }

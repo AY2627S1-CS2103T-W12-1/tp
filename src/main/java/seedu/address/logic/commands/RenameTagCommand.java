@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -11,6 +12,7 @@ import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
@@ -29,6 +31,11 @@ public class RenameTagCommand extends Command {
     public static final String MESSAGE_SUCCESS = "Renamed tag \"%1$s\" to \"%2$s\" for %3$d member(s).";
     public static final String MESSAGE_MERGED = " %1$d already had \"%2$s\".";
     public static final String MESSAGE_TAG_NOT_FOUND = "No member in the current list has the tag \"%1$s\".";
+    public static final String MESSAGE_HIDDEN_HAVE_TAG = " %1$d hidden member(s) have it; run list first.";
+    public static final String MESSAGE_HIDDEN_KEEP_TAG = "\n%1$d hidden member(s) still have \"%2$s\". "
+            + "Run list, then renametag again to rename it for everyone.";
+    public static final String MESSAGE_ALREADY_SPELLED =
+            "Every displayed member with this tag already uses \"%1$s\"." + Messages.MESSAGE_NO_CHANGES;
     public static final String MESSAGE_SAME_TAG = "The new tag must be different from the current tag.";
 
     private static final Logger logger = LogsCenter.getLogger(RenameTagCommand.class);
@@ -52,48 +59,111 @@ public class RenameTagCommand extends Command {
         if (oldTag.tagName.equals(newTag.tagName)) {
             throw new CommandException(MESSAGE_SAME_TAG);
         }
-        // Copies the targets first, as updating a member refreshes the displayed list.
-        List<Person> targets = model.getFilteredPersonList().stream()
-                .filter(person -> person.getTags().contains(oldTag))
+        List<Person> targets = getDisplayedMembersWithOldTag(model).stream()
+                .filter(person -> !isAlreadyRenamed(person))
                 .toList();
-        if (targets.isEmpty()) {
-            logger.info(String.format("renametag rejected: no displayed member has tag %s", oldTag.tagName));
-            throw new CommandException(String.format(MESSAGE_TAG_NOT_FOUND, oldTag.tagName));
-        }
+        int mergedCount = (int) targets.stream().filter(this::isMerge).count();
 
-        boolean isCaseOnlyRename = oldTag.equals(newTag);
-        int renamedCount = 0;
-        int mergedCount = 0;
+        List<Person> renamedPersons = new ArrayList<>();
         for (Person target : targets) {
-            if (isCaseOnlyRename && target.getTags().stream()
-                    .anyMatch(tag -> tag.tagName.equals(newTag.tagName))) {
-                continue;
-            }
-            if (!isCaseOnlyRename && target.getTags().contains(newTag)) {
-                mergedCount++;
-            }
-            model.setPerson(target, createRenamedPerson(target));
-            renamedCount++;
+            Person renamedPerson = createRenamedPerson(target);
+            model.setPerson(target, renamedPerson);
+            renamedPersons.add(renamedPerson);
         }
 
         logger.info(String.format("renametag t/%s t/%s: updated %d member(s), %d already had the new tag",
-                oldTag.tagName, newTag.tagName, renamedCount, mergedCount));
-        String message = String.format(MESSAGE_SUCCESS, oldTag.tagName, newTag.tagName, renamedCount);
-        if (mergedCount > 0) {
-            message += String.format(MESSAGE_MERGED, mergedCount, newTag.tagName);
+                oldTag.tagName, newTag.tagName, renamedPersons.size(), mergedCount));
+        return new CommandResult(createFeedback(model, renamedPersons, mergedCount));
+    }
+
+    /**
+     * Returns a copy of the displayed members who have {@code oldTag}, as updating a member refreshes
+     * the displayed list.
+     *
+     * @throws CommandException If no displayed member has {@code oldTag}.
+     */
+    private List<Person> getDisplayedMembersWithOldTag(Model model) throws CommandException {
+        List<Person> membersWithOldTag = model.getFilteredPersonList().stream()
+                .filter(person -> person.getTags().contains(oldTag))
+                .toList();
+        if (membersWithOldTag.isEmpty()) {
+            logger.info(String.format("renametag rejected: no displayed member has tag %s", oldTag.tagName));
+            String message = String.format(MESSAGE_TAG_NOT_FOUND, oldTag.tagName);
+            int hiddenCount = countHiddenMembersWithOldTag(model);
+            if (hiddenCount > 0) {
+                message += String.format(MESSAGE_HIDDEN_HAVE_TAG, hiddenCount);
+            }
+            throw new CommandException(message);
         }
-        return new CommandResult(message);
+        return membersWithOldTag;
+    }
+
+    /**
+     * Returns true if {@code oldTag} and {@code newTag} differ only in letter case.
+     */
+    private boolean isCaseOnlyRename() {
+        return oldTag.equals(newTag);
+    }
+
+    /**
+     * Returns true if a case-only rename would not change {@code person}, as the tag already uses
+     * the spelling of {@code newTag}.
+     */
+    private boolean isAlreadyRenamed(Person person) {
+        return isCaseOnlyRename() && person.getTags().stream()
+                .anyMatch(tag -> tag.tagName.equals(newTag.tagName));
+    }
+
+    /**
+     * Returns true if {@code person} already has {@code newTag}, so renaming merges the two tags into one.
+     */
+    private boolean isMerge(Person person) {
+        return !isCaseOnlyRename() && person.getTags().contains(newTag);
+    }
+
+    /**
+     * Returns the feedback for renaming the tag of {@code renamedPersons}, of whom {@code mergedCount}
+     * already had {@code newTag}. It also explains when the active filters now hide some of them.
+     */
+    private String createFeedback(Model model, List<Person> renamedPersons, int mergedCount) {
+        String feedback;
+        if (renamedPersons.isEmpty()) {
+            feedback = String.format(MESSAGE_ALREADY_SPELLED, newTag.tagName);
+        } else {
+            feedback = String.format(MESSAGE_SUCCESS, oldTag.tagName, newTag.tagName, renamedPersons.size());
+            if (mergedCount > 0) {
+                feedback += String.format(MESSAGE_MERGED, mergedCount, newTag.tagName);
+            }
+            feedback += TagUpdateUtil.describeHiddenUpdates(model, renamedPersons);
+        }
+        int hiddenCount = countHiddenMembersWithOldTag(model);
+        return hiddenCount == 0 ? feedback : feedback + String.format(MESSAGE_HIDDEN_KEEP_TAG, hiddenCount,
+                oldTag.tagName);
+    }
+
+    /**
+     * Returns how many members hidden from the displayed list still need to be renamed, as they have
+     * {@code oldTag} in a spelling that this command would change.
+     */
+    private int countHiddenMembersWithOldTag(Model model) {
+        List<Person> displayedMembers = model.getFilteredPersonList();
+        return (int) model.getAddressBook().getPersonList().stream()
+                .filter(person -> person.getTags().contains(oldTag) && !isAlreadyRenamed(person))
+                .filter(person -> !displayedMembers.contains(person))
+                .count();
     }
 
     /**
      * Returns a copy of {@code person} with {@code oldTag} replaced by {@code newTag}.
      */
     private Person createRenamedPerson(Person person) {
+        assert person.getTags().contains(oldTag) : "renametag updates only members who have the current tag";
         Set<Tag> updatedTags = new HashSet<>(person.getTags());
         updatedTags.remove(oldTag);
+        // Tags match regardless of letter case, so this also drops a different spelling of newTag.
+        updatedTags.remove(newTag);
         updatedTags.add(newTag);
-        return new Person(person.getName(), person.getPhone(), person.getEmail(), person.getAddress(),
-                updatedTags);
+        return TagUpdateUtil.withTags(person, updatedTags);
     }
 
     @Override
