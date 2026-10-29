@@ -18,6 +18,7 @@ for command syntax and the sections below for implementation decisions and failu
 ## Contents
 
 - [Acknowledgements](#acknowledgements)
+  - [AI-assisted development](#ai-assisted-development)
 - [Feature Map](#feature-map)
 - [Setting Up](#setting-up-getting-started)
 - [Design](#design)
@@ -74,12 +75,25 @@ for command syntax and the sections below for implementation decisions and failu
   [Checkstyle](https://checkstyle.org/), and [JaCoCo](https://www.jacoco.org/jacoco/) support testing and builds.
 
 
+### AI-assisted development {id="ai-assisted-development"}
+
+OpenAI Codex was used to assist Ian's TrackCall contributions, including implementing and refactoring
+Java code, writing regression tests, debugging, addressing PR feedback, resolving merge conflicts,
+rewriting guide sections and generating PlantUML diagram sources. Requests included scoped clearing
+(`clear` and `clear /all`), persistent sorting, validation fixes and coverage improvements.
+
+AI-generated suggestions and outputs were adapted into the project and checked with JUnit, Checkstyle,
+JaCoCo, documentation builds and local-reference checks. This included generated code, tests and prose,
+not only autocomplete. Automated checks provide validation evidence; contributors remain responsible
+for reviewing the work and completing release acceptance.
+
+
 ## Feature Map
 
 | Task | Commands or actions | Implementation |
 | --- | --- | --- |
 | Get help or exit | `help`, `exit` | [Offline help](#1-offline-command-help), [UI](#ui-component) |
-| Restore or reset the roster | `list`, `clear` | [View reset and save rollback](#2-list-and-clear-commands) |
+| Restore or clear members | `list`, `clear`, `clear /all` | [View reset and save rollback](#2-list-and-clear-commands) |
 | Order the displayed members | `sort` | [Name sorting](#3-name-sorting) |
 | Find members | `find`, `findemail` | [Email search](#4-email-search), [model views](#model-component) |
 | Inspect and copy contact details | Select a roster row | [Member details and command messages](#5-member-details-and-command-messages) |
@@ -388,7 +402,7 @@ and navigable associations. Filled diamonds indicate composition.
 
 ### 2. List and clear commands
 
-**Purpose:** restore the complete view with `list`, or remove the complete roster with `clear`.
+**Purpose:** restore the complete view with `list`, remove displayed members with `clear`, or remove everyone with `clear /all`.
 
 <span id="list-behaviour"></span>
 
@@ -402,16 +416,23 @@ and navigable associations. Filled diamonds indicate composition.
 
 **Clear flow**
 
-1. For a non-empty roster, `LogicManager` retains the `ClearCommand` in `pendingConfirmation`
-   and returns a prompt counting all records, including hidden ones. Nothing changes or saves yet.
-2. The next input confirms only if it is exactly `yes` after surrounding whitespace is stripped.
-   A near miss (`y`, `Y`, `YES`) keeps the confirmation pending and repeats the prompt. Any other input
-   cancels and is consumed. If it starts with a command word, the message also says that the input was not
-   run, so the user knows to enter it again. Confirming or cancelling ends the pending confirmation. As with deletion, the full
-   word prevents an accidental clear of the entire roster.
-3. On confirmation, snapshot the roster, then execute `ClearCommand` to install an empty roster.
-   An already-empty roster skips confirmation but still follows the execution and save path.
-4. Retain predicates and sorting until saving finishes. Return success only after saving completes.
+This candidate behavior is implemented in [PR #322](https://github.com/AY2627S1-CS2103T-W12-1/tp/pull/322).
+Merge that implementation before publishing this guide as the current application behavior.
+
+1. `ClearCommandParser` accepts `clear` or exactly `clear /all`; other arguments are rejected.
+2. `prepareTargets(model)` snapshots displayed members for `clear`, or the full roster for `/all`.
+   A nonempty target set prompts with its scope and count. Mention hidden survivors only when present.
+3. Only lowercase `yes` confirms. Near misses retain the original prompt; other input cancels without
+   executing it. Removing a filter while waiting cannot expand the captured target set.
+4. Snapshot the complete roster, then remove only captured targets without changing selection metadata yet.
+5. Save the remaining roster. After a successful displayed clear, retain conditions and remove deleted
+   members from Show selections; an emptied selection remains removable as `Show: 0 selected`.
+   Whole-roster clearing resets conditions. `list` reveals any hidden survivors.
+6. On failure, restore the original records under the original conditions, preserving Show selections.
+   Include the storage failure reason. A fresh `clear` or `clear /all` confirmation is needed to retry.
+
+An empty displayed list with hidden records reports nothing to clear and suggests `list` or `clear /all`,
+without prompting or saving. An already-empty roster keeps the existing immediate-save retry behavior.
 
 <a class="dg-diagram" style="--dg-diagram-width: 65.6923em" href="images/ClearSequenceDiagram.svg" aria-label="Open diagram at full size: Clear save success and rollback"><img src="images/ClearSequenceDiagram.svg" alt="Clear save success and rollback"></a>
 
@@ -419,13 +440,14 @@ and navigable associations. Filled diamonds indicate composition.
 
 | Outcome | Records and view | Command input |
 | --- | --- | --- |
-| Save succeeds | Empty roster; conditions cleared; sorting setting retained. | Clear the input. |
-| Save fails | Restore the snapshot under the original predicates and sorting. | Retain the submitted input; run `clear` again to restart confirmation. |
+| Save succeeds | Remove only targets; displayed clear retains conditions, `/all` resets them. | Clear the input. |
+| Save fails | Restore the snapshot under the original predicates and sorting. | Retain the submitted input; run `clear` or `clear /all` again for the intended scope. |
 
 **Rules and design**
 
 - Clearing a non-empty roster requires confirmation and has no undo. It does not change preferences.
-- Even an empty clear attempts to save, allowing a retry after an unsaved deletion.
+- Clearing an already-empty roster attempts to save, allowing a retry after an unsaved deletion.
+  An empty displayed list with hidden members never saves or removes those members.
 - Keep rollback in Logic because that layer knows the persistence outcome.
 - Atomic roster replacement is separate from backup rotation; see [startup and validation](#startup-and-validation).
 
@@ -433,7 +455,7 @@ and navigable associations. Filled diamonds indicate composition.
 
 `SaveFailureException#isChangeApplied()` lets the command box retain the last submitted input on
 clear rollback while clearing input for changes that remain applied. After a confirmed clear fails,
-the retained input is the answer `yes`; run `clear` again to start a fresh confirmation.
+the retained input is the answer `yes`; choose `clear` or `clear /all` again to start a fresh confirmation.
 
 
 <span id="name-sorting"></span>
@@ -572,12 +594,13 @@ cumulative and repeat-detection rules for names.
 
 | Command | In-memory state | Retry behavior |
 | --- | --- | --- |
-| `clear` | Restore prior records and view. | Resolve the cause before running `clear` again; confirm if prompted. A lone `yes` cannot retry. |
+| `clear`, `clear /all` | Restore prior records and view. | Resolve the cause before repeating the intended scope; confirm if prompted. A lone `yes` cannot retry. |
 | Other data-changing commands | Keep the applied change. | Clear the input to prevent accidental repetition. |
 
 - `SaveFailureException` records whether the change remains applied.
 - `clear` reports its failure message followed by the underlying storage error, including outside-change warnings.
-  If external edits may exist, restart to load them; retry clear only when intentionally replacing them with an empty roster.
+  If external edits may exist, restart to load them; retry clearing only when intentionally replacing the outside
+  version with the remaining in-memory roster. `clear /all` replaces it with an empty roster.
 - The previous roster file is unchanged. Exiting can lose unsaved in-memory changes.
 - After restoring access, inspect the list and use `edit` with an existing value to retry saving.
 - If no records remain, use `clear`. Exit never retries a roster save.
@@ -654,7 +677,7 @@ showing file contents. A missing or null `persons` list also explains the requir
   - **Address:** optional. When present, it must contain a character other than whitespace or Unicode spaces.
 - Tag parsers name unsupported member fields, preambles and missing `t/` prefixes in their diagnostics.
   Invalid tag values receive the specific reason followed by the command usage.
-- `list`, `sort`, `clear` and `exit` take no arguments. Each other command enforces its own grammar.
+- `clear` accepts only an optional `/all`; `list`, `sort` and `exit` take no arguments. Each other command enforces its own grammar.
 
 
 <span id="csv-import"></span>
@@ -770,7 +793,7 @@ Commons CSV handles quoting instead of manual string splitting.
 - Removing a chip removes only that selection. Its count reflects the remaining selected records,
   including those hidden by other conditions. Deleting every selected record leaves a removable
   **Show: 0 selected** chip.
-- `list`, successful `add`/`clear` and valid `import` clear selections.
+- `list`, successful `add`/`clear /all` and valid `import` clear selections; displayed `clear` retains conditions and updates Show counts.
 - Show is read-only and does not save.
 
 
@@ -1097,10 +1120,10 @@ These contracts apply across commands. Feature sections explain their implementa
     Other applied changes remain in memory and can be lost on exit; retry saving with a valid no-op.
     See [saving and recovery](#6-saving-and-recovery) for backup rollback and retry details.
 11. **Add and destructive actions:** add appends a record and clears conditions. Delete retains conditions;
-    successful clear removes hidden records too and clears conditions. Non-empty delete/clear requests
+    `clear` removes displayed records while keeping hidden members and conditions; `clear /all` removes everyone and resets conditions. Non-empty delete/clear requests
     require the next input to be exactly `yes`, to prevent accidental deletion. A near miss such as `y` keeps
     the prompt pending; any other reply cancels and is consumed. Neither action has undo.
-    Empty clear saves immediately. List, sort, clear and exit reject extra arguments.
+    An empty roster still saves immediately. Clear accepts only an optional `/all`; list, sort and exit reject extra arguments.
 12. **Startup and exit:** load the packaged JAR's `data/addressbook.json`; missing data loads samples,
     while a valid empty roster stays empty. Invalid data requires preservation and recovery before editing.
     Normal startup, read-only commands and exit do not save the roster.
@@ -1259,7 +1282,7 @@ Deletion has no undo after confirmation. It removes the underlying record, not j
 
 **MSS**
 
-1. The secretary decides to remove all records and requests clearing the roster.
+1. The secretary decides to remove all records and submits `clear /all`. Plain `clear` targets only displayed members.
 2. TrackCall validates the request and asks for confirmation, counting the whole roster including hidden records.
 3. The secretary confirms by entering `yes`.
 4. TrackCall removes every member, saves the empty roster, clears the search, tag, and selection filters,
@@ -1280,7 +1303,7 @@ Deletion has no undo after confirmation. It removes the underlying record, not j
   leaves the saved file unchanged. It reports that no members were removed. The secretary can
   resolve the storage problem and retry step 1.
 
-Confirmation ends even when saving fails, so a retry must start with `clear` again.
+Confirmation ends even when saving fails, so a retry must start with the appropriate `clear` or `clear /all` command.
 There is no undo after confirmation. Recovery after a successful clear requires a usable backup,
 such as the automatic previous-version backup.
 
@@ -1410,7 +1433,7 @@ Vary the inputs freely; the cases below are starting points that complement the 
 2. Before each independent scenario below, recreate this fixture by entering each command separately:
 
 ```text
-clear
+clear /all
 yes
 add n/Zara Lim p/90000001 e/zara@example.com a/Test Road t/friends
 add n/Bob Lee p/90000002 e/bob@school.edu t/committee
@@ -1418,7 +1441,7 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Main Street t/committee
 ```
 
 **Expected baseline:** three members in stored order: Zara, Bob, Alice. Bob has no address.
-Enter `yes` only when `clear` prompts for confirmation; an already-empty roster needs no answer.
+Enter `yes` only when `clear /all` prompts for confirmation; an already-empty roster needs no answer.
 Use `list` and check the displayed indices before any indexed command. Read-only commands must not change the
 roster file's bytes or timestamp. Back up test files before fault injection.
 
@@ -1511,9 +1534,9 @@ Start each subsection below from the baseline fixture and run its numbered steps
    type `yes` exactly, and nothing is deleted. Enter `yes`. **Expect:** Alice is deleted; `list` shows Zara and Bob.
 3. Try `delete 0`, `delete -1`, a very large integer, and an index beyond the displayed list.
    **Expect:** errors without deletion.
-4. Restore the fixture, run `find Alice`, then `clear`. **Expect:** a prompt counting all three records; nothing
+4. Restore the fixture, run `find Alice`, then `clear /all`. **Expect:** a prompt counting all three records; nothing
    removed or saved yet. Enter `list`. **Expect:** cancellation noting that `list` was not run.
-   Run `clear`, then `y`. **Expect:** the prompt stays pending. Enter `yes`.
+   Run `clear /all`, then `y`. **Expect:** the prompt stays pending. Enter `yes`.
    **Expect:** all three records are removed, including hidden members.
 5. Run `clear` again. **Expect:** the already-empty message after saving, without confirmation.
    `.bak` still holds the previous distinct roster. Confirmed clear has no undo.
@@ -1556,7 +1579,7 @@ this candidate. Record it separately from the nonbreaking-space cases above; rej
    order, with hidden Zara excluded and the view unchanged. Inspect the CSV. **Expect:** the documented UTF-8 header,
    correctly quoted fields, and sorted semicolon-separated tags.
 3. Run `import p/members.csv`. **Expect:** zero imports and two skipped duplicates; filters and sorting reset.
-   Run `clear`, confirm with `yes`, then import again. **Expect:** two imports that persist after restart.
+   Run `clear /all`, confirm with `yes`, then import again. **Expect:** two imports that persist after restart.
    Import Alice's details with a lowercase or repeated-space name. **Expect:** a skipped duplicate, no merged tags.
 4. Copy the CSV to `member list.csv`. **Expect:** `import p/"member list.csv"` works and a missing source fails
    without changes. `export member list.csv`, without quotes, creates a file named exactly that.
@@ -1608,7 +1631,7 @@ Use a fresh fixture and backup for each failure scenario. Restore access before 
    - Restore access, reapply an existing field with `edit`, then restart. **Expect:** the current roster is saved.
 5. Repeat the write failure with `clear` while a filter hides members, confirming with `yes`.
    **Expect:** no members removed, the full roster and previous filtered view restored, and unchanged saved bytes.
-   Restore access, run `clear` again, and confirm. **Expect:** all members removed.
+   Restore access, run `clear` again, and confirm. **Expect:** only displayed targets removed; hidden members remain.
    Repeat with an already-empty roster, which saves without confirmation.
 6. With the app closed, add surrounding whitespace to valid JSON contact and tag fields and a leading UTF-8
    byte-order mark, then restart. **Expect:** loading succeeds with outer whitespace trimmed.
@@ -1637,3 +1660,12 @@ For grouped tag filters, test `filter t/committee t/friends`, then `filter t/yea
 the first box and AND between boxes. Repeat with reordered/case-varied tags: no duplicate box should
 appear. Supply more than four alternatives: the short label must show `+N more`, while the tooltip
 and remove button's accessible text retain the complete list. Removing a group's X removes that group only.
+
+### Displayed clearing and whole-roster override
+
+Restore the fixture and run `filter t/committee`, `clear`, then `yes`. Expect only committee members
+removed, with conditions still applied; `list` reveals the hidden survivors. Restore the fixture and
+repeat using `clear /all`: everyone is removed and conditions reset. Cancel each form and test near misses.
+Remove a filter while a prompt is pending: only the originally captured targets may be removed.
+With an empty result and hidden records, `clear` must not prompt or save; `/all` still prompts for everyone.
+Inject a write failure: restore all records and original Show selections, with unchanged saved bytes.

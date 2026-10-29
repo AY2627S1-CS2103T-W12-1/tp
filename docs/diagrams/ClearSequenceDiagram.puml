@@ -1,61 +1,68 @@
 @startuml
 !include style.puml
 skinparam ArrowFontStyle plain
-participant ":LogicManager" as logic LOGIC_COLOR
-participant "c:ClearCommand" as command LOGIC_COLOR
-participant "model:Model" as model MODEL_COLOR
-participant "storage:Storage" as storage STORAGE_COLOR
-
-[-> logic : execute("clear")
-activate logic
-note over logic, command: Non-empty roster; parsing omitted.
-logic -> model : getAddressBook()
-activate model
-model --> logic : currentRoster
-deactivate model
-note left of logic: Keep ClearCommand pending.
-logic -->[ : prompt with full roster count
-deactivate logic
-
-[-> logic : execute("yes")
-activate logic
-note over logic, command: End pending confirmation before execution.
-logic -> model : getAddressBook()
-activate model
-model --> logic : currentRoster
-deactivate model
-note left of logic: beforeClear = copy of roster
-logic -> command : execute(model)
-activate command
-command -> model : getAddressBook()
-activate model
-model --> command : currentRoster
-note left of command: Count the members.
-deactivate model
-command -> model : setAddressBook(new AddressBook())
-activate model
-model --> command
-deactivate model
-command --> logic : result with count
-deactivate command
-logic -> storage : saveAddressBook(roster)
-activate storage
-storage --> logic : return or throw IOException
-deactivate storage
+participant ":LogicManager" as Logic LOGIC_COLOR
+participant ":ClearCommand" as Clear LOGIC_COLOR
+participant ":Model" as Model MODEL_COLOR
+participant ":Storage" as Storage STORAGE_COLOR
+[-> Logic : execute("clear" or "clear /all")
+activate Logic
+Logic -> Clear : prepareTargets(model)
+activate Clear
+Clear -> Model : getFilteredPersonList() or getAddressBook()
+activate Model
+Model --> Clear : members
+deactivate Model
+Clear --> Logic : captured target count
+deactivate Clear
+Logic -->[ : scope/count confirmation prompt
+deactivate Logic
+[-> Logic : execute("yes")
+activate Logic
+Logic -> Model : getAddressBook()
+activate Model
+Model --> Logic : beforeClear snapshot
+deactivate Model
+Logic -> Clear : execute(model)
+activate Clear
+Clear -> Model : setAddressBook(non-target members)
+activate Model
+Model --> Clear : return
+deactivate Model
+note right of Model : Preserve conditions until save succeeds
+Clear --> Logic : result
+deactivate Clear
+Logic -> Storage : saveAddressBook(remaining roster)
+activate Storage
 alt save succeeds
-    logic -> model : updateFilteredPersonList(SHOW_ALL)
-    activate model
-    model --> logic
-    deactivate model
-    logic -->[ : result
-else IOException
-    logic -> model : setAddressBook(beforeClear)
-    activate model
-    model --> logic
-    deactivate model
-    logic -->[ : throws SaveFailureException\n(changeApplied=false)
+Storage --> Logic : saved
+deactivate Storage
+Logic -> Clear : finishSaving(model)
+activate Clear
+alt displayed clearing
+Clear -> Model : removeDeletedPersonsFromSelections(targets)
+activate Model
+Model --> Clear : return
+deactivate Model
+note right of Model : Retain conditions; update Show counts
+else whole-roster clearing
+Clear -> Model : updateFilteredPersonList(SHOW_ALL)
+activate Model
+Model --> Clear : return
+deactivate Model
 end
-deactivate logic
-note over model: Success clears predicates;\nfailure restores records and the old view.
-note over logic, command: Near misses such as "y" keep\nthe prompt pending. Other replies\ncancel without saving.
+Clear --> Logic : return
+deactivate Clear
+Logic -->[ : cleared count
+else save fails
+activate Storage
+Storage --> Logic : IOException
+deactivate Storage
+Logic -> Model : setAddressBook(beforeClear)
+activate Model
+Model --> Logic : return
+deactivate Model
+Logic -->[ : save error; no members removed
+end
+deactivate Logic
 @enduml
