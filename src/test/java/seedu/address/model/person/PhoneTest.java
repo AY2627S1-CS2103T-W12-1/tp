@@ -1,5 +1,6 @@
 package seedu.address.model.person;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -30,12 +31,24 @@ public class PhoneTest {
         assertFalse(Phone.isValidPhone("91")); // less than 3 numbers
         assertFalse(Phone.isValidPhone("phone")); // non-numeric
         assertFalse(Phone.isValidPhone("9011p041")); // alphabets within digits
-        assertFalse(Phone.isValidPhone("9312 1534")); // spaces within digits
+        assertTrue(Phone.isValidPhone("9312 1534")); // internal spaces are preserved
 
         // valid phone numbers
         assertTrue(Phone.isValidPhone("911")); // exactly 3 numbers
         assertTrue(Phone.isValidPhone("93121534"));
         assertTrue(Phone.isValidPhone("124293842033123")); // long phone numbers
+    }
+
+    @Test
+    public void formattedPhone_preservesValueAndRejectsMalformedFormatting() {
+        for (String value : new String[] {"+6591234567", "+65 9123 4567", "1  2 3", "001 234"}) {
+            assertTrue(Phone.isValidPhone(value));
+            assertEquals(value, new Phone(value).value);
+        }
+        for (String value : new String[] {"+", "+12", "1 2", "++123", "12+3", " 123", "123 ",
+            "123-456", "(123)", "123\t456", "\u0661\u0662\u0663"}) {
+            assertFalse(Phone.isValidPhone(value));
+        }
     }
 
     @Test

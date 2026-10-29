@@ -5,7 +5,6 @@ import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_EMPTY_TAG
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_INVALID_TAG;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
-import static seedu.address.logic.parser.RenameTagCommandParser.MESSAGE_SAME_TAG;
 
 import org.junit.jupiter.api.Test;
 
@@ -45,6 +44,6 @@ public class RenameTagCommandParserTest {
 
     @Test
     public void parse_sameTagTwice_rejectsCommand() {
-        assertParseFailure(parser, " t/alumni t/alumni", MESSAGE_SAME_TAG);
+        assertParseFailure(parser, " t/alumni t/alumni", RenameTagCommand.MESSAGE_SAME_TAG);
     }
 }

@@ -15,11 +15,13 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Address;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
+import seedu.address.model.tag.Tag;
 
 public class JsonAdaptedPersonTest {
     private static final String INVALID_NAME = "R@chel";
-    private static final String INVALID_PHONE = "+651234";
+    private static final String INVALID_PHONE = "+65x1234";
     private static final String INVALID_ADDRESS = " ";
     private static final String INVALID_EMAIL = "example.com";
     private static final String INVALID_TAG = "#friend";
@@ -39,9 +41,42 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_hyphenatedTag_preservesTag() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS,
+                List.of(new JsonAdaptedTag("year-1")));
+
+        assertEquals("year-1", person.toModelType().getTags().iterator().next().tagName);
+    }
+
+    @Test
     public void toModelType_emptyAddress_returnsPersonWithoutAddress() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, "", VALID_TAGS);
         assertEquals(Address.EMPTY_ADDRESS, person.toModelType().getAddress());
+    }
+
+    @Test
+    public void toModelType_caseVariantTags_keepsOneTag() throws Exception {
+        List<JsonAdaptedTag> tags = List.of(new JsonAdaptedTag("Student"), new JsonAdaptedTag("student"));
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, VALID_ADDRESS, tags);
+        Person loaded = person.toModelType();
+
+        assertEquals(1, loaded.getTags().size());
+        assertEquals(new Tag("STUDENT"), loaded.getTags().iterator().next());
+        assertEquals("Student", loaded.getTags().iterator().next().tagName);
+    }
+
+    @Test
+    public void toModelType_valuesWithSurroundingSpaces_returnsTrimmedPerson() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(" " + VALID_NAME + " ", " " + VALID_PHONE + " ",
+                " " + VALID_EMAIL + " ", " " + VALID_ADDRESS + " ",
+                List.of(new JsonAdaptedTag(" owesMoney "), new JsonAdaptedTag("\tfriends\n")));
+        assertEquals(BENSON, person.toModelType());
+    }
+
+    @Test
+    public void toModelType_spacesOnlyAddress_throwsIllegalValueException() {
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_PHONE, VALID_EMAIL, "   ", VALID_TAGS);
+        assertThrows(IllegalValueException.class, Address.MESSAGE_CONSTRAINTS, person::toModelType);
     }
 
     @Test

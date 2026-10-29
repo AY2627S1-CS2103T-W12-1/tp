@@ -123,7 +123,7 @@ public class MainApp extends Application {
             model.setAddressBook(saved.orElseGet(SampleDataUtil::getSampleAddressBook));
         } catch (DataLoadingException e) {
             logger.warning("The saved roster could not be loaded. Recovery is required: " + e.getMessage());
-            if (!recoverRoster(primaryStage)) {
+            if (!recoverRoster(primaryStage, getLoadingFailureReason(e))) {
                 Platform.exit();
                 return;
             }
@@ -131,8 +131,17 @@ public class MainApp extends Application {
         ui.start(primaryStage);
     }
 
-    /** Preserves the damaged file and requires an explicit choice before exposing the editable roster. */
-    boolean recoverRoster(Stage owner) {
+    /** Returns the message of the error that stopped the roster from loading, for display to the user. */
+    static String getLoadingFailureReason(DataLoadingException e) {
+        return e.getCause() == null ? e.getMessage() : e.getCause().getMessage();
+    }
+
+    /**
+     * Preserves the damaged file and requires an explicit choice before exposing the editable roster.
+     *
+     * @param reason Why the roster could not be loaded, shown in the recovery dialog.
+     */
+    boolean recoverRoster(Stage owner, String reason) {
         JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(storage.getAddressBookFilePath());
         try {
             Path preservedFile = addressBookStorage.preserveDamagedFile();
@@ -143,7 +152,7 @@ public class MainApp extends Application {
                 logger.warning("The backup could not be loaded: " + e.getMessage());
                 backup = Optional.empty();
             }
-            RosterRecoveryDialog.Choice choice = new RosterRecoveryDialog(owner, preservedFile,
+            RosterRecoveryDialog.Choice choice = new RosterRecoveryDialog(owner, reason, preservedFile,
                     JsonAddressBookStorage.getBackupFilePath(storage.getAddressBookFilePath()),
                     backup.isPresent()).showChoice();
             if (choice == RosterRecoveryDialog.Choice.CLOSE) {
@@ -152,9 +161,11 @@ public class MainApp extends Application {
             ReadOnlyAddressBook recovered = choice == RosterRecoveryDialog.Choice.RESTORE_BACKUP
                     ? backup.orElseThrow() : new AddressBook();
             addressBookStorage.recoverAddressBook(recovered, preservedFile);
-            model.setAddressBook(recovered);
+            // Reload through the session storage to establish its outside-edit baseline.
+            model.setAddressBook(storage.readAddressBook().orElseThrow(() ->
+                    new IOException("The recovered roster is no longer available. Restart TrackCall.")));
             return true;
-        } catch (IOException e) {
+        } catch (IOException | DataLoadingException e) {
             logger.severe("Could not recover the roster: " + StringUtil.getDetails(e));
             Alert alert = new Alert(Alert.AlertType.ERROR);
             if (owner.getScene() != null) {
@@ -162,8 +173,8 @@ public class MainApp extends Application {
             }
             alert.setTitle("Roster recovery failed");
             alert.setHeaderText("TrackCall could not safely recover your roster.");
-            alert.setContentText("The saved roster has not been replaced. Close TrackCall and check the file "
-                    + "and folder permissions, or restore a backup manually.\n\n" + e.getMessage());
+            alert.setContentText("Close TrackCall and check the saved roster, recovery copy, and folder permissions. "
+                    + "Preserved recovery files have not been removed.\n\n" + e.getMessage());
             alert.showAndWait();
             return false;
         }

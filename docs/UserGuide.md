@@ -126,11 +126,17 @@ Extra arguments produce `Invalid command format. Usage: list` without changing t
 `show 1 3` shows only members 1 and 3 from the **currently displayed list**.
 The selected members stay in their current order and receive new displayed numbers starting at 1.
 You can use `show` again with those new numbers, or use `list` to restore the full roster.
-While a `show` selection is active, a **Show: active** box appears under the command field.
-It stays visible even if you remove other search or filter boxes. Hover over it to see how many times
-`show` has been applied. Select its **X** to remove all `show` selections at once while keeping any
-name, email, or tag filters. The **ROSTER** heading shows how many members are currently displayed,
-including when the result is empty.
+Each distinct `show` selection adds a box under the command field, such as **Show: 2 selected**.
+Repeating `show` with the same selected members does not add another box. The count is the number
+selected by that command. Hover over the box label to see the selected names. Boxes appear from left
+to right in command order, alongside name, email, and tag boxes. Select a box's **X** to remove only that
+selection while keeping the other conditions. The **ROSTER** heading shows how many members are
+currently displayed, including when the result is empty.
+If all members in a selection are deleted, its box remains as **Show: 0 selected**. Hovering over it
+shows `Selected members: No selected members remain`; select its **X** to remove the empty selection.
+
+Names in a `show` box's hover text are listed alphabetically, ignoring case. This does not change
+the displayed roster order.
 
 Supply one or more positive numbers separated by spaces. Repeating a number selects that member once.
 If any number is invalid or outside the current list, the view stays unchanged. `show` does not change
@@ -171,7 +177,8 @@ Search by a full email address or any part of an email address:
 * `findemail @example.com` finds emails containing that domain fragment.
 * `findemail @example.com @school.edu` finds emails containing **either** fragment.
 
-Matching ignores letter case. Whitespace separates keywords, and any keyword can match.
+Matching ignores letter case. Whitespace, including pasted nonbreaking spaces, separates keywords;
+any keyword can match.
 Keywords are literal text, not regular expressions; names and phone numbers are not searched.
 Supply at least one keyword. No matches produce `0 members listed.` and an empty list.
 
@@ -198,9 +205,12 @@ clear only the email condition while keeping any later name or tag filters.
 This keeps only committee members in the current view. Their order, including active name sorting,
 stays the same, and their displayed numbers update.
 
-* Matching is exact and case-sensitive: `committee` and `Committee` are different tags.
+* Matching ignores letter case: `committee` and `Committee` identify the same tag.
 * Each filter narrows the current results. Run `filter t/year1` next to keep members with **both** tags.
-  Applying the same tag again does not add a duplicate condition.
+  Applying the same tag again, even with different letter case, leaves the view unchanged. The result
+  names the active spelling, says no changes were made, and shows the current count and active tags.
+  For example, repeating `filter t/committee` begins with
+  `Tag "committee" is already an active filter. No changes were made.`
 * A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
   A new `findemail` searches the whole roster and replaces previous filters.
 
@@ -212,8 +222,9 @@ No matches produce a count of 0 and an empty list. Filtering does not change or 
 Check the displayed numbers before using `edit`, `tag`, `untag`, or `delete`. Editing keeps the active search and filters.
 If an edited member no longer matches, they disappear from view but remain in the roster.
 
-Supply exactly one tag of 1 to 30 ASCII letters or digits, with no internal spaces. Surrounding spaces
-are ignored. Missing or extra parameters and invalid tags are rejected without changing the view.
+Supply exactly one tag of 1 to 30 characters, using ASCII letters or digits with optional internal hyphens.
+For example, `year-1` is valid. Surrounding spaces are ignored. Missing or extra parameters and invalid
+tags are rejected without changing the view.
 For example, `filter t/committee t/year1` is invalid; apply each tag in a separate command.
 
 #### Sort members by name: `sort`
@@ -242,18 +253,28 @@ Add reserves whitespace-delimited single ASCII letters followed by `/` for field
 Only lowercase `n/`, `p/`, `e/`, `a/`, and `t/` are accepted; `x/extra` and `T/committee`
 report an invalid command format. The standalone abbreviation `c/o` (in any letter case),
 URLs, numeric slashes such as `12/3`, and slashes embedded in words remain address text.
+Within an `a/` value, uppercase `A/` followed by a digit is also literal address text,
+so `a/Block A/12` is accepted. Other uppercase or unknown field prefixes remain invalid.
 
 | Field | Current rule |
 | --- | --- |
-| Name | ASCII letters, digits, and spaces. Cannot be blank. |
-| Phone | At least three ASCII digits. No spaces or punctuation. |
+| Name | Start with a Unicode letter or ASCII digit. Unicode letters, combining marks, ASCII digits, spaces, hyphens, and straight or curly apostrophes are accepted. |
+| Phone | At least three ASCII digits, with an optional leading `+` and spaces between digits. Formatting is preserved. Hyphens, parentheses, and internal tabs are rejected. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
-| Address | Non-blank text when adding; `edit INDEX a/` clears an existing address. |
-| Tag | 1 to 30 ASCII letters or digits, without spaces. Tags are case-sensitive. |
+| Address | Non-blank text when provided; Unicode-space-only values are rejected. `edit INDEX a/` clears an address. |
+| Tag | 1 to 30 ASCII letters or digits with optional internal hyphens. Matching ignores letter case. |
+
+Names such as `Anne-Marie`, `José Garcia`, and `O'Connor` keep their entered spelling,
+including combining accents. Phone examples include `+6591234567` and `9123 4567`.
+Phone formatting is stored, displayed, copied, and exported as entered; the app does not infer country
+codes or treat differently formatted numbers as equal. Multiple spaces between digit groups are accepted.
+Names retain their Unicode representation, so visually identical accented spellings can match differently in searches
+or duplicate checks. Sorting uses case-insensitive text order rather than a language-specific alphabet;
+for example, `Émile` sorts after `Zara`.
 
 **Email rules:**
 
-* The local part contains ASCII letters or digits, optionally separated by single `+`, `_`, `.`, or `-` characters.
+* The local part contains ASCII letters or digits, optionally separated by single `+`, `_`, `.`, apostrophe (`'`), or `-` characters.
 * Domain labels contain ASCII letters or digits, optionally separated by single hyphens.
 * The final domain label needs at least two characters.
 
@@ -269,6 +290,7 @@ If you omit `a/`, the address is shown as `(none)` until you add one with `edit`
 
 Duplicate checking ignores name capitalization, repeated whitespace and surrounding whitespace.
 For example, `Alice Tan`, `alice tan` and `Alice  Tan` match when phone, email and address also match.
+Unicode letter case is ignored too; for example, `ΟΣ`, `οσ` and `ος` match.
 Those other fields are trimmed but otherwise compared exactly; tags are ignored.
 Names keep their entered capitalization and spacing in storage and display. Accents and punctuation
 are not removed by duplicate checking, and this rule does not expand the supported name characters.
@@ -320,7 +342,9 @@ untag 2 t/friends
 
 Check the displayed number after searching, filtering, showing selected members, or sorting. The
 index identifies the member shown at that number when you submit the command. Hidden members are
-not changed. Tags must contain 1 to 30 ASCII letters or digits; matching is case-sensitive.
+not changed. Tags contain 1 to 30 ASCII letters or digits with optional internal hyphens; matching ignores letter case.
+Adding `t/student` to a member who already has `Student` does not add a second tag.
+If one `add` or `edit` command supplies both spellings, the first `t/` spelling is kept.
 
 If the member already has the tag (for `tag`) or lacks it (for `untag`), TrackCall reports that
 no change was made. A valid no-op still attempts to save. Searches, filters, sorting, and a `show`
@@ -356,14 +380,19 @@ Members who already have the tag (for `tagall`) or do not have it (for `untagall
 The result reports both counts:
 
 * `Added tag "committee" to 9 member(s). 3 already had this tag.`
-* `Removed tag "committee" from 12 member(s).`
+* `Removed tag "committee" (any letter case) from 12 member(s).`
+
+When every displayed member is skipped, the result ends with `No changes were made.`, for example
+`Added tag "committee" to 0 member(s). 12 already had this tag. No changes were made.`
 
 The current search, filters, and sorting stay applied after the update.
 If you remove the tag used by the active filter, the updated members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
+The result then also reports the current list, for example
+`0 member(s) listed with tag "committee". Run list to show everyone.`
 
-Supply exactly one tag of 1 to 30 ASCII letters or digits with no internal spaces. Spaces around the tag
-are ignored, and matching is case-sensitive. Missing `t/`, empty tags, invalid tags, more than one tag, and
+Supply exactly one tag of 1 to 30 ASCII letters or digits with optional internal hyphens. Spaces around the tag
+are ignored, and matching ignores letter case. Missing `t/`, empty tags, invalid tags, more than one tag, and
 other field prefixes such as `n/` are rejected without changing any member. If no members are displayed, TrackCall reports
 `There are no members in the current list to update.` and changes nothing.
 
@@ -371,28 +400,37 @@ There is no confirmation or undo. A valid command saves the roster, even when ev
 
 #### Rename a tag: `renametag`
 
-`renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for **every member in the roster**,
-including members hidden by `find` or `filter`. Each member's other tags are kept.
+`renametag t/CURRENT_TAG t/NEW_TAG` replaces one tag with another for **every member in the current list**
+who has it. Members hidden by `find`, `findemail`, `filter`, or `show` keep the current tag.
+Each member's other tags are kept. To rename the tag for everyone, run `list` first.
 
 ```text
 renametag t/batch2026 t/alumni
 ```
 
-Every member tagged `batch2026` is now tagged `alumni` instead. The result reports how many members changed:
+Every displayed member tagged `batch2026` is now tagged `alumni` instead. The result reports how many members changed:
 
 * `Renamed tag "batch2026" to "alumni" for 15 member(s).`
 * `Renamed tag "year1" to "year2" for 10 member(s). 2 already had "year2".`
 
-A member who already has the new tag keeps a single copy of it.
-Tags are case-sensitive, so `renametag t/committee t/Committee` is a valid rename.
+A member with both distinct tags keeps a single copy of the replacement tag.
+Tags match regardless of letter case. To standardize capitalization across the roster, run `list`, then
+`renametag t/committee t/Committee`. Members already using `Committee` are skipped and the result
+counts only members whose spelling changed. If every matching member already uses the new spelling,
+TrackCall reports `Every displayed member with this tag already uses "Committee". No changes were made.`
+Supplying identical spellings is rejected.
 
 The current search, filters, and sorting stay applied after the update.
 If you rename the tag used by the active filter, the renamed members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
+The result then also reports the current list, for example
+`0 member(s) listed with tag "friends". Run list to show everyone.`
 
-Supply exactly two tags, each after `t/`, with 1 to 30 ASCII letters or digits and no internal spaces.
-The two tags must be different. If no member has the current tag, TrackCall reports
-`No member has the tag "CURRENT_TAG".` and changes nothing. Other invalid input is rejected without
+Supply exactly two tags, each after `t/`, with 1 to 30 characters using ASCII letters or digits and
+optional internal hyphens.
+The two tags must be different. If no member in the current list has the current tag, TrackCall reports
+`No member in the current list has the tag "CURRENT_TAG".` and changes nothing, even if hidden members
+have it. Other invalid input is rejected without
 changing any member.
 
 There is no confirmation or undo. A valid command saves the roster.
@@ -405,8 +443,11 @@ Export a complete roster or bring existing member records into TrackCall.
 
 `export [FILEPATH]` writes every member to a UTF-8 CSV file, including members hidden by a search.
 The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
-Tags for each member are sorted in case-sensitive ASCII order (digits, uppercase letters, then lowercase letters)
+Tags for each member are sorted in case-sensitive ASCII order (hyphens, digits, uppercase letters, then lowercase letters)
 and joined with semicolons.
+If an imported CSV file or saved JSON roster contains case variants of one tag on the same member,
+TrackCall keeps the first spelling listed for that member. The retained spelling appears in the member
+list and exports. On the next roster save, the other spellings are removed from the saved file.
 
 * Without `FILEPATH`, the file is written to `addressbook.csv` beside the JAR. During development,
   it is written to the working directory.
@@ -414,6 +455,8 @@ and joined with semicolons.
   that folder. The parent directory must already exist and be writable.
 * The destination must end in `.csv` (ignoring letter case). Other extensions and missing extensions are rejected
   with `File must have a .csv extension.` Filenames may contain spaces.
+* Double quotes are rejected anywhere in the export path, including directory names, because `import`
+  cannot read filenames containing them. Choose another name; spaces do not need surrounding quotes.
 * An existing destination file is overwritten.
   The active roster file, preferences file, their backups and recovery copies, application lock, and running JAR
   cannot be used as export destinations. These reserved paths are case-insensitive, including directory names,
@@ -460,6 +503,12 @@ internal spaces, tabs, and case are preserved. Line breaks inside fields are not
 with semicolons; leave the tags field empty for no tags. Leave the address field empty when it is unknown.
 An optional UTF-8 byte-order mark is accepted.
 
+Imports accept files up to 10 MiB (10,485,760 bytes) and at most 10,000 non-blank member rows,
+counted before duplicate removal. The header and blank rows do not count toward the member-row limit.
+Larger files are rejected without importing any members; split them into smaller CSV files.
+The file name must end in `.csv` (in any letter case). Renaming a PDF, spreadsheet, image, or other file to `.csv`
+does not convert it: its contents must follow the UTF-8 CSV format above.
+
 ```text
 name,phone,email,address,tags
 John Doe,98765432,johnd@example.com,"John Street, Block 123",year1;committee
@@ -473,10 +522,12 @@ A header-only or duplicate-only file succeeds with zero imports and still retrie
 
 If a row, header, CSV structure, or UTF-8 encoding is invalid, no records or view state change. The first
 error identifies the row where applicable. The source CSV is never modified.
+A missing file reports its resolved path; check the spelling and location. In a packaged build, keep the file
+inside the JAR folder or one of its subfolders.
 
 ### Remove member records {id="remove-records"}
 
-Remove one member with confirmation, or clear the whole roster.
+Remove one member or the whole roster with confirmation.
 
 #### Delete a member: `delete`
 
@@ -484,21 +535,27 @@ Remove one member with confirmation, or clear the whole roster.
 after you confirm the deletion.
 
 1. Run `list`, then `find Alice`, and check the results. Select the intended member to check their contact details.
-2. Use `delete 1`. TrackCall names the first match and its tags, then asks you to confirm:
+2. Use `delete 1`. TrackCall names the first match with its displayed number and tags, then asks you to confirm:
 
    ```text
-   Delete member Alice Tan?
+   Delete member 1, Alice Tan?
    Tags: (none)
-   Type y and press Enter to confirm. Any other input cancels the deletion.
+   Type yes and press Enter to confirm, or type no to cancel the deletion.
    ```
 
    The tags shown depend on the member; Alice from the quick start has none.
    The command box is highlighted until you answer. Asking for confirmation does not change or save the roster.
-3. Type `y` and press Enter to delete that member.
+3. Type `yes` and press Enter to delete that member.
 
-Any other input, including another command, cancels the deletion with
+Only `yes`, typed exactly in lowercase, confirms. `y`, `Y`, `YES`, or `Yes` does not confirm or cancel: it keeps
+the prompt pending and reminds you:
+`To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.`
+The reminder is followed by the original prompt, so the member to be deleted (or, for `clear`, the total member
+count) stays visible, including after you remove a filter box.
+
+Any other input, such as `no` or another command, cancels the deletion with
 `Deletion cancelled. No member was removed.` That input is not run, so enter it again if you need it.
-Only lowercase `y` confirms.
+When the input is a command, such as `list`, the result also says `"list" was not run. Enter it again to run it.`
 
 After you confirm, other records remain, and the remaining matches are renumbered.
 The result identifies the removed member without displaying their phone, email, or address.
@@ -510,7 +567,14 @@ The result identifies the removed member without displaying their phone, email, 
 `clear` removes the entire roster, including members hidden by a search.
 It saves the empty roster and resets the search after a successful save.
 
-**Clearing is immediate, with no confirmation or undo.**
+1. Run `clear`. TrackCall shows the total number of stored members, including anyone hidden by searches or filters.
+2. Type `yes` and press Enter to clear and save the entire roster.
+   As for `delete`, `y`, `Y`, `YES`, or `Yes` keeps the prompt pending and reminds you to type `yes` exactly.
+   Any other input, such as `no`, cancels without running that input as a command.
+
+The roster, current view, and saved file stay unchanged while the prompt is pending or when you cancel.
+An already-empty roster saves immediately without prompting, so `clear` can still retry an unsaved empty roster.
+**There is no undo after confirmation.** Back up records you may need later.
 
 | Situation | Feedback after saving |
 | --- | --- |
@@ -522,7 +586,7 @@ The count includes hidden members.
 Extra arguments produce `Invalid command format. Usage: clear. This command removes all members.`
 
 If saving fails, TrackCall restores the roster and previous view. It reports:
-`Unable to clear the roster because the changes could not be saved. No members were removed.`
+`Unable to clear the roster because the changes could not be saved. No members were removed. Run clear again to retry.`
 See [Correcting errors](#correcting-errors) for recovery steps.
 
 ### Help and session {id="help-and-session"}
@@ -601,9 +665,10 @@ Exiting before a successful retry loses unsaved changes.
 ### A save fails after clear
 
 TrackCall restores every member and the previous view. It reports `No members were removed.`
-The clear input stays in the command box.
+The submitted input stays in the command box (`yes` after confirmation, or `clear` for an already-empty roster).
 
-Fix the storage problem. Retry only if you still want to remove the entire roster.
+Fix the storage problem. Run `clear` again and confirm the new prompt only if you still want to remove the entire roster.
+A second `yes` alone cannot repeat the action.
 
 ## Your data
 
@@ -624,11 +689,19 @@ start from the same folder to keep using the same roster.
 
 ### Editing the file manually
 
-Close TrackCall and make a backup first. Keep the existing JSON structure:
+Close TrackCall and make a backup first. If you edit the file while TrackCall is open, the next save is
+refused with a warning so your edits are not silently replaced. To keep your edits, exit and restart
+TrackCall. To replace them with the roster shown in TrackCall, retry the save; your edited version is
+then kept in `data/addressbook.json.bak`.
+
+Keep the existing JSON structure:
 
 * A `persons` array contains the members.
 * Each member has `name`, `phone`, `email`, `address`, and `tags` fields. An empty `address` means none was provided.
+  Spaces before or after a value, including each tag, are ignored, as they are in commands.
 * Use `tags` for each member's group assignments.
+* Save the file as UTF-8. A byte order mark (BOM) at the start of the file, which some editors such as
+  Windows Notepad add, is accepted.
 
 ### Missing or invalid files
 
@@ -648,7 +721,9 @@ without replacing that backup, including `clear` on an already-empty roster.
 If the backup cannot be written, the roster save fails and the existing roster stays unchanged.
 
 If the roster cannot be loaded, TrackCall first preserves its exact contents in a uniquely named
-`data/addressbook.json.corrupt-....json` file. It then offers:
+`data/addressbook.json.corrupt-....json` file. It then shows why the roster could not be loaded,
+for example `Reason: Tag names should be 1 to 30 characters long, using ASCII letters or digits with optional
+internal hyphens`, and offers:
 
 * **Restore backup**, when the backup is valid: restore the previous saved roster.
 * **Start empty**: explicitly replace the unreadable roster with an empty roster.
@@ -684,7 +759,7 @@ the member's other tags. Use `edit INDEX t/...` only when replacing the full tag
 
 Yes. Use `find` or `filter t/TAG` to display the group, then use `tagall t/TAG` or `untagall t/TAG`.
 Only the displayed members change. See [Tag or untag a group](#tag-or-untag-a-group-tagall-untagall).
-To rename a group's tag for everyone, use `renametag`. See [Rename a tag](#rename-a-tag-renametag).
+To rename a tag for the displayed members, use `renametag`. See [Rename a tag](#rename-a-tag-renametag).
 
 ### What should I do after a save error?
 
@@ -710,9 +785,9 @@ in memory.
 | Filter by tag | `filter t/TAG` | `filter t/committee` narrows the displayed members. |
 | Tag a group | `tagall t/TAG` | `tagall t/committee` adds the tag to every displayed member. |
 | Untag a group | `untagall t/TAG` | `untagall t/committee` removes the tag from every displayed member. |
-| Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every member. |
-| Delete one member | `delete INDEX`, then `y` | `delete 1`, then `y`, removes the first currently displayed member. |
-| Clear the roster | `clear` | `clear` removes all members, including those hidden by a search. |
+| Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every displayed member. |
+| Delete one member | `delete INDEX`, then `yes` | `delete 1`, then `yes`, removes the first currently displayed member. |
+| Clear the roster | `clear` | Run `clear`, then `yes` to remove all members, including hidden ones. `no` cancels. |
 | Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |
 | Import members | `import p/FILE_PATH` | `import p/members.csv` appends unique valid records. |
 | Close the app | `exit` | `exit` ends the session. |

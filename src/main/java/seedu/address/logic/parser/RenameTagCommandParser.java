@@ -12,7 +12,6 @@ import seedu.address.model.tag.Tag;
  * Parses the current and new tags accepted by {@code renametag}.
  */
 public class RenameTagCommandParser implements Parser<RenameTagCommand> {
-    public static final String MESSAGE_SAME_TAG = "The new tag must be different from the current tag.";
 
     /**
      * Parses {@code args} into a renametag command with exactly two valid tags.
@@ -30,8 +29,8 @@ public class RenameTagCommandParser implements Parser<RenameTagCommand> {
 
         Tag oldTag = BulkTagArgumentParser.parseTagName(tagValues.get(0));
         Tag newTag = BulkTagArgumentParser.parseTagName(tagValues.get(1));
-        if (oldTag.equals(newTag)) {
-            throw new ParseException(MESSAGE_SAME_TAG);
+        if (oldTag.tagName.equals(newTag.tagName)) {
+            throw new ParseException(RenameTagCommand.MESSAGE_SAME_TAG);
         }
         return new RenameTagCommand(oldTag, newTag);
     }

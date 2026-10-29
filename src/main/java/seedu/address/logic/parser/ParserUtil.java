@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -25,18 +26,19 @@ public class ParserUtil {
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
 
     /**
-     * Parses one or more search keywords using Java whitespace, including Unicode word separators.
+     * Parses search keywords using Java whitespace and Unicode space separators, including nonbreaking spaces.
      *
      * @param args Search keywords separated by whitespace.
      * @param usage Guidance to show when no keyword is supplied.
      * @throws ParseException If the input contains no keywords.
      */
     public static List<String> parseKeywords(String args, String usage) throws ParseException {
-        String strippedArgs = requireNonNull(args).strip();
-        if (strippedArgs.isEmpty()) {
+        List<String> keywords = Arrays.stream(requireNonNull(args).split("[\\p{javaWhitespace}\\p{Zs}]+"))
+                .filter(keyword -> !keyword.isEmpty()).toList();
+        if (keywords.isEmpty()) {
             throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, usage));
         }
-        return List.of(strippedArgs.split("\\p{javaWhitespace}+"));
+        return keywords;
     }
 
     /**

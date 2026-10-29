@@ -36,7 +36,7 @@ public class DeleteCommandTest {
         DeleteCommand deleteCommand = new DeleteCommand(INDEX_FIRST_PERSON);
 
         CommandResult expectedResult = new CommandResult(String.format(DeleteCommand.MESSAGE_CONFIRM_DELETE,
-                personToDelete.getName(), Messages.formatTags(personToDelete)),
+                INDEX_FIRST_PERSON.getOneBased(), personToDelete.getName(), Messages.formatTags(personToDelete)),
                 new ConfirmDeleteCommand(personToDelete));
 
         ModelManager expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
@@ -60,7 +60,7 @@ public class DeleteCommandTest {
         DeleteCommand deleteCommand = new DeleteCommand(INDEX_FIRST_PERSON);
 
         CommandResult expectedResult = new CommandResult(String.format(DeleteCommand.MESSAGE_CONFIRM_DELETE,
-                personToDelete.getName(), Messages.formatTags(personToDelete)),
+                INDEX_FIRST_PERSON.getOneBased(), personToDelete.getName(), Messages.formatTags(personToDelete)),
                 new ConfirmDeleteCommand(personToDelete));
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());

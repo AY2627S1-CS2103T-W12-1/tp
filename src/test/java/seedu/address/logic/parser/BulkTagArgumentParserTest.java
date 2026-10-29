@@ -1,7 +1,6 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_EMPTY_TAG;
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_INVALID_TAG;
@@ -29,6 +28,7 @@ public class BulkTagArgumentParserTest {
         assertEquals(new Tag("committee"), BulkTagArgumentParser.parse(" t/committee", USAGE));
         assertEquals(new Tag("committee"), BulkTagArgumentParser.parse("t/committee", USAGE));
         assertEquals(new Tag("year1"), BulkTagArgumentParser.parse(" t/ year1 ", USAGE));
+        assertEquals(new Tag("year-1"), BulkTagArgumentParser.parse(" t/year-1", USAGE));
         assertEquals(new Tag("Batch2026"), BulkTagArgumentParser.parse("\t t/\tBatch2026 \t", USAGE));
     }
 
@@ -42,12 +42,13 @@ public class BulkTagArgumentParserTest {
     }
 
     @Test
-    public void parse_tagsDifferingOnlyInCase_remainDistinct() throws Exception {
+    public void parse_tagsDifferingOnlyInCase_match() throws Exception {
         Tag upper = BulkTagArgumentParser.parse(" t/Year1", USAGE);
         Tag lower = BulkTagArgumentParser.parse(" t/year1", USAGE);
         assertEquals(new Tag("Year1"), upper);
         assertEquals(new Tag("year1"), lower);
-        assertNotEquals(upper, lower);
+        assertEquals(upper, lower);
+        assertEquals(upper.hashCode(), lower.hashCode());
     }
 
     @Test
@@ -102,7 +103,8 @@ public class BulkTagArgumentParserTest {
 
     @Test
     public void parse_invalidTag_throwsInvalidTagMessage() {
-        String[] inputs = {" t/year-1", " t/year1 year2", " t/hello!", " t/one x/two", " t/caf\u00e9"};
+        String[] inputs = {" t/-year1", " t/year1-", " t/year--1", " t/year1 year2",
+            " t/hello!", " t/one x/two", " t/caf\u00e9"};
         for (String input : inputs) {
             assertThrows(ParseException.class, MESSAGE_INVALID_TAG, () ->
                     BulkTagArgumentParser.parse(input, USAGE));

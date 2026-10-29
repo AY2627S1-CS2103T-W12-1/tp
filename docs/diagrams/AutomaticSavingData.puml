@@ -18,7 +18,7 @@ if (Parsing and execution succeeded?) then (no)
 else (yes)
 endif
 
-if (Read-only command or cancelled deletion?) then (yes)
+if (Read-only command, pending confirmation,\nor cancelled confirmation?) then (yes)
     :Show result without saving;
     stop
 else (no)

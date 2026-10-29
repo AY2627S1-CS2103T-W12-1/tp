@@ -39,7 +39,7 @@ public class FilterCommandParser implements Parser<FilterCommand> {
 
         String tagName = tagArgument.trim();
         if (!Tag.isValidTagName(tagName)) {
-            throw new ParseException(Tag.MESSAGE_CONSTRAINTS);
+            throw new ParseException(Tag.MESSAGE_CONSTRAINTS + ".");
         }
         return new FilterCommand(new Tag(tagName));
     }

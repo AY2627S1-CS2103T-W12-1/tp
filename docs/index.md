@@ -64,7 +64,7 @@ with [keyboard shortcuts](UserGuide.html#read-the-interface) for selecting membe
 * [**Remove one member's tag: `untag`**](UserGuide.html#add-or-remove-one-tag-tag-untag) — remove one assignment without replacing the rest.
 * [**Tag a displayed group: `tagall`**](UserGuide.html#tag-or-untag-a-group-tagall-untagall) — add a tag to every displayed member.
 * [**Untag a displayed group: `untagall`**](UserGuide.html#tag-or-untag-a-group-tagall-untagall) — remove a tag from every displayed member.
-* [**Rename a tag: `renametag`**](UserGuide.html#rename-a-tag-renametag) — replace a tag across the entire roster, including hidden members.
+* [**Rename a tag: `renametag`**](UserGuide.html#rename-a-tag-renametag) — replace a tag for every displayed member who has it.
 
 ### Exchange rosters with CSV
 
@@ -74,7 +74,8 @@ with [keyboard shortcuts](UserGuide.html#read-the-interface) for selecting membe
 ### Remove member records
 
 * [**Delete one member: `delete`**](UserGuide.html#delete-a-member-delete) — review a confirmation prompt before removing the selected record.
-* [**Clear the roster: `clear`**](UserGuide.html#clear-all-members-clear) — remove all members, including hidden records. Clearing is immediate and has no confirmation or undo.
+* [**Clear the roster: `clear`**](UserGuide.html#clear-all-members-clear) — remove all members, including hidden records,
+  after confirming with `yes`. An already-empty roster saves without prompting. There is no undo after confirming.
 
 ### Help and session
 

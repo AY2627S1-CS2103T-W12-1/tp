@@ -16,13 +16,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.exceptions.DataLoadingException;
+import seedu.address.commons.util.JsonUtil;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ReadOnlyAddressBook;
+import seedu.address.model.person.Person;
+import seedu.address.testutil.PersonBuilder;
 
 /** Tests complete roster persistence and rejection of invalid data files. */
 public class JsonAddressBookStorageTest {
@@ -104,6 +108,73 @@ public class JsonAddressBookStorageTest {
         Path file = testFolder.resolve("empty.json");
         Files.writeString(file, "{\"persons\":[]} \n\t\r\n");
         assertEquals(new AddressBook(), new JsonAddressBookStorage(file).readAddressBook().orElseThrow());
+    }
+
+    @Test
+    public void readAddressBook_byteOrderMark_loadsRosterWithoutChangingFile() throws Exception {
+        Path file = testFolder.resolve("bom.json");
+        String contents = "\uFEFF{\"persons\":[{\"name\":\"Alice\",\"phone\":\"123\","
+                + "\"email\":\"alice@example.com\",\"address\":\"Main Street\",\"tags\":[\"friends\"]}]}";
+        Files.writeString(file, contents);
+        Person alice = new PersonBuilder().withName("Alice").withPhone("123").withEmail("alice@example.com")
+                .withAddress("Main Street").withTags("friends").build();
+
+        ReadOnlyAddressBook loaded = new JsonAddressBookStorage(file).readAddressBook().orElseThrow();
+
+        assertEquals(List.of(alice), loaded.getPersonList());
+        assertEquals(contents, Files.readString(file));
+    }
+
+    @Test
+    public void readAddressBook_byteOrderMarkInsideRoster_throwsDataLoadingException() throws IOException {
+        assertInvalidDataRejected("\uFEFF\uFEFF{\"persons\":[]}");
+    }
+
+    @Test
+    public void saveAddressBook_fileChangedOutsideAfterLoad_refusesOnceThenKeepsOutsideVersionInBackup()
+            throws Exception {
+        Path file = testFolder.resolve("members.json");
+        new JsonAddressBookStorage(file).saveAddressBook(getTypicalAddressBook());
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.readAddressBook();
+        AddressBook outside = getTypicalAddressBook();
+        outside.addPerson(HOON);
+        new JsonAddressBookStorage(file).saveAddressBook(outside);
+        AddressBook session = getTypicalAddressBook();
+        session.addPerson(IDA);
+
+        assertThrows(IOException.class, JsonAddressBookStorage.MESSAGE_CHANGED_OUTSIDE, () ->
+                storage.saveAddressBook(session));
+        assertEquals(outside, storage.readAddressBook(file).orElseThrow());
+
+        storage.saveAddressBook(session);
+        assertEquals(session, storage.readAddressBook(file).orElseThrow());
+        assertEquals(outside, storage.readBackup().orElseThrow());
+    }
+
+    @Test
+    public void saveAddressBook_fileChangedOutsideAfterSave_refusesSave() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(getTypicalAddressBook());
+        new JsonAddressBookStorage(file).saveAddressBook(new AddressBook());
+
+        assertThrows(IOException.class, JsonAddressBookStorage.MESSAGE_CHANGED_OUTSIDE, () ->
+                storage.saveAddressBook(getTypicalAddressBook()));
+        assertEquals(new AddressBook(), storage.readAddressBook(file).orElseThrow());
+    }
+
+    @Test
+    public void saveAddressBook_fileReformattedOutsideWithSameData_saves() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(getTypicalAddressBook());
+        Files.writeString(file, Files.readString(file).replace("\n", "\n\n"));
+        AddressBook session = getTypicalAddressBook();
+        session.addPerson(HOON);
+
+        storage.saveAddressBook(session);
+        assertEquals(session, storage.readAddressBook(file).orElseThrow());
     }
 
     /** Verifies corrupt data is rejected without changing the file or escaping as an unchecked exception. */
@@ -214,6 +285,60 @@ public class JsonAddressBookStorageTest {
     }
 
     @Test
+    public void save_caseOnlyTagChange_createsBackupWithPreviousSpelling() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(rosterWithTag("Committee"));
+        byte[] previousRoster = Files.readAllBytes(file);
+
+        storage.saveAddressBook(rosterWithTag("committee"));
+
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        assertArrayEquals(previousRoster, Files.readAllBytes(backup));
+        assertTrue(Files.readString(file).contains("committee"));
+    }
+
+    @Test
+    public void save_caseOnlyTagChange_replacesExistingBackup() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(rosterWithTag("Earlier"));
+        storage.saveAddressBook(rosterWithTag("Committee"));
+        byte[] previousRoster = Files.readAllBytes(file);
+
+        storage.saveAddressBook(rosterWithTag("committee"));
+
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        assertArrayEquals(previousRoster, Files.readAllBytes(backup));
+        byte[] backupAfterRename = Files.readAllBytes(backup);
+        storage.saveAddressBook(rosterWithTag("committee"));
+        assertArrayEquals(backupAfterRename, Files.readAllBytes(backup));
+    }
+
+    @Test
+    public void save_caseOnlyTagChangeWithFailedWrite_preservesExistingBackup() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(rosterWithTag("Earlier"));
+        storage.saveAddressBook(rosterWithTag("Committee"));
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        byte[] activeBefore = Files.readAllBytes(file);
+        byte[] backupBefore = Files.readAllBytes(backup);
+
+        JsonAddressBookStorage failingStorage = storageWithFailingActiveWrite(file);
+        assertThrows(IOException.class, () -> failingStorage.saveAddressBook(rosterWithTag("committee")));
+
+        assertArrayEquals(activeBefore, Files.readAllBytes(file));
+        assertArrayEquals(backupBefore, Files.readAllBytes(backup));
+    }
+
+    private AddressBook rosterWithTag(String tagName) {
+        AddressBook addressBook = new AddressBook();
+        addressBook.addPerson(new PersonBuilder().withTags(tagName).build());
+        return addressBook;
+    }
+
+    @Test
     public void save_corruptRoster_blocksReplacementAndPreservesGoodBackup() throws Exception {
         Path file = testFolder.resolve("members.json");
         JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
@@ -243,6 +368,47 @@ public class JsonAddressBookStorageTest {
 
         assertArrayEquals(original, Files.readAllBytes(file));
         assertTrue(Files.exists(backup.resolve("keep.txt")));
+    }
+
+    @Test
+    public void save_activeWriteFails_preservesPreviousDistinctBackup() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        AddressBook earlier = getTypicalAddressBook();
+        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(new AddressBook()), file);
+        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(earlier), backup);
+        byte[] activeBefore = Files.readAllBytes(file);
+        byte[] backupBefore = Files.readAllBytes(backup);
+
+        JsonAddressBookStorage storage = storageWithFailingActiveWrite(file);
+        assertThrows(IOException.class, () -> storage.saveAddressBook(earlier));
+
+        assertArrayEquals(activeBefore, Files.readAllBytes(file));
+        assertArrayEquals(backupBefore, Files.readAllBytes(backup));
+    }
+
+    @Test
+    public void save_activeWriteFails_removesNewBackup() throws Exception {
+        Path file = testFolder.resolve("members.json");
+        Path backup = JsonAddressBookStorage.getBackupFilePath(file);
+        JsonUtil.saveJsonFile(new JsonSerializableAddressBook(new AddressBook()), file);
+        byte[] activeBefore = Files.readAllBytes(file);
+
+        JsonAddressBookStorage storage = storageWithFailingActiveWrite(file);
+        assertThrows(IOException.class, () -> storage.saveAddressBook(getTypicalAddressBook()));
+
+        assertArrayEquals(activeBefore, Files.readAllBytes(file));
+        assertFalse(Files.exists(backup));
+    }
+
+    /** Injects a failure at the active-file write, after backup rotation has completed. */
+    private JsonAddressBookStorage storageWithFailingActiveWrite(Path file) {
+        return new JsonAddressBookStorage(file) {
+            @Override
+            protected void writeActiveRoster(ReadOnlyAddressBook addressBook, Path target) throws IOException {
+                throw new IOException("Injected active roster write failure");
+            }
+        };
     }
 
     @Test

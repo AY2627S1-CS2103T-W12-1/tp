@@ -107,6 +107,11 @@ public class HelpWindow extends UiPart<Stage> {
         show();
     }
 
+    /**
+     * Resets help content and navigation state, then displays the overview or the selected topic.
+     *
+     * @param topic The command topic to display, or an empty string for the overview.
+     */
     private void populateCards(String topic) {
         commandCards.getChildren().clear();
         overviewGrid = null;
@@ -149,6 +154,12 @@ public class HelpWindow extends UiPart<Stage> {
         layoutOverview(commandScrollPane.getViewportBounds().getWidth());
     }
 
+    /**
+     * Creates an accessible overview row whose button opens the command's detailed help.
+     *
+     * @param entry The command help entry represented by the row.
+     * @return The row containing the navigation button, title, and example.
+     */
     private VBox createOverviewRow(CommandHelp entry) {
         Button details = new Button(entry.getKeyword());
         details.getStyleClass().add("overview-keyword");
@@ -184,6 +195,12 @@ public class HelpWindow extends UiPart<Stage> {
         }
     }
 
+    /**
+     * Builds a detail card with the command's purpose, syntax, example, notes, and error guidance.
+     *
+     * @param entry The command help entry to display.
+     * @return The populated detail card.
+     */
     private VBox createCard(CommandHelp entry) {
         VBox card = new VBox(10);
         card.getStyleClass().add("command-card");
