@@ -149,12 +149,17 @@ or save member data.
 * Matching ignores letter case and accepts any contiguous part of a name word.
   `Alice`, `Ali`, `lic`, and `ice` all match `Alice Tan`.
   For example, `find ali tan` shows names containing either `ali` or `tan`.
-* Each new `find` adds another name filter. For example, `find Alice Tan` followed by `find Tan`
+* Each distinct `find` adds another name filter. For example, `find Alice Tan` followed by `find Tan`
   keeps members matching both searches.
 * Email addresses, phone numbers, and tags are not searched.
 * Supply at least one keyword.
 
-The result reports `1 member listed.` or `N members listed.`
+Repeating an active search keeps its original box and reports `This name search is already active.`
+Keyword case, order, and repetition do not matter: `find Alice Tan` and `find TAN alice alice` are equivalent.
+A different query that leaves the same members visible adds its own box and reports `Results unchanged.`
+This also applies when the displayed list is empty.
+
+The result includes `1 member listed.` or `N members listed.`
 No matches produce `0 members listed.` and an empty list. No records are deleted.
 Active name, email and tag filters appear as boxes under the command field. Search boxes are blue and tag boxes
 are green. The boxes appear left to right in the order applied. With an unchanged roster, their order
@@ -187,14 +192,22 @@ any keyword can match.
 Keywords are literal text, not regular expressions; names and phone numbers are not searched.
 Supply at least one keyword. No matches produce `0 members listed.` and an empty list.
 
-Each new `findemail` searches the full roster and replaces earlier name searches, email searches,
-tag filters, and `show` selections. Active name sorting stays applied. Use `filter t/TAG` to narrow the email results,
-or `list` to show everyone again. Searching does not change records or save the data file.
+* Each `findemail` narrows the **currently displayed list**. Earlier name searches, email searches,
+  tag filters, and `show` selections stay active. Name sorting stays applied.
+* Each distinct search adds an **Email:** box in command order. Use its **X** to remove only that email condition.
+* For example, `filter t/committee` then `findemail example` keeps committee members whose emails contain
+  `example`. Running `findemail zara` next keeps only those whose emails also contain `zara`.
+* Keywords within one command mean **any**; separate searches must **all** match.
+* Repeating an active query keeps its original box and reports `This email search is already active.`
+  Keyword case, order, and repetition do not matter.
+* A different query that leaves the same members visible adds its own box and reports `Results unchanged.`
+  The existing conditions still apply, including after edits and when other boxes are removed.
+* Use `list` to clear all conditions and search the whole roster again.
+
+Searching does not change records or save the data file.
 Check the current displayed numbers before using `edit` or `delete`. Editing keeps the email search;
 if an edited email no longer matches, the member disappears from view but remains in the roster.
 Use `help findemail` for the same instructions offline.
-The filter row shows an **Email:** box with the search terms. Remove it with its **X** button to
-clear only the email condition while keeping any later name or tag filters.
 
 #### Filter displayed members by tag: `filter`
 
@@ -217,11 +230,11 @@ stays the same, and their displayed numbers update.
   For example, repeating `filter t/committee` begins with
   `Tag "committee" is already an active filter. No changes were made.`
 * A new `find` narrows these results by name. Use a box's **X** to remove one filter, or `list` to show everyone.
-  A new `findemail` searches the whole roster and replaces previous filters.
+  A new `findemail` also narrows these results by email, retaining previous conditions.
 
 The result reports `N member(s) listed with tag "TAG".` for one active tag filter. With multiple
 active tags, it names every distinct tag in the order applied, for example:
-`1 member(s) listed with tags "committee", "year1".` Use `list` or `findemail` to clear all active tag filters.
+`1 member(s) listed with tags "committee", "year1".` Use `list` to clear all active conditions.
 No matches produce a count of 0 and an empty list. Filtering does not change or save member data.
 
 Check the displayed numbers before using `edit`, `tag`, `untag`, or `delete`. Editing keeps the active search and filters.
@@ -616,7 +629,7 @@ The count includes hidden members.
 Extra arguments produce `Invalid command format. Usage: clear. This command removes all members.`
 
 If saving fails, TrackCall restores the roster and previous view. It reports:
-`Unable to clear the roster because the changes could not be saved. No members were removed. Run clear again to retry.`
+`Unable to clear the roster because the changes could not be saved. No members were removed.`
 See [Correcting errors](#correcting-errors) for recovery steps.
 
 ### Help and session {id="help-and-session"}
@@ -697,7 +710,10 @@ Exiting before a successful retry loses unsaved changes.
 TrackCall restores every member and the previous view. It reports `No members were removed.`
 The submitted input stays in the command box (`yes` after confirmation, or `clear` for an already-empty roster).
 
-Fix the storage problem. Run `clear` again and confirm the new prompt only if you still want to remove the entire roster.
+The feedback includes the storage failure reason. If it says the file changed outside TrackCall,
+restart to load those outside changes. Retry only if you intend to replace them with the session's cleared roster;
+the outside version will be kept in the backup. For other failures, resolve the stated storage problem first.
+Run `clear` again and confirm the new prompt only if you still want to remove the entire roster.
 A second `yes` alone cannot repeat the action.
 
 ## Your data
@@ -755,6 +771,8 @@ If an expected roster is missing, close the app and repair or restore the file f
 Before replacing an existing valid roster, TrackCall saves its previous contents to
 `data/addressbook.json.bak`. This is the previous distinct saved version. A save with unchanged member data retries persistence
 without replacing that backup, including `clear` on an already-empty roster.
+An explicit retry after an outside-change warning still backs up the outside file's exact contents,
+even if its members match the session's roster.
 If the backup cannot be written, the roster save fails and the existing roster stays unchanged.
 
 If the roster cannot be loaded, TrackCall first preserves its exact contents in a uniquely named

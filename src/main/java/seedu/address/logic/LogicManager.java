@@ -154,7 +154,11 @@ public class LogicManager implements Logic {
             if (beforeClear != null) {
                 // Clear changes only the records, so restoring them also restores the prior filtered view.
                 model.setAddressBook(beforeClear);
-                throw new SaveFailureException(ClearCommand.MESSAGE_SAVE_FAILURE, ioe, false);
+                String errorFormat = ioe instanceof AccessDeniedException
+                        ? FILE_OPS_PERMISSION_ERROR_FORMAT : FILE_OPS_ERROR_FORMAT;
+                String details = ioe.getMessage() == null ? ioe.toString() : ioe.getMessage();
+                throw new SaveFailureException(ClearCommand.MESSAGE_SAVE_FAILURE + "\n"
+                        + String.format(errorFormat, details), ioe, false);
             }
             if (command instanceof ImportCommand) {
                 String details = ioe.getMessage() == null ? ioe.toString() : ioe.getMessage();

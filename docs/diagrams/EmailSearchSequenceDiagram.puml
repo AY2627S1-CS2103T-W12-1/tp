@@ -11,9 +11,9 @@ activate logic
 note over logic, command: Parsing omitted; the command\nholds an email predicate.
 logic -> command : execute(model)
 activate command
-command -> model : updateFilteredPersonList(...)
+command -> model : filterFilteredPersonListByEmail(...)
 activate model
-note over model: Replace all conditions with\none email ActiveFilter.
+note over model: Add a distinct email filter;\nkeep other conditions.
 model -> model : refreshFilteredPersons()
 activate model
 model -> view : setPredicate(...)

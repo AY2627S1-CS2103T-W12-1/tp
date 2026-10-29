@@ -451,7 +451,7 @@ the retained input is the answer `yes`; run `clear` again to start a fresh confi
 | --- | --- | --- |
 | `sort` | Enable A–Z. | Retain. |
 | `list`, valid `import` | Disable. | Clear. |
-| `findemail` | Retain. | Replace with email query. |
+| `findemail` | Retain. | Narrow the view; add a distinct email condition. |
 | `find`, `filter`, `show` | Retain. | Narrow the view. |
 | Successful `add` execution | Retain. | Clear, even if the later save fails. |
 | `clear` | Retain. | Clear after saving succeeds; retain on save failure. |
@@ -470,23 +470,32 @@ the retained input is the answer `yes`; run `clear` again to start a fresh confi
 
 ### 4. Email search
 
-**Purpose:** search the full roster using an address or email fragments.
+**Purpose:** narrow the displayed members by an address or email fragments. `find` follows the same
+cumulative and repeat-detection rules for names.
 
 **Flow**
 
 1. Parse a nonblank query into `EmailContainsKeywordsPredicate`.
-2. Replace prior name, email, tag and `show` conditions with one email `ActiveFilter`.
-3. Re-evaluate the live view and return its count. Retain the current sort comparator.
+2. `FindEmailCommand` calls `ModelManager#filterFilteredPersonListByEmail`. If an equivalent email search is
+   not already active, append one email `ActiveFilter` and reapply all active conditions with AND.
+3. Re-evaluate the live view and return its count with the feedback below. Retain the current sort comparator.
 
-<a class="dg-diagram" style="--dg-diagram-width: 64.0000em" href="images/EmailSearchSequenceDiagram.svg" aria-label="Open diagram at full size: Email search and view replacement"><img src="images/EmailSearchSequenceDiagram.svg" alt="Email search and view replacement"></a>
+<a class="dg-diagram" style="--dg-diagram-width: 64.0000em" href="images/EmailSearchSequenceDiagram.svg" aria-label="Open diagram at full size: Cumulative email search"><img src="images/EmailSearchSequenceDiagram.svg" alt="Cumulative email search"></a>
 
 **Rules and design**
 
 - Split keywords on Java whitespace and Unicode space separators, including nonbreaking spaces.
-  Lowercase keywords and email with `Locale.ROOT`; match literal substrings with OR.
+  Lowercase keywords and email with `Locale.ROOT`; match literal substrings with OR within one command.
 - Do not search names or phone numbers. Regex syntax has no special meaning.
-  Keywords split on any Unicode space, including nonbreaking spaces.
-- Later `find` and `filter` commands narrow the results. Removing the email box retains later conditions.
+- Keep earlier name searches, email searches, tag filters, `show` selections and sorting. Each distinct search
+  adds its own box in application order; removing a box retains the other conditions, and `list` clears all.
+- **Repeats:** `ActiveFilter#hasSameSearch` compares keyword sets of the same kind, ignoring keyword case,
+  order and repetition. Names use `String.CASE_INSENSITIVE_ORDER` and emails use `Locale.ROOT` lowercase,
+  matching their predicates. A repeat keeps the original box and label. Both model search methods return
+  whether a condition was added.
+- **Feedback:** a repeat reports that the search is already active. A different query that leaves the displayed
+  count unchanged reports `Results unchanged.` and keeps its condition. Searches only narrow the list, so
+  equal counts mean the same members remain visible.
 - An email edit can remove a record from the view without deleting it.
 - Blank input preserves the view. Searching never saves data.
 
@@ -566,7 +575,7 @@ the retained input is the answer `yes`; run `clear` again to start a fresh confi
 | Other data-changing commands | Keep the applied change. | Clear the input to prevent accidental repetition. |
 
 - `SaveFailureException` records whether the change remains applied.
-- `clear` currently reports a generic failure without the underlying cause, including outside-change warnings.
+- `clear` reports its failure message followed by the underlying storage error, including outside-change warnings.
   If external edits may exist, restart to load them; retry clear only when intentionally replacing them with an empty roster.
 - The previous roster file is unchanged. Exiting can lose unsaved in-memory changes.
 - After restoring access, inspect the list and use `edit` with an existing value to retry saving.
@@ -603,9 +612,11 @@ the retained input is the answer `yes`; run `clear` again to start a fresh confi
   attempts to restore that backup; if rollback also fails, the temporary backup copy is retained.
 - Before saving, compare the valid file with the last loaded or saved roster. The first save after
   detecting an outside edit is refused and records the outside version as the new baseline.
-  Restart to load that version, or retry saving to replace it while keeping it in `.bak`.
-- Known gaps (pending PR #294): a roster file created externally after a missing-file start is not detected,
-  and a retry with matching session and outside data does not back up the outside file.
+  Restart to load that version, or retry saving to replace it while keeping its exact bytes in `.bak`, even if
+  its member values match the requested save. This backup requirement stays pending after a failed write and
+  clears after a successful save or an explicit reload.
+- A roster file created externally after a missing-file start is also detected, because storage records that it
+  observed the file as missing.
 - Invalid preferences fall back to defaults. Logger initialization failure falls back to the console.
 
 
@@ -755,7 +766,7 @@ Commons CSV handles quoting instead of manual string splitting.
 - Removing a chip removes only that selection. Its count reflects the remaining selected records,
   including those hidden by other conditions. Deleting every selected record leaves a removable
   **Show: 0 selected** chip.
-- `list`, successful `add`/`clear`, `findemail` and valid `import` clear selections.
+- `list`, successful `add`/`clear` and valid `import` clear selections.
 - Show is read-only and does not save.
 
 
@@ -1042,8 +1053,9 @@ These contracts apply across commands. Feature sections explain their implementa
 3. **Tags:** store each tag once per member, match without regard to case, retain its spelling and
    display tags in ASCII order. See the [User Guide](UserGuide.html) for tag syntax and length limits.
 4. **Listing and search:** `list` clears conditions and sorting. `find` adds a partial-name condition;
-   `findemail` replaces all conditions with a literal email search of the full roster. Keywords within
-   one search use OR; successive conditions use AND. Searches retain sorting.
+   `findemail` also narrows the displayed list with a literal email search. Keywords within
+   one search use OR; successive conditions use AND. Repeating a search reports that it is already active,
+   and a different query with unchanged results reports `Results unchanged.` Searches retain sorting.
 5. **Tag filtering:** each `filter` adds one tag condition. Repeating it, including with different case,
    reports an already-active filter without changing conditions. Zero matches is a valid result.
 6. **Displayed indexes:** indexed commands use the current filtered and sorted display, numbered from 1.
@@ -1489,15 +1501,26 @@ this candidate. Record it separately from the nonbreaking-space cases above; rej
 
 **Setup:** restore the fixture before each independent check.
 
-1. Run `sort`, `find Nobody`, then `findemail @EXAMPLE.COM`. **Expect:** Alice and Zara in name order; the previous
-   search is replaced. Run `filter t/committee`, then `findemail @school.edu`. **Expect:** Bob; the tag filter is
-   replaced too.
-2. Run `findemail alice@example.com @school.edu`. **Expect:** Alice and Bob (OR matching), also with a
-   nonbreaking space (U+00A0) between the keywords.
-3. Run `findemail .*`. **Expect:** zero matches, not regular-expression matching.
-   Run `findemail` without arguments. **Expect:** invalid input and the preceding view retained.
-4. Run `findemail @example.com`, then edit Alice's email to `alice@other.net` using her displayed index.
-   **Expect:** Alice leaves the view but remains stored; `list` shows all three members.
+1. **Cumulative conditions:** run `list`, `sort`, `filter t/committee`, then `findemail @EXAMPLE.COM`.
+   **Expect:** Alice only, with boxes `Tag: committee` and `Email: @EXAMPLE.COM`.
+   Run `findemail alice`. **Expect:** `Results unchanged. 1 member listed.` and a third box, `Email: alice`.
+   Run `findemail ALICE alice`. **Expect:** `This email search is already active. 1 member listed.` and still
+   three boxes, with the original spelling. Remove the `Email: alice` box with X: Alice remains.
+   Remove the domain box: Alice and Bob reappear in name order.
+2. **Empty results:** run `find Nobody`, then `findemail @example.com`. **Expect:** an empty list; the email search
+   does not restore hidden members. Run `findemail` without arguments. **Expect:** invalid input and unchanged
+   boxes and results.
+3. **Alternatives within a search:** run `list`, then `findemail alice@example.com @school.edu`.
+   **Expect:** Alice and Bob (OR matching), also with a nonbreaking space (U+00A0) between the keywords.
+   Run `findemail example.com`. **Expect:** Alice only. Remove the first Email box. **Expect:** Alice and Zara.
+   Run `list`, then `findemail .*`. **Expect:** zero matches, not regular-expression matching.
+4. **Selections and edits:** run `list`, `sort`, `show 1`, then `findemail @example.com`. **Expect:** Alice only
+   with the Show condition still active. Run `list`, then `findemail @example.com`, and edit Alice's email to
+   `alice@other.net` using her displayed index. **Expect:** Alice leaves the view but remains stored;
+   `list` shows all three members.
+5. **Name-search feedback:** run `list`, then `find Alice`, then `find ALICE alice`. **Expect:** one Name box and
+   `This name search is already active. 1 member listed.` Run `find Ali`. **Expect:** a second Name box and
+   `Results unchanged. 1 member listed.` Remove `Name: Alice`: `Name: Ali` stays active.
 
 ### Sorting and CSV workflows
 
