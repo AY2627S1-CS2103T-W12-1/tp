@@ -83,7 +83,8 @@ public class TagAllCommandTest {
         model.filterFilteredPersonList(HAS_FRIENDS_TAG);
         Model expectedModel = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         expectedModel.filterFilteredPersonList(HAS_FRIENDS_TAG);
-        String expectedMessage = "Added tag \"friends\" to 0 member(s). 3 already had this tag.";
+        String expectedMessage = "Added tag \"friends\" to 0 member(s). 3 already had this tag."
+                + " No changes were made.";
 
         try (LogCapture logs = new LogCapture(TagAllCommand.class)) {
             assertCommandSuccess(new TagAllCommand(friends), model, expectedMessage, expectedModel);

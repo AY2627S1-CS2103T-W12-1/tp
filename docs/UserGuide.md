@@ -382,9 +382,14 @@ The result reports both counts:
 * `Added tag "committee" to 9 member(s). 3 already had this tag.`
 * `Removed tag "committee" (any letter case) from 12 member(s).`
 
+When every displayed member is skipped, the result ends with `No changes were made.`, for example
+`Added tag "committee" to 0 member(s). 12 already had this tag. No changes were made.`
+
 The current search, filters, and sorting stay applied after the update.
 If you remove the tag used by the active filter, the updated members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
+The result then also reports the current list, for example
+`0 member(s) listed with tag "committee". Run list to show everyone.`
 
 Supply exactly one tag of 1 to 30 ASCII letters or digits with optional internal hyphens. Spaces around the tag
 are ignored, and matching ignores letter case. Missing `t/`, empty tags, invalid tags, more than one tag, and
@@ -411,11 +416,15 @@ Every displayed member tagged `batch2026` is now tagged `alumni` instead. The re
 A member with both distinct tags keeps a single copy of the replacement tag.
 Tags match regardless of letter case. To standardize capitalization across the roster, run `list`, then
 `renametag t/committee t/Committee`. Members already using `Committee` are skipped and the result
-counts only members whose spelling changed. Supplying identical spellings is rejected.
+counts only members whose spelling changed. If every matching member already uses the new spelling,
+TrackCall reports `Every displayed member with this tag already uses "Committee". No changes were made.`
+Supplying identical spellings is rejected.
 
 The current search, filters, and sorting stay applied after the update.
 If you rename the tag used by the active filter, the renamed members disappear from view
 because they no longer match. They are not deleted; run `list` to show everyone.
+The result then also reports the current list, for example
+`0 member(s) listed with tag "friends". Run list to show everyone.`
 
 Supply exactly two tags, each after `t/`, with 1 to 30 characters using ASCII letters or digits and
 optional internal hyphens.
@@ -526,21 +535,27 @@ Remove one member or the whole roster with confirmation.
 after you confirm the deletion.
 
 1. Run `list`, then `find Alice`, and check the results. Select the intended member to check their contact details.
-2. Use `delete 1`. TrackCall names the first match and its tags, then asks you to confirm:
+2. Use `delete 1`. TrackCall names the first match with its displayed number and tags, then asks you to confirm:
 
    ```text
-   Delete member Alice Tan?
+   Delete member 1, Alice Tan?
    Tags: (none)
-   Type y and press Enter to confirm. Any other input cancels the deletion.
+   Type yes and press Enter to confirm, or type no to cancel the deletion.
    ```
 
    The tags shown depend on the member; Alice from the quick start has none.
    The command box is highlighted until you answer. Asking for confirmation does not change or save the roster.
-3. Type `y` and press Enter to delete that member.
+3. Type `yes` and press Enter to delete that member.
 
-Any other input, including another command, cancels the deletion with
+Only `yes`, typed exactly in lowercase, confirms. `y`, `Y`, `YES`, or `Yes` does not confirm or cancel: it keeps
+the prompt pending and reminds you:
+`To confirm, type yes exactly, in lowercase, and press Enter. To cancel, type no.`
+The reminder is followed by the original prompt, so the member to be deleted (or, for `clear`, the total member
+count) stays visible, including after you remove a filter box.
+
+Any other input, such as `no` or another command, cancels the deletion with
 `Deletion cancelled. No member was removed.` That input is not run, so enter it again if you need it.
-Only lowercase `y` confirms.
+When the input is a command, such as `list`, the result also says `"list" was not run. Enter it again to run it.`
 
 After you confirm, other records remain, and the remaining matches are renumbered.
 The result identifies the removed member without displaying their phone, email, or address.
@@ -553,8 +568,9 @@ The result identifies the removed member without displaying their phone, email, 
 It saves the empty roster and resets the search after a successful save.
 
 1. Run `clear`. TrackCall shows the total number of stored members, including anyone hidden by searches or filters.
-2. Type `y` and press Enter to clear and save the entire roster.
-   Any other input cancels without running that input as a command.
+2. Type `yes` and press Enter to clear and save the entire roster.
+   As for `delete`, `y`, `Y`, `YES`, or `Yes` keeps the prompt pending and reminds you to type `yes` exactly.
+   Any other input, such as `no`, cancels without running that input as a command.
 
 The roster, current view, and saved file stay unchanged while the prompt is pending or when you cancel.
 An already-empty roster saves immediately without prompting, so `clear` can still retry an unsaved empty roster.
@@ -649,10 +665,10 @@ Exiting before a successful retry loses unsaved changes.
 ### A save fails after clear
 
 TrackCall restores every member and the previous view. It reports `No members were removed.`
-The submitted input stays in the command box (`y` after confirmation, or `clear` for an already-empty roster).
+The submitted input stays in the command box (`yes` after confirmation, or `clear` for an already-empty roster).
 
 Fix the storage problem. Run `clear` again and confirm the new prompt only if you still want to remove the entire roster.
-A second `y` alone cannot repeat the action.
+A second `yes` alone cannot repeat the action.
 
 ## Your data
 
@@ -770,8 +786,8 @@ in memory.
 | Tag a group | `tagall t/TAG` | `tagall t/committee` adds the tag to every displayed member. |
 | Untag a group | `untagall t/TAG` | `untagall t/committee` removes the tag from every displayed member. |
 | Rename a tag | `renametag t/CURRENT_TAG t/NEW_TAG` | `renametag t/batch2026 t/alumni` renames the tag for every displayed member. |
-| Delete one member | `delete INDEX`, then `y` | `delete 1`, then `y`, removes the first currently displayed member. |
-| Clear the roster | `clear` | Run `clear`, then `y` to remove all members, including hidden ones. Any other reply cancels. |
+| Delete one member | `delete INDEX`, then `yes` | `delete 1`, then `yes`, removes the first currently displayed member. |
+| Clear the roster | `clear` | Run `clear`, then `yes` to remove all members, including hidden ones. `no` cancels. |
 | Export members | `export [FILEPATH]` | `export members.csv` writes the full roster to CSV. |
 | Import members | `import p/FILE_PATH` | `import p/members.csv` appends unique valid records. |
 | Close the app | `exit` | `exit` ends the session. |

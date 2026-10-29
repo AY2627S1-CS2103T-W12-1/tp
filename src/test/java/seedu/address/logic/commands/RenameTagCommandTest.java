@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -120,6 +121,21 @@ public class RenameTagCommandTest {
     }
 
     @Test
+    public void execute_caseOnlyRenameAlreadySpelled_reportsNoChanges() throws Exception {
+        Model model = new ModelManager();
+        model.addPerson(new PersonBuilder().withName("Alice").withTags("Committee").build());
+        model.addPerson(new PersonBuilder().withName("Bob").withTags("Committee").build());
+        AddressBook before = new AddressBook(model.getAddressBook());
+
+        String feedback = new RenameTagCommand(new Tag("committee"), new Tag("Committee"))
+                .execute(model).getFeedbackToUser();
+
+        assertEquals("Every displayed member with this tag already uses \"Committee\". No changes were made.",
+                feedback);
+        assertEquals(before, model.getAddressBook());
+    }
+
+    @Test
     public void execute_renamingActiveFilterTag_keepsFilterAndHidesRenamedMembers() {
         Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
         model.filterFilteredPersonListByTag(friends);
@@ -128,7 +144,8 @@ public class RenameTagCommandTest {
         renameTagForAll(expectedModel, "friends", "buddies");
 
         assertCommandSuccess(new RenameTagCommand(friends, buddies), model,
-                "Renamed tag \"friends\" to \"buddies\" for 3 member(s).", expectedModel);
+                "Renamed tag \"friends\" to \"buddies\" for 3 member(s).\n"
+                + "0 member(s) listed with tag \"friends\". Run list to show everyone.", expectedModel);
         assertTrue(model.getFilteredPersonList().isEmpty());
         assertEquals(List.of(friends), model.getActiveTagFilters());
     }

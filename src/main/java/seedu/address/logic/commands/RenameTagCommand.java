@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -29,6 +30,8 @@ public class RenameTagCommand extends Command {
     public static final String MESSAGE_SUCCESS = "Renamed tag \"%1$s\" to \"%2$s\" for %3$d member(s).";
     public static final String MESSAGE_MERGED = " %1$d already had \"%2$s\".";
     public static final String MESSAGE_TAG_NOT_FOUND = "No member in the current list has the tag \"%1$s\".";
+    public static final String MESSAGE_ALREADY_SPELLED =
+            "Every displayed member with this tag already uses \"%1$s\". No changes were made.";
     public static final String MESSAGE_SAME_TAG = "The new tag must be different from the current tag.";
 
     private static final Logger logger = LogsCenter.getLogger(RenameTagCommand.class);
@@ -64,6 +67,7 @@ public class RenameTagCommand extends Command {
         boolean isCaseOnlyRename = oldTag.equals(newTag);
         int renamedCount = 0;
         int mergedCount = 0;
+        List<Person> renamedPersons = new ArrayList<>();
         for (Person target : targets) {
             if (isCaseOnlyRename && target.getTags().stream()
                     .anyMatch(tag -> tag.tagName.equals(newTag.tagName))) {
@@ -72,15 +76,23 @@ public class RenameTagCommand extends Command {
             if (!isCaseOnlyRename && target.getTags().contains(newTag)) {
                 mergedCount++;
             }
-            model.setPerson(target, createRenamedPerson(target));
+            Person renamedPerson = createRenamedPerson(target);
+            model.setPerson(target, renamedPerson);
+            renamedPersons.add(renamedPerson);
             renamedCount++;
         }
 
         logger.info(String.format("renametag t/%s t/%s: updated %d member(s), %d already had the new tag",
                 oldTag.tagName, newTag.tagName, renamedCount, mergedCount));
+        if (renamedCount == 0) {
+            return new CommandResult(String.format(MESSAGE_ALREADY_SPELLED, newTag.tagName));
+        }
         String message = String.format(MESSAGE_SUCCESS, oldTag.tagName, newTag.tagName, renamedCount);
         if (mergedCount > 0) {
             message += String.format(MESSAGE_MERGED, mergedCount, newTag.tagName);
+        }
+        if (!model.getFilteredPersonList().containsAll(renamedPersons)) {
+            message += FilterCommand.describeHiddenUpdates(model);
         }
         return new CommandResult(message);
     }

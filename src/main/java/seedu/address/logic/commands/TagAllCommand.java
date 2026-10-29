@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
+import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
@@ -64,6 +65,9 @@ public class TagAllCommand extends Command {
         String message = String.format(MESSAGE_SUCCESS, tag.tagName, taggedCount);
         if (skippedCount > 0) {
             message += String.format(MESSAGE_ALREADY_TAGGED, skippedCount);
+        }
+        if (taggedCount == 0) {
+            message += Messages.MESSAGE_NO_CHANGES;
         }
         return new CommandResult(message);
     }

@@ -172,19 +172,23 @@ public enum CommandHelp {
                     + "use clear for an empty roster. Exiting before a successful retry loses the batch."),
     DELETE("Remove records", "delete", "Delete one member", "delete INDEX", "delete 2",
             "Permanently removes the member at a displayed list number after you confirm the deletion.",
-            "Asks you to confirm deleting the second member in the current list. Typing y deletes them and shows "
+            "Asks you to confirm deleting the second member in the current list. Typing yes deletes them and shows "
                     + "their name and tags after saving.",
-            "Search first if needed, then check the number and contact details. The confirmation names the member; "
-                    + "any input other than y cancels without running that input. There is no undo after confirming.",
+            "Search first if needed, then check the number and contact details. The confirmation names the member "
+                    + "and their number. Only yes, in lowercase, confirms. y, Y or YES keeps the prompt and "
+                    + "reminds you; any other input "
+                    + "cancels without running that input. There is no undo after confirming.",
             "Supply one positive number shown in the current list. Zero, negative numbers and missing members "
                     + "are rejected. If saving fails, the deletion remains in this session and the command box clears; "
                     + "do not repeat the deletion to retry saving."),
     CLEAR("Remove records", "clear", "Clear the whole roster", "clear", "clear",
             "Permanently removes every member after confirmation, including members hidden by a search or filter.",
-            "For a non-empty roster, first shows the total member count and asks you to confirm with y. "
+            "For a non-empty roster, first shows the total member count and asks you to confirm with yes. "
                     + "After confirmation and saving, the result reports how many members were cleared, "
                     + "or confirms that an already empty roster needed no changes.",
-            "Any input other than y cancels without running that input. There is no undo after confirmation. "
+            "Only yes, in lowercase, confirms. y, Y or YES keeps the prompt and reminds you; "
+                    + "any other input cancels without running "
+                    + "that input. There is no undo after confirmation. "
                     + "An already-empty roster saves immediately without confirmation. "
                     + "Back up records you may need later.",
             "Extra arguments are rejected. If saving fails, the previous roster and displayed list are restored. "

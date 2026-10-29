@@ -10,6 +10,7 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
+import seedu.address.logic.commands.CommandHelp;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ConfirmDeleteCommand;
 import seedu.address.logic.commands.ExportCommand;
@@ -47,6 +48,9 @@ public class LogicManager implements Logic {
     /** The destructive command awaiting confirmation by the next input, or null if none is pending. */
     private Command pendingConfirmation;
 
+    /** The prompt that named the pending action and its scope, repeated after a near-miss reply. */
+    private String pendingConfirmationPrompt;
+
     /**
      * Constructs a {@code LogicManager} with the given {@code Model} and {@code Storage}.
      */
@@ -61,13 +65,23 @@ public class LogicManager implements Logic {
         logger.info("User command received");
 
         if (pendingConfirmation != null) {
+            String input = commandText.strip();
+            if (ConfirmDeleteCommand.isNearMiss(input)) {
+                logger.info("Inexact confirmation word received; the confirmation stays pending");
+                return new CommandResult(ConfirmDeleteCommand.MESSAGE_CONFIRMATION_REMINDER
+                        + "\n\n" + pendingConfirmationPrompt);
+            }
             Command confirmation = pendingConfirmation;
-            // The next input always ends the confirmation, so a later "y" cannot repeat a destructive action.
+            // Any other input ends the confirmation, so a later "yes" cannot repeat a destructive action.
             pendingConfirmation = null;
-            if (!commandText.strip().equals(ConfirmDeleteCommand.CONFIRMATION_WORD)) {
+            if (!input.equals(ConfirmDeleteCommand.CONFIRMATION_WORD)) {
                 logger.info("Confirmation cancelled; the cancelling input was not run as a command");
-                return new CommandResult(confirmation instanceof ClearCommand
-                        ? ClearCommand.MESSAGE_CANCELLED : ConfirmDeleteCommand.MESSAGE_CANCELLED);
+                String cancelled = confirmation instanceof ClearCommand
+                        ? ClearCommand.MESSAGE_CANCELLED : ConfirmDeleteCommand.MESSAGE_CANCELLED;
+                if (CommandHelp.find(input.split("\\s+", 2)[0]).isPresent()) {
+                    cancelled += String.format(ConfirmDeleteCommand.MESSAGE_INPUT_NOT_RUN, input);
+                }
+                return new CommandResult(cancelled);
             }
             logger.info("Destructive command confirmed");
             return executeAndSave(confirmation);
@@ -78,10 +92,12 @@ public class LogicManager implements Logic {
         if (command instanceof ClearCommand && memberCount > 0) {
             // Delay execution and persistence until the next input explicitly confirms the entire roster.
             pendingConfirmation = command;
-            return new CommandResult(String.format(ClearCommand.MESSAGE_CONFIRMATION, memberCount));
+            pendingConfirmationPrompt = String.format(ClearCommand.MESSAGE_CONFIRMATION, memberCount);
+            return new CommandResult(pendingConfirmationPrompt);
         }
         CommandResult commandResult = executeAndSave(command);
         pendingConfirmation = commandResult.getPendingDeletion().orElse(null);
+        pendingConfirmationPrompt = commandResult.getFeedbackToUser();
         return commandResult;
     }
 
