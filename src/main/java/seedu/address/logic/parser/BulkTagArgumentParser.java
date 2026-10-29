@@ -16,7 +16,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.tag.Tag;
 
 /**
- * Parses the single {@code t/TAG} argument shared by the bulk tag commands.
+ * Parses and validates the {@code t/TAG} arguments of the tag commands: {@code tag}, {@code untag},
+ * {@code tagall}, {@code untagall} and {@code renametag}.
  */
 public final class BulkTagArgumentParser {
     public static final String MESSAGE_EMPTY_TAG = "Tag cannot be empty.";

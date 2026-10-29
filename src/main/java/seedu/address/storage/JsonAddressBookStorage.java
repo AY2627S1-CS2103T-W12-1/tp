@@ -36,7 +36,7 @@ public class JsonAddressBookStorage {
     private static final Logger logger = LogsCenter.getLogger(JsonAddressBookStorage.class);
 
     private Path filePath;
-    // The roster this storage last read from or wrote to filePath, or null if it has not done so yet.
+    /** The roster this storage last read from or wrote to filePath, or null if it has not done so yet. */
     private ReadOnlyAddressBook lastKnownRoster;
 
     public JsonAddressBookStorage(Path filePath) {
