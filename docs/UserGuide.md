@@ -668,7 +668,7 @@ after you confirm the deletion.
    Asking for confirmation does not change or save the roster.
 3. Type `yes` and press Enter to delete that member.
 
-Only `yes`, typed exactly in lowercase, confirms. `y`, or `yes` in any other letter case (such as `Y`, `YES`, or `Yes`),
+Only `yes`, typed exactly in lowercase, confirms (spaces before or after it are ignored). `y`, or `yes` in any other letter case (such as `Y`, `YES`, or `Yes`),
 does not confirm or cancel: it keeps
 the prompt pending and reminds you:
 `To confirm, type yes exactly, in lowercase, and press Enter, or type anything else to cancel (except yes or y in any letter case).`
