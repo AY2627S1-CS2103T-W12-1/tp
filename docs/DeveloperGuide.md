@@ -665,13 +665,13 @@ showing file contents. A missing or null `persons` list also explains the requir
 
 - Add/edit accept fields in any order and reject repeated non-tag prefixes.
 - Reject unsupported whitespace-delimited ASCII single-letter prefixes in add/edit, including wrong-case prefixes.
-- Preserve the `c/o` address abbreviation, URLs, numeric slashes and slashes embedded within words in add/edit.
+- Preserve standalone `c/o`, `s/o`, and `d/o` abbreviations in any letter case, URLs, numeric slashes and slashes embedded within words in add/edit.
   `A/` followed by a digit is also literal within an address, as in `Block A/12`.
   A supported lowercase prefix still ends the address.
 - Shared field validation, in the model value classes, applies these rules:
   - **Name:** starts with a Unicode letter or ASCII digit. The rest may be Unicode letters, combining marks,
-    ASCII digits, spaces, hyphens and apostrophes, including the curly `’`. Leading hyphens or apostrophes,
-    a lone combining mark, slashes, tabs, line breaks, `@` and emoji are rejected.
+    ASCII digits, spaces, periods, slashes, hyphens and apostrophes, including the curly `’`. Leading punctuation,
+    a lone combining mark, tabs, line breaks, `@` and emoji are rejected.
   - **Phone:** at least 3 ASCII digits, with an optional leading `+` and internal spaces. The first and last
     characters after any `+` must be digits.
   - **Email:** ASCII letters, digits, `+ _ - '` in the local part, with single periods separating nonempty parts.
@@ -1490,8 +1490,9 @@ Start each subsection below from the baseline fixture and run its numbered steps
 3. Add Alice's contact details with different tags, then repeat using `alice tan` and `Alice  Tan`.
    **Expect:** duplicate rejection each time. Change the phone and retry. **Expect:** a separate record.
 4. Add a member using `n/Chloé O'Connor`, `p/+65 9123 4567`, `e/chloe.o'connor@example.com`,
-   `a/Block A/12` and `t/year-1`. **Expect:** accepted values with their spelling and formatting preserved.
-   Then add the same member with one invalid value at a time: `n/-Anne`, `n/Alice/Other`, `p/1 2` (two digits),
+   `a/Block A/12` and `t/year-1`. **Expect:** accepted values with their spelling and formatting preserved. Also check `Ravi s/o Kumar`,
+   `Priya d/o Raman`, and `J. Tan` through add, edit, CSV import/export, and restart.
+   Then add the same member with one invalid value at a time: `n/-Anne`, `n/Alice@Other`, `p/1 2` (two digits),
    `p/65+`, `e/john..doe@example.com`, and `a/` followed only by a nonbreaking space (U+00A0).
    **Expect:** a field-specific error each time, with no record added.
 

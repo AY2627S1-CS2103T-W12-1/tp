@@ -13,8 +13,8 @@ public class Name {
 
     public static final String MESSAGE_CONSTRAINTS =
             "Names must start with a letter or ASCII digit and contain only Unicode letters, combining marks, "
-                    + "ASCII digits, spaces, hyphens and apostrophes";
-    public static final String VALIDATION_REGEX = "[\\p{L}0-9][\\p{L}\\p{M}0-9 '\u2019-]*";
+                    + "ASCII digits, spaces, periods, slashes, hyphens and apostrophes";
+    public static final String VALIDATION_REGEX = "[\\p{L}0-9][\\p{L}\\p{M}0-9 ./'\u2019-]*";
 
     /** Shared spacing rule for new-contact duplicate matching and stored-roster sorting. */
     private static final Pattern WHITESPACE = Pattern.compile("(?U)\\s+");
