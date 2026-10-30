@@ -674,8 +674,8 @@ showing file contents. A missing or null `persons` list also explains the requir
     a lone combining mark, slashes, tabs, line breaks, `@` and emoji are rejected.
   - **Phone:** at least 3 ASCII digits, with an optional leading `+` and internal spaces. The first and last
     characters after any `+` must be digits.
-  - **Email:** ASCII letters and digits in the local part, separated singly by `+ _ . - '`. The local part
-    starts and ends with a letter or digit, and consecutive separators are rejected.
+  - **Email:** ASCII letters, digits, `+ _ - '` in the local part, with single periods separating nonempty parts.
+    Domain labels contain ASCII letters, digits and internal hyphens, with alphanumeric boundaries.
   - **Address:** optional. When present, it must contain a character other than whitespace or Unicode spaces.
 - Tag parsers name unsupported member fields, preambles and missing `t/` prefixes in their diagnostics.
   Invalid tag values receive the specific reason followed by the command usage.

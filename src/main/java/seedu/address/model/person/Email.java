@@ -10,20 +10,14 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 public class Email {
 
     public static final String MESSAGE_CONSTRAINTS = "Emails must use the format local-part@domain.\n"
-            + "1. Use ASCII letters (A-Z, a-z) and digits (0-9). The local-part must start and end with a letter "
-            + "or digit; single + _ . apostrophe or - separators may appear between letters or digits. "
-            + "Consecutive separators are not allowed.\n"
-            + "2. Separate domain labels with single periods. Each label must start and end with a letter or digit; "
-            + "single hyphens may appear between letters or digits. Consecutive hyphens are not allowed.\n"
+            + "1. The local part uses ASCII letters, digits, +, _, apostrophe or -, with single periods "
+            + "between nonempty parts.\n"
+            + "2. Domain labels use ASCII letters, digits and internal hyphens, separated by single periods.\n"
             + "3. The final domain label must contain at least 2 characters.";
-    private static final String SPECIAL_CHARACTERS = "+_.'-";
-    // Possessive repetition avoids backtracking and stack growth on long inputs. Each group starts
-    // with a separator absent from the following alphanumeric run, so no valid match needs backtracking.
-    private static final String ALPHANUMERIC_NO_UNDERSCORE = "[^\\W_]++"; // alphanumeric characters except underscore
-    private static final String LOCAL_PART_REGEX = "^" + ALPHANUMERIC_NO_UNDERSCORE + "(?:[" + SPECIAL_CHARACTERS + "]"
-            + ALPHANUMERIC_NO_UNDERSCORE + ")*+";
-    private static final String DOMAIN_PART_REGEX = ALPHANUMERIC_NO_UNDERSCORE
-            + "(?:-" + ALPHANUMERIC_NO_UNDERSCORE + ")*+";
+    // Possessive runs prevent backtracking and stack growth on long inputs.
+    private static final String LOCAL_ATOM = "[A-Za-z0-9+_'-]++";
+    private static final String LOCAL_PART_REGEX = "^" + LOCAL_ATOM + "(?:\\." + LOCAL_ATOM + ")*+";
+    private static final String DOMAIN_PART_REGEX = "[A-Za-z0-9]++(?:-++[A-Za-z0-9]++)*+";
     // Check the label length separately to avoid nested repetition and excessive backtracking.
     private static final String DOMAIN_LAST_PART_REGEX = "(?=[^.]{2,}$)" + DOMAIN_PART_REGEX + "$";
     private static final String DOMAIN_REGEX = "(?:" + DOMAIN_PART_REGEX + "\\.)*+" + DOMAIN_LAST_PART_REGEX;

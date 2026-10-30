@@ -72,8 +72,8 @@ public class EmailTest {
         assertFalse(Email.isValidEmail("peterjack@example.com ")); // trailing space
         assertFalse(Email.isValidEmail("peterjack@@example.com")); // double '@' symbol
         assertFalse(Email.isValidEmail("peter@jack@example.com")); // '@' symbol in local part
-        assertFalse(Email.isValidEmail("-peterjack@example.com")); // local part starts with a hyphen
-        assertFalse(Email.isValidEmail("peterjack-@example.com")); // local part ends with a hyphen
+        assertTrue(Email.isValidEmail("-peterjack@example.com"));
+        assertTrue(Email.isValidEmail("peterjack-@example.com"));
         assertFalse(Email.isValidEmail("peter..jack@example.com")); // local part has two consecutive periods
         assertFalse(Email.isValidEmail("peterjack@example@com")); // '@' symbol in domain name
         assertFalse(Email.isValidEmail("peterjack@.example.com")); // domain name starts with a period
@@ -101,15 +101,22 @@ public class EmailTest {
         for (String separator : new String[] {"+", "_", ".", "'", "-"}) {
             assertTrue(Email.isValidEmail("alice" + separator + "tan@example.com"));
             for (String secondSeparator : new String[] {"+", "_", ".", "'", "-"}) {
-                assertFalse(Email.isValidEmail("alice" + separator + secondSeparator + "tan@example.com"));
+                assertTrue(Email.isValidEmail("alice" + separator + secondSeparator + "tan@example.com")
+                        == !(separator.equals(".") && secondSeparator.equals(".")));
             }
         }
-        assertFalse(Email.isValidEmail("'alice@example.com"));
-        assertFalse(Email.isValidEmail("alice'@example.com"));
+        assertTrue(Email.isValidEmail("'alice@example.com"));
+        assertTrue(Email.isValidEmail("alice'@example.com"));
         assertFalse(Email.isValidEmail("alice@o'connor.com"));
         assertTrue(Email.isValidEmail("alice@a-b.co"));
-        assertFalse(Email.isValidEmail("alice@a--b.co"));
+        assertTrue(Email.isValidEmail("alice@a--b.co"));
         assertFalse(Email.isValidEmail("alice@a..co"));
+        assertTrue(Email.isValidEmail("alice__tan@xn--bcher-kva.example"));
+        assertTrue(Email.isValidEmail("alice._tan@example.com"));
+        assertTrue(Email.isValidEmail("_alice@example.com"));
+        assertFalse(Email.isValidEmail(".alice@example.com"));
+        assertFalse(Email.isValidEmail("alice.@example.com"));
+        assertFalse(Email.isValidEmail("alice@xn--.example"));
         assertFalse(Email.isValidEmail("álîce@example.com"));
         assertFalse(Email.isValidEmail("alice@éxample.com"));
         assertFalse(Email.isValidEmail("alice@１２.com"));
@@ -133,5 +140,22 @@ public class EmailTest {
 
         // different values -> returns false
         assertFalse(email.equals(new Email("other.valid@email")));
+    }
+    @Test
+    public void isValidEmail_expandedBoundariesAndLongHyphens() {
+        for (String punctuation : new String[] {"+", "_", "'", "-"}) {
+            assertTrue(Email.isValidEmail(punctuation + "alice@example.com"));
+            assertTrue(Email.isValidEmail("alice" + punctuation + "@example.com"));
+            assertTrue(Email.isValidEmail("alice." + punctuation + "tan@example.com"));
+        }
+        assertTrue(Email.isValidEmail("alice@example.xn--p1ai"));
+        assertFalse(Email.isValidEmail("alice@-xn--p1ai.example"));
+        assertFalse(Email.isValidEmail("alice@xn--p1ai-.example"));
+        assertFalse(Email.isValidEmail("alice@example..xn--p1ai"));
+        String label = "xn" + "-".repeat(20000) + "p1ai";
+        assertTimeoutPreemptively(Duration.ofSeconds(2), () -> {
+            assertTrue(Email.isValidEmail("alice@example." + label));
+            assertFalse(Email.isValidEmail("alice@example." + label + "-"));
+        });
     }
 }

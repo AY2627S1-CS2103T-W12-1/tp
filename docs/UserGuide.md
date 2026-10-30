@@ -480,8 +480,8 @@ Keep member contact details up to date.
 
 <p class="ug-topic"><strong>Email rules:</strong></p>
 
-- The local part contains ASCII letters or digits, optionally separated by single `+`, `_`, `.`, apostrophe (`'`), or `-` characters.
-- Domain labels contain ASCII letters or digits, optionally separated by single hyphens.
+- The local part contains ASCII letters, digits, `+`, `_`, apostrophe (`'`), and `-`. Single periods separate nonempty parts.
+- Domain labels contain ASCII letters, digits, and internal hyphens; labels start and end with a letter or digit.
 - The final domain label needs at least two characters.
 
 <p class="ug-topic"><strong>Example:</strong></p>
