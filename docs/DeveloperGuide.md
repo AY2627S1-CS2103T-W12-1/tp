@@ -475,7 +475,7 @@ the retained input is the answer `yes`; choose `clear` or `clear /all` again to 
 | --- | --- | --- |
 | `sort` | Stably reorder everyone A–Z. | Retain. |
 | `list` | Retain, including a saved sort. | Clear. |
-| Valid `import`, successful `add` execution | Append new members until the next `sort`. | Clear. |
+| Valid `import`, applied `add` | Append new members until the next `sort`. | Clear. |
 | `find`, `findemail`, `filter`, `show` | Retain. | Narrow the view. |
 | Displayed `clear` | Remove captured targets; retain survivor order. | Retain after saving. |
 | `clear /all` | Empty the roster. | Clear after saving. |
@@ -795,7 +795,8 @@ Commons CSV handles quoting instead of manual string splitting.
 - Removing a chip removes only that selection. Its count reflects the remaining selected records,
   including those hidden by other conditions. Deleting every selected record leaves a removable
   **Show: 0 selected** chip.
-- `list`, successful `add`/`clear /all` and valid `import` clear selections; displayed `clear` retains conditions and updates Show counts.
+- `list`, applied `add`, successful `clear /all` and valid `import` clear selections;
+  displayed `clear` retains conditions and updates Show counts.
 - Show is read-only and does not save.
 
 
