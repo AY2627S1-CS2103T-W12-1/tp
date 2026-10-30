@@ -77,7 +77,7 @@ for command syntax and the sections below for implementation decisions and failu
 
 ### AI-assisted development {id="ai-assisted-development"}
 
-OpenAI Codex was used to assist contributions to TrackCall, including implementing and refactoring
+Ian Abiel Wangsa (`Manutd1234`) used OpenAI Codex to assist contributions to TrackCall, including implementing and refactoring
 Java code, writing regression tests, debugging, reviewing pull requests, addressing review feedback,
 resolving merge conflicts, rewriting guide sections and generating PlantUML diagram sources. Requests included scoped clearing
 (`clear` and `clear /all`), persistent sorting, validation fixes and coverage improvements.
