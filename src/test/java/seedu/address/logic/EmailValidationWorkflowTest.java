@@ -3,7 +3,6 @@ package seedu.address.logic;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -57,8 +56,7 @@ public class EmailValidationWorkflowTest {
     public void userSession_unicodeNamesAndJitteredCommands_areStable() throws Exception {
         Session session = new Session(temporaryFolder.resolve("unicode-session"));
         Random random = new Random(359356L);
-        List<String> names = List.of("李明", "Αλέξανδρος", "Мария", "José\u0301 Tan", "नमस्ते सदस्य",
-                "علي حسن", "हана", "Zoë", "山田太郎", "Élodie O'Connor");
+        List<String> names = unicodeNames(random, 100);
         int index = 0;
         for (String name : names) {
             String email = "member_" + index + "@xn--bcher-kva.example";
@@ -74,6 +72,18 @@ public class EmailValidationWorkflowTest {
                     "edit 1 e/" + unicode), unicode);
         }
         assertEquals(names, session.saved().stream().map(person -> person.getName().fullName).toList());
+    }
+
+    private static List<String> unicodeNames(Random random, int count) {
+        int[] letters = {0x391, 0x3b1, 0x410, 0x430, 0x5d0, 0x5d1, 0x627, 0x628,
+            0x915, 0x938, 0x995, 0x9ac, 0x4e2d, 0x5c71, 0x3042, 0x30ab,
+            0xac00, 0xb098, 0x1000, 0x1001, 0x10a0, 0x10d0, 0x1e00, 0x1e02};
+        return java.util.stream.IntStream.range(0, count).mapToObj(index -> {
+            String name = "Member " + index + " "
+                    + new String(Character.toChars(letters[random.nextInt(letters.length)]))
+                    + new String(Character.toChars(letters[random.nextInt(letters.length)]));
+            return index % 5 == 0 ? name + "\u0301" : name;
+        }).toList();
     }
 
     private static List<String> row(String name, String email) {
