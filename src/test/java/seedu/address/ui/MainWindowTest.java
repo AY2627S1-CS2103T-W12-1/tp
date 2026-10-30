@@ -761,12 +761,27 @@ public class MainWindowTest {
                 Stage stage = window.getPrimaryStage();
                 ListView<?> roster = (ListView<?>) stage.getScene().lookup("#personListView");
                 assertInScene(roster);
-                for (Node node : roster.lookupAll(".list-cell")) {
+                Node viewport = roster.lookup(".clipped-container");
+                assertTrue(viewport != null, "The roster must render its viewport");
+                Bounds viewportBounds = viewport.localToScene(viewport.getLayoutBounds());
+                int visibleCells = 0;
+                for (Node node : viewport.lookupAll(".list-cell")) {
                     ListCell<?> cell = (ListCell<?>) node;
-                    if (cell.isEmpty()) {
+                    if (cell.isEmpty() || !cell.isVisible()) {
                         continue;
                     }
 
+                    // Rows may be partially visible vertically, but must fit the viewport horizontally.
+                    Bounds cellBounds = cell.localToScene(cell.getLayoutBounds());
+                    if (cellBounds.getMaxY() <= viewportBounds.getMinY()
+                            || cellBounds.getMinY() >= viewportBounds.getMaxY()) {
+                        continue;
+                    }
+                    visibleCells++;
+                    assertTrue(cellBounds.getMinX() >= viewportBounds.getMinX() - 1,
+                            cellBounds + " inside " + viewportBounds);
+                    assertTrue(cellBounds.getMaxX() <= viewportBounds.getMaxX() + 1,
+                            cellBounds + " inside " + viewportBounds);
                     Node card = cell.getGraphic();
                     assertTrue(card != null, "A populated roster cell must render its card");
                     assertInside(card, cell);
@@ -774,6 +789,7 @@ public class MainWindowTest {
                     assertTrue(name != null, "A roster card must render its name");
                     assertInside(name, card);
                 }
+                assertTrue(visibleCells > 0, "The roster must render at least one visible member row");
             });
         }
     }
