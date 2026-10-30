@@ -48,7 +48,8 @@ final class PrefixValidator {
             }
             boolean isAddressUnit = inAddress && letter == 'A' && i + 2 < args.length()
                     && args.charAt(i + 2) >= '0' && args.charAt(i + 2) <= '9';
-            if (!isCareOf && !isAddressUnit) {
+            // Preserve s/o and d/o.
+            if (!isCareOf && !isAddressUnit && !args.substring(i).matches("(?is)[sd]/o(?:\\p{javaWhitespace}.*)?")) {
                 throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, commandUsage));
             }
         }
