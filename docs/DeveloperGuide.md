@@ -915,7 +915,7 @@ removes the tag. `tagall` updates members who lack the tag; `untagall` updates m
 - Never visit hidden members. Removing an active filter tag can hide targets after their update.
 - Retain conditions and stored order. Skip redundant assignments rather than rejecting the batch.
 - Feedback adds "No changes were made." for a zero count. If active filters now hide updated members, it adds
-  the displayed-list summary and a reminder to run `list` (`FilterCommand#describeHiddenUpdates`).
+  the displayed-list summary and a reminder to run `list` (`TagUpdateUtil#describeHiddenUpdates`).
 - A valid all-skipped batch still saves. A save failure leaves the complete batch in memory.
 - The shared base class keeps targeting, logging and feedback consistent between add/remove operations.
 - Acting on the whole roster would prevent group targeting; `list` supplies that behavior when wanted.
@@ -1356,9 +1356,9 @@ alter the roster, view or JSON file.
 
 * **1a.** After a valid roster was loaded or saved, an outside edit changes its member data.
   The next save is refused. Restart to load the outside version and discard this session's unsaved changes,
-  or deliberately retry a roster-changing command to replace it. The retry updates `.bak` only if outside and
-  session data differ. Initially missing files and matching-roster retries have the limits described under
-  [storage safeguards](#startup-and-validation).
+  or deliberately retry a roster-changing command to replace it. A successful retry copies the warned-about outside
+  version into `.bak` even when its member values match the session. See
+  [storage safeguards](#startup-and-validation) for the full outside-edit and backup rules.
 * **3a.** The file is missing. TrackCall loads sample members and logs that the file was missing.
   It creates the file only after a valid data-changing command saves successfully. The use case ends.
 * **3b.** The file is invalid or unreadable. TrackCall preserves its bytes in a uniquely named
