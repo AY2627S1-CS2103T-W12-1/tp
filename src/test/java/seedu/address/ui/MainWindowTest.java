@@ -1149,6 +1149,11 @@ public class MainWindowTest {
                 assertEquals(model.getFilteredPersonList().getFirst(), window.getPersonListPanel().getSelectedPerson());
                 assertTrue(window.getPrimaryStage().getScene().lookup("#detailsScroll").isVisible());
             }
+            roster.getSelectionModel().clearSelection();
+            assertFalse(window.getPrimaryStage().getScene().lookup("#detailsScroll").isVisible());
+            Event.fireEvent(roster, key(KeyCode.HOME));
+            assertEquals(0, roster.getSelectionModel().getSelectedIndex());
+            assertTrue(window.getPrimaryStage().getScene().lookup("#detailsScroll").isVisible());
         });
     }
 
