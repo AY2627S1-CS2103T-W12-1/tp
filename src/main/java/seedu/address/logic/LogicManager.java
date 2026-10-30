@@ -65,7 +65,9 @@ public class LogicManager implements Logic {
         logger.info("User command received");
 
         if (pendingConfirmation != null) {
-            return handleConfirmationInput(commandText.strip());
+            // Ignore boundary spaces without changing confirmation case or interior text.
+            return handleConfirmationInput(commandText.replaceAll(
+                    "\\A[\\p{javaWhitespace}\\p{Zs}]+|[\\p{javaWhitespace}\\p{Zs}]+\\z", ""));
         }
 
         Command command = addressBookParser.parseCommand(commandText);

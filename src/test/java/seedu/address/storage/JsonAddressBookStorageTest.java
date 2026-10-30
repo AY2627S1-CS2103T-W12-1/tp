@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.HOON;
@@ -16,7 +18,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -53,6 +59,28 @@ public class JsonAddressBookStorageTest {
     @Test
     public void read_missingFile_emptyResult() throws Exception {
         assertFalse(readAddressBook("NonExistentFile.json").isPresent());
+    }
+
+    @Test
+    public void readAddressBook_inaccessibleParent_throwsWithoutChangingRoster() throws Exception {
+        assumeTrue(Files.getFileAttributeView(testFolder, PosixFileAttributeView.class) != null);
+        Path dataDirectory = Files.createDirectory(testFolder.resolve("data"));
+        Path file = dataDirectory.resolve("addressbook.json");
+        JsonAddressBookStorage storage = new JsonAddressBookStorage(file);
+        storage.saveAddressBook(getTypicalAddressBook());
+        byte[] original = Files.readAllBytes(file);
+        Set<PosixFilePermission> originalPermissions = Files.getPosixFilePermissions(dataDirectory);
+
+        try {
+            Files.setPosixFilePermissions(dataDirectory, PosixFilePermissions.fromString("r--------"));
+            assumeFalse(Files.isReadable(file), "Requires enforced directory access restrictions");
+            assertThrows(DataLoadingException.class, storage::readAddressBook);
+        } finally {
+            Files.setPosixFilePermissions(dataDirectory, originalPermissions);
+        }
+
+        assertArrayEquals(original, Files.readAllBytes(file));
+        assertEquals(getTypicalAddressBook(), storage.readAddressBook().orElseThrow());
     }
 
     @Test

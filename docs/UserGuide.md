@@ -122,6 +122,12 @@ retained and adapted for TrackCall. Each group explains the relevant commands, e
 - Do not type the brackets or ellipsis.
 - Submit each command on one line.
 
+> **Pasting commands**
+>
+> The command box removes pasted tab characters, which can join words or change contact values.
+> Replace tab separators with ordinary spaces before pasting, then check the displayed command and its
+> contact values before pressing Enter. Type confirmation replies manually.
+
 > **Before trying an example**
 >
 > Examples are independent. A command using a member number needs a member at that number in the
@@ -261,7 +267,8 @@ Searching does not save the data file.
 <p class="ug-topic"><strong>Matching:</strong></p>
 
 - Matching ignores letter case.
-- Whitespace, including pasted nonbreaking spaces, separates keywords; any keyword can match.
+- Spaces, including pasted nonbreaking spaces, separate keywords; any keyword can match.
+  Use ordinary spaces instead of tabs when pasting a search.
 - Keywords are literal text, not regular expressions; names and phone numbers are not searched.
 - Supply at least one keyword.
 - No matches produce `0 members listed.` and an empty list.
@@ -442,7 +449,7 @@ Keep member contact details up to date.
 
 - Provide a name, phone, and email. Address and tags are optional.
 - Required prefixes may appear in any order, but each must appear exactly once.
-- Separate each prefix from the preceding value with whitespace; pasted tabs also work.
+- Separate each prefix from the preceding value with ordinary spaces; pasted tabs are removed.
 - Use `a/` if you have an address, and a separate `t/` for each tag.
 
 <p class="ug-topic"><strong>Field prefixes and address text</strong></p>
@@ -461,7 +468,7 @@ Keep member contact details up to date.
 | Field | Current rule |
 | --- | --- |
 | Name | Start with a Unicode letter or ASCII digit. Unicode letters, combining marks, ASCII digits, spaces, periods, slashes, hyphens, and straight or curly apostrophes are accepted. |
-| Phone | At least three ASCII digits, with an optional leading `+` and spaces between digits. Formatting is preserved. Hyphens, parentheses, and internal tabs are rejected. |
+| Phone | At least three ASCII digits, with an optional leading `+` and spaces between digits. Formatting is preserved. Hyphens and parentheses are rejected. Internal tabs are invalid, but command-box pasting removes them before validation. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text when provided; Unicode-space-only values are rejected. `edit INDEX a/` clears an address. |
 | Tag | 1 to 30 ASCII letters or digits with optional internal hyphens, such as `year-1`. Spaces, underscores, other symbols such as `@ # $ % .`, and accented letters are not allowed. Matching ignores letter case. |
@@ -942,6 +949,8 @@ The command box is highlighted until you answer:
 <p class="ug-topic"><strong>Confirmation and near misses</strong></p>
 
 - Only `yes`, typed exactly in lowercase, confirms (spaces before or after it are ignored).
+- Type confirmation replies manually. Pasting `y<TAB>es` (where `<TAB>` is a literal tab) displays `yes`
+  and confirms if you press Enter.
 - `y`, or `yes` in any other letter case (such as `Y`, `YES`, or `Yes`), does not confirm or cancel:
   it keeps the prompt pending and reminds you:
   `To confirm, type yes exactly, in lowercase, and press Enter, or type anything else to cancel (except yes or y in any letter case).`

@@ -234,7 +234,8 @@ public class JsonAddressBookStorage {
             if (Files.exists(backup)) {
                 previousBackup = Files.createTempFile(backup.toAbsolutePath().getParent(),
                         ".trackcall-backup-", ".tmp");
-                Files.copy(backup, previousBackup, StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(backup, previousBackup, StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.COPY_ATTRIBUTES);
             }
             FileUtil.writeAtomically(backup,
                     temporary -> Files.copy(target, temporary, StandardCopyOption.REPLACE_EXISTING));

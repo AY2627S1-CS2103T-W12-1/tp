@@ -8,6 +8,8 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.model.person.Person;
@@ -33,6 +35,16 @@ public class PersonListPanel extends UiPart<Region> {
         personListView.setCellFactory(listView -> new PersonListViewCell());
         personListView.getSelectionModel().selectedItemProperty().addListener((unused, oldPerson, newPerson) ->
                 onSelectionChanged.run());
+        // JavaFX returns at both arrow-key boundaries when the sole row is focused but not selected.
+        personListView.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            if (!event.isShiftDown() && !event.isControlDown() && !event.isAltDown() && !event.isMetaDown()
+                    && (event.getCode() == KeyCode.UP || event.getCode() == KeyCode.DOWN
+                            || event.getCode() == KeyCode.KP_UP || event.getCode() == KeyCode.KP_DOWN)
+                    && personListView.getSelectionModel().isEmpty() && personListView.getItems().size() == 1) {
+                personListView.getSelectionModel().selectFirst();
+                event.consume();
+            }
+        });
     }
 
     /** Notifies the details panel when an explicit roster selection changes. */

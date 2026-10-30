@@ -1136,6 +1136,80 @@ public class MainWindowTest {
     }
 
     @Test
+    public void keyboard_singleDisplayedMember_arrowKeysSelectAndRevealDetails() throws Exception {
+        onJavaFxThread(() -> {
+            enter("show 1");
+            ListView<?> roster = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+            for (KeyCode direction : List.of(KeyCode.DOWN, KeyCode.UP, KeyCode.KP_DOWN, KeyCode.KP_UP)) {
+                roster.getSelectionModel().clearSelection();
+                Event.fireEvent(input, key(KeyCode.F2));
+                assertEquals(roster, window.getPrimaryStage().getScene().getFocusOwner());
+                Event.fireEvent(roster, key(direction));
+                assertEquals(0, roster.getSelectionModel().getSelectedIndex(), direction + " should select sole row");
+                assertEquals(model.getFilteredPersonList().getFirst(), window.getPersonListPanel().getSelectedPerson());
+                assertTrue(window.getPrimaryStage().getScene().lookup("#detailsScroll").isVisible());
+            }
+            roster.getSelectionModel().clearSelection();
+            assertFalse(window.getPrimaryStage().getScene().lookup("#detailsScroll").isVisible());
+            Event.fireEvent(roster, key(KeyCode.HOME));
+            assertEquals(0, roster.getSelectionModel().getSelectedIndex());
+            assertTrue(window.getPrimaryStage().getScene().lookup("#detailsScroll").isVisible());
+        });
+    }
+
+    @Test
+    public void keyboard_rosterArrows_keepF2PrivateAndNavigateExistingSelection() throws Exception {
+        onJavaFxThread(() -> {
+            ListView<?> roster = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+            Event.fireEvent(input, key(KeyCode.F2));
+            assertNull(roster.getSelectionModel().getSelectedItem());
+            assertFalse(window.getPrimaryStage().getScene().lookup("#detailsScroll").isVisible());
+            Event.fireEvent(roster, key(KeyCode.DOWN));
+            assertEquals(1, roster.getSelectionModel().getSelectedIndex());
+            Event.fireEvent(roster, key(KeyCode.UP));
+            assertEquals(0, roster.getSelectionModel().getSelectedIndex());
+            Event.fireEvent(roster, key(KeyCode.DOWN));
+            assertEquals(1, roster.getSelectionModel().getSelectedIndex());
+            Event.fireEvent(roster, key(KeyCode.ESCAPE));
+            assertNull(roster.getSelectionModel().getSelectedItem());
+            assertFalse(window.getPrimaryStage().getScene().lookup("#detailsScroll").isVisible());
+            assertEquals(input, window.getPrimaryStage().getScene().getFocusOwner());
+            Event.fireEvent(input, key(KeyCode.F2));
+            assertNull(roster.getSelectionModel().getSelectedItem());
+        });
+    }
+
+    @Test
+    public void keyboard_emptyRoster_arrowsLeaveDetailsHidden() throws Exception {
+        onJavaFxThread(() -> {
+            enter("find Nobody");
+            ListView<?> roster = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+            Event.fireEvent(input, key(KeyCode.F2));
+            Event.fireEvent(roster, key(KeyCode.DOWN));
+            Event.fireEvent(roster, key(KeyCode.UP));
+            assertNull(roster.getSelectionModel().getSelectedItem());
+            assertFalse(window.getPrimaryStage().getScene().lookup("#detailsScroll").isVisible());
+        });
+    }
+
+    @Test
+    public void keyboard_singleDisplayedMember_modifiedArrowsRetainDefaultHandling() throws Exception {
+        onJavaFxThread(() -> {
+            enter("show 1");
+            ListView<?> roster = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+            Event.fireEvent(input, key(KeyCode.F2));
+            boolean[] reachedLaterFilter = {false};
+            roster.addEventFilter(KeyEvent.KEY_PRESSED, event -> reachedLaterFilter[0] = true);
+            for (int modifier = 0; modifier < 4; modifier++) {
+                reachedLaterFilter[0] = false;
+                Event.fireEvent(roster, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.UP,
+                        modifier == 0, modifier == 1, modifier == 2, modifier == 3));
+                assertTrue(reachedLaterFilter[0], "Modified arrow must reach the existing event pipeline");
+            }
+        });
+    }
+
+    @Test
     public void keyboard_escapeFromCommand_clearsSelectedDetailsButPreservesDraftInput() throws Exception {
         onJavaFxThread(() -> {
             ListView<?> roster = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");

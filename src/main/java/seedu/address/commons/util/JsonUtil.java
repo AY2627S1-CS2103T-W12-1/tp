@@ -64,7 +64,8 @@ public class JsonUtil {
 
         try {
             filePath = FileUtil.resolvePath(filePath);
-            if (!Files.exists(filePath)) {
+            // Access failures must not trigger first-run defaults.
+            if (Files.notExists(filePath)) {
                 return Optional.empty();
             }
             logger.info("JSON file " + filePath + " found.");

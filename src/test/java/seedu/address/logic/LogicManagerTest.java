@@ -203,6 +203,50 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_unicodePaddedConfirmation_preservesCaseAndCapturedTargets() throws Exception {
+        for (String command : List.of("delete 1", "clear", "clear /all")) {
+            for (String space : List.of(" ", "\t", "\u00a0", "\u2007", "\u202f", "\u2003", "\u3000")) {
+                model.setAddressBook(new AddressBook());
+                model.addPerson(AMY);
+                model.addPerson(BOB);
+                logic.execute("find Amy");
+                String prompt = logic.execute(command).getFeedbackToUser();
+                // Changing the visible list must not expand the action captured by the prompt.
+                logic.removeActiveFilter(logic.getActiveFilters().get(0));
+
+                for (String nearMiss : List.of("YES", "Yes", "y", "Y")) {
+                    assertEquals(Confirmation.REMINDER + "\n\n" + prompt,
+                            logic.execute(space + nearMiss + space).getFeedbackToUser());
+                    assertTrue(logic.isAwaitingConfirmation());
+                    assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
+                }
+
+                logic.execute(space + "yes" + space);
+                assertFalse(logic.isAwaitingConfirmation());
+                assertEquals(command.equals("clear /all") ? List.of() : List.of(BOB),
+                        model.getAddressBook().getPersonList());
+                assertModelSaved();
+                assertParseException("yes", MESSAGE_UNKNOWN_COMMAND);
+            }
+        }
+    }
+
+    @Test
+    public void execute_confirmationWithInteriorSpace_cancelsWithoutDeleting() throws Exception {
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        for (String command : List.of("delete 1", "clear", "clear /all")) {
+            for (String input : List.of("y\u00a0es", "ye\u2007s", "yes\u202fplease", "\u00a0no\u00a0")) {
+                logic.execute(command);
+                logic.execute(input);
+                assertFalse(logic.isAwaitingConfirmation());
+                assertEquals(List.of(AMY, BOB), model.getAddressBook().getPersonList());
+            }
+        }
+        assertNothingSaved();
+    }
+
+    @Test
     public void execute_invalidDeleteIndex_doesNotAwaitConfirmation() {
         model.addPerson(AMY);
 
