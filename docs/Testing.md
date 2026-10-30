@@ -59,7 +59,7 @@ These categories describe what a test exercises; a suite can cover more than one
   Checks displayed-member exports and hidden counts while filtering, duplicate imports, field boundaries, rejected imports,
   and save-failure recovery guidance.
 - **`CommandSequenceOracleTest`:** compares the application with an independent reference roster.
-  Runs 3,200 steps across eight fixed seeds, covering filters, sorting, selections, tags, CSV,
+  Runs 8,000 steps across sixteen fixed seeds, covering filters, sorting, selections, tags, CSV,
   deletion confirmation, reloads, and saved-file preservation after read-only commands.
   A separate scenario checks condition and stored-order rollback after a failed clear.
 - **`CsvRoundTripRandomizedTest`:** checks that exported data can be imported without losing fields or order.
@@ -87,6 +87,44 @@ These categories describe what a test exercises; a suite can cover more than one
 - Simulated write failures do not reproduce every full-disk or power-loss condition.
 - These suites run in CI on Windows, macOS, and Linux. Passing them does not establish that every recovery
   failure is covered; known gaps remain in the issue tracker.
+
+The generated operations also reject malformed commands, out-of-range indices, duplicate additions,
+imports with an invalid row after a valid row, and exports to a blocked destination. Exported CSV fields
+and displayed row order are checked against the displayed reference records using a CSV parser independently of the
+application's importer. Full list/export/clear/import/reload cycles check that a successful round trip restores
+the complete roster. Twelve additional seeded workflows guarantee that filtering, sorting, show selections,
+editing, tagging, deletion cancellation and confirmation, rejected operations, and export/restore are exercised
+together with nonempty targets. These expectations describe this checkout's command contracts; adapt them
+to another application's documented behavior before treating a difference as a bug.
+
+To replay or expand the generated run in PowerShell:
+
+```powershell
+$env:ORACLE_FIRST_SEED = '0'
+$env:ORACLE_SEEDS = '32'
+$env:ORACLE_STEPS = '1000'
+.\gradlew.bat test --tests '*CommandSequenceOracleTest' --rerun-tasks
+Remove-Item Env:ORACLE_FIRST_SEED, Env:ORACLE_SEEDS, Env:ORACLE_STEPS
+```
+
+Generated-operation failures include the seed, step, recent commands, and a path to `failure-trace.txt` containing the full
+command history. Failing sessions retain their JUnit temporary directory. The trace is for replay and
+investigation; automatic reduction to a minimal command sequence is not implemented.
+
+To measure whether the guaranteed workflows detect selected known faults, run:
+
+```shell
+python tools/calibrate_command_oracle.py --gradle /absolute/path/to/gradle
+```
+
+On Windows pass the path to `gradle.bat`; `--gradle-user-home` can select an existing dependency cache.
+The calibration runs offline and therefore requires a populated Gradle cache. It copies tracked working-tree
+files (including local edits) into an isolated `.integration/oracle-calibration-*` directory, verifies a passing
+baseline, and separately introduces four faults: exporting hidden members, editing by the stored index,
+not saving edits, and reversing the sort order. It retains per-run logs and `summary.json`, restores each
+mutated source file, and does not modify production files in the original checkout. Compilation or setup
+failures do not count as detections. This is a small calibration set, not a general bug-detection percentage
+or evidence of performance on an unseen repository.
 
 ## Release verification
 
