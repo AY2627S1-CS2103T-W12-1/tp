@@ -32,6 +32,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
@@ -744,6 +745,40 @@ public class MainWindowTest {
     }
 
     /** Resizes on a separate JavaFX turn so the native window can update its scene dimensions. */
+    @Test
+    public void longUnicodeNames_keepRosterCardsInsideResponsiveLayout() throws Exception {
+        onJavaFxThread(() -> {
+            String[] scripts = {"李明", "Αλέξανδρος", "Мария", "नमस्ते", "علي", "山田"};
+            for (int i = 0; i < 12; i++) {
+                String name = scripts[i % scripts.length] + " " + "界界Ée\u0301".repeat(24) + i;
+                model.addPerson(new PersonBuilder().withName(name).build());
+            }
+        });
+        for (double[] size : new double[][] {{450, 450}, {720, 560}, {1100, 760}}) {
+            resizeWindow(size[0], size[1]);
+            onJavaFxThread(() -> {
+                layoutWindow();
+                Stage stage = window.getPrimaryStage();
+                ListView<?> roster = (ListView<?>) stage.getScene().lookup("#personListView");
+                Node viewport = roster.lookup(".viewport");
+                assertInScene(roster);
+                for (Node node : roster.lookupAll(".list-cell")) {
+                    ListCell<?> cell = (ListCell<?>) node;
+                    if (cell.isEmpty()) {
+                        continue;
+                    }
+                    assertInside(cell, viewport);
+                    Node card = cell.getGraphic();
+                    assertTrue(card != null, "A populated roster cell must render its card");
+                    assertInside(card, cell);
+                    Node name = card.lookup(".member-name");
+                    assertTrue(name != null, "A roster card must render its name");
+                    assertInside(name, card);
+                }
+            });
+        }
+    }
+
     private void resizeWindow(double width, double height) throws Exception {
         onJavaFxThread(() -> {
             window.getPrimaryStage().setWidth(width);
