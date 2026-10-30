@@ -1485,8 +1485,8 @@ Start each subsection below from the baseline fixture and run its numbered steps
    Run `edit 1 a/`. **Expect:** Zara's address is cleared. Run `edit 1 t/committee t/year1`, then `edit 1 t/`.
    **Expect:** replaced tags, then no tags.
 2. Try, separately, a missing required field, repeated `n/`, invalid phone/email, empty `add ... a/`, `edit 1`,
-   and appending `x/extra` or `T/committee`. **Expect:** rejection without changes. Tab separators before valid
-   prefixes parse like spaces.
+   and appending `x/extra` or `T/committee`. **Expect:** rejection without changes. Use ordinary spaces between
+   prefixes: the command field removes pasted tabs before they reach the parser.
 3. Add Alice's contact details with different tags, then repeat using `alice tan` and `Alice  Tan`.
    **Expect:** duplicate rejection each time. Change the phone and retry. **Expect:** a separate record.
 4. Add a member using `n/Chloé O'Connor`, `p/+65 9123 4567`, `e/chloe.o'connor@example.com`,
