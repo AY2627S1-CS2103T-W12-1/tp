@@ -475,7 +475,7 @@ the retained input is the answer `yes`; choose `clear` or `clear /all` again to 
 | --- | --- | --- |
 | `sort` | Stably reorder everyone A–Z. | Retain. |
 | `list` | Retain, including a saved sort. | Clear. |
-| Valid `import`, successful `add` execution | Append new members until the next `sort`. | Clear. |
+| Valid `import`, applied `add` | Append new members until the next `sort`. | Clear. |
 | `find`, `findemail`, `filter`, `show` | Retain. | Narrow the view. |
 | Displayed `clear` | Remove captured targets; retain survivor order. | Retain after saving. |
 | `clear /all` | Empty the roster. | Clear after saving. |
@@ -795,7 +795,8 @@ Commons CSV handles quoting instead of manual string splitting.
 - Removing a chip removes only that selection. Its count reflects the remaining selected records,
   including those hidden by other conditions. Deleting every selected record leaves a removable
   **Show: 0 selected** chip.
-- `list`, successful `add`/`clear /all` and valid `import` clear selections; displayed `clear` retains conditions and updates Show counts.
+- `list`, applied `add`, successful `clear /all` and valid `import` clear selections;
+  displayed `clear` retains conditions and updates Show counts.
 - Show is read-only and does not save.
 
 
@@ -915,7 +916,7 @@ removes the tag. `tagall` updates members who lack the tag; `untagall` updates m
 - Never visit hidden members. Removing an active filter tag can hide targets after their update.
 - Retain conditions and stored order. Skip redundant assignments rather than rejecting the batch.
 - Feedback adds "No changes were made." for a zero count. If active filters now hide updated members, it adds
-  the displayed-list summary and a reminder to run `list` (`FilterCommand#describeHiddenUpdates`).
+  the displayed-list summary and a reminder to run `list` (`TagUpdateUtil#describeHiddenUpdates`).
 - A valid all-skipped batch still saves. A save failure leaves the complete batch in memory.
 - The shared base class keeps targeting, logging and feedback consistent between add/remove operations.
 - Acting on the whole roster would prevent group targeting; `list` supplies that behavior when wanted.
@@ -1104,8 +1105,9 @@ These contracts apply across commands. Feature sections explain their implementa
    `findemail` also narrows the displayed list with a literal email search. Keywords within
    one search use OR; successive conditions use AND. Repeating a search reports that it is already active,
    and a different query with unchanged results reports `Results unchanged.` Searches retain stored order.
-5. **Tag filtering:** each `filter` adds one OR group of tags; separate groups combine with AND. Repeating it, including with different case,
-   reports an already-active filter without changing conditions. Zero matches is a valid result.
+5. **Tag filtering:** each `filter` adds one OR group of tags; separate groups combine with AND. Repeating the same
+   complete tag set, ignoring letter case, order and repetition, reports an already-active filter without changing
+   conditions. Zero matches is a valid result.
 6. **Displayed indexes:** indexed commands use the current filtered display in stored order, numbered from 1.
    Accept ASCII positive integers and leading zeroes; reject signs, decimals, internal spaces and
    out-of-range values. A view change can renumber members.
@@ -1356,9 +1358,9 @@ alter the roster, view or JSON file.
 
 * **1a.** After a valid roster was loaded or saved, an outside edit changes its member data.
   The next save is refused. Restart to load the outside version and discard this session's unsaved changes,
-  or deliberately retry a roster-changing command to replace it. The retry updates `.bak` only if outside and
-  session data differ. Initially missing files and matching-roster retries have the limits described under
-  [storage safeguards](#startup-and-validation).
+  or deliberately retry a roster-changing command to replace it. A successful retry copies the warned-about outside
+  version into `.bak` even when its member values match the session. See
+  [storage safeguards](#startup-and-validation) for the full outside-edit and backup rules.
 * **3a.** The file is missing. TrackCall loads sample members and logs that the file was missing.
   It creates the file only after a valid data-changing command saves successfully. The use case ends.
 * **3b.** The file is invalid or unreadable. TrackCall preserves its bytes in a uniquely named
@@ -1495,16 +1497,25 @@ Start each subsection below from the baseline fixture and run its numbered steps
 
 #### Search, filter and selection
 
-1. Run `find ali`, then `find Zara Bob`, then `find Nobody`. **Expect:** Alice; Zara and Bob; no matches.
-   `list` restores Zara, Bob, Alice in stored order.
-2. Run `filter t/committee`, then `find Alice`. **Expect:** Alice only. Remove the name-filter box.
+1. **Independent searches:** run `list`, then `find ali`. **Expect:** Alice. Run `list`, then `find Zara Bob`.
+   **Expect:** Zara and Bob (OR matching within one search). Run `list`, then `find Nobody`. **Expect:** no matches.
+2. **Cumulative searches:** run `list`, `find ali`, then `find Zara Bob`. **Expect:** no matches, with two Name boxes:
+   a member must satisfy both searches. Remove `Name: ali`. **Expect:** Zara and Bob; the other search remains.
+   Run `list` to restore Zara, Bob, Alice in stored order.
+3. Run `filter t/committee`, then `find Alice`. **Expect:** Alice only. Remove the name-filter box.
    **Expect:** Bob and Alice; the committee filter remains. Run `filter t/COMMITTEE`.
    **Expect:** one tag chip, unchanged results, and feedback that the filter is already active.
-3. Run `list`, `show 1 3`, then `show 2`. **Expect:** Zara and Alice, then Alice only, with chips
+4. **Tag-group identity:** run `list`, then `filter t/committee t/friends`. **Expect:** all three members and one
+   Tag box. Run `filter t/FRIENDS t/COMMITTEE t/friends`. **Expect:** the same box and this feedback:
+   `A filter for the tags "committee" / "friends" is already active. No changes were made.`
+   The following count remains `3 member(s) listed with tags "committee" / "friends".`
+   Run `filter t/committee`. **Expect:** Bob and Alice, with a second Tag box: the single-tag condition is different
+   from the existing OR group. Remove the single-tag box. **Expect:** all three members; the OR group remains.
+5. Run `list`, `show 1 3`, then `show 2`. **Expect:** Zara and Alice, then Alice only, with chips
    **Show: 2 selected** and **Show: 1 selected** in command order. Repeat `show 1`. **Expect:** no extra chip.
    Remove the one-member chip. **Expect:** Zara and Alice return. Hover over the remaining chip.
    **Expect:** Alice Tan and Zara Lim in alphabetical order.
-4. Try `find` without a keyword, an empty tag filter, and an out-of-range selection.
+6. Try `find` without a keyword, an empty tag filter, and an out-of-range selection.
    **Expect:** errors preserving the preceding view.
 
 #### Individual and bulk tags
