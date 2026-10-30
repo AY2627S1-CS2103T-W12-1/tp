@@ -286,6 +286,30 @@
         "remaining-limitations": "Remaining limitations"
       },
       "headingKeywords": {}
+    },
+    {
+      "src": "team/manutd1234.md",
+      "title": "Ian Abiel Wangsa - Project Portfolio",
+      "headings": {
+        "ian-abiel-wangsa-project-portfolio": "Ian Abiel Wangsa - Project Portfolio",
+        "project-overview": "Overview",
+        "most-significant-contributions": "Most significant contributions",
+        "code-contributed": "Code contributed",
+        "core-feature-contributions": "Core feature contributions",
+        "1-listing-and-clearing-members": "1. Listing and clearing members",
+        "2-persistent-and-stable-name-sorting": "2. Persistent and stable name sorting",
+        "3-email-search-and-removable-conditions": "3. Email search and removable conditions",
+        "reliability-and-data-protection": "Reliability and data protection",
+        "protecting-exports-and-application-files": "Protecting exports and application files",
+        "recovery-outside-edits-and-privacy": "Recovery, outside edits, and privacy",
+        "testing-and-other-functional-improvements": "Testing and other functional improvements",
+        "documentation-diagrams-and-website": "Documentation, diagrams, and website",
+        "user-and-developer-guides": "User and Developer Guides",
+        "website-and-development-tooling": "Website and development tooling",
+        "team-contributions-and-release-work": "Team contributions and release work",
+        "reuse-and-ai-assistance": "Reuse and AI assistance"
+      },
+      "headingKeywords": {}
     }
   ]
 }
