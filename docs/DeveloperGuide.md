@@ -1104,8 +1104,9 @@ These contracts apply across commands. Feature sections explain their implementa
    `findemail` also narrows the displayed list with a literal email search. Keywords within
    one search use OR; successive conditions use AND. Repeating a search reports that it is already active,
    and a different query with unchanged results reports `Results unchanged.` Searches retain stored order.
-5. **Tag filtering:** each `filter` adds one OR group of tags; separate groups combine with AND. Repeating it, including with different case,
-   reports an already-active filter without changing conditions. Zero matches is a valid result.
+5. **Tag filtering:** each `filter` adds one OR group of tags; separate groups combine with AND. Repeating the same
+   complete tag set, ignoring letter case, order and repetition, reports an already-active filter without changing
+   conditions. Zero matches is a valid result.
 6. **Displayed indexes:** indexed commands use the current filtered display in stored order, numbered from 1.
    Accept ASCII positive integers and leading zeroes; reject signs, decimals, internal spaces and
    out-of-range values. A view change can renumber members.
@@ -1497,21 +1498,23 @@ Start each subsection below from the baseline fixture and run its numbered steps
 
 1. **Independent searches:** run `list`, then `find ali`. **Expect:** Alice. Run `list`, then `find Zara Bob`.
    **Expect:** Zara and Bob (OR matching within one search). Run `list`, then `find Nobody`. **Expect:** no matches.
-   **Cumulative searches:** run `list`, `find ali`, then `find Zara Bob`. **Expect:** no matches, with two Name boxes:
+2. **Cumulative searches:** run `list`, `find ali`, then `find Zara Bob`. **Expect:** no matches, with two Name boxes:
    a member must satisfy both searches. Remove `Name: ali`. **Expect:** Zara and Bob; the other search remains.
    Run `list` to restore Zara, Bob, Alice in stored order.
-2. Run `filter t/committee`, then `find Alice`. **Expect:** Alice only. Remove the name-filter box.
+3. Run `filter t/committee`, then `find Alice`. **Expect:** Alice only. Remove the name-filter box.
    **Expect:** Bob and Alice; the committee filter remains. Run `filter t/COMMITTEE`.
    **Expect:** one tag chip, unchanged results, and feedback that the filter is already active.
-3. **Tag-group identity:** run `list`, then `filter t/committee t/friends`. **Expect:** all three members and one
-   Tag box. Run `filter t/FRIENDS t/COMMITTEE t/friends`. **Expect:** the same box and already-active feedback.
+4. **Tag-group identity:** run `list`, then `filter t/committee t/friends`. **Expect:** all three members and one
+   Tag box. Run `filter t/FRIENDS t/COMMITTEE t/friends`. **Expect:** the same box and this feedback:
+   `A filter for the tags "committee" / "friends" is already active. No changes were made.`
+   The following count remains `3 member(s) listed with tags "committee" / "friends".`
    Run `filter t/committee`. **Expect:** Bob and Alice, with a second Tag box: the single-tag condition is different
    from the existing OR group. Remove the single-tag box. **Expect:** all three members; the OR group remains.
-4. Run `list`, `show 1 3`, then `show 2`. **Expect:** Zara and Alice, then Alice only, with chips
+5. Run `list`, `show 1 3`, then `show 2`. **Expect:** Zara and Alice, then Alice only, with chips
    **Show: 2 selected** and **Show: 1 selected** in command order. Repeat `show 1`. **Expect:** no extra chip.
    Remove the one-member chip. **Expect:** Zara and Alice return. Hover over the remaining chip.
    **Expect:** Alice Tan and Zara Lim in alphabetical order.
-5. Try `find` without a keyword, an empty tag filter, and an out-of-range selection.
+6. Try `find` without a keyword, an empty tag filter, and an out-of-range selection.
    **Expect:** errors preserving the preceding view.
 
 #### Individual and bulk tags

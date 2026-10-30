@@ -16,8 +16,8 @@ state "Narrowed\n(one or more conditions)" as Narrowed
 
 AllMembers --> Narrowed : find / filter / show / findemail
 Narrowed --> AllMembers : remove last chip
-Narrowed --> AllMembers : list, successful add,\nsuccessful clear /all, valid import
-Narrowed --> Narrowed : add or remove a condition
+Narrowed --> AllMembers : list, applied add,\nsuccessful clear /all, valid import
+Narrowed --> Narrowed : add or remove a condition\n[one or more conditions remain]
 
 note left of Narrowed
 Conditions combine with AND.
@@ -33,5 +33,8 @@ note right of AllMembers
 sort, delete and displayed clear
 retain the active conditions.
 list preserves stored order.
+
+add/import clear conditions before saving.
+A failed save retains that cleared view.
 end note
 @enduml
