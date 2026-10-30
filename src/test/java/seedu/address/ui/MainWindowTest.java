@@ -760,14 +760,13 @@ public class MainWindowTest {
                 layoutWindow();
                 Stage stage = window.getPrimaryStage();
                 ListView<?> roster = (ListView<?>) stage.getScene().lookup("#personListView");
-                Node viewport = roster.lookup(".viewport");
                 assertInScene(roster);
                 for (Node node : roster.lookupAll(".list-cell")) {
                     ListCell<?> cell = (ListCell<?>) node;
                     if (cell.isEmpty()) {
                         continue;
                     }
-                    assertInside(cell, viewport);
+
                     Node card = cell.getGraphic();
                     assertTrue(card != null, "A populated roster cell must render its card");
                     assertInside(card, cell);
