@@ -58,9 +58,14 @@ Try the examples in this guide on them, then use `clear /all` to remove them whe
 
 ### Read the interface
 
-![TrackCall showing the command box, compact roster, and selected member details](images/user-guide/interface.png)
+Screenshots use fictional sample members. Each caption names the command and the visible result; your counts and member numbers depend on your roster. Select any screenshot to open it at full size.
 
-*TrackCall with sample member 2 selected. The status bar shows where your data file is saved.*
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/interface.jpg" aria-label="Open full-size screenshot: TrackCall with Bernice selected and her contact details displayed">
+<img src="images/user-guide/features/interface.jpg" alt="TrackCall with Bernice selected and her contact details displayed" loading="lazy">
+</a>
+<figcaption>The command box and feedback are above the roster. Selecting Bernice reveals her details on the right; the status bar shows the data-file location.</figcaption>
+</figure>
 
 <p class="ug-topic"><strong>From top to bottom:</strong></p>
 
@@ -148,6 +153,13 @@ Find the right members, narrow the displayed roster, or change its order.
 `list` clears name searches, email searches, tag filters, and `show` selections, then shows the full roster
 in its stored order, retaining any order saved by `sort`. `list` does not change or save records.
 
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/list.jpg" aria-label="Open full-size screenshot: Full six-member sample roster after list">
+<img src="images/user-guide/features/list.jpg" alt="Full six-member sample roster after list" loading="lazy">
+</a>
+<figcaption>After <code>list</code>, all six sample members return and the selection boxes disappear. The feedback reads <code>Showing 6 members.</code></figcaption>
+</figure>
+
 <p class="ug-topic"><strong>Feedback:</strong></p>
 
 The result is `Showing 1 member.`, `Showing N members.`, or `No members in the roster.`
@@ -164,6 +176,13 @@ Extra arguments produce `Invalid command format. Usage: list` without changing t
 `show 1 3` shows only members 1 and 3 from the **currently displayed list**.
 The selected members stay in their current order and receive new displayed numbers starting at 1.
 You can use `show` again with those new numbers, or use `list` to restore the full roster.
+
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/show.jpg" aria-label="Open full-size screenshot: Alex and Charlotte displayed with a Show selection box">
+<img src="images/user-guide/features/show.jpg" alt="Alex and Charlotte displayed with a Show selection box" loading="lazy">
+</a>
+<figcaption>Starting from the sample roster, <code>show 1 3</code> keeps Alex and Charlotte. They are now displayed as 1 and 2, and the box records two selected members.</figcaption>
+</figure>
 
 <p class="ug-topic"><strong>Selection boxes:</strong></p>
 
@@ -203,6 +222,13 @@ the displayed roster order.
 
 `find Alice Tan` shows currently displayed members whose names contain **Alice or Tan**.
 
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/find.jpg" aria-label="Open full-size screenshot: David Li is the only result of a name search">
+<img src="images/user-guide/features/find.jpg" alt="David Li is the only result of a name search" loading="lazy">
+</a>
+<figcaption>Sample-roster example: run <code>list</code>, then <code>find David</code>. David is the only result and a blue Name box records the search.</figcaption>
+</figure>
+
 <p class="ug-topic"><strong>Matching rules</strong></p>
 
 - Matching ignores letter case and accepts any contiguous part of a name word.
@@ -237,9 +263,12 @@ No matches produce `0 members listed.` and an empty list. No records are deleted
   `filter t/committee`.
 - Select a box's **X** to remove only that condition, or use `list` to show everyone again.
 
-![Two active conditions, Tag: year1 and Name: David, shown as boxes under the command box](images/user-guide/filter-boxes.png)
-
-*After `filter t/year1` and then `find David`, both conditions appear as boxes and only David Li is shown.*
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/combined-filters.jpg" aria-label="Open full-size screenshot: Tag year1 and Name David conditions are both active">
+<img src="images/user-guide/features/combined-filters.jpg" alt="Tag year1 and Name David conditions are both active" loading="lazy">
+</a>
+<figcaption>Run <code>list</code>, <code>filter t/year1</code>, then <code>find David</code>. Both boxes remain active: David satisfies both conditions. Removing one box keeps the other.</figcaption>
+</figure>
 
 <p class="ug-topic"><strong>Keyboard and long labels:</strong></p>
 
@@ -263,6 +292,13 @@ Searching does not save the data file.
 - `findemail alice@example.com` finds emails containing that address.
 - `findemail @example.com` finds emails containing that domain fragment.
 - `findemail @example.com @school.edu` finds emails containing **either** fragment.
+
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/findemail.jpg" aria-label="Open full-size screenshot: Charlotte is displayed with an Email school.edu condition">
+<img src="images/user-guide/features/findemail.jpg" alt="Charlotte is displayed with an Email school.edu condition" loading="lazy">
+</a>
+<figcaption>On the sample roster, <code>list</code> followed by <code>findemail @school.edu</code> finds Charlotte. Her displayed number becomes 1.</figcaption>
+</figure>
 
 <p class="ug-topic"><strong>Matching:</strong></p>
 
@@ -331,6 +367,13 @@ Use `help findemail` for the same instructions offline.
 
 This keeps only committee members in the current view. Their stored order stays the same,
 and their displayed numbers update.
+
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/filter.jpg" aria-label="Open full-size screenshot: Bernice and David match the year1 tag filter">
+<img src="images/user-guide/features/filter.jpg" alt="Bernice and David match the year1 tag filter" loading="lazy">
+</a>
+<figcaption>Another sample-roster example: <code>list</code>, then <code>filter t/year1</code> displays Bernice and David. The green box records the active tag condition.</figcaption>
+</figure>
 
 <p class="ug-topic"><strong>Matching rules</strong></p>
 
@@ -410,6 +453,13 @@ If an edited member no longer matches, they disappear from view but remain in th
 - The result reports `Sorted all N members by name (A to Z).`
 - The saved order survives `list` and a restart and is used by `export`.
 - An empty or already sorted roster also reports success and attempts to save.
+
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/sort.jpg" aria-label="Open full-size screenshot: Seven-member roster sorted with Bob between Bernice and Charlotte">
+<img src="images/user-guide/features/sort.jpg" alt="Seven-member roster sorted with Bob between Bernice and Charlotte" loading="lazy">
+</a>
+<figcaption>After adding Bob using the example below, <code>sort</code> saves the order of all seven members. Bob moves to number 3, between Bernice and Charlotte.</figcaption>
+</figure>
 
 <p class="ug-topic"><strong>After adding or editing:</strong></p>
 
@@ -503,6 +553,13 @@ add n/Bob Lee p/92345678 e/bob@example.com a/20 College Road t/committee t/year1
 - Repeated identical tags appear once.
 - If you omit `a/`, the address is shown as `(none)` until you add one with `edit`.
 
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/add.jpg" aria-label="Open full-size screenshot: New member Bob appears at the end of the sample roster">
+<img src="images/user-guide/features/add.jpg" alt="New member Bob appears at the end of the sample roster" loading="lazy">
+</a>
+<figcaption>The example adds Bob as member 7 after the six sample members. Select his row to check his phone, email, address and two tags.</figcaption>
+</figure>
+
 <p class="ug-topic"><strong>Duplicate checks</strong></p>
 
 - **Duplicate identity:** Duplicate checking ignores name capitalization, repeated whitespace and surrounding whitespace.
@@ -544,6 +601,13 @@ add n/Bob Lee p/92345678 e/bob@example.com a/20 College Road t/committee t/year1
   Changing a name does not move the member; run `sort` again to reorder the roster.
 - The details panel stays hidden until you select a member again to inspect the changed contact fields.
 
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/edit.jpg" aria-label="Open full-size screenshot: Bob selected after his phone and email were updated">
+<img src="images/user-guide/features/edit.jpg" alt="Bob selected after his phone and email were updated" loading="lazy">
+</a>
+<figcaption>Worked example after adding Bob and running <code>sort</code>: <code>edit 3 p/98765432 e/bob.new@example.com</code>. Select Bob again to verify both new values; his address and tags are retained.</figcaption>
+</figure>
+
 - **After filtering:** If the updated member no longer matches the search or filters, they disappear from view but remain
   in the roster. Use `list` to show everyone again.
 
@@ -580,8 +644,8 @@ Use tags for overlapping groups, then update one member or the whole displayed g
 For example:
 
 ```text
-tag 2 t/committee
-untag 2 t/year1
+tag 2 t/volunteer
+untag 2 t/volunteer
 ```
 
 <p class="ug-topic"><strong>Feedback</strong></p>
@@ -589,10 +653,24 @@ untag 2 t/year1
 With the sample members, the first command reports:
 
 ```text
-Added tag "committee" to member 2.
+Added tag "volunteer" to member 2.
 Name: Bernice Yu
-Tags: batch2026, committee, year1
+Tags: batch2026, volunteer, year1
 ```
+
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/tag.jpg" aria-label="Open full-size screenshot: Bernice has the new volunteer tag alongside her original tags">
+<img src="images/user-guide/features/tag.jpg" alt="Bernice has the new volunteer tag alongside her original tags" loading="lazy">
+</a>
+<figcaption><code>tag 2 t/volunteer</code> adds volunteer to Bernice while retaining batch2026 and year1.</figcaption>
+</figure>
+
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/untag.jpg" aria-label="Open full-size screenshot: Bernice retains batch2026 and year1 after volunteer is removed">
+<img src="images/user-guide/features/untag.jpg" alt="Bernice retains batch2026 and year1 after volunteer is removed" loading="lazy">
+</a>
+<figcaption><code>untag 2 t/volunteer</code> removes only volunteer. The original two tags remain.</figcaption>
+</figure>
 
 <p class="ug-topic"><strong>Member numbers and matching</strong></p>
 
@@ -633,22 +711,31 @@ Tags: batch2026, committee, year1
 
 <p class="ug-topic"><strong>Example</strong></p>
 
-To tag committee members for an event, run each command separately:
+To tag year-2 members for an event, run each command separately:
 
 ```text
 list
-filter t/committee
+filter t/year2
 tagall t/event2026
 ```
 
-- **Result:** Every displayed committee member now also has the `event2026` tag.
+- **Result:** Every displayed year-2 member now also has the `event2026` tag.
 
-![The committee filter box is active and both displayed members now have the event2026 tag](images/user-guide/tag-group.png)
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/tagall.jpg" aria-label="Open full-size screenshot: Both displayed year2 members have event2026">
+<img src="images/user-guide/features/tagall.jpg" alt="Both displayed year2 members have event2026" loading="lazy">
+</a>
+<figcaption><code>tagall t/event2026</code> adds the tag to Alex and Irfan in the year2 view. Hidden members are unchanged.</figcaption>
+</figure>
 
-*With the sample members, `tagall t/event2026` tags the two committee members and reports
-`Added tag "event2026" to 2 member(s).`*
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/untagall.jpg" aria-label="Open full-size screenshot: Both year2 members retain their other tags after event2026 is removed">
+<img src="images/user-guide/features/untagall.jpg" alt="Both year2 members retain their other tags after event2026 is removed" loading="lazy">
+</a>
+<figcaption>With the same view, <code>untagall t/event2026</code> removes the event tag from both members and keeps their other tags.</figcaption>
+</figure>
 
-- **Export the group:** To export the displayed committee members afterwards, run `export members.csv`.
+- **Export the group:** To export the displayed year-2 members afterwards, run `export members.csv`.
   To export the entire roster, run `list` first.
 
 <p class="ug-topic"><strong>Changed and skipped members</strong></p>
@@ -756,6 +843,14 @@ Every displayed member tagged `batch2026` is now tagged `alumni` instead. The re
 
 - **Hidden from view:** The result then also reports the current list, for example
   `0 member(s) listed with tag "batch2026". Run list to show everyone.`
+
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/renametag.jpg" aria-label="Open full-size screenshot: An empty year2 view after both matching members were renamed to seniors">
+<img src="images/user-guide/features/renametag.jpg" alt="An empty year2 view after both matching members were renamed to seniors" loading="lazy">
+</a>
+<figcaption>Worked example: <code>list</code>, <code>filter t/year2</code>, then <code>renametag t/year2 t/seniors</code>. Two members change, but the retained year2 condition now matches none. Run <code>list</code> to see them again.</figcaption>
+</figure>
+
 - Renamed members disappear only if they no longer satisfy **all** active conditions. With a filter group
   such as `filter t/batch2026 t/alumni`, a member who still matches another alternative stays visible.
 
@@ -834,6 +929,13 @@ Export displayed members or bring existing member records into TrackCall.
 - `export member list.csv` writes `member list.csv`. Unlike `import`, do not put quotes around an export path;
   everything after `export` is used as the path.
 
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/export.jpg" aria-label="Open full-size screenshot: Export feedback identifies three displayed and four excluded members">
+<img src="images/user-guide/features/export.jpg" alt="Export feedback identifies three displayed and four excluded members" loading="lazy">
+</a>
+<figcaption>After adding Bob, run <code>list</code>, <code>filter t/committee</code>, then <code>export committee.csv</code>. Only Alex, Bob and Charlotte are exported; the feedback reports four hidden members excluded.</figcaption>
+</figure>
+
 </section>
 
 <section class="ug-command">
@@ -893,8 +995,18 @@ name,phone,email,address,tags
 
 ```text
 name,phone,email,address,tags
-John Doe,98765432,johnd@example.com,"John Street, Block 123",year1;committee
+Maya Chen,91234567,maya@example.com,10 College Road,year1;volunteer
 ```
+
+Save this as `new-members.csv` beside the JAR, then run `import p/new-members.csv`.
+You can also [download the example CSV](files/new-members.csv).
+
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/import.jpg" aria-label="Open full-size screenshot: Import succeeds and restores the complete eight-member roster">
+<img src="images/user-guide/features/import.jpg" alt="Import succeeds and restores the complete eight-member roster" loading="lazy">
+</a>
+<figcaption>Importing the example into the seven-member roster adds Maya and skips zero duplicates. The earlier committee filter is cleared and all eight members are shown. Maya is appended at the end; scroll down to find her.</figcaption>
+</figure>
 
 <p class="ug-topic"><strong>Validation and duplicate handling</strong></p>
 
@@ -927,9 +1039,9 @@ Remove one member or the whole roster with confirmation.
 
 <p class="ug-topic"><strong>Steps</strong></p>
 
-1. Run `list`, or a search such as `find Bernice`, and check the displayed numbers. Select the intended member
-   to check their contact details.
-2. Use `delete 2`. TrackCall names the member at that displayed number with their tags, then asks you to
+1. Run `list` and check the displayed numbers. On the unchanged sample roster, Bernice is number 2.
+   Select her row to verify the contact details.
+2. Run `delete 2` only if Bernice is still displayed as number 2. TrackCall names that member and asks you to
    confirm. With the sample members, the prompt is:
 
    ```text
@@ -940,11 +1052,17 @@ Remove one member or the whole roster with confirmation.
 
    Asking for confirmation does not change or save the roster.
 
-The command box is highlighted until you answer:
+3. Check the name and tags in the prompt. Type `yes` and press Enter to delete that member, or `no` to cancel.
 
-![A delete prompt naming member 2, Bernice Yu, with the command box highlighted until the user answers](images/user-guide/delete-confirmation.png)
+> After a search, use the **new displayed number**. For example, `find Bernice` on the sample roster shows her as 1,
+> so the matching command is `delete 1`, not `delete 2`.
 
-3. Type `yes` and press Enter to delete that member.
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/delete.jpg" aria-label="Open full-size screenshot: Deletion confirmation names Bernice and leaves the roster unchanged">
+<img src="images/user-guide/features/delete.jpg" alt="Deletion confirmation names Bernice and leaves the roster unchanged" loading="lazy">
+</a>
+<figcaption><code>delete 2</code> asks about Bernice before changing any records. The highlighted command box is waiting for an answer; the screenshot shows a pending request, not a completed deletion.</figcaption>
+</figure>
 
 <p class="ug-topic"><strong>Confirmation and near misses</strong></p>
 
@@ -1000,6 +1118,20 @@ The command box is highlighted until you answer:
 `filter t/committee`, then `clear`, then `yes` removes committee members only;
 `clear /all`, then `yes` removes everyone instead.
 
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/clear-displayed.jpg" aria-label="Open full-size screenshot: Clear confirmation targets the three displayed committee members">
+<img src="images/user-guide/features/clear-displayed.jpg" alt="Clear confirmation targets the three displayed committee members" loading="lazy">
+</a>
+<figcaption>In this eight-member example, <code>clear</code> targets the three displayed committee members and keeps the five hidden members. Check the count before confirming.</figcaption>
+</figure>
+
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/clear-all.jpg" aria-label="Open full-size screenshot: Clear all confirmation targets eight members despite the three-member view">
+<img src="images/user-guide/features/clear-all.jpg" alt="Clear all confirmation targets eight members despite the three-member view" loading="lazy">
+</a>
+<figcaption>After cancelling the first prompt with <code>no</code>, <code>clear /all</code> asks to remove all eight members. The same three-member view does not limit this command.</figcaption>
+</figure>
+
 <p class="ug-topic"><strong>Empty lists and feedback</strong></p>
 
 - **Empty lists:** An empty displayed list with hidden records reports an error without saving or asking to delete them.
@@ -1038,6 +1170,13 @@ Read command instructions offline and close TrackCall when you are finished.
 - Each command has a short description and a runnable example.
 - The overview uses two columns in a wide window and one in a narrow window.
 
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/help.jpg" aria-label="Open full-size screenshot: Offline help overview with command buttons grouped by task">
+<img src="images/user-guide/features/help.jpg" alt="Offline help overview with command buttons grouped by task" loading="lazy">
+</a>
+<figcaption><code>help</code> opens the command overview without changing the roster. Select a command button for details, or scroll to the remaining categories.</figcaption>
+</figure>
+
 <p class="ug-topic"><strong>Navigate and close help</strong></p>
 
 - **Open details:** select a command-name button or type `help COMMAND`, such as `help edit`.
@@ -1064,6 +1203,13 @@ Read command instructions offline and close TrackCall when you are finished.
 
 > Exiting does not retry a failed save. Resolve storage errors first to keep unsaved changes.
 
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/exit-help.jpg" aria-label="Open full-size screenshot: Offline exit help explains saving and closing the application">
+<img src="images/user-guide/features/exit-help.jpg" alt="Offline exit help explains saving and closing the application" loading="lazy">
+</a>
+<figcaption><code>help exit</code> explains the command before you close the app. This is the help screen; running <code>exit</code> closes the application instead.</figcaption>
+</figure>
+
 </section>
 
 ## Correcting errors
@@ -1082,9 +1228,12 @@ Read command instructions offline and close TrackCall when you are finished.
 - `delete 0` is invalid. Use `list`, check the member, and enter its displayed number.
 - `tag 0 t/committee` and `untag 1 t/` are invalid. Use a positive current list number and one valid tag.
 
-![TrackCall rejects edit 1 a/Main Road T/committee because the tag prefix is uppercase, and shows the valid edit format](images/user-guide/validation.png)
-
-*An unsupported field prefix leaves the member unchanged. Use lowercase `t/`, then press Enter to try again.*
+<figure class="ug-figure">
+<a class="ug-screenshot" href="images/user-guide/features/validation.jpg" aria-label="Open full-size screenshot: Uppercase tag prefix is rejected and the input remains available for correction">
+<img src="images/user-guide/features/validation.jpg" alt="Uppercase tag prefix is rejected and the input remains available for correction" loading="lazy">
+</a>
+<figcaption><code>edit 1 a/Main Road T/committee</code> is rejected because <code>T/</code> is uppercase. The roster stays unchanged and the input remains visible. Change it to lowercase <code>t/</code>, then retry.</figcaption>
+</figure>
 
 ### Field prefix syntax {id="field-prefix-syntax"}
 

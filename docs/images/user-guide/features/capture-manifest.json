@@ -1,0 +1,40 @@
+{
+  "captured_on": "2026-10-31",
+  "source_commit": "a256c7115f914f3f200b3573a5b638eca78b470b",
+  "jar_sha256": "2246380923884f317515db6342e65ad86446f10bf465ba389b1940aa8b3229d8",
+  "runtime": "Java 25.0.4 on macOS",
+  "method": "Native application screenshots captured through CUA. No generated or retouched UI. Synthetic sample contacts only.",
+  "window": "Main window 1000 x 720 logical pixels; help retains its own proportions in the same CSS frame.",
+  "verification": [
+    "All 23 images visually inspected.",
+    "Saved JSON verified: eight expected members; updated Bob phone/email; year2 renamed to seniors on Alex and Irfan.",
+    "committee.csv independently checked: Alex, Bob and Charlotte only; four hidden members excluded.",
+    "Deletion and both clear screenshots show pending prompts. Each prompt was cancelled; the screenshots do not claim a completed deletion.",
+    "exit-help shows help exit, not execution of exit."
+  ],
+  "files": {
+    "add.jpg": "2e2af23261bdfe16c8d33a430c4c1472a13b5ac574c7670f2dab041bc1e96306",
+    "clear-all.jpg": "a2a615656f9f39fb926cdfb2b9020439d88a5fe35e07eaae8e9abfb9b2ea6731",
+    "clear-displayed.jpg": "2d2e42f65d508bc5e266a3b6f14293b80e050f216ab8b5756fb89204317f210b",
+    "combined-filters.jpg": "30e5666fa2033552bf7b25f723a43711279f3181c58997ca7a4bcd7ade01f339",
+    "delete.jpg": "48176bd807596b0e62771106138627a9938a17e0d3524c80a1ccdc65df33e563",
+    "edit.jpg": "73ff1656ae10146da27d1e947b0efb7f52cc4e17e8d4e1b0c1ac96d2b94dccb7",
+    "exit-help.jpg": "8dbf427e255981180d15181df868b19fd6a25b9fe55fe0ee7de3a9267c2f023e",
+    "export.jpg": "33536960d0f67ab0dc80b2463ac65dfa3c458af3e331f20fbb1c3218dc46b78e",
+    "filter.jpg": "6617fd7e5e52bef4c4f4faa421b1f9c1da5c22d0107490aa8018952fd0682737",
+    "find.jpg": "2bc6c2e3ada824b4968f8cc1dc920525e0e2ca21c3e0f6d58c083ed174b0cb5f",
+    "findemail.jpg": "77b416a8ada2c5a4925ca1a48814da0f8a6384ffe2d403f53a12eef580b1455b",
+    "help.jpg": "453589ca4a43b057e9b0ac379ee7e7ca04917bad768078a2d37d7a9252a829f4",
+    "import.jpg": "afe0b08b29b261db58219584c8df44960aa152101d3850330b9746f7e83ae91f",
+    "interface.jpg": "1a01f14009d6a5ffd927b5a7615ff931c3e42254352143152b3d1184c3caa2d0",
+    "list.jpg": "0e69c4ab1e13dfe30a3204ed141c8f14bad42481e65a11950ba3699c2730d53d",
+    "renametag.jpg": "f8dd8feef899c3ec9ae25d9b365c39970c815b75ab8c61129d6db48dc8fb2e0b",
+    "show.jpg": "e2e24d6ea961becb55e085f93f2bea96de5a10cea7c6ef48b25936a1ee794dc7",
+    "sort.jpg": "9d2949acbf64f75df2ec0e33f24e118785b694f3cb4a2166112a0e9f83d3c664",
+    "tag.jpg": "180650e0285a34e1aefe9476352c8bb056d0b2a49144d7f2c7a14bae4b3e40e9",
+    "tagall.jpg": "a80a4f1c1f3b75e99075fb44648c219239af5dd607cbef50765e39a095a55783",
+    "untag.jpg": "32ee9592233772a87e7cd52444a0be298f2d8f9ee207f285bf1d57ea86640bde",
+    "untagall.jpg": "cc3bd2376cf8b9c8449a0ab8718af485909bdc6992e91f044bacad6e8d33b9d5",
+    "validation.jpg": "4c8e9ba2716b547abfa69d21c6cd2bf697b8c67bf13165ff400139ef0d61c0d8"
+  }
+}
