@@ -58,6 +58,7 @@ We are a team based in the [School of Computing, National University of Singapor
 <img src="images/manutd1234.png" width="200" alt="Ian Abiel Wangsa">
 
 [[GitHub](https://github.com/Manutd1234)]
+[[Project Portfolio](team/manutd1234.html)]
 
 * Role: Team Lead
 * Responsibilities: List members (`list`) and clear the roster (`clear`); sorting (`sort`).
