@@ -1495,16 +1495,23 @@ Start each subsection below from the baseline fixture and run its numbered steps
 
 #### Search, filter and selection
 
-1. Run `find ali`, then `find Zara Bob`, then `find Nobody`. **Expect:** Alice; Zara and Bob; no matches.
-   `list` restores Zara, Bob, Alice in stored order.
+1. **Independent searches:** run `list`, then `find ali`. **Expect:** Alice. Run `list`, then `find Zara Bob`.
+   **Expect:** Zara and Bob (OR matching within one search). Run `list`, then `find Nobody`. **Expect:** no matches.
+   **Cumulative searches:** run `list`, `find ali`, then `find Zara Bob`. **Expect:** no matches, with two Name boxes:
+   a member must satisfy both searches. Remove `Name: ali`. **Expect:** Zara and Bob; the other search remains.
+   Run `list` to restore Zara, Bob, Alice in stored order.
 2. Run `filter t/committee`, then `find Alice`. **Expect:** Alice only. Remove the name-filter box.
    **Expect:** Bob and Alice; the committee filter remains. Run `filter t/COMMITTEE`.
    **Expect:** one tag chip, unchanged results, and feedback that the filter is already active.
-3. Run `list`, `show 1 3`, then `show 2`. **Expect:** Zara and Alice, then Alice only, with chips
+3. **Tag-group identity:** run `list`, then `filter t/committee t/friends`. **Expect:** all three members and one
+   Tag box. Run `filter t/FRIENDS t/COMMITTEE t/friends`. **Expect:** the same box and already-active feedback.
+   Run `filter t/committee`. **Expect:** Bob and Alice, with a second Tag box: the single-tag condition is different
+   from the existing OR group. Remove the single-tag box. **Expect:** all three members; the OR group remains.
+4. Run `list`, `show 1 3`, then `show 2`. **Expect:** Zara and Alice, then Alice only, with chips
    **Show: 2 selected** and **Show: 1 selected** in command order. Repeat `show 1`. **Expect:** no extra chip.
    Remove the one-member chip. **Expect:** Zara and Alice return. Hover over the remaining chip.
    **Expect:** Alice Tan and Zara Lim in alphabetical order.
-4. Try `find` without a keyword, an empty tag filter, and an out-of-range selection.
+5. Try `find` without a keyword, an empty tag filter, and an out-of-range selection.
    **Expect:** errors preserving the preceding view.
 
 #### Individual and bulk tags

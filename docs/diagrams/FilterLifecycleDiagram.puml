@@ -20,9 +20,13 @@ Narrowed --> AllMembers : list, successful add,\nsuccessful clear /all, valid im
 Narrowed --> Narrowed : add or remove a condition
 
 note left of Narrowed
-All conditions combine with AND.
-A repeated tag or identical show
-selection adds no new condition.
+Conditions combine with AND.
+Within each search or tag group,
+alternatives combine with OR.
+Repeated name/email keyword sets,
+complete tag sets, or show selections
+add no condition. Keyword/tag sets
+ignore case, order and repetition.
 end note
 
 note right of AllMembers
