@@ -3,12 +3,14 @@ package seedu.address.logic;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ModelManager;
 import seedu.address.model.person.Person;
 import seedu.address.storage.JsonAddressBookStorage;
@@ -48,6 +51,29 @@ public class EmailValidationWorkflowTest {
         writeCsv(csv, List.of(row("Valid", email), row("Invalid", "alice..tan@example.com")));
         assertThrows(CommandException.class, () -> session.logic.execute("import p/" + csv));
         assertArrayEquals(saved, Files.readAllBytes(session.file));
+    }
+
+    @Test
+    public void userSession_unicodeNamesAndJitteredCommands_areStable() throws Exception {
+        Session session = new Session(temporaryFolder.resolve("unicode-session"));
+        Random random = new Random(359356L);
+        List<String> names = List.of("李明", "Αλέξανδρος", "Мария", "José\u0301 Tan", "नमस्ते सदस्य",
+                "علي حسن", "हана", "Zoë", "山田太郎", "Élodie O'Connor");
+        int index = 0;
+        for (String name : names) {
+            String email = "member_" + index + "@xn--bcher-kva.example";
+            String gap = " ".repeat(1 + random.nextInt(4));
+            session.logic.execute("add" + gap + "n/" + name + gap + "p/123" + index + gap + "e/" + email);
+            assertEquals(name, session.saved().getLast().getName().fullName);
+            assertEquals(email, session.saved().getLast().getEmail().value);
+            index++;
+        }
+        for (String unicode : List.of("álîce@例子.example", "alice@例子.example", "álîce@example.com",
+                "alice@ｅxample.com", "alice@xn--bücher.example", "😀@example.com")) {
+            assertThrows(ParseException.class, () -> session.logic.execute(
+                    "edit 1 e/" + unicode), unicode);
+        }
+        assertEquals(names, session.saved().stream().map(person -> person.getName().fullName).toList());
     }
 
     private static List<String> row(String name, String email) {
