@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.time.Duration;
+import java.util.Random;
 
 import org.junit.jupiter.api.Test;
 
@@ -120,6 +121,22 @@ public class EmailTest {
         assertFalse(Email.isValidEmail("álîce@example.com"));
         assertFalse(Email.isValidEmail("alice@éxample.com"));
         assertFalse(Email.isValidEmail("alice@１２.com"));
+    }
+
+    @Test
+    public void isValidEmail_randomUnicode_isRejectedReproducibly() {
+        long seed = 0x359_356_10_000L;
+        Random random = new Random(seed);
+        for (int i = 0; i < 10_000; i++) {
+            int codePoint;
+            do {
+                codePoint = 0x80 + random.nextInt(Character.MAX_CODE_POINT - 0x7f);
+            } while (codePoint >= Character.MIN_SURROGATE && codePoint <= Character.MAX_SURROGATE);
+            String unicode = new String(Character.toChars(codePoint));
+            String email = random.nextBoolean()
+                    ? "alice" + unicode + "@example.com" : "alice@example" + unicode + ".com";
+            assertFalse(Email.isValidEmail(email), "seed=" + seed + ", case=" + i + ", input=" + email);
+        }
     }
 
     @Test
