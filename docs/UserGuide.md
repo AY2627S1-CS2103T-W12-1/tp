@@ -450,7 +450,7 @@ Keep member contact details up to date.
 - **Field prefixes:** Add reserves whitespace-delimited single ASCII letters followed by `/` for field prefixes.
   Only lowercase `n/`, `p/`, `e/`, `a/`, and `t/` are accepted; `x/extra` and `T/committee`
   report an invalid command format.
-- The standalone abbreviation `c/o` (in any letter case), URLs, numeric slashes such as `12/3`,
+- The standalone abbreviations `c/o`, `s/o`, and `d/o` (in any letter case), URLs, numeric slashes such as `12/3`,
   and slashes embedded in words remain address text.
 
 - **Address text:** Within an `a/` value, uppercase `A/` followed by a digit is also literal address text,
@@ -460,7 +460,7 @@ Keep member contact details up to date.
 
 | Field | Current rule |
 | --- | --- |
-| Name | Start with a Unicode letter or ASCII digit. Unicode letters, combining marks, ASCII digits, spaces, hyphens, and straight or curly apostrophes are accepted. |
+| Name | Start with a Unicode letter or ASCII digit. Unicode letters, combining marks, ASCII digits, spaces, periods, slashes, hyphens, and straight or curly apostrophes are accepted. |
 | Phone | At least three ASCII digits, with an optional leading `+` and spaces between digits. Formatting is preserved. Hyphens, parentheses, and internal tabs are rejected. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text when provided; Unicode-space-only values are rejected. `edit INDEX a/` clears an address. |
@@ -469,7 +469,7 @@ Keep member contact details up to date.
 <p class="ug-topic"><strong>Names, phone numbers and Unicode</strong></p>
 
 - **Names and phone formatting:** Names such as `Anne-Marie`, `José Garcia`, and `O'Connor` keep their entered spelling,
-  including combining accents.
+  including combining accents. Names such as `Ravi s/o Kumar`, `Priya d/o Raman`, and `J. Tan` also keep their punctuation.
 - Phone examples include `+6591234567` and `9123 4567`.
 - Phone formatting is stored, displayed, copied, and exported as entered; the app does not infer country
   codes or treat differently formatted numbers as equal. Multiple spaces between digit groups are accepted.
@@ -1085,7 +1085,7 @@ Read command instructions offline and close TrackCall when you are finished.
   including inside an address.
 - **Address exception:** uppercase `A/` immediately followed by a digit within an `a/` value is literal text.
   For example, `a/Block A/12` is valid in both commands. Other unsupported prefixes remain invalid.
-- **Other address text:** standalone `c/o`, URLs, numeric slashes such as `12/3`, and slashes inside words remain valid.
+- **Other address text:** standalone `c/o`, `s/o`, and `d/o`, URLs, numeric slashes such as `12/3`, and slashes inside words remain valid.
 
 > **Correction example:** `edit 1 a/Main Road T/committee` reports invalid input; use lowercase `t/` to assign a tag.
 
