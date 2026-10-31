@@ -126,6 +126,50 @@ mutated source file, and does not modify production files in the original checko
 failures do not count as detections. This is a small calibration set, not a general bug-detection percentage
 or evidence of performance on an unseen repository.
 
+## Designing useful test cases
+
+Use heuristics when they reveal a meaningful risk. A test does not need to use every heuristic.
+Add a short comment when the partition, boundary, or interaction is not obvious from its name.
+
+| Technique | TrackCall example | What to assert |
+| --- | --- | --- |
+| Equivalence partitioning | Valid input, rejected input, and valid input that makes no change | Correct result and unchanged state for rejected commands |
+| Boundary values | Index 0, first/last displayed index, one past the end; CSV limit and limit + 1 | Correct acceptance or rejection at the boundary |
+| State transitions | Failed save → repair → read-only command → explicit save retry | Unsaved changes remain in memory; only the explicit retry updates the roster file |
+| Feature interactions | Filter + Show selection + delete/clear + save failure | Only the intended members change; hidden members and selections remain correct |
+| Regression tests | A minimal reproduction of a confirmed issue | The original failure is detected, without depending on unrelated setup |
+
+### Checking recovery across commands
+
+`SaveFailureTransitionTest` complements the existing CSV and recovery suites:
+
+- **Unsaved edit:** after storage is repaired, browsing, help, and export must not silently save the roster.
+  Export must reflect the displayed in-memory data. An explicit unchanged edit retries persistence.
+- **Failed confirmed deletion:** the deletion stays applied in memory, but its confirmation is consumed.
+  A second `yes` must not replay it or remove another member. An explicit retry saves the surviving members.
+- **Failed clear after an unsaved edit:** rollback must restore the pre-clear session, including the earlier
+  unsaved edit and its filters. A later successful clear removes only the intended displayed member.
+
+These tests use real temporary files, exact-byte backup checks, synthetic contacts, and a fresh storage reader.
+A nonempty directory at the backup path injects a portable write failure; it does not simulate every disk failure.
+
+```shell
+./gradlew test --tests '*SaveFailureTransitionTest'
+```
+
+### Keeping assertions trustworthy
+
+- Derive expected results from documented behavior. Write expected member identities, order, and CSV content
+  independently of the production helper being tested.
+- Check both visible results and side effects: hidden members, active conditions, saved bytes, backup bytes,
+  and data loaded by a fresh storage session.
+- Snapshot mutable state before the command. A reference that changes with the app is not an independent expectation.
+- Give each test its own fixture. Do not rely on the execution order of test methods.
+- Use fixed seeds and retain failure traces for generated tests. Reduce discovered failures to focused regressions.
+- Check test sensitivity with isolated, deliberately introduced faults. Compilation errors do not count as detections.
+- Treat coverage as a way to locate gaps, not proof of correct behavior. Native UI and packaged-release checks
+  remain necessary even when automated checks pass.
+
 ## Release verification
 
 1. **Check and package:** run `./gradlew check shadowJar` with Java 25.
