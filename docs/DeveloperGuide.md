@@ -42,9 +42,9 @@ for command syntax and the sections below for implementation decisions and failu
   - [11. Tag filtering](#11-tag-filtering)
   - [12. Individual tag editing](#12-individual-tag-editing)
   - [13. Bulk tag editing](#13-bulk-tag-editing)
-  - [14. Verification roadmap](#verification-roadmap)
-  - [15. Limitations](#limitations)
+- [Known limitations](#limitations)
 - [Development workflow](#documentation-logging-testing-dev-ops)
+  - [Where to test a change](#verification-roadmap)
 - [Appendix: Requirements](#appendix-requirements)
   - [Product scope](#product-scope)
   - [User Stories for TrackCall](#user-stories)
@@ -255,7 +255,7 @@ roster even though it writes a separate CSV file.
 - **Value conversion:** `ParserUtil` validates and converts indexes and member fields.
 - **Prefix checks:** add/edit parsers use `PrefixValidator` to reject unsupported field prefixes.
 - **Tag checks:** tag, untag, bulk-tag and rename parsers share `BulkTagArgumentParser`.
-  It recognizes `n/`, `p/`, `e/` and `a/` only to reject them with command-usage guidance.
+  It recognises `n/`, `p/`, `e/` and `a/` only to reject them with command-usage guidance.
 
 ### Model component
 
@@ -356,6 +356,12 @@ See [saving and recovery](#6-saving-and-recovery) for JSON failures and
 
 Classes used by multiple components are in the `seedu.address.commons` package.
 
+- `core`: `GuiSettings` holds the window size and position saved in preferences, `LogsCenter` configures the
+  shared loggers, and `Index` represents a one-based displayed index.
+- `exceptions`: `IllegalValueException` and `DataLoadingException` signal invalid values and unreadable stored data.
+- `util`: helpers for files (`FileUtil`, including atomic writes), JSON (`JsonUtil`), strings (`StringUtil`),
+  collections (`CollectionUtil`), argument checks (`AppUtil`) and `toString` output (`ToStringBuilder`).
+
 
 ## Implementation
 
@@ -397,6 +403,8 @@ and navigable associations. Filled diamonds indicate composition.
 - Use two card columns in wide windows and one in narrow windows.
 - Arrow/Page keys scroll; Home/End move to the ends; Escape closes help.
 - Help is read-only. Invalid or multiple topics do not open a new topic.
+- **Design note:** the catalogue is bundled in `CommandHelp` instead of linking to the hosted User Guide, so help
+  works without a browser or network connection. `CommandHelpTest` checks that it covers every command.
 
 
 <span id="list-and-clear-commands"></span>
@@ -432,7 +440,7 @@ and navigable associations. Filled diamonds indicate composition.
    Include the storage failure reason. A fresh `clear` or `clear /all` confirmation is needed to retry.
 
 An empty displayed list with hidden records reports nothing to clear and suggests `list` or `clear /all`,
-without prompting or saving. An already-empty roster keeps the existing immediate-save retry behavior.
+without prompting or saving. An already-empty roster keeps the existing immediate-save retry behaviour.
 
 <a class="dg-diagram" style="--dg-diagram-width: 65.6923em" href="images/ClearSequenceDiagram.svg" aria-label="Open diagram at full size: Clear save success and rollback"><img src="images/ClearSequenceDiagram.svg" alt="Clear save success and rollback"></a>
 
@@ -487,6 +495,9 @@ the retained input is the answer `yes`; choose `clear` or `clear /all` again to 
 - Sorting has no confirmation because it removes no records. The original insertion order cannot be restored by a command.
 - Stable ties use the current stored order, including after edits and tag changes.
 - A failed save retains the reordered in-memory roster and reports the shared unsaved-change guidance.
+- **Design note:** `sort` reorders the stored roster instead of adding a display-only sort mode. This keeps one
+  order for the view, indexes, export and persistence; a second ordering would force indexed commands and `export`
+  to say which order they use, and would not survive a restart.
 - No descending or multi-field sorting is provided. `PersistentSortTest` and `SortOrderIntegrationTest` cover persistence,
   hidden members, stable ties, active conditions, later edits/appends and save failures.
 
@@ -523,6 +534,8 @@ cumulative and repeat-detection rules for names.
   equal counts mean the same members remain visible.
 - An email edit can remove a record from the view without deleting it.
 - Blank input preserves the view. Searching never saves data.
+- **Design note:** email matching is a separate command so that `find` stays name-only and every condition box
+  describes exactly one kind of search.
 
 
 <span id="readable-member-details-and-feedback"></span>
@@ -594,7 +607,7 @@ cumulative and repeat-detection rules for names.
 
 **Save failures**
 
-| Command | In-memory state | Retry behavior |
+| Command | In-memory state | Retry behaviour |
 | --- | --- | --- |
 | `clear`, `clear /all` | Restore prior records and view. | Resolve the cause before repeating the intended scope; confirm if prompted. A lone `yes` cannot retry. |
 | Other data-changing commands | Keep the applied change. | Clear the input to prevent accidental repetition. |
@@ -616,7 +629,8 @@ cumulative and repeat-detection rules for names.
 2. Load valid records in stored order. A missing file loads sample members.
 3. For invalid data, preserve the exact bytes in a unique `.corrupt-....json` copy.
 4. Show the loading failure reason after `Reason:`: UTF-8 errors, JSON line/column syntax errors,
-   a missing `persons` list, or an invalid member field. Malformed JSON also includes a JSON syntax hint without exposing file contents. Offer a validated backup, an empty roster, or closing without replacement.
+   a missing `persons` list, or an invalid member field. Offer a validated backup, an empty roster, or closing
+   without replacement.
 5. Verify the original still matches its preserved copy before recovery replacement.
 6. Reload the recovered roster through the same storage instance to refresh its saved-data baseline.
 
@@ -626,13 +640,13 @@ showing file contents. A missing or null `persons` list also explains the requir
 **Safeguards and limits**
 
 - Hold the instance lock through shutdown. A second instance is rejected; do not delete the lock file.
-- Accept one leading UTF-8 byte-order mark in JSON. Trim surrounding member-field and tag whitespace.
+- Accept one optional leading UTF-8 byte-order mark in JSON. Trim surrounding member-field and tag whitespace;
+  name case and internal spacing are preserved.
 - Reject null roots, null members, null tags and invalid or duplicate member values.
-- Preserve an empty address, but reject a non-empty address that becomes blank after trimming or contains only Unicode spaces.
-- JSON loading retains `Person#isSamePerson`: compare all four trimmed contact fields exactly and ignore tags.
-  Older name variants remain loadable. Surrounding field/tag whitespace is trimmed on load; name case and
-  internal spacing are preserved. An empty address is valid; a whitespace-only address is rejected.
-- Accept an optional leading UTF-8 byte-order mark. The recovery dialog displays the load failure reason.
+- Preserve an empty address, but reject a non-empty address that is blank after trimming or contains only
+  Unicode spaces.
+- JSON loading retains `Person#isSamePerson`: compare all four trimmed contact fields exactly and ignore tags,
+  so older name variants remain loadable.
 - Preservation failure prevents an editable roster from opening.
 - Normal saves validate the existing roster and rotate `.bak` only when stored member values differ,
   including tag spelling. A capitalization-only tag change therefore creates a backup.
@@ -646,7 +660,7 @@ showing file contents. A missing or null `persons` list also explains the requir
   clears after a successful save or an explicit reload.
 - A roster file created externally after a missing-file start is also detected, because storage records that it
   observed the file as missing.
-- Invalid preferences fall back to defaults. Logger initialization failure falls back to the console.
+- Invalid preferences fall back to defaults. Logger initialisation failure falls back to the console.
 
 
 <span id="command-parsing"></span>
@@ -668,15 +682,11 @@ showing file contents. A missing or null `persons` list also explains the requir
 - Preserve standalone `c/o`, `s/o`, and `d/o` abbreviations in any letter case, URLs, numeric slashes and slashes embedded within words in add/edit.
   `A/` followed by a digit is also literal within an address, as in `Block A/12`.
   A supported lowercase prefix still ends the address.
-- Shared field validation, in the model value classes, applies these rules:
-  - **Name:** starts with a Unicode letter or ASCII digit. The rest may be Unicode letters, combining marks,
-    ASCII digits, spaces, periods, slashes, hyphens and apostrophes, including the curly `’`. Leading punctuation,
-    a lone combining mark, tabs, line breaks, `@` and emoji are rejected.
-  - **Phone:** at least 3 ASCII digits, with an optional leading `+` and internal spaces. The first and last
-    characters after any `+` must be digits.
-  - **Email:** ASCII letters, digits, `+ _ - '` in the local part, with single periods separating nonempty parts.
-    Domain labels contain ASCII letters, digits and internal hyphens, with alphanumeric boundaries.
-  - **Address:** optional. When present, it must contain a character other than whitespace or Unicode spaces.
+- Field validation lives in the model value classes (`Name`, `Phone`, `Email`, `Address`, `Tag`) through
+  `isValidXyz` methods, not in the parsers. The command parsers, the JSON loader and the CSV importer therefore
+  apply one definition per field. The [User Guide](UserGuide.html#add-a-member-add) lists the accepted formats.
+  `Address` is the only optional field: an empty value is valid, but a non-empty value must contain a character
+  other than whitespace or Unicode spaces, so `edit` can tell "clear the address" from "blank address".
 - Tag parsers name unsupported member fields, preambles and missing `t/` prefixes in their diagnostics.
   Invalid tag values receive the specific reason followed by the command usage.
 - `clear` accepts only an optional `/all`; `list`, `sort` and `exit` take no arguments. Each other command enforces its own grammar.
@@ -715,6 +725,13 @@ showing file contents. A missing or null `persons` list also explains the requir
 **Validation and failure rules**
 
 - Require a case-insensitive `.csv` extension. Preserve path case.
+- **Folder restriction:** the app never reads or writes files outside the folder that holds the JAR. In a
+  packaged build, `FileUtil#resolvePath` resolves a relative path from that folder and rejects a path that
+  leaves it, such as one using `..` or an absolute path elsewhere (`Files must stay inside the JAR folder: ...`). It also rejects any path component that
+  is a symbolic link, or whose real location is outside the folder, even when a link's target is inside it
+  (`Symbolic links are not allowed in application file paths.`). An absolute path inside the folder is accepted.
+  Each rejection is reported as `Could not import CSV:` followed by the reason, and changes nothing. Development
+  runs are unrestricted so that test fixtures can use temporary folders. Export applies the same check.
 - Treat only a single letter followed by `/` as a parameter prefix, so a folder name such as `backup-2026/`
   is not reported as an unknown prefix. Uppercase `P/` is an unknown prefix, not a repeated `p/`.
 - Reject files over 10 MiB and more than 10,000 nonblank member rows before duplicate removal.
@@ -723,14 +740,14 @@ showing file contents. A missing or null `persons` list also explains the requir
 - Require the five headers in any order; validate CSV quoting and every member field.
 - Trim surrounding field/tag whitespace. Reject embedded line breaks.
 - Skip blank records but include them when reporting physical row numbers.
-- Report a missing source with its resolved path. Other read failures, including directories, use the
-  platform's I/O error text and do not always include the path. Reject repeated or unknown prefixes.
+- Report a missing source with its resolved path and ask the user to check its name and location. Other read
+  failures, including directories, use the platform's I/O error text and do not always include the path.
+  Reject repeated or unknown prefixes.
 - Read or validation errors leave records, the view and saved data unchanged. Never modify the source CSV.
-- A missing source reports the resolved path and asks the user to check its name and location.
 - Save failures keep the imported batch in memory and report retry guidance.
 
 **Design:** whole-file validation prevents partial imports. `Person#isDuplicateContactOf` provides the same
-normalized-name duplicate check as new add/edit input; phone, email and address still compare exactly after trimming.
+normalised-name duplicate check as new add/edit input; phone, email and address still compare exactly after trimming.
 Commons CSV handles quoting instead of manual string splitting.
 
 
@@ -771,7 +788,7 @@ Commons CSV handles quoting instead of manual string splitting.
 - Report missing/non-directory parents and write failures with actionable messages instead of temporary-file paths.
 - Close the CSV writer before atomic replacement. Attempt temporary-file cleanup on failure.
 - Preserve an existing export if writing fails. Keep roster data, filters and stored order unchanged.
-- Reject aliases of protected files by checking existing file identity as well as normalized paths.
+- Reject aliases of protected files by checking existing file identity as well as normalised paths.
 
 
 <span id="selecting-members-and-sorting"></span>
@@ -798,6 +815,9 @@ Commons CSV handles quoting instead of manual string splitting.
 - `list`, applied `add`, successful `clear /all` and valid `import` clear selections;
   displayed `clear` retains conditions and updates Show counts.
 - Show is read-only and does not save.
+- **Design note:** a selection is a predicate over `Person` references, not remembered indexes, so it stays
+  correct when other conditions renumber the view. The cost is updating those references when `setPerson`
+  replaces a record (see [Model component](#model-component)).
 
 
 <span id="filter-members-by-tag"></span>
@@ -850,6 +870,8 @@ cover OR/AND combinations, repeated groups, invalid values, counts, truncated la
   Keep the stored spelling when skipping an already-present tag.
 - Invalid indexes or arguments fail before saving. Applied-but-unsaved changes remain in memory.
 - The shared tag parser rejects member-field prefixes (`n/`, `p/`, `e/`, `a/`) with command usage.
+- **Design note:** `tag` and `untag` copy the tag set and change one entry, whereas `edit INDEX t/...` replaces
+  the whole set, so adding one tag with `edit` means retyping the rest.
 
 
 <span id="bulk-tag-editing"></span>
@@ -863,19 +885,12 @@ cover OR/AND combinations, repeated groups, invalid values, counts, truncated la
 **Input:** `TagAllCommandParser` and `UntagAllCommandParser` share `BulkTagArgumentParser`.
 Require exactly one valid `t/TAG`.
 
-* A missing `t/` reports `Missing t/ prefix. Supply tags using t/TAG.`
-* Text before a supplied `t/` is named in an `Unexpected text before t/` error.
-* An `n/`, `p/`, `e/`, or `a/` prefix is named as an unsupported field.
-  Each of these errors includes the calling command's usage.
-* An empty tag reports `Tag cannot be empty.`
-* More than one `t/` reports `Only one tag can be applied per command. Run the command once for each tag.`
-* Unsupported characters are named in the error, followed by the allowed ASCII letters, digits, and internal
-  single hyphens. A space, tab or other whitespace inside a tag reports `Tag cannot contain spaces. Use a hyphen
-  instead, e.g. year-1.` A double quote is shown escaped as `\"`.
-* Leading, trailing, and consecutive hyphens each report a specific error with `year-1` as a valid example.
+* `BulkTagArgumentParser` reports each failure with its own diagnostic: a missing `t/`, text before `t/`, a
+  member-field prefix (`n/`, `p/`, `e/`, `a/`), an empty tag, more than one `t/`, an unsupported character,
+  whitespace inside a tag, misplaced hyphens, or excess length. Every diagnostic is followed by the calling
+  command's usage. The [User Guide](UserGuide.html#tag-or-untag-a-group-tagall-untagall) gives the wording.
 * Unsupported characters are checked before length, so non-ASCII code points are not misreported as
   overlong ASCII tags. Invisible control characters are shown as code points, for example `U+0000`.
-* Overlong tags report their actual length and the limit from `Tag.MAX_LENGTH`.
 * These argument errors give the reason followed by usage without a generic format-error header.
   Existing index parsing in `tag` and `untag` retains its format-error header.
 
@@ -884,7 +899,6 @@ Require exactly one valid `t/TAG`.
 **Flow**
 
 `TagAllCommand` and `UntagAllCommand` inherit this flow from `BulkTagCommand#execute`.
-Each subclass supplies `needsUpdate` and `updateTags`.
 
 1. Snapshot the displayed list. This prevents updates from changing the targets mid-loop.
 2. Reject an empty target set before saving, with guidance to run `list` or choose a group using `find` or `filter`.
@@ -915,11 +929,9 @@ removes the tag. `tagall` updates members who lack the tag; `untagall` updates m
 
 - Never visit hidden members. Removing an active filter tag can hide targets after their update.
 - Retain conditions and stored order. Skip redundant assignments rather than rejecting the batch.
-- Feedback adds "No changes were made." for a zero count. If active filters now hide updated members, it adds
-  the displayed-list summary and a reminder to run `list` (`TagUpdateUtil#describeHiddenUpdates`).
 - A valid all-skipped batch still saves. A save failure leaves the complete batch in memory.
 - The shared base class keeps targeting, logging and feedback consistent between add/remove operations.
-- Acting on the whole roster would prevent group targeting; `list` supplies that behavior when wanted.
+- Acting on the whole roster would prevent group targeting; `list` supplies that behaviour when wanted.
   Explicit index lists would be error-prone for large groups; `show` can choose a precise target set first.
 
 
@@ -927,21 +939,15 @@ removes the tag. `tagall` updates members who lack the tag; `untagall` updates m
 
 **Renaming within the displayed group**
 
-`RenameTagCommandParser` reads the `t/` values with `BulkTagArgumentParser#parseTagValues` and requires
-exactly two. A different count reports the received count and explains that the current tag precedes the
-new tag. Text before the first `t/` and unsupported member field prefixes receive the shared specific
-errors, with the `renametag` usage. Each value is validated by
-`BulkTagArgumentParser#parseTagName`, so empty and invalid tags report the same messages as `tagall` and
-`untagall`. Identical spellings report `The new tag must be different from the current tag.`
-Case-only changes are allowed so a group can use one capitalization.
-
-
 `RenameTagCommand` extends `Command` directly instead of `BulkTagCommand`. It handles two tags, rejects an
 old tag that no displayed member has, and counts merges as well as changes, which the shared loop does not.
 Like `BulkTagCommand`, it snapshots the displayed members before updating them.
 
-1. `RenameTagCommandParser` uses `BulkTagArgumentParser#parseTagValues` to require exactly two tags.
-   Reject preambles, other member-field prefixes and identical spellings. Allow case-only renames.
+1. `RenameTagCommandParser` uses `BulkTagArgumentParser#parseTagValues` to require exactly two tags; a different
+   count is reported with the number received and a reminder that the current tag comes first. It rejects
+   preambles, other member-field prefixes and identical spellings, and allows case-only renames so a group can
+   use one capitalization. `BulkTagArgumentParser#parseTagName` validates each value, so invalid tags give the
+   same diagnostics as `tagall` and `untagall`.
 2. Snapshot displayed members with the old tag, matching without regard to case. Leave hidden members unchanged.
 3. Reject an old tag that no displayed member has. If hidden members have it, report their count and suggest `list`.
    Otherwise replace it on targets requiring a change.
@@ -959,13 +965,24 @@ members visible. Renaming to a different tag name leaves the old filter active a
 without deleting them. Rejecting an unused current tag catches likely typos; allowing case-only renames supports
 consistent spelling.
 
-<span id="test-coverage"></span>
-<span id="test-coverage-1"></span>
-<span id="test-coverage-2"></span>
-<span id="individual-tag-test-coverage"></span>
-<span id="test-coverage-3"></span>
+## Known limitations {id="limitations"}
 
-### 14. Verification roadmap {id="verification-roadmap"}
+- JSON uses a `persons` array and member `tags` arrays. Unknown fields are ignored and repeated fields
+  retain the last value. Numeric JSON values in text fields become text. Comments and trailing commas fail.
+- Deletion and clearing a non-empty roster require confirmation. Neither has undo after confirmation.
+- The backup retains the previous distinct saved roster, not a full history. Later changed saves replace it.
+- Names are compared and searched as entered, without Unicode normalisation. Sorting uses Java's
+  case-insensitive order, so accented names can sort after `Z`.
+- After an accidental clear, stop changing data and follow the [manual recovery steps](UserGuide.html#automatic-backup-and-recovery).
+
+## Development workflow {id="documentation-logging-testing-dev-ops"}
+
+* [Documentation guide](Documentation.html)
+* [Testing guide](Testing.html)
+* [Logging guide](Logging.html)
+* [DevOps guide](DevOps.html)
+
+### Where to test a change {id="verification-roadmap"}
 
 Use these entry points when changing a workflow; the [manual testing appendix](#appendix-instructions-for-manual-testing)
 covers interactions that also depend on JavaFX, the file system or a packaged build.
@@ -977,23 +994,6 @@ covers interactions that also depend on JavaFX, the file system or a packaged bu
 | Saving, clear rollback and applied-but-unsaved changes | `LogicManagerTest`, `ListClearIntegrationTest`, `JsonAddressBookStorageTest`, `FileUtilTest`. |
 | CSV validation and export destinations | `CsvAddressBookImporterTest`, `ExportCommandTest`. |
 | Offline help, details and window placement | `CommandHelpTest`, `HelpWindowTest`, `MainWindowTest`, `WindowPlacementTest`. |
-
-### 15. Limitations {id="limitations"}
-
-- JSON uses a `persons` array and member `tags` arrays. Unknown fields are ignored and repeated fields
-  retain the last value. Numeric JSON values in text fields become text. Comments and trailing commas fail.
-- Deletion and clearing a non-empty roster require confirmation. Neither has undo after confirmation.
-- The backup retains the previous distinct saved roster, not a full history. Later changed saves replace it.
-- Names are compared and searched as entered, without Unicode normalization. Sorting uses Java's
-  case-insensitive order, so accented names can sort after `Z`.
-- After an accidental clear, stop changing data and follow the [manual recovery steps](UserGuide.html#automatic-backup-and-recovery).
-
-## Development workflow {id="documentation-logging-testing-dev-ops"}
-
-* [Documentation guide](Documentation.html)
-* [Testing guide](Testing.html)
-* [Logging guide](Logging.html)
-* [DevOps guide](DevOps.html)
 
 
 ## Appendix: Requirements {id="appendix-requirements"}
@@ -1052,24 +1052,24 @@ Each story identifies a user role, a desired capability and its benefit.
 | US07 | `***` | club secretary | review a request to clear the whole roster and confirm or cancel it | reset the directory only when I intend to remove all members |
 | US08 | `***` | club secretary | filter the displayed members by an exact tag | work with one group or an overlap of groups |
 | US09 | `***` | club secretary | add or remove one group tag for all displayed members while retaining other tags | update a reviewed group without editing each member separately |
-| US11 | `***` | club secretary | have valid changes saved automatically | recover my saved roster when I next open the app |
-| US12 | `***` | club secretary | receive clear error messages for invalid commands and storage failures | correct my input or the storage problem and know whether my changes were saved |
-| US13 | `***` | club secretary | close the app with a command | finish my work using the keyboard |
-| US14 | `***` | experienced secretary | edit a backed-up data file while the app is closed | make awkward data corrections outside the app when necessary |
-| US15 | `**` | club secretary | export member records as a CSV file | share a reviewable copy, prepare submissions or hand over records to my successor |
-| US16 | `**` | club secretary | hide private contact details until a member is selected | reduce accidental disclosure to people nearby |
-| US17 | `*` | club secretary | save all members in name order | browse a long roster more easily |
-| US18 | `***` | prospective club secretary | try TrackCall with sample member data | understand the workflow without risking real records |
-| US19 | `**` | first-time user | follow the User Guide's quick start | learn the basic workflow |
-| US21 | `**` | club secretary | import CSV member records and review accepted and skipped counts and the resulting roster | bring in an existing roster efficiently and verify the outcome |
-| US24 | `***` | club secretary | add or remove one group tag from a member while preserving their other tags | keep overlapping group memberships up to date |
-| US25 | `***` | club secretary | view a selected member's details and copy their contact fields | check the correct record and reuse contact details without retyping |
-| US29 | `**` | club secretary | rename a group tag for displayed members | correct a group name for a reviewed set of members |
-| US35 | `***` | club secretary | have duplicate contact details rejected during data entry | avoid storing the same contact twice |
-| US37 | `**` | club secretary | find members by a full email address or domain fragment | retrieve contacts or select an email-domain group |
-| US38 | `***` | club secretary | choose a startup recovery action when the roster cannot be read | recover usable records while keeping a copy of the damaged file |
-| US39 | `**` | club secretary | remove one active name, email, tag or show condition | broaden the displayed results while keeping other conditions |
-| US40 | `**` | club secretary | show a subset using current displayed member numbers | focus on selected records before applying a group command |
+| US10 | `***` | club secretary | have valid changes saved automatically | recover my saved roster when I next open the app |
+| US11 | `***` | club secretary | receive clear error messages for invalid commands and storage failures | correct my input or the storage problem and know whether my changes were saved |
+| US12 | `***` | club secretary | close the app with a command | finish my work using the keyboard |
+| US13 | `***` | experienced secretary | edit a backed-up data file while the app is closed | make awkward data corrections outside the app when necessary |
+| US14 | `***` | prospective club secretary | try TrackCall with sample member data | understand the workflow without risking real records |
+| US15 | `***` | club secretary | add or remove one group tag from a member while preserving their other tags | keep overlapping group memberships up to date |
+| US16 | `***` | club secretary | view a selected member's details and copy their contact fields | check the correct record and reuse contact details without retyping |
+| US17 | `***` | club secretary | have duplicate contact details rejected during data entry | avoid storing the same contact twice |
+| US18 | `***` | club secretary | choose a startup recovery action when the roster cannot be read | recover usable records while keeping a copy of the damaged file |
+| US19 | `**` | club secretary | export member records as a CSV file | share a reviewable copy, prepare submissions or hand over records to my successor |
+| US20 | `**` | club secretary | hide private contact details until a member is selected | reduce accidental disclosure to people nearby |
+| US21 | `**` | first-time user | follow the User Guide's quick start | learn the basic workflow |
+| US22 | `**` | club secretary | import CSV member records and review accepted and skipped counts and the resulting roster | bring in an existing roster efficiently and verify the outcome |
+| US23 | `**` | club secretary | rename a group tag for displayed members | correct a group name for a reviewed set of members |
+| US24 | `**` | club secretary | find members by a full email address or domain fragment | retrieve contacts or select an email-domain group |
+| US25 | `**` | club secretary | remove one active name, email, tag or show condition | broaden the displayed results while keeping other conditions |
+| US26 | `**` | club secretary | show a subset using current displayed member numbers | focus on selected records before applying a group command |
+| US27 | `*` | club secretary | save all members in name order | browse a long roster more easily |
 
 `tag` and `untag` change one assignment while preserving other tags. `edit` replaces the supplied tag set.
 Import review consists of result counts and inspecting the roster; there is no staged review screen.
@@ -1082,11 +1082,11 @@ not promised releases, in line with the
 
 | ID | Priority | As a... | I want to... | So that I can... | Scope decision |
 | --- | --- | --- | --- | --- | --- |
-| US27 | `**` | club secretary | search by phone number | identify a member when I only have their number | Considered; the current version searches names and emails only. |
-| US30 | `**` | club secretary | update a non-tag field for a group in one operation | handle repeated renewal changes efficiently | Considered; bulk changes in the current version affect tags only. |
-| US31 | `**` | long-time secretary | archive an inactive member | reduce clutter while keeping their history | Considered; deletion in the current version does not retain history. |
-| US32 | `*` | long-time secretary | archive an unused group tag | keep old groups out of my active work without losing their history | Considered; the current version has no tag archive or separate tag catalogue. |
-| US33 | `*` | club secretary | sort members by class | review members in the order relevant to my task | Considered; no class field or class sorting is implemented. |
+| US28 | `**` | club secretary | search by phone number | identify a member when I only have their number | Considered; the current version searches names and emails only. |
+| US29 | `**` | club secretary | update a non-tag field for a group in one operation | handle repeated renewal changes efficiently | Considered; bulk changes in the current version affect tags only. |
+| US30 | `**` | long-time secretary | archive an inactive member | reduce clutter while keeping their history | Considered; deletion in the current version does not retain history. |
+| US31 | `*` | long-time secretary | archive an unused group tag | keep old groups out of my active work without losing their history | Considered; the current version has no tag archive or separate tag catalogue. |
+| US32 | `*` | club secretary | sort members by class | review members in the order relevant to my task | Considered; no class field or class sorting is implemented. |
 
 ### Shared behaviour rules
 
@@ -1095,7 +1095,7 @@ These contracts apply across commands. Feature sections explain their implementa
 1. **Input validation:** use lowercase keywords and prefixes; trim surrounding field whitespace.
    Reject invalid input before changing records, filters, stored order or files. Submitting any command
    still clears the highlighted row and its details. See [command parsing](#7-command-parsing) for field rules.
-2. **Duplicate identity:** add/edit/import compare normalized names (case and repeated whitespace ignored)
+2. **Duplicate identity:** add/edit/import compare normalised names (case and repeated whitespace ignored)
    and exact trimmed phone, email and address values, ignoring tags and the edited record itself.
    Preserve stored spelling. JSON loading keeps the legacy exact-contact rule; tag-only and unchanged-contact
    edits remain possible on legacy variants. See [contact identity](#model-component).
@@ -1161,7 +1161,7 @@ interactions are covered by their user stories and manual tests. Internal method
 
 #### UC01: Register a member
 
-**Related stories:** US02, US35.
+**Related stories:** US02, US17.
 
 **Goal:** add a new member and retain the record for later sessions.
 
@@ -1179,7 +1179,7 @@ interactions are covered by their user stories and manual tests. Internal method
 
 #### UC02: Find and update a member
 
-**Related stories:** US03, US04, US05, US24, US25.
+**Related stories:** US03, US04, US05, US15, US16.
 
 **Goal:** correct one member's record.
 
@@ -1241,7 +1241,7 @@ not delete them. Counts still refer to the target set fixed at step 6.
 
 #### UC04: Remove one member
 
-**Related stories:** US05, US06, US25.
+**Related stories:** US05, US06, US16.
 
 **Goal:** remove one unwanted record while retaining other members.
 
@@ -1313,7 +1313,7 @@ such as the automatic previous-version backup.
 
 #### UC06: Import members from CSV
 
-**Related stories:** US15, US21, US35.
+**Related stories:** US17, US19, US22.
 
 **Goal:** import a batch of member records without accepting an incomplete file.
 
@@ -1341,7 +1341,7 @@ alter the roster, view or JSON file.
 
 #### UC07: Load a manually edited data file
 
-**Related stories:** US11, US12, US14.
+**Related stories:** US10, US11, US13.
 
 **Goal:** load valid corrections made outside the app.
 
@@ -1410,7 +1410,7 @@ Validation, duplicates and filters are functional rules. Development-process rul
 | CSV | Comma-separated values: a text format that represents a table as rows of fields. TrackCall uses CSV to import and export rosters for use with spreadsheets and other tools. |
 | Data-changing command | A command intended to modify roster records, including a valid request that makes no change. |
 | Displayed list | The members visible after applying the current conditions to stored order. Displayed indexes refer to this view. |
-| Duplicate record | A contact whose normalized name and trimmed phone, email and address match another record; tags do not distinguish contacts. See [contact identity](#model-component) for the separate JSON-loading rule. |
+| Duplicate record | A contact whose normalised name and trimmed phone, email and address match another record; tags do not distinguish contacts. See [contact identity](#model-component) for the separate JSON-loading rule. |
 | Group | Members sharing a tag, such as a committee or cohort. A group is not a separate stored object. |
 | In-memory data | The working roster held by the running app, which can differ from the saved file after a save failure. |
 | Index | A member's position in the displayed list, starting at 1. It can change when the view changes. |
@@ -1426,9 +1426,9 @@ Validation, duplicates and filters are functional rules. Development-process rul
 
 ## Appendix: Instructions for Manual Testing {id="appendix-instructions-for-manual-testing"}
 
-Use a disposable folder and synthetic contacts. These are test instructions, not a record of passed tests.
-Record the release version, JAR checksum, Java version, OS and actual result for each run.
-Vary the inputs freely; the cases below are starting points that complement the [User Guide](UserGuide.html).
+Use a disposable folder and synthetic contacts. These are starting points, not a complete test plan:
+vary the inputs freely, and see the [User Guide](UserGuide.html) for each command's full rules.
+Record the release version, Java version, OS and actual result for each run.
 
 ### Test setup
 
@@ -1446,8 +1446,7 @@ add n/Alice Tan p/90000003 e/alice@example.com a/Main Street t/committee
 
 **Expected baseline:** three members in stored order: Zara, Bob, Alice. Bob has no address.
 Enter `yes` only when `clear /all` prompts for confirmation; an already-empty roster needs no answer.
-Use `list` and check the displayed indices before any indexed command. Read-only commands must not change the
-roster file's bytes or timestamp. Back up test files before fault injection.
+Use `list` and check the displayed indices before any indexed command. Back up test files before fault injection.
 
 ### Launch and shutdown
 
@@ -1459,67 +1458,59 @@ roster file's bytes or timestamp. Back up test files before fault injection.
 4. Move and resize the window, close, and restart. **Expect:** valid saved bounds are restored.
    Repeat after disconnecting its former display. **Expect:** the window remains reachable.
 
-### Offline help and readable feedback {id="offline-help-and-readable-feedback-1"}
+### Offline help and member details {id="offline-help-and-readable-feedback-1"}
 
 **Setup:** restore the fixture and disable networking.
 
 1. Open `help`, F1, and the Help menu. **Expect:** the same offline overview of all 19 commands.
-   Open `help edit` and the overview's edit button. **Expect:** matching syntax, examples, rules, and errors.
-   Use Tab, arrow keys, Page Up/Down, Home/End, and Escape. **Expect:** reachable content and visible focus.
-2. Try `help ADD`, `help unknown`, and `help add edit`. **Expect:** useful errors without record or view changes.
+   Open `help edit` and the overview's edit button. **Expect:** matching syntax, examples and errors.
+   Use arrow keys, Page Up/Down, Home/End, and Escape. **Expect:** reachable content and a closing window.
+2. Try `help ADD`, `help unknown`, and `help add edit`. **Expect:** errors without record or view changes.
 3. Press F2 and select a member with arrow keys. **Expect:** that member's complete contact details.
-   Copy a field, then select Bob. **Expect:** the absent-address copy control is disabled and the clipboard is unchanged.
-   Press Escape. **Expect:** hidden details and focus in the command box.
-4. Add, edit, untag, and confirm a delete. **Expect:** the details panel clears; feedback contains the name and
-   sorted tags but no phone, email, or address, and routine logs hold no synthetic contact values.
-5. Add long values and several 30-character tags, apply many name filters, and resize the main and help windows.
-   **Expect:** reachable text, no overlapping controls, and each filter's removal control usable by keyboard.
+   Select Bob. **Expect:** the absent-address copy control is disabled. Press Escape.
+   **Expect:** hidden details and focus in the command box.
+4. Add, edit, untag, and confirm a delete. **Expect:** the details panel clears and the feedback shows the name
+   and sorted tags but no phone, email, or address.
 
-### Commands and displayed indices
-
-Start each subsection below from the baseline fixture and run its numbered steps in order.
-
-#### Add, edit and validation
+### Add, edit and validation
 
 1. Add a fourth member without `a/`. **Expect:** an absent address that survives restart.
    Run `edit 1 a/`. **Expect:** Zara's address is cleared. Run `edit 1 t/committee t/year1`, then `edit 1 t/`.
    **Expect:** replaced tags, then no tags.
 2. Try, separately, a missing required field, repeated `n/`, invalid phone/email, empty `add ... a/`, `edit 1`,
-   and appending `x/extra` or `T/committee`. **Expect:** rejection without changes. Use ordinary spaces between
-   prefixes: the command field removes pasted tabs before they reach the parser.
+   and appending `x/extra` or `T/committee`. **Expect:** rejection without changes.
 3. Add Alice's contact details with different tags, then repeat using `alice tan` and `Alice  Tan`.
    **Expect:** duplicate rejection each time. Change the phone and retry. **Expect:** a separate record.
-4. Add a member using `n/Chloé O'Connor`, `p/+65 9123 4567`, `e/chloe.o'connor@example.com`,
-   `a/Block A/12` and `t/year-1`. **Expect:** accepted values with their spelling and formatting preserved. Also check `Ravi s/o Kumar`,
-   `Priya d/o Raman`, and `J. Tan` through add, edit, CSV import/export, and restart.
-   Then add the same member with one invalid value at a time: `n/-Anne`, `n/Alice@Other`, `p/1 2` (two digits),
-   `p/65+`, `e/john..doe@example.com`, and `a/` followed only by a nonbreaking space (U+00A0).
+4. Add `n/Chloé O'Connor p/+65 9123 4567 e/chloe.o'connor@example.com a/Block A/12 t/year-1`.
+   **Expect:** accepted with spelling preserved. Also check `Ravi s/o Kumar` and `J. Tan` as names.
+   Then try one invalid value at a time: `n/-Anne`, `n/Alice@Other`, `p/1 2`, `p/65+`,
+   `e/john..doe@example.com`, and `a/` followed only by a nonbreaking space (U+00A0).
    **Expect:** a field-specific error each time, with no record added.
 
-#### Search, filter and selection
+### Search, filter and selection
 
-1. **Independent searches:** run `list`, then `find ali`. **Expect:** Alice. Run `list`, then `find Zara Bob`.
-   **Expect:** Zara and Bob (OR matching within one search). Run `list`, then `find Nobody`. **Expect:** no matches.
-2. **Cumulative searches:** run `list`, `find ali`, then `find Zara Bob`. **Expect:** no matches, with two Name boxes:
+1. Run `list`, then `find ali`. **Expect:** Alice. Run `find Zara Bob`. **Expect:** no matches, with two Name boxes:
    a member must satisfy both searches. Remove `Name: ali`. **Expect:** Zara and Bob; the other search remains.
-   Run `list` to restore Zara, Bob, Alice in stored order.
-3. Run `filter t/committee`, then `find Alice`. **Expect:** Alice only. Remove the name-filter box.
-   **Expect:** Bob and Alice; the committee filter remains. Run `filter t/COMMITTEE`.
-   **Expect:** one tag chip, unchanged results, and feedback that the filter is already active.
-4. **Tag-group identity:** run `list`, then `filter t/committee t/friends`. **Expect:** all three members and one
-   Tag box. Run `filter t/FRIENDS t/COMMITTEE t/friends`. **Expect:** the same box and this feedback:
-   `A filter for the tags "committee" / "friends" is already active. No changes were made.`
-   The following count remains `3 member(s) listed with tags "committee" / "friends".`
-   Run `filter t/committee`. **Expect:** Bob and Alice, with a second Tag box: the single-tag condition is different
-   from the existing OR group. Remove the single-tag box. **Expect:** all three members; the OR group remains.
-5. Run `list`, `show 1 3`, then `show 2`. **Expect:** Zara and Alice, then Alice only, with chips
-   **Show: 2 selected** and **Show: 1 selected** in command order. Repeat `show 1`. **Expect:** no extra chip.
-   Remove the one-member chip. **Expect:** Zara and Alice return. Hover over the remaining chip.
-   **Expect:** Alice Tan and Zara Lim in alphabetical order.
-6. Try `find` without a keyword, an empty tag filter, and an out-of-range selection.
+   After `list`, run `find Zara Bob` alone. **Expect:** Zara and Bob (OR within one search).
+2. Run `list`, `filter t/committee`, then `find Alice`. **Expect:** Alice only. Remove the name box.
+   **Expect:** Bob and Alice. Run `filter t/COMMITTEE`. **Expect:** one tag box and an "already active" message.
+3. Run `list`, then `filter t/committee t/friends`. **Expect:** all three members and one Tag box.
+   Run `filter t/committee`. **Expect:** Bob and Alice with a second Tag box, because a single tag is a different
+   condition from the OR group. Remove it. **Expect:** all three members; the OR group remains.
+4. Run `list`, `show 1 3`, then `show 2`. **Expect:** Zara and Alice, then Alice only, with chips
+   **Show: 2 selected** and **Show: 1 selected**. Repeat `show 1`. **Expect:** no extra chip.
+   Hover over the remaining chip. **Expect:** names in alphabetical order.
+5. Run `list`, `sort`, `filter t/committee`, then `findemail @EXAMPLE.COM`. **Expect:** Alice only, with boxes
+   `Tag: committee` and `Email: @EXAMPLE.COM`. Run `findemail alice`. **Expect:** `Results unchanged.` and a third box.
+   Run `findemail ALICE alice`. **Expect:** an "already active" message and still three boxes.
+6. Run `list`, then `findemail alice@example.com @school.edu`. **Expect:** Alice and Bob (OR matching).
+   Run `list`, then `findemail .*`. **Expect:** zero matches, not regular-expression matching.
+7. Edit Alice's email to `alice@other.net` while an `@example.com` email search is active.
+   **Expect:** Alice leaves the view but remains stored; `list` shows all three.
+8. Try `find` or `findemail` without a keyword, an empty tag filter, and an out-of-range `show`.
    **Expect:** errors preserving the preceding view.
 
-#### Individual and bulk tags
+### Individual and bulk tags
 
 1. Run `tag 1 t/year1` twice. **Expect:** Zara gains one tag; repetition reports no change.
    Run `list`, `filter t/committee`, then `tagall t/year1` twice. **Expect:** Bob and Alice gain the tag;
@@ -1527,81 +1518,50 @@ Start each subsection below from the baseline fixture and run its numbered steps
 2. Run `untagall t/committee`. **Expect:** both members leave the filtered view. Run `list`.
    **Expect:** all three remain stored with their other tags intact.
 3. Run `find Alice`, then `renametag t/year1 t/alumni`, followed by `list`.
-   **Expect:** only Alice's tag is renamed; hidden Bob and Zara retain `year1`.
+   **Expect:** only Alice's tag is renamed; hidden members retain `year1`.
 4. Restore the fixture. Run `filter t/committee`, then `untag 1 t/committee`.
    **Expect:** Bob disappears from the view but remains in the roster.
-5. Try invalid indices, empty tags, two tags for `tagall`, identical old/new tags for `renametag`, a bulk update
-   on an empty view, and each tag command with `n/extra`, `p/123`, `e/a@example.com` or `a/Home`.
-   **Expect:** format or usage errors without changes.
-6. Restore the fixture. Run `filter t/committee`, then `renametag t/committee t/Committee`.
-   **Expect:** two changed members, both still displayed, and the `committee` filter retained.
-   Repeat. **Expect:** zero changed and no merges. Run `renametag t/committee t/alumni`.
+5. Run `filter t/committee`, then `renametag t/committee t/Committee`. **Expect:** two changed members, both
+   still displayed. Repeat. **Expect:** zero changed. Run `renametag t/committee t/alumni`.
    **Expect:** both members leave the old-tag filter; removing it returns all three, with `alumni` on Bob and Alice.
+6. Try invalid indices, empty tags, two tags for `tagall`, identical old/new tags for `renametag`, a bulk update
+   on an empty view, and each tag command with `n/extra` or `a/Home`.
+   **Expect:** format or usage errors without changes.
 
-#### Delete and clear
+### Delete and clear
 
 1. Run `find Alice`, then `delete 1`. **Expect:** a confirmation naming Alice; no deletion yet.
-   Enter `list`. **Expect:** cancellation; `list` is consumed and the message adds
-   `"list" was not run. Enter it again to run it.` Repeat `delete 1`, then enter `no`.
-   **Expect:** only the plain cancellation message.
+   Enter `list`. **Expect:** cancellation; `list` is consumed and the message says it was not run.
+   Repeat `delete 1`, then enter `no`. **Expect:** only the plain cancellation message.
 2. Run `delete 1`, then `y`, `Y` and `YES` in turn. **Expect:** each keeps the prompt pending with a reminder to
-   type `yes` exactly, and nothing is deleted. Enter `yes`. **Expect:** Alice is deleted; `list` shows Zara and Bob.
+   type `yes` exactly, and nothing is deleted. Enter `yes`. **Expect:** Alice is deleted.
 3. Try `delete 0`, `delete -1`, a very large integer, and an index beyond the displayed list.
    **Expect:** errors without deletion.
-4. Restore the fixture, run `find Alice`, then `clear /all`. **Expect:** a prompt counting all three records; nothing
-   removed or saved yet. Enter `list`. **Expect:** cancellation noting that `list` was not run.
-   Run `clear /all`, then `y`. **Expect:** the prompt stays pending. Enter `yes`.
-   **Expect:** all three records are removed, including hidden members.
-5. Run `clear` again. **Expect:** the already-empty message after saving, without confirmation.
-   `.bak` still holds the previous distinct roster. Confirmed clear has no undo.
+4. Restore the fixture, run `filter t/committee`, `clear`, then `yes`. **Expect:** only committee members removed,
+   with the filter still applied; `list` reveals Zara. With an empty result and hidden records, **expect** `clear`
+   to neither prompt nor save, while `clear /all` still prompts for everyone.
+5. Restore the fixture, run `find Alice`, then `clear /all`. **Expect:** a prompt counting all three records.
+   Enter `y`, then `yes`. **Expect:** the prompt stays pending, then everyone is removed, including hidden members.
+6. Run `clear` on the empty roster. **Expect:** the already-empty message after saving, without confirmation.
+   `.bak` still holds the previous distinct roster. A confirmed clear has no undo.
 
-Also run `edit 1 a/` followed only by U+2003 (EM SPACE). **Expect:** address validation fails and the existing
-address is retained. Repeat for a non-address field containing only Unicode whitespace; no record may change.
-
-### Email search
-
-**Setup:** restore the fixture before each independent check.
-
-1. **Cumulative conditions:** run `list`, `sort`, `filter t/committee`, then `findemail @EXAMPLE.COM`.
-   **Expect:** Alice only, with boxes `Tag: committee` and `Email: @EXAMPLE.COM`.
-   Run `findemail alice`. **Expect:** `Results unchanged. 1 member listed.` and a third box, `Email: alice`.
-   Run `findemail ALICE alice`. **Expect:** `This email search is already active. 1 member listed.` and still
-   three boxes, with the original spelling. Remove the `Email: alice` box with X: Alice remains.
-   Remove the domain box: Alice and Bob reappear in name order.
-2. **Empty results:** run `find Nobody`, then `findemail @example.com`. **Expect:** an empty list; the email search
-   does not restore hidden members. Run `findemail` without arguments. **Expect:** invalid input and unchanged
-   boxes and results.
-3. **Alternatives within a search:** run `list`, then `findemail alice@example.com @school.edu`.
-   **Expect:** Alice and Bob (OR matching), also with a nonbreaking space (U+00A0) between the keywords.
-   Run `findemail example.com`. **Expect:** Alice only. Remove the first Email box. **Expect:** Alice and Zara.
-   Run `list`, then `findemail .*`. **Expect:** zero matches, not regular-expression matching.
-4. **Selections and edits:** run `list`, `sort`, `show 1`, then `findemail @example.com`. **Expect:** Alice only
-   with the Show condition still active. Run `list`, then `findemail @example.com`, and edit Alice's email to
-   `alice@other.net` using her displayed index. **Expect:** Alice leaves the view but remains stored;
-   `list` shows all three members.
-5. **Name-search feedback:** run `list`, then `find Alice`, then `find ALICE alice`. **Expect:** one Name box and
-   `This name search is already active. 1 member listed.` Run `find Ali`. **Expect:** a second Name box and
-   `Results unchanged. 1 member listed.` Remove `Name: Alice`: `Name: Ali` stays active.
-
-### Sorting and CSV workflows
+### Sorting and CSV
 
 **Setup:** restore the fixture. Use only files inside the disposable application folder.
 
 1. Run `filter t/committee`, then `sort`. **Expect:** Alice and Bob displayed, while all three stored members
-   are reordered to Alice, Bob, Zara. Run `list` and restart: that order persists. Repeat `sort`: unchanged order
-   and a normal save. Try `sort date`: an error preserving the view and saved bytes.
+   are ordered Alice, Bob, Zara. Run `list` and restart: that order persists. Try `sort date`.
+   **Expect:** an error preserving the view and saved bytes. Add a member whose name precedes Alice, and import
+   another new member. **Expect:** both append at the end rather than inserting alphabetically.
 2. Run `filter t/committee`, `sort`, then `export members.csv`. **Expect:** Alice and Bob exported in displayed
-   order, with hidden Zara excluded and the view unchanged. Inspect the CSV. **Expect:** the documented UTF-8 header,
-   correctly quoted fields, and sorted semicolon-separated tags.
-3. Run `import p/members.csv`. **Expect:** zero imports and two skipped duplicates; filters reset and stored order is retained.
+   order, hidden Zara excluded and counted, and the view unchanged. Inspect the CSV. **Expect:** a UTF-8 header,
+   quoted fields where needed, and sorted semicolon-separated tags.
+3. Run `import p/members.csv`. **Expect:** zero imports and two skipped duplicates; filters reset.
    Run `clear /all`, confirm with `yes`, then import again. **Expect:** two imports that persist after restart.
-   Import Alice's details with a lowercase or repeated-space name. **Expect:** a skipped duplicate, no merged tags.
-4. Copy the CSV to `member list.csv`. **Expect:** `import p/"member list.csv"` works and a missing source fails
-   without changes. `export member list.csv`, without quotes, creates a file named exactly that.
-   Try each malformed import separately. **Expect:** an error naming the problem, with no change to the roster,
-   view or saved file.
-   - `import p/"member list.csv` (unmatched quote).
-   - `import p/member list.csv` (unquoted whitespace) and `import p/members.csv extra` (trailing argument).
+4. Copy the CSV to `member list.csv`. **Expect:** `import p/"member list.csv"` works, and `export member list.csv`
+   without quotes creates a file named exactly that. Try each malformed import separately.
+   **Expect:** an error naming the problem, with no change to the roster, view or saved file.
+   - `import p/"member list.csv` (unmatched quote) and `import p/member list.csv` (unquoted whitespace).
    - `import p/a.csv p/b.csv` (repeated `p/`), `import x/a.csv` (unknown prefix) and `import p/""` (empty path).
 5. Import this CSV. **Expect:** a row-specific error with no partial import, save, or view change.
 
@@ -1613,22 +1573,15 @@ address is retained. Repeat for a non-address field containing only Unicode whit
 
    Repeat separately for a bad header, broken quoting, and a line break inside a quoted field.
    A header-only CSV import and an empty-roster export are valid zero-record operations.
-6. Try `export "members.csv"` and `export back"ups/members.csv`. **Expect:** the double-quote error and no file.
-   Export to a missing directory, a protected application file, a path outside the application folder (also through
-   symbolic links), `members.txt`, and a directory named `folder.csv`.
+6. Try `export "members.csv"`, `export members.txt`, and `export folder.csv` where `folder.csv` is a directory.
+   Export to a missing directory, a protected application file, and a path outside the application folder.
    **Expect:** handled errors with extension or folder guidance, and no file replaced.
-7. In a separate disposable roster, add two, then four, members with the same name and distinct phone/email fields.
-   Run `sort`, `tagall t/year1`, `renametag t/year1 t/year2`, a phone-only `edit` and an individual `tag`.
-   **Expect:** tied names retain stored roster order after each. Also test names differing only in case or spaces.
-8. Import a file over 10 MiB, then a separate file with 10,001 valid nonblank member rows.
-   **Expect:** the matching limit error with no imports, saves or view changes, even if the rows are duplicates.
-9. Restore the fixture, run `sort`, then add a member whose name precedes Alice and import another new member.
-   **Expect:** new members append, rather than inserting alphabetically. Rename Alice to Zoe: the record stays
-   in its position until another `sort`. Run `sort`, `list`, and restart: the reordered roster persists.
-10. Apply name, tag and Show conditions, then `sort`. **Expect:** the same conditions and selected members,
-    displayed in stored name order. Sort an empty roster: it saves successfully. Inject a sort save failure:
-    the in-memory order changes, saved bytes stay unchanged, and the shared unsaved-change warning appears.
-
+7. Import a file over 10 MiB, then a separate file with 10,001 valid nonblank member rows.
+   **Expect:** the matching limit error with no imports, saves or view changes.
+8. In a separate disposable roster, add several members with the same name and distinct phone numbers. Run `sort`,
+   then `tagall t/year1` and a phone-only `edit`. **Expect:** tied names retain stored roster order after each.
+9. Apply name, tag and Show conditions, then `sort`. **Expect:** the same conditions and selected members,
+   displayed in stored name order. Sort an empty roster: it saves successfully.
 
 ### Persistence and invalid files
 
@@ -1639,54 +1592,49 @@ Use a fresh fixture and backup for each failure scenario. Restore access before 
 2. With the app closed, replace the roster with malformed JSON, `null`, a null member, or a null tag, each
    separately. **Expect:** a recovery dialog stating the load failure and an exact-byte, uniquely named recovery copy.
    Try Close, Restore backup, and Start empty. **Expect:** Close preserves the invalid file; recovery preserves the
-   damaged copy and existing backup. If no recovery copy can be written, startup stops before an editable roster opens.
+   damaged copy and existing backup.
 3. Test null preferences and null `guiSettings`. **Expect:** usable defaults. In a valid JSON roster, keep two names
-   differing only in case with identical other fields. **Expect:** both load; tag-only and unchanged-contact edits
-   remain possible.
-4. While the app is open, prevent file creation or replacement in its `data` directory: on macOS/Linux remove
-   directory write permission, on Windows deny write access. Keep read access. Making only `addressbook.json`
-   read-only may still allow atomic replacement, so first confirm a save error occurs. Test each of `add`, `edit`,
-   `tag`, `untag`, confirmed `delete`, `tagall`, `untagall`, `renametag`, `import`, and `sort` independently.
+   differing only in case with identical other fields. **Expect:** both load, and tag-only edits remain possible.
+4. While the app is open, remove write permission from its `data` directory but keep read access (on Windows,
+   deny write access). Making only `addressbook.json` read-only may still allow atomic replacement, so first
+   confirm a save error occurs. Test `add`, `edit`, `tag`, `untag`, confirmed `delete`, `tagall`, `untagall`,
+   `renametag`, `import`, and `sort` independently.
    - **Expect:** a save error with retry guidance; the change stays in memory and saved bytes are unchanged.
      Pressing Enter again must not repeat the command.
    - Restore access, reapply an existing field with `edit`, then restart. **Expect:** the current roster is saved.
 5. Repeat the write failure with `clear` while a filter hides members, confirming with `yes`.
    **Expect:** no members removed, the full roster and previous filtered view restored, and unchanged saved bytes.
-   Restore access, run `clear` again, and confirm. **Expect:** only displayed targets removed; hidden members remain.
-   Repeat with an already-empty roster, which saves without confirmation.
+   Restore access, run `clear` again, and confirm. **Expect:** only displayed targets removed.
 6. With the app closed, add surrounding whitespace to valid JSON contact and tag fields and a leading UTF-8
    byte-order mark, then restart. **Expect:** loading succeeds with outer whitespace trimmed.
    Test a whitespace-only address separately. **Expect:** a recovery dialog, not an empty address.
 7. While the app is open, replace the data file with a different valid roster, then attempt a data change.
    **Expect:** the first save is refused with outside-edit guidance and the file is preserved.
    Restart to load the outside version, or retry with an existing field value. **Expect on retry:** the outside
-   version is backed up. Repeat after startup recovery.
-8. Rename a tag by capitalization only. **Expect:** `.bak` retains the previous spelling. During a later simulated
-   roster-write failure, **expect** the active file and the older backup are both restored when rollback succeeds.
+   version is backed up in `.bak`.
+8. Rename a tag by capitalization only. **Expect:** `.bak` retains the previous spelling.
 
-### Release acceptance checks still required
+### Release checks
 
-Use the supplied release JAR for every check. Record pass/fail and evidence for:
+These checks cover the [non-functional requirements](#non-functional-requirements) and the file-location
+restriction that the scenarios above do not exercise. Use the packaged release JAR, because development runs do
+not apply the folder restriction.
 
-- Windows, macOS and Linux with the required Java 25 distribution.
-- Startup from a folder containing spaces, and operation with networking disabled.
-- Keyboard access, long values, and every resolution and scaling combination in NFR05.
-- Every User Guide example, comparing actual output with the documented outcome.
-- The NFR08 response-time workload, including machine details and measured timings.
-- Save failures, recovery, empty inputs, overlapping filters, hidden members, and restart persistence.
-
-Record unresolved failures with the release version and JAR checksum so they can be reproduced.
-
-For grouped tag filters, test `filter t/committee t/friends`, then `filter t/year1`. Verify OR within
-the first box and AND between boxes. Repeat with reordered/case-varied tags: no duplicate box should
-appear. Supply more than four alternatives: the short label must show `+N more`, while the tooltip
-and remove button's accessible text retain the complete list. Removing a group's X removes that group only.
-
-### Displayed clearing and whole-roster override
-
-Restore the fixture and run `filter t/committee`, `clear`, then `yes`. Expect only committee members
-removed, with conditions still applied; `list` reveals the hidden survivors. Restore the fixture and
-repeat using `clear /all`: everyone is removed and conditions reset. Cancel each form and test near misses.
-Remove a filter while a prompt is pending: only the originally captured targets may be removed.
-With an empty result and hidden records, `clear` must not prompt or save; `/all` still prompts for everyone.
-Inject a write failure: restore all records and original Show selections, with unchanged saved bytes.
+1. **Folder with spaces:** copy the JAR to a new folder whose path contains spaces and launch it with
+   `java -jar "trackcall.jar"`. Add a member, then exit. **Expect:** normal startup, and every file the app
+   creates, such as `data/`, `preferences.json`, `trackcall.log*` and `.trackcall.lock`, inside that folder.
+2. **Folder restriction:** run `import p/../outside.csv`, then `import` with an absolute path to a valid CSV outside
+   the JAR folder. **Expect:** `Files must stay inside the JAR folder`, nothing imported, and no change to the
+   roster, view or saved file. Export to `../outside.csv`. **Expect:** an error and no file written outside the folder.
+   Where your OS supports symbolic links, make `linked.csv` a link to a valid CSV inside the folder, then run
+   `import p/linked.csv`. **Expect:** `Symbolic links are not allowed in application file paths.` and no change.
+3. **Screen sizes (NFR05):** at 1920 × 1080 with 100% and 125% scaling, and at 1280 × 720 with 150% scaling, open
+   the main and help windows with long names, many tags and several condition boxes. **Expect:** readable text,
+   no overlapping controls, and long lists and help text reachable by scrolling.
+4. **Response time (NFR08):** create 500 members by importing a generated CSV, keeping the data file under 1 MB.
+   Time representative valid commands (`add`, `edit`, `find`, `filter`, `sort`, `tagall`, a confirmed `delete`
+   and `export`) from submission to visible result, including saving. **Expect:** each completes within two
+   seconds. Record the OS, Java version, hardware, dataset and timings, and exclude startup and shutdown.
+5. **User Guide examples:** run every example in the [User Guide](UserGuide.html) and compare the actual result
+   with the documented outcome. **Expect:** they match. Record any unresolved difference with the release version
+   and JAR checksum so it can be reproduced.
