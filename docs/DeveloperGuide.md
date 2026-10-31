@@ -725,6 +725,13 @@ showing file contents. A missing or null `persons` list also explains the requir
 **Validation and failure rules**
 
 - Require a case-insensitive `.csv` extension. Preserve path case.
+- **Folder restriction:** the app never reads or writes files outside the folder that holds the JAR. In a
+  packaged build, `FileUtil#resolvePath` resolves a relative path from that folder and rejects a path that
+  leaves it, such as one using `..` or an absolute path elsewhere (`Files must stay inside the JAR folder: ...`). It also rejects any path component that
+  is a symbolic link, or whose real location is outside the folder, even when a link's target is inside it
+  (`Symbolic links are not allowed in application file paths.`). An absolute path inside the folder is accepted.
+  Each rejection is reported as `Could not import CSV:` followed by the reason, and changes nothing. Development
+  runs are unrestricted so that test fixtures can use temporary folders. Export applies the same check.
 - Treat only a single letter followed by `/` as a parameter prefix, so a folder name such as `backup-2026/`
   is not reported as an unknown prefix. Uppercase `P/` is an unknown prefix, not a repeated `p/`.
 - Reject files over 10 MiB and more than 10,000 nonblank member rows before duplicate removal.
@@ -1606,3 +1613,28 @@ Use a fresh fixture and backup for each failure scenario. Restore access before 
    Restart to load the outside version, or retry with an existing field value. **Expect on retry:** the outside
    version is backed up in `.bak`.
 8. Rename a tag by capitalization only. **Expect:** `.bak` retains the previous spelling.
+
+### Release checks
+
+These checks cover the [non-functional requirements](#non-functional-requirements) and the file-location
+restriction that the scenarios above do not exercise. Use the packaged release JAR, because development runs do
+not apply the folder restriction.
+
+1. **Folder with spaces:** copy the JAR to a new folder whose path contains spaces and launch it with
+   `java -jar "trackcall.jar"`. Add a member, then exit. **Expect:** normal startup, and every file the app
+   creates, such as `data/`, `preferences.json`, `trackcall.log*` and `.trackcall.lock`, inside that folder.
+2. **Folder restriction:** run `import p/../outside.csv`, then `import` with an absolute path to a valid CSV outside
+   the JAR folder. **Expect:** `Files must stay inside the JAR folder`, nothing imported, and no change to the
+   roster, view or saved file. Export to `../outside.csv`. **Expect:** an error and no file written outside the folder.
+   Where your OS supports symbolic links, make `linked.csv` a link to a valid CSV inside the folder, then run
+   `import p/linked.csv`. **Expect:** `Symbolic links are not allowed in application file paths.` and no change.
+3. **Screen sizes (NFR05):** at 1920 × 1080 with 100% and 125% scaling, and at 1280 × 720 with 150% scaling, open
+   the main and help windows with long names, many tags and several condition boxes. **Expect:** readable text,
+   no overlapping controls, and long lists and help text reachable by scrolling.
+4. **Response time (NFR08):** create 500 members by importing a generated CSV, keeping the data file under 1 MB.
+   Time representative valid commands (`add`, `edit`, `find`, `filter`, `sort`, `tagall`, a confirmed `delete`
+   and `export`) from submission to visible result, including saving. **Expect:** each completes within two
+   seconds. Record the OS, Java version, hardware, dataset and timings, and exclude startup and shutdown.
+5. **User Guide examples:** run every example in the [User Guide](UserGuide.html) and compare the actual result
+   with the documented outcome. **Expect:** they match. Record any unresolved difference with the release version
+   and JAR checksum so it can be reproduced.
