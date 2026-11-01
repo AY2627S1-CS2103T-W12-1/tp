@@ -566,7 +566,8 @@ add n/Bob Lee p/92345678 e/bob@example.com a/20 College Road t/committee t/year1
   For example, `Alice Tan`, `alice tan` and `Alice  Tan` match when phone, email and address also match.
   Unicode letter case is ignored too; for example, `ΟΣ`, `οσ` and `ος` match.
 
-- **Other contact fields:** Those other fields are trimmed but otherwise compared exactly; tags are ignored.
+- **Phone and email:** ASCII spaces in phone numbers are ignored, but the leading `+` remains significant. Email local parts
+  remain case-sensitive; domain capitalization is ignored. Address text is trimmed and compared exactly. Tags are ignored.
 
 - **Stored spelling:** Names keep their entered capitalization and spacing in storage and display. Accents and punctuation
   are not removed by duplicate checking, and this rule does not expand the supported name characters.
