@@ -56,6 +56,39 @@ public class PersonCardTest {
     }
 
     @Test
+    public void card_mixedScriptName_showsComposedNameAndKeepsStoredName() throws Exception {
+        onJavaFxThread(() -> {
+            // Greek word followed by CJK plus decomposed accents, the input that triggered #378.
+            String greek = "\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac";
+            String decomposedName = greek + "\u754c\u754cE\u0301e\u0301".repeat(24);
+            String composedName = greek + "\u754c\u754c\u00c9\u00e9".repeat(24);
+            Person person = new PersonBuilder().withName(decomposedName).build();
+            Region card = layoutCard(person, 1, 450);
+            assertEquals(composedName, ((Label) card.lookup("#name")).getText());
+            // Only the displayed text is normalized; the stored name keeps its original spelling.
+            assertEquals(decomposedName, person.getName().fullName);
+        });
+    }
+
+    @Test
+    public void card_composedName_showsNameUnchanged() throws Exception {
+        onJavaFxThread(() -> {
+            Region card = layoutCard(new PersonBuilder().withName("Al\u00e9x").build(), 1, 450);
+            assertEquals("Al\u00e9x", ((Label) card.lookup("#name")).getText());
+        });
+    }
+
+    @Test
+    public void card_markWithoutComposedForm_showsNameAsTyped() throws Exception {
+        onJavaFxThread(() -> {
+            // Devanagari has no precomposed form for these marks, so normalization cannot change them.
+            String devanagariName = "\u0928\u092e\u0938\u094d\u0924\u0947";
+            Region card = layoutCard(new PersonBuilder().withName(devanagariName).build(), 1, 450);
+            assertEquals(devanagariName, ((Label) card.lookup("#name")).getText());
+        });
+    }
+
+    @Test
     public void card_noTags_omitsEmptyTagRow() throws Exception {
         onJavaFxThread(() -> {
             Region card = layoutCard(new PersonBuilder().withTags().build(), 1, 400);

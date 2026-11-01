@@ -2,6 +2,7 @@ package seedu.address.ui;
 
 import static java.util.Objects.requireNonNull;
 
+import java.text.Normalizer;
 import java.util.Comparator;
 
 import javafx.fxml.FXML;
@@ -53,7 +54,7 @@ public class MemberDetailsPanel extends UiPart<Region> {
         requireNonNull(person);
         selectedPerson = person;
         displayedIndex.setText("MEMBER " + index);
-        name.setText(person.getName().fullName);
+        name.setText(Normalizer.normalize(person.getName().fullName, Normalizer.Form.NFC));
         phone.setText(person.getPhone().value);
         email.setText(person.getEmail().value);
         String addressValue = person.getAddress().value;

@@ -45,7 +45,7 @@ public class PersonCard extends UiPart<Region> {
         tags.setMinHeight(Region.USE_PREF_SIZE);
         tags.setVisible(!person.getTags().isEmpty());
         tags.setManaged(!person.getTags().isEmpty());
-        // Recompose combining marks (e + U+0301 becomes one character) to avoid a slow text-layout path.
+        // Recompose combining marks to avoid the slow layout seen with CJK plus a decomposed accent (#378).
         name.setText(Normalizer.normalize(person.getName().fullName, Normalizer.Form.NFC));
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))
