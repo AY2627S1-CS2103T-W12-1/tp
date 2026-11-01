@@ -306,7 +306,7 @@
 
 .filter-chip {
     -fx-alignment: center-left;
-    -fx-background-color: -tc-sage-soft;
+    -fx-background-color: #e0e8d7;
     -fx-background-radius: 6;
     -fx-border-color: #bdcaae;
     -fx-border-radius: 6;
@@ -314,7 +314,7 @@
 }
 
 .filter-chip .label {
-    -fx-text-fill: -tc-sage;
+    -fx-text-fill: #40573b;
     -fx-font-size: 13px;
 }
 
@@ -323,7 +323,7 @@
     -fx-border-color: transparent;
     -fx-padding: 0 4;
     -fx-font-size: 17px;
-    -fx-text-fill: -tc-sage;
+    -fx-text-fill: #40573b;
 }
 
 .filter-chip-remove:hover, .filter-chip-remove:focused {
