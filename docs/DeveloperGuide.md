@@ -1524,7 +1524,7 @@ Use `list` and check the displayed indices before any indexed command. Back up t
    **Expect:** only Alice's tag is renamed; hidden members retain `year1`.
 4. Restore the fixture. Run `filter t/committee`, then `untag 1 t/committee`.
    **Expect:** Bob disappears from the view but remains in the roster.
-5. Run `filter t/committee`, then `renametag t/committee t/Committee`. **Expect:** two changed members, both
+5. Restore the fixture. Run `filter t/committee`, then `renametag t/committee t/Committee`. **Expect:** two changed members, both
    still displayed. Repeat. **Expect:** zero changed. Run `renametag t/committee t/alumni`.
    **Expect:** both members leave the old-tag filter; removing it returns all three, with `alumni` on Bob and Alice.
 6. Try invalid indices, empty tags, two tags for `tagall`, identical old/new tags for `renametag`, a bulk update
