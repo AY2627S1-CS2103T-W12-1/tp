@@ -48,6 +48,14 @@ public class PersonCardTest {
     }
 
     @Test
+    public void card_nameWithCombiningMark_showsComposedName() throws Exception {
+        onJavaFxThread(() -> {
+            Region card = layoutCard(new PersonBuilder().withName("Ale\u0301x").build(), 1, 450);
+            assertEquals("Al\u00e9x", ((Label) card.lookup("#name")).getText());
+        });
+    }
+
+    @Test
     public void card_noTags_omitsEmptyTagRow() throws Exception {
         onJavaFxThread(() -> {
             Region card = layoutCard(new PersonBuilder().withTags().build(), 1, 400);
