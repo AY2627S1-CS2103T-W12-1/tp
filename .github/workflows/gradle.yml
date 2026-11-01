@@ -38,8 +38,9 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '25'
-          # macOS tests use the JavaFX dependencies declared by Gradle.
-          java-package: ${{ runner.os == 'macOS' && 'jdk' || 'jdk+fx' }}
+          # Use the same JavaFX dependencies as the packaged application on every OS.
+          # A bundled FX runtime can shadow Gradle's version in the lifecycle child JVM.
+          java-package: jdk
 
       - name: Build and check with Gradle on Linux
         if: runner.os == 'Linux'
