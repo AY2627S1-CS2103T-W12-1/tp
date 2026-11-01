@@ -58,7 +58,7 @@ public class PersonCardTest {
     @Test
     public void card_mixedScriptName_showsComposedNameAndKeepsStoredName() throws Exception {
         onJavaFxThread(() -> {
-            // Greek word followed by CJK plus decomposed accents, the input that triggered #378.
+            // Greek word followed by CJK plus decomposed accents, the combination that made layout slow.
             String greek = "\u0395\u03bb\u03bb\u03b7\u03bd\u03b9\u03ba\u03ac";
             String decomposedName = greek + "\u754c\u754cE\u0301e\u0301".repeat(24);
             String composedName = greek + "\u754c\u754c\u00c9\u00e9".repeat(24);
