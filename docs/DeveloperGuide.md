@@ -688,8 +688,8 @@ showing file contents. A missing or null `persons` list also explains the requir
   apply one definition per field. The [User Guide](UserGuide.html#add-a-member-add) lists the accepted formats.
   `Address` is the only optional field: an empty value is valid, but a non-empty value must contain a character
   other than whitespace or Unicode spaces, so `edit` can tell "clear the address" from "blank address".
-- Tag parsers name unsupported member fields, preambles and missing `t/` prefixes in their diagnostics.
-  Invalid tag values receive the specific reason followed by the command usage.
+- Tag parsers name unsupported member fields, preambles and missing `t/` prefixes in their diagnostics,
+  followed by the command usage. Invalid tag values receive only the specific reason.
 - `clear` accepts only an optional `/all`; `list`, `sort` and `exit` take no arguments. Each other command enforces its own grammar.
 
 
