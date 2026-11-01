@@ -325,7 +325,7 @@ public class LogicManagerTest {
     @Test
     public void execute_storageThrowsAdException_throwsCommandException() {
         assertCommandFailureForExceptionFromStorage(DUMMY_AD_EXCEPTION, String.format(
-                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, DUMMY_AD_EXCEPTION.getMessage())
+                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, temporaryFolder.resolve("ExceptionUserPrefs.json"))
                 + LogicManager.UNSAVED_CHANGE_GUIDANCE);
     }
 
@@ -984,7 +984,9 @@ public class LogicManagerTest {
             assertEquals(original, model.getAddressBook());
             assertEquals(List.of(AMY), model.getFilteredPersonList());
             assertTrue(failure.getMessage().contains("No members were removed."));
-            assertTrue(failure.getMessage().contains(error.getMessage()));
+            String expectedDetails = error instanceof AccessDeniedException
+                    ? temporaryFolder.resolve("roster.json").toString() : error.getMessage();
+            assertTrue(failure.getMessage().contains(expectedDetails));
         }
     }
 
