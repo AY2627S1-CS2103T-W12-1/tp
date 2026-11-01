@@ -54,7 +54,9 @@ Run the automated tests with:
 ./gradlew test
 ```
 
-See the [setup instructions](docs/SettingUp.md) for the full development setup.
+Java CI uses plain Zulu JDK 25 on all three platforms, with JavaFX supplied by Gradle.
+To reproduce a CI-only failure, use that runtime for your Gradle JVM; a JDK+FX installation
+can load its bundled JavaFX instead. See the [setup instructions](docs/SettingUp.md) for details.
 
 ## Acknowledgements
 
