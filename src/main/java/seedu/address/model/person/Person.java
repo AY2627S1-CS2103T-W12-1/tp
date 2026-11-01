@@ -4,6 +4,7 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
@@ -80,15 +81,30 @@ public class Person {
 
     /**
      * Checks duplicate contact input without changing stored names or the legacy storage identity rule.
-     * Name case and repeated whitespace are ignored; other contact fields are trimmed and compared exactly.
+     * Name case and repeated whitespace are ignored; phone spacing and email-domain case are ignored.
+     * Other contact fields are trimmed and compared exactly.
      * Tags are ignored. Existing JSON records continue to use {@link #isSamePerson(Person)} when loading.
      */
     public boolean isDuplicateContactOf(Person otherPerson) {
         return otherPerson != null
                 && name.getComparisonKey().equalsIgnoreCase(otherPerson.getName().getComparisonKey())
-                && phone.value.trim().equals(otherPerson.getPhone().value.trim())
-                && email.value.trim().equals(otherPerson.getEmail().value.trim())
+                && normalizePhone(phone.value).equals(normalizePhone(otherPerson.getPhone().value))
+                && normalizeEmail(email.value).equals(normalizeEmail(otherPerson.getEmail().value))
                 && address.value.trim().equals(otherPerson.getAddress().value.trim());
+    }
+
+    /** Removes ASCII spaces while retaining a phone number's optional leading plus. */
+    private static String normalizePhone(String value) {
+        return value.trim().replace(" ", "");
+    }
+
+    /** Compares the email local part exactly and folds only the domain's ASCII case. */
+    private static String normalizeEmail(String value) {
+        String trimmed = value.trim();
+        int separator = trimmed.lastIndexOf('@');
+        String localPart = trimmed.substring(0, separator);
+        String domain = trimmed.substring(separator + 1).toLowerCase(Locale.ROOT);
+        return localPart + "@" + domain;
     }
 
     /**
