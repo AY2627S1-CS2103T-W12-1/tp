@@ -1437,7 +1437,8 @@ Record the release version, Java version, OS and actual result for each run.
 
 1. Put the supplied TrackCall JAR in a new, writable folder. Run `java -version` to confirm Java 25, then launch
    with `java -jar "trackcall.jar"` from that folder in a terminal.
-2. Before each independent scenario below, recreate this fixture by entering each command separately:
+2. Before each independent scenario below, and wherever a step says "Restore the fixture", recreate this fixture
+   by entering each command separately:
 
 ```text
 clear /all
@@ -1524,8 +1525,12 @@ Use `list` and check the displayed indices before any indexed command. Back up t
    **Expect:** only Alice's tag is renamed; hidden members retain `year1`.
 4. Restore the fixture. Run `filter t/committee`, then `untag 1 t/committee`.
    **Expect:** Bob disappears from the view but remains in the roster.
-5. Run `filter t/committee`, then `renametag t/committee t/Committee`. **Expect:** two changed members, both
-   still displayed. Repeat. **Expect:** zero changed. Run `renametag t/committee t/alumni`.
+5. Restore the fixture again, because step 4 removed Bob's only tag. Run `filter t/committee`, then
+   `renametag t/committee t/Committee`. 
+   **Expect:** two changed members, both still displayed.
+   Run `renametag t/committee t/Committee` again.
+   **Expect:** zero changed. 
+   Run `renametag t/committee t/alumni`.
    **Expect:** both members leave the old-tag filter; removing it returns all three, with `alumni` on Bob and Alice.
 6. Try invalid indices, empty tags, two tags for `tagall`, identical old/new tags for `renametag`, a bulk update
    on an empty view, and each tag command with `n/extra` or `a/Home`.
