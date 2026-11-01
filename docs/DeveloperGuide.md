@@ -889,11 +889,12 @@ Require exactly one valid `t/TAG`.
 
 * `BulkTagArgumentParser` reports each failure with its own diagnostic: a missing `t/`, text before `t/`, a
   member-field prefix (`n/`, `p/`, `e/`, `a/`), an empty tag, more than one `t/`, an unsupported character,
-  whitespace inside a tag, misplaced hyphens, or excess length. Every diagnostic is followed by the calling
-  command's usage. The [User Guide](UserGuide.html#tag-or-untag-a-group-tagall-untagall) gives the wording.
+  whitespace inside a tag, misplaced hyphens, or excess length. A missing `t/`, text before `t/` or a member-field
+  prefix is followed by the calling command's usage; the other errors give only the reason. The
+  [User Guide](UserGuide.html#tag-or-untag-a-group-tagall-untagall) gives the wording.
 * Unsupported characters are checked before length, so non-ASCII code points are not misreported as
   overlong ASCII tags. Invisible control characters are shown as code points, for example `U+0000`.
-* These argument errors give the reason followed by usage without a generic format-error header.
+* These argument errors give the reason, with usage where described above, without a generic format-error header.
   Existing index parsing in `tag` and `untag` retains its format-error header.
 
 <span id="execution-1"></span>
