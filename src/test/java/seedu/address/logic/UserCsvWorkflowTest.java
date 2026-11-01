@@ -3,10 +3,13 @@ package seedu.address.logic;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -19,7 +22,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.commands.exceptions.SaveFailureException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
 import seedu.address.model.ModelManager;
@@ -172,7 +177,7 @@ public class UserCsvWorkflowTest {
         CommandException error = assertThrows(CommandException.class, () -> logic.execute("import p/\"" + csv + "\""));
 
         String feedback = error.getMessage().toLowerCase(Locale.ROOT);
-        assertTrue(feedback.startsWith("could not save data to file:"));
+        assertImportSaveFailureFeedback(error);
         assertTrue(feedback.contains("not saved"), "The user must be told their imported members are not saved");
         assertTrue(feedback.contains("edit"), "The user must be told how to retry saving");
         assertTrue(feedback.contains("exit"), "The user must be warned about losing unsaved members on exit");
@@ -301,7 +306,7 @@ public class UserCsvWorkflowTest {
             CommandException error = assertThrows(
                     CommandException.class, () -> logic.execute("import p/\"" + csv + "\""));
 
-            assertTrue(error.getMessage().startsWith("Could not save data to file:"));
+            assertImportSaveFailureFeedback(error);
             assertArrayEquals(saved, Files.readAllBytes(rosterFile));
             assertTrue(model.getAddressBook().getPersonList().stream()
                     .anyMatch(p -> p.getName().fullName.equals(name)));
@@ -315,6 +320,18 @@ public class UserCsvWorkflowTest {
             assertEquals(model.getAddressBook(),
                     new JsonAddressBookStorage(rosterFile).readAddressBook().orElseThrow());
         }
+    }
+
+    /** Checks the complete feedback for the actual filesystem failure without assuming an OS-specific subtype. */
+    private void assertImportSaveFailureFeedback(CommandException error) {
+        SaveFailureException failure = assertInstanceOf(SaveFailureException.class, error);
+        IOException cause = assertInstanceOf(IOException.class, failure.getCause());
+        assertTrue(failure.isChangeApplied(), "The imported batch must remain available for retry");
+        // Windows reports AccessDeniedException for the directory blocker; Unix may report another IO failure.
+        String expectedError = cause instanceof AccessDeniedException
+                ? String.format(LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, rosterFile)
+                : String.format(ImportCommand.MESSAGE_SAVE_FAILURE, cause.getMessage());
+        assertEquals(expectedError + LogicManager.UNSAVED_CHANGE_GUIDANCE, failure.getMessage());
     }
 
     private LogicManager logicFor(ModelManager sessionModel, Path file) throws Exception {
