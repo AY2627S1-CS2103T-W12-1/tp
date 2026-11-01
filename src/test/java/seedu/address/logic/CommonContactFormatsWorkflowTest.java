@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ModelManager;
 import seedu.address.storage.CsvAddressBookImporter;
@@ -52,14 +53,28 @@ public class CommonContactFormatsWorkflowTest {
 
     @Test
     public void phone_countryCodeAndSpaces_preservedThroughAddEditAndRoundTrip() throws Exception {
-        List<String> phones = List.of("+6591234567", "9123 4567", "+65 9123 4567");
+        List<String> phones = List.of("+65 9123 4567", "9123 4567");
         for (String phone : phones) {
             logic.execute("add n/Alice p/" + phone + " e/alice@example.com");
         }
+        assertThrows(CommandException.class, () ->
+                logic.execute("add n/Alice p/+6591234567 e/alice@example.com"));
         assertEquals(phones, model.getAddressBook().getPersonList().stream()
                 .map(person -> person.getPhone().value).toList());
         logic.execute("edit 1 p/+44 20 1234 5678");
         assertEquals("+44 20 1234 5678", model.getAddressBook().getPersonList().getFirst().getPhone().value);
+        assertRoundTrip();
+    }
+
+    @Test
+    public void email_domainCase_isDuplicateButLocalPartCaseRemainsSignificant() throws Exception {
+        logic.execute("add n/Alice p/123 e/alice@example.com");
+        assertThrows(CommandException.class, () ->
+                logic.execute("add n/Alice p/123 e/alice@EXAMPLE.COM"));
+        logic.execute("add n/Alice p/123 e/Alice@EXAMPLE.COM");
+
+        assertEquals(List.of("alice@example.com", "Alice@EXAMPLE.COM"), model.getAddressBook().getPersonList().stream()
+                .map(person -> person.getEmail().value).toList());
         assertRoundTrip();
     }
 

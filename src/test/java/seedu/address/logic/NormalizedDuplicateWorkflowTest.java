@@ -164,6 +164,90 @@ public class NormalizedDuplicateWorkflowTest {
         }
     }
 
+    @Test
+    public void edit_equivalentPhoneOfHiddenMember_rejectedWithoutChangingViewOrFile() throws Exception {
+        logic.execute("add n/Alice Tan p/+65 9123 4567 e/alice@example.com a/Home t/hidden");
+        logic.execute("add n/Alice Tan p/999 e/alice@example.com a/Home t/visible");
+        logic.execute("filter t/visible");
+        AddressBook before = new AddressBook(model.getAddressBook());
+        var displayed = List.copyOf(model.getFilteredPersonList());
+        var filters = List.copyOf(model.getActiveFilters());
+        byte[] saved = Files.readAllBytes(roster);
+
+        assertThrows(CommandException.class, () -> logic.execute("edit 1 p/+6591234567"));
+
+        assertEquals(before, model.getAddressBook());
+        assertEquals(displayed, model.getFilteredPersonList());
+        assertEquals(filters, model.getActiveFilters());
+        assertArrayEquals(saved, Files.readAllBytes(roster));
+    }
+
+    @Test
+    public void edit_equivalentEmailOfHiddenMember_rejectedWithoutChangingViewOrFile() throws Exception {
+        logic.execute("add n/Alice Tan p/123 e/alice@example.com a/Home t/hidden");
+        logic.execute("add n/Alice Tan p/123 e/other@example.com a/Home t/visible");
+        logic.execute("filter t/visible");
+        AddressBook before = new AddressBook(model.getAddressBook());
+        var displayed = List.copyOf(model.getFilteredPersonList());
+        var filters = List.copyOf(model.getActiveFilters());
+        byte[] saved = Files.readAllBytes(roster);
+
+        assertThrows(CommandException.class, () -> logic.execute("edit 1 e/alice@EXAMPLE.COM"));
+
+        assertEquals(before, model.getAddressBook());
+        assertEquals(displayed, model.getFilteredPersonList());
+        assertEquals(filters, model.getActiveFilters());
+        assertArrayEquals(saved, Files.readAllBytes(roster));
+    }
+
+    @Test
+    public void import_phoneAndDomainVariants_skipsHiddenAndEarlierContactsWithoutMergingTags() throws Exception {
+        logic.execute("add n/Alice Tan p/+65 9123 4567 e/alice@example.com a/Home t/original");
+        logic.execute("find Nobody");
+        Person original = model.getAddressBook().getPersonList().getFirst();
+        Path csv = directory.resolve("normalized contacts.csv");
+        Files.writeString(csv, "name,phone,email,address,tags\n"
+                + "Alice Tan,+6591234567,alice@example.com,Home,phoneDuplicate\n"
+                + "Alice Tan,+65 9123 4567,alice@EXAMPLE.COM,Home,emailDuplicate\n"
+                + "Bob Ray,9876 5432,bob@EXAMPLE.COM,Elsewhere,first\n"
+                + "Bob Ray,98765432,bob@EXAMPLE.COM,Elsewhere,phoneDuplicate\n"
+                + "Bob Ray,9876 5432,bob@example.com,Elsewhere,emailDuplicate\n"
+                + "Alice Tan,6591234567,alice@example.com,Home,differentPlus\n"
+                + "Alice Tan,+65 9123 4567,Alice@example.com,Home,differentLocalPart\n");
+
+        var result = logic.execute("import p/\"" + csv + "\"");
+
+        assertTrue(result.getFeedbackToUser().startsWith("Imported 3 member(s)"));
+        assertTrue(result.getFeedbackToUser().endsWith("Skipped 4 duplicate record(s)."));
+        List<Person> expected = List.of(original,
+                new PersonBuilder().withName("Bob Ray").withPhone("9876 5432")
+                        .withEmail("bob@EXAMPLE.COM").withAddress("Elsewhere").withTags("first").build(),
+                new PersonBuilder(original).withPhone("6591234567").withTags("differentPlus").build(),
+                new PersonBuilder(original).withEmail("Alice@example.com").withTags("differentLocalPart").build());
+        assertEquals(expected, model.getAddressBook().getPersonList());
+        assertEquals(expected, new JsonAddressBookStorage(roster).readAddressBook().orElseThrow().getPersonList());
+    }
+
+    @Test
+    public void legacyPhoneAndDomainVariants_reloadAndAllowSelfEditsWithoutMerging() throws Exception {
+        Person first = new PersonBuilder().withName("Alice Tan").withPhone("9123 4567")
+                .withEmail("alice@example.com").withTags("original").build();
+        Person phoneVariant = new PersonBuilder(first).withPhone("91234567").withTags("phone").build();
+        Person emailVariant = new PersonBuilder(first).withEmail("alice@EXAMPLE.COM").withTags("email").build();
+        AddressBook previous = new AddressBook();
+        List.of(first, phoneVariant, emailVariant).forEach(previous::addPerson);
+        new JsonAddressBookStorage(roster).saveAddressBook(previous);
+        model = new ModelManager(new JsonAddressBookStorage(roster).readAddressBook().orElseThrow(), new UserPrefs());
+        logic = logicFor(model);
+
+        logic.execute("edit 2 t/paid");
+        logic.execute("edit 3 e/alice@EXAMPLE.COM");
+
+        List<Person> expected = List.of(first, new PersonBuilder(phoneVariant).withTags("paid").build(), emailVariant);
+        assertEquals(expected, model.getAddressBook().getPersonList());
+        assertEquals(expected, new JsonAddressBookStorage(roster).readAddressBook().orElseThrow().getPersonList());
+    }
+
     private LogicManager logicFor(ModelManager sessionModel) {
         return new LogicManager(sessionModel, new StorageManager(new JsonAddressBookStorage(roster),
                 new JsonUserPrefsStorage(directory.resolve("preferences.json"))));
