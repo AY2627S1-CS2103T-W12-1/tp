@@ -85,11 +85,48 @@ public class EditCommandTest {
         EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptor());
         Person editedPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
 
-        String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(editedPerson));
+        String expectedMessage = String.format(EditCommand.MESSAGE_NO_CHANGES, Messages.format(editedPerson));
 
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
 
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_tagSpellingChanged_reportsUpdatedMember() throws Exception {
+        Person original = model.getFilteredPersonList().get(0);
+        Person edited = new PersonBuilder(original).withTags("FRIENDS").build();
+        EditCommand command = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withTags("FRIENDS").build());
+
+        assertEquals(String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(edited)),
+                command.execute(model).getFeedbackToUser());
+        assertEquals("FRIENDS", model.getFilteredPersonList().get(0).getTags().iterator().next().tagName);
+    }
+
+    @Test
+    public void execute_unchangedSuppliedFields_reportsNoChanges() {
+        Person original = model.getFilteredPersonList().get(0);
+        EditCommand command = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder(original).build());
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+
+        assertCommandSuccess(command, model,
+                String.format(EditCommand.MESSAGE_NO_CHANGES, Messages.format(original)), expectedModel);
+        assertFalse(command.isReadOnly());
+    }
+
+    @Test
+    public void execute_unchangedNameInFilteredList_reportsNoChanges() {
+        showPersonAtIndex(model, INDEX_FIRST_PERSON);
+        Person original = model.getFilteredPersonList().get(0);
+        EditCommand command = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withName(original.getName().fullName).build());
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        showPersonAtIndex(expectedModel, INDEX_FIRST_PERSON);
+
+        assertCommandSuccess(command, model,
+                String.format(EditCommand.MESSAGE_NO_CHANGES, Messages.format(original)), expectedModel);
     }
 
     @Test

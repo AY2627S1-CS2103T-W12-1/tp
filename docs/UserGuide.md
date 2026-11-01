@@ -597,6 +597,8 @@ add n/Bob Lee p/92345678 e/bob@example.com a/20 College Road t/committee t/year1
 <p class="ug-topic"><strong>Result and current view</strong></p>
 
 - This changes the first displayed member's phone and email. Omitted fields stay unchanged.
+- If every supplied value already matches the member, TrackCall reports `No changes were made.` and
+  shows the unchanged member details. This valid command still saves the roster.
 - Use `edit INDEX a/` to remove an address that is no longer known; the details panel then shows `(none)`.
 - After saving, TrackCall confirms the member's name and tags and keeps the active search, tag filters, and roster order.
   Changing a name does not move the member; run `sort` again to reorder the roster.
@@ -888,6 +890,17 @@ Export displayed members or bring existing member records into TrackCall.
 - The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
 - Tags for each member are sorted in case-sensitive ASCII order (hyphens, digits, uppercase letters, then lowercase letters)
   and joined with semicolons.
+
+<p class="ug-topic"><strong>Opening exports in a spreadsheet</strong></p>
+
+- Export preserves member values for reimport; it does not neutralize spreadsheet formulas.
+  Spreadsheet apps may interpret values beginning with `=`, `+`, `-`, or `@` as formulas.
+  This includes addresses such as `=SUM(A1)` and `-5 Road`, and can also affect phone or email values.
+- Use your spreadsheet app's text/CSV import feature and explicitly set every column to **Text** before loading.
+  Avoid opening the CSV by double-clicking it with automatic formula interpretation enabled.
+  CSV quotation marks only protect commas, quotes, and line breaks; they do not prevent formula interpretation.
+- For an unchanged export/import round trip, import the original CSV directly into TrackCall.
+  Spreadsheet apps may change values when saving, even if you did not edit the cells.
 
 - **Duplicate tag spellings:** If an imported CSV file or saved JSON roster contains case variants of one tag on the same member,
   TrackCall keeps the first spelling listed for that member. The retained spelling appears in the member

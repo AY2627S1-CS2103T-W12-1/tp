@@ -88,6 +88,18 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_unchangedEdit_reportsNoChangesAndStillSaves() throws Exception {
+        model.addPerson(AMY);
+
+        CommandResult result = logic.execute("edit 1 n/" + AMY.getName().fullName);
+
+        assertEquals(String.format(EditCommand.MESSAGE_NO_CHANGES, Messages.format(AMY)),
+                result.getFeedbackToUser());
+        JsonAddressBookStorage saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+        assertEquals(model.getAddressBook(), saved.readAddressBook().orElseThrow());
+    }
+
+    @Test
     public void execute_invalidCommandFormat_throwsParseException() {
         String invalidCommand = "uicfhmowqewca";
         assertParseException(invalidCommand, MESSAGE_UNKNOWN_COMMAND);
