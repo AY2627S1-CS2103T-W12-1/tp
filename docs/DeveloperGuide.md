@@ -1458,7 +1458,8 @@ Use `list` and check the displayed indices before any indexed command. Back up t
 1. Start in a new folder without a roster file. **Expect:** sample members and a usable command box.
 2. Run `list extra`, `clear extra`, and `exit extra`. **Expect:** input errors, unchanged records, and an open app.
    Run `exit`, then restart. **Expect:** the last successfully saved roster.
-3. Launch the same JAR twice. **Expect:** the second process reports that the app is already running.
+3. Launch the same JAR twice. **Expect:** the second process shows an already-running message. Dismiss it and
+   verify that the second process exits, while the original window and its saved roster remain unchanged.
    Close the first and relaunch. **Expect:** startup succeeds without deleting `.trackcall.lock`.
 4. Move and resize the window, close, and restart. **Expect:** valid saved bounds are restored.
    Repeat after disconnecting its former display. **Expect:** the window remains reachable.
