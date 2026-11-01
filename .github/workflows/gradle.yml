@@ -39,7 +39,7 @@ jobs:
           distribution: 'zulu'
           java-version: '25'
           # Use the same JavaFX dependencies as the packaged application on every OS.
-          # A bundled FX runtime can shadow Gradle's version in the lifecycle child JVM.
+          # Avoid a second JavaFX runtime; the failed child JVM in #363 loaded jrt:/javafx.graphics.
           java-package: jdk
 
       - name: Build and check with Gradle on Linux

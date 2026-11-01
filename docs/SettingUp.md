@@ -45,6 +45,12 @@ automatically use the Gradle `run` task's adjusted classpath.
 
    This project includes GitHub Actions configuration files in `.github/workflows`. GitHub runs Java CI for pull requests, pushes to `master`, and tags. Documentation changes also run the website build. No workflow setup is required.
 
+   Java CI uses **plain Zulu JDK 25** on Linux, Windows and macOS, with JavaFX supplied by the dependencies
+   in `build.gradle`. The course-compatible JDK+FX setup can load its bundled JavaFX instead. To reproduce
+   a CI-only failure, point `JAVA_HOME` (terminal) or the **Gradle JVM** setting (IDEA) to a plain Zulu JDK 25
+   installation, then run the same Gradle task as CI. This explains the CI environment; the course setup
+   guidance for local development still applies.
+
 1. **Learn the design**
 
    When you are ready to start coding, we recommend that you get some sense of the overall design by reading about [TrackCall’s architecture](DeveloperGuide.html#architecture).
