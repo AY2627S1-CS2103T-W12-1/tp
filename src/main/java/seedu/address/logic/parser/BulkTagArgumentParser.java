@@ -23,6 +23,8 @@ public final class BulkTagArgumentParser {
     public static final String MESSAGE_INVALID_TAG = Tag.MESSAGE_CONSTRAINTS + ".";
     public static final String MESSAGE_UNSUPPORTED_CHARACTER = "Tag contains unsupported character \"%s\". "
             + "Use letters (A-Z, a-z), digits (0-9), or internal hyphens (-), e.g. year-1.";
+    public static final String MESSAGE_UNSUPPORTED_QUOTE = "Tag contains unsupported character \" (double quote). "
+            + "Use letters (A-Z, a-z), digits (0-9), or internal hyphens (-), e.g. year-1.";
     public static final String MESSAGE_WHITESPACE =
             "Tag cannot contain spaces. Use a hyphen instead, e.g. year-1.";
     public static final String MESSAGE_LEADING_HYPHEN =
@@ -150,6 +152,9 @@ public final class BulkTagArgumentParser {
             if (isSpace(character)) {
                 throw new ParseException(MESSAGE_WHITESPACE);
             }
+            if (character == '"') {
+                throw new ParseException(MESSAGE_UNSUPPORTED_QUOTE);
+            }
             throw new ParseException(String.format(MESSAGE_UNSUPPORTED_CHARACTER, describeCharacter(character)));
         }
     }
@@ -160,14 +165,11 @@ public final class BulkTagArgumentParser {
     }
 
     /**
-     * Makes invisible control characters and the double quote readable inside the quoted error message.
+     * Makes invisible control characters readable inside the quoted error message.
      */
     private static String describeCharacter(int character) {
         if (Character.isISOControl(character) || Character.getType(character) == Character.FORMAT) {
             return String.format("U+%04X", character);
-        }
-        if (character == '"') {
-            return "\\\"";
         }
         return new String(Character.toChars(character));
     }

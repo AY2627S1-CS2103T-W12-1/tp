@@ -129,7 +129,7 @@ public class BulkTagArgumentParserTest {
         String guidance = ". Use letters (A-Z, a-z), digits (0-9), or internal hyphens (-), e.g. year-1.";
         assertParseRejected("Tag contains unsupported character \"_\"" + guidance, " t/year_1");
         assertParseRejected("Tag contains unsupported character \"!\"" + guidance, " t/hello!");
-        assertParseRejected("Tag contains unsupported character \"\\\"\"" + guidance, " t/year\"1");
+        assertParseRejected("Tag contains unsupported character \" (double quote)" + guidance, " t/year\"1");
         assertParseRejected("Tag contains unsupported character \"/\"" + guidance, " t/onex/two");
         assertParseRejected("Tag contains unsupported character \"é\"" + guidance, " t/café");
     }
