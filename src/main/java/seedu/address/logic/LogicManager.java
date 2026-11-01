@@ -161,7 +161,8 @@ public class LogicManager implements Logic {
                 throw new SaveFailureException(ClearCommand.MESSAGE_SAVE_FAILURE + "\n"
                         + String.format(errorFormat, details), ioe, false);
             }
-            if (command instanceof ImportCommand) {
+            // A permission failure falls through to the shared message below, which explains the cause.
+            if (command instanceof ImportCommand && !(ioe instanceof AccessDeniedException)) {
                 String details = getSaveFailureDetails(ioe);
                 throw new SaveFailureException(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, details)
                         + UNSAVED_CHANGE_GUIDANCE, ioe, true);
@@ -180,8 +181,8 @@ public class LogicManager implements Logic {
 
     /**
      * Returns the text describing a failed save for the user.
-     * A permission failure names the roster file, because the exception message names the internal temporary file
-     * that the atomic write created beside it.
+     * A permission failure names the roster file, whichever file in the data folder was refused, because the
+     * exception message may name an internal temporary or backup file that the user never created.
      */
     private String getSaveFailureDetails(IOException ioe) {
         if (ioe instanceof AccessDeniedException) {

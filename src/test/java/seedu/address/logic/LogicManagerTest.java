@@ -67,6 +67,8 @@ import seedu.address.testutil.PersonUtil;
 public class LogicManagerTest {
     private static final IOException DUMMY_IO_EXCEPTION = new IOException("dummy IO exception");
     private static final IOException DUMMY_AD_EXCEPTION = new AccessDeniedException("dummy access denied exception");
+    /** File name of the roster file used by the storage stubs that fail on save. */
+    private static final String FAILING_ROSTER_FILE_NAME = "failingRoster.json";
     private static final String[] READ_ONLY_COMMANDS = {
         "list", "find Amy", "find m", "findemail @example.com", "findemail absent@", "filter t/friend",
         "help", "help add", "help filter", "help findemail", "exit"
@@ -323,9 +325,18 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_storageThrowsIoExceptionWithoutMessage_usesExceptionDescription() {
+        IOException failureWithoutMessage = new IOException();
+        assertCommandFailureForExceptionFromStorage(failureWithoutMessage, String.format(
+                LogicManager.FILE_OPS_ERROR_FORMAT, failureWithoutMessage)
+                + LogicManager.UNSAVED_CHANGE_GUIDANCE);
+    }
+
+    @Test
     public void execute_storageThrowsAdException_throwsCommandException() {
         assertCommandFailureForExceptionFromStorage(DUMMY_AD_EXCEPTION, String.format(
-                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, temporaryFolder.resolve("ExceptionUserPrefs.json"))
+                LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT,
+                temporaryFolder.resolve(FAILING_ROSTER_FILE_NAME))
                 + LogicManager.UNSAVED_CHANGE_GUIDANCE);
     }
 
@@ -579,6 +590,25 @@ public class LogicManagerTest {
 
         assertEquals(String.format(ImportCommand.MESSAGE_SAVE_FAILURE, failureWithoutMessage)
                 + LogicManager.UNSAVED_CHANGE_GUIDANCE, failure.getMessage());
+        assertTrue(failure.isChangeApplied());
+        assertEquals(1, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
+    public void execute_importSaveFailureAccessDenied_namesRosterAndHidesTemporaryFile() throws Exception {
+        Path csvFile = temporaryFolder.resolve("members.csv");
+        Files.writeString(csvFile, "name,phone,email,address,tags\n"
+                + "New Member,123,new@example.com,New address,\n");
+        Path temporaryFile = temporaryFolder.resolve(".trackcall-backup-123.tmp");
+        useFailingStorage(new AccessDeniedException(temporaryFile.toString()));
+
+        SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
+                SaveFailureException.class, () -> logic.execute("import p/" + csvFile));
+
+        assertEquals(String.format(LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT,
+                temporaryFolder.resolve(FAILING_ROSTER_FILE_NAME)) + LogicManager.UNSAVED_CHANGE_GUIDANCE,
+                failure.getMessage());
+        assertFalse(failure.getMessage().contains(".trackcall-backup"));
         assertTrue(failure.isChangeApplied());
         assertEquals(1, model.getAddressBook().getPersonList().size());
     }
@@ -967,32 +997,40 @@ public class LogicManagerTest {
     }
 
     @Test
-    public void execute_failedClear_restoresRosterAndExistingFilter() throws Exception {
-        for (IOException error : List.of(DUMMY_IO_EXCEPTION, DUMMY_AD_EXCEPTION)) {
-            model = new ModelManager();
-            model.addPerson(AMY);
-            model.addPerson(BOB);
-            AddressBook original = new AddressBook(model.getAddressBook());
-            useFailingStorage(error);
-            logic.execute("find Amy");
-            logic.execute("clear /all");
+    public void execute_failedClearWithIoException_restoresRosterAndNamesError() throws Exception {
+        assertFailedClearRestoresRoster(DUMMY_IO_EXCEPTION, DUMMY_IO_EXCEPTION.getMessage());
+    }
 
-            SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
-                    SaveFailureException.class, () -> logic.execute("yes"));
+    @Test
+    public void execute_failedClearWithAccessDenied_restoresRosterAndNamesRosterFile() throws Exception {
+        assertFailedClearRestoresRoster(DUMMY_AD_EXCEPTION,
+                temporaryFolder.resolve(FAILING_ROSTER_FILE_NAME).toString());
+    }
 
-            assertFalse(failure.isChangeApplied());
-            assertEquals(original, model.getAddressBook());
-            assertEquals(List.of(AMY), model.getFilteredPersonList());
-            assertTrue(failure.getMessage().contains("No members were removed."));
-            String expectedDetails = error instanceof AccessDeniedException
-                    ? temporaryFolder.resolve("roster.json").toString() : error.getMessage();
-            assertTrue(failure.getMessage().contains(expectedDetails));
-        }
+    /** Runs a confirmed clear that fails to save and checks the restored roster and the reported details. */
+    private void assertFailedClearRestoresRoster(IOException error, String expectedDetails) throws Exception {
+        model = new ModelManager();
+        model.addPerson(AMY);
+        model.addPerson(BOB);
+        AddressBook original = new AddressBook(model.getAddressBook());
+        useFailingStorage(error);
+        logic.execute("find Amy");
+        logic.execute("clear /all");
+
+        SaveFailureException failure = org.junit.jupiter.api.Assertions.assertThrows(
+                SaveFailureException.class, () -> logic.execute("yes"));
+
+        assertFalse(failure.isChangeApplied());
+        assertEquals(original, model.getAddressBook());
+        assertEquals(List.of(AMY), model.getFilteredPersonList());
+        assertTrue(failure.getMessage().contains("No members were removed."));
+        assertTrue(failure.getMessage().contains(expectedDetails));
     }
 
     /** Replaces persistence with a deterministic failure after a command has changed the model. */
     private void useFailingStorage(IOException failure) {
-        JsonAddressBookStorage addressStorage = new JsonAddressBookStorage(temporaryFolder.resolve("roster.json")) {
+        JsonAddressBookStorage addressStorage = new JsonAddressBookStorage(
+                temporaryFolder.resolve(FAILING_ROSTER_FILE_NAME)) {
             @Override
             public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
                 throw failure;
@@ -1089,10 +1127,10 @@ public class LogicManagerTest {
      * @param expectedMessage the message expected inside exception thrown by the Logic component
      */
     private void assertCommandFailureForExceptionFromStorage(IOException e, String expectedMessage) {
-        Path prefPath = temporaryFolder.resolve("ExceptionUserPrefs.json");
+        Path rosterPath = temporaryFolder.resolve(FAILING_ROSTER_FILE_NAME);
 
         // Inject LogicManager with a JsonAddressBookStorage that throws the IOException e when saving
-        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(prefPath) {
+        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(rosterPath) {
             @Override
             public void saveAddressBook(ReadOnlyAddressBook addressBook) throws IOException {
                 throw e;
