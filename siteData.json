@@ -129,6 +129,9 @@
         "what-each-suite-covers": "What each suite covers",
         "running-selected-suites": "Running selected suites",
         "interpreting-results": "Interpreting results",
+        "designing-useful-test-cases": "Designing useful test cases",
+        "checking-recovery-across-commands": "Checking recovery across commands",
+        "keeping-assertions-trustworthy": "Keeping assertions trustworthy",
         "release-verification": "Release verification"
       },
       "headingKeywords": {}
