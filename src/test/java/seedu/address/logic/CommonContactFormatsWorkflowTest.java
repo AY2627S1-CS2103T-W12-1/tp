@@ -57,8 +57,8 @@ public class CommonContactFormatsWorkflowTest {
         for (String phone : phones) {
             logic.execute("add n/Alice p/" + phone + " e/alice@example.com");
         }
-        assertThrows(CommandException.class,
-                () -> logic.execute("add n/Alice p/+6591234567 e/alice@example.com"));
+        assertThrows(CommandException.class, () ->
+                logic.execute("add n/Alice p/+6591234567 e/alice@example.com"));
         assertEquals(phones, model.getAddressBook().getPersonList().stream()
                 .map(person -> person.getPhone().value).toList());
         logic.execute("edit 1 p/+44 20 1234 5678");
@@ -69,8 +69,8 @@ public class CommonContactFormatsWorkflowTest {
     @Test
     public void email_domainCase_isDuplicateButLocalPartCaseRemainsSignificant() throws Exception {
         logic.execute("add n/Alice p/123 e/alice@example.com");
-        assertThrows(CommandException.class,
-                () -> logic.execute("add n/Alice p/123 e/alice@EXAMPLE.COM"));
+        assertThrows(CommandException.class, () ->
+                logic.execute("add n/Alice p/123 e/alice@EXAMPLE.COM"));
         logic.execute("add n/Alice p/123 e/Alice@EXAMPLE.COM");
 
         assertEquals(List.of("alice@example.com", "Alice@EXAMPLE.COM"), model.getAddressBook().getPersonList().stream()
