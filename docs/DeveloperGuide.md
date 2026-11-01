@@ -284,10 +284,11 @@ The model separates stored records from display state. The diagrams show one res
 
 **Contact identity:** `Person#isDuplicateContactOf` checks new add/edit/import input against the
 whole roster, including hidden members. It ignores name case and repeated whitespace, compares the
-other trimmed contact fields exactly, and ignores tags. Name case is compared with `equalsIgnoreCase` after
-whitespace is collapsed, not by lowercasing, because lowercasing changes Greek sigma by its position in
-the word. `Person#isSamePerson` retains exact name
-matching for JSON loading, so older name variants remain loadable. `EditCommand` checks for duplicates
+phone after removing ASCII spaces, compares email local parts exactly and domains without regard to ASCII case,
+and compares trimmed addresses exactly; tags are ignored. A phone's leading `+` remains significant. Name case
+is compared with `equalsIgnoreCase` after whitespace is collapsed, not by lowercasing, because lowercasing
+changes Greek sigma by its position in the word. `Person#isSamePerson` retains exact name matching for JSON
+loading, so older name variants remain loadable. `EditCommand` checks for duplicates
 only when contact details change; tag-only and unchanged-contact edits remain possible on those records.
 
 **3. Display pipeline**
@@ -747,7 +748,8 @@ showing file contents. A missing or null `persons` list also explains the requir
 - Save failures keep the imported batch in memory and report retry guidance.
 
 **Design:** whole-file validation prevents partial imports. `Person#isDuplicateContactOf` provides the same
-normalised-name duplicate check as new add/edit input; phone, email and address still compare exactly after trimming.
+duplicate check as new add/edit input, including normalized names, phone spacing and email-domain case.
+The email local part remains case-sensitive; trimmed addresses compare exactly.
 Commons CSV handles quoting instead of manual string splitting.
 
 
@@ -1095,8 +1097,9 @@ These contracts apply across commands. Feature sections explain their implementa
 1. **Input validation:** use lowercase keywords and prefixes; trim surrounding field whitespace.
    Reject invalid input before changing records, filters, stored order or files. Submitting any command
    still clears the highlighted row and its details. See [command parsing](#7-command-parsing) for field rules.
-2. **Duplicate identity:** add/edit/import compare normalised names (case and repeated whitespace ignored)
-   and exact trimmed phone, email and address values, ignoring tags and the edited record itself.
+2. **Duplicate identity:** add/edit/import compare normalised names (case and repeated whitespace ignored),
+   phone numbers with ASCII spaces removed (keeping a leading `+` significant), email local parts exactly with
+   domains compared without regard to ASCII case, and trimmed addresses exactly. Tags and the edited record are ignored.
    Preserve stored spelling. JSON loading keeps the legacy exact-contact rule; tag-only and unchanged-contact
    edits remain possible on legacy variants. See [contact identity](#model-component).
 3. **Tags:** store each tag once per member, match without regard to case, retain its spelling and
