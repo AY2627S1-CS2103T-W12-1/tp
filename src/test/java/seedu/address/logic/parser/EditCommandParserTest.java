@@ -58,7 +58,7 @@ public class EditCommandParserTest {
     @Test
     public void parse_unknownOrUppercasePrefix_failure() {
         for (String prefix : new String[] {"x/extra", "T/committee", "N/Amy", "P/12345678", "E/a@b.com",
-            "A/Main", "z/", "c/other", "c/office"}) {
+            "A/Main", "z/", "c/other", "c/office", "A/L", "A/P"}) {
             assertParseFailure(parser, "1 a/Main Road " + prefix, MESSAGE_INVALID_FORMAT);
             assertParseFailure(parser, "1 a/Main Road\t" + prefix + TAG_DESC_FRIEND, MESSAGE_INVALID_FORMAT);
             assertParseFailure(parser, "1 " + prefix + ADDRESS_DESC_AMY, MESSAGE_INVALID_FORMAT);

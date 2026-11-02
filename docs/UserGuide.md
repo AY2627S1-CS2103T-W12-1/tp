@@ -510,15 +510,18 @@ Keep member contact details up to date.
 - **Field prefixes:** Add reserves whitespace-delimited single ASCII letters followed by `/` for field prefixes.
   Only lowercase `n/`, `p/`, `e/`, `a/`, and `t/` are accepted; `x/extra` and `T/committee`
   report an invalid command format.
-- **Why some slashes are rejected:** TrackCall finds each field by a space, one letter and `/`, so this pattern
-  cannot appear inside a name or address. `Block A/12`, `Block B/12` and `Alice Tan g/glory` are rejected;
-  use `Block A-12` or `Block B-12` instead.
+- **Why some slashes are rejected:** TrackCall finds each field by a space, one letter and `/`, so apart from the
+  abbreviations below, this pattern cannot be part of a name or address. `Block A/12`, `Block B/12` and
+  `Alice Tan g/glory` are rejected; use `Block A-12` or `Block B-12` instead.
 - **Slashes that are accepted:** a slash after two or more letters (`Block AB/12`), without a space before the letter
   (`Alice/Glory`), or after a space (`Alice Tan /`). URLs, numeric slashes such as `12/3`, and the standalone
   abbreviations `c/o`, `s/o`, and `d/o` (in any letter case) are also accepted.
-- **Prefixes inside a value:** a lowercase `n/`, `p/`, `e/`, `a/`, or `t/` inside a value starts that field.
-  For example, `n/Ravi a/l Kumar` saves the name `Ravi` and the address `l Kumar`; in `edit`, it also replaces
-  the existing address. Write such names without the slash, such as `Ravi al Kumar`, and check the result.
+- **Names with `A/L` or `A/P`:** write these in uppercase, such as `Ravi A/L Kumar` or `Siti A/P Ahmad`;
+  they stay part of the name. Elsewhere, `A/L` and `A/P` are rejected. Lowercase `a/l` or `a/p` directly after a
+  name is rejected with an explanation, because `a/` could also start the address.
+- **Prefixes inside a value:** any other lowercase `n/`, `p/`, `e/`, `a/`, or `t/` inside a value starts that field.
+  For example, `n/Alice t/year1` saves the name `Alice` with the tag `year1`. For an address whose first word is
+  `l` or `p`, do not put `a/` directly after the name: use `n/Alice p/91234567 a/p Street`.
 
 <p class="ug-topic"><strong>Field rules</strong></p>
 
@@ -1299,7 +1302,8 @@ Read command instructions offline and close TrackCall when you are finished.
   see [Field prefixes and address text](#add-a-member-add).
 - **Unit labels:** use `a/Block A-12` or `a/Block B-12`. Standalone single-letter slash labels
   such as `A/12` and `B/12` are rejected in both commands.
-- **Other address text:** standalone `c/o`, `s/o`, and `d/o`, URLs, numeric slashes such as `12/3`, and slashes inside words remain valid.
+- **Other address text:** standalone `c/o`, `s/o`, and `d/o`, URLs, numeric slashes such as `12/3`,
+  and slashes inside words remain valid.
 
 > **Correction example:** `edit 1 a/Main Road T/committee` reports invalid input; use lowercase `t/` to assign a tag.
 

@@ -54,7 +54,7 @@ public class AddCommandParserTest {
         String validArguments = NAME_DESC_BOB + PHONE_DESC_BOB + EMAIL_DESC_BOB + ADDRESS_DESC_BOB;
         String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
         for (String prefix : new String[] {"x/extra", "T/committee", "N/Bob", "P/12345678", "E/a@b.com",
-            "A/Main", "z/", "c/other", "c/office"}) {
+            "A/Main", "z/", "c/other", "c/office", "A/L", "A/P"}) {
             assertParseFailure(parser, validArguments + " " + prefix, expectedMessage);
             assertParseFailure(parser, validArguments + "\t" + prefix + TAG_DESC_FRIEND, expectedMessage);
             assertParseFailure(parser, " " + prefix + validArguments, expectedMessage);
