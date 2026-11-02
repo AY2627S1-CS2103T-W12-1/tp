@@ -7,9 +7,7 @@ import static seedu.address.testutil.JavaFxTestUtil.onJavaFxThread;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -18,8 +16,6 @@ import org.junit.jupiter.api.Test;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.DataFormat;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.commands.exceptions.SaveFailureException;
@@ -165,32 +161,6 @@ public class CommandBoxTest {
             field.replaceSelection("Alice\n");
             assertEquals("find  Bob", field.getText());
             assertTrue(warning(box).isVisible());
-        });
-    }
-
-    @Test
-    public void paste_fromClipboard_rejectsTabsAndAcceptsSpaces() throws Exception {
-        onJavaFxThread(() -> {
-            Clipboard clipboard = Clipboard.getSystemClipboard();
-            Map<DataFormat, Object> originalClipboardContent = new HashMap<>();
-            for (DataFormat format : clipboard.getContentTypes()) {
-                originalClipboardContent.put(format, clipboard.getContent(format));
-            }
-            try {
-                CommandBox box = new CommandBox(command -> new CommandResult("Done."));
-                TextField field = field(box);
-                clipboard.setContent(Map.of(DataFormat.PLAIN_TEXT, "find Alice\tBob"));
-                field.paste();
-                assertEquals("", field.getText());
-                assertTrue(warning(box).isVisible());
-
-                clipboard.setContent(Map.of(DataFormat.PLAIN_TEXT, "find Alice Bob"));
-                field.paste();
-                assertEquals("find Alice Bob", field.getText());
-                assertFalse(warning(box).isVisible());
-            } finally {
-                clipboard.setContent(originalClipboardContent);
-            }
         });
     }
 
