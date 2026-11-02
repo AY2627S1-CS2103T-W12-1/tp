@@ -107,7 +107,7 @@ public class CommandBoxTest {
             for (String pasted : List.of("add\tn/Charlie p/123 e/charlie@example.com",
                     "add n/Charlie\tp/123\te/charlie@example.com", "find Alice\tBob",
                     "add n/Charlie p/123\t456 e/charlie@example.com", "y\tes", "find Alice\nBob", "y\r\nes",
-                    "\nlist", "list\u0000")) {
+                    "\nlist", "list\u0000", "list\u007f")) {
                 field.clear();
                 field.replaceSelection(pasted);
                 assertEquals("", field.getText());
