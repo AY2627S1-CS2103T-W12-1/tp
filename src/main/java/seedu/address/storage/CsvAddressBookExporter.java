@@ -44,8 +44,11 @@ public final class CsvAddressBookExporter {
                         .map(tag -> tag.tagName)
                         .sorted()
                         .collect(joining(";"));
-                csvPrinter.printRecord(person.getName(), person.getPhone(), person.getEmail(),
-                        person.getAddress(), tags);
+                csvPrinter.printRecord(CsvAddressBookCsv.escapeForSpreadsheet(person.getName().toString()),
+                        CsvAddressBookCsv.escapeForSpreadsheet(person.getPhone().toString()),
+                        CsvAddressBookCsv.escapeForSpreadsheet(person.getEmail().toString()),
+                        CsvAddressBookCsv.escapeForSpreadsheet(person.getAddress().toString()),
+                        CsvAddressBookCsv.escapeForSpreadsheet(tags));
             }
         }
     }

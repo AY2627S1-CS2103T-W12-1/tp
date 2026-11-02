@@ -3,6 +3,7 @@ package seedu.address.storage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -96,6 +97,29 @@ public class CsvAddressBookExporterTest {
         CsvAddressBookExporter.export(List.of(alice), destination);
 
         assertEquals(List.of(alice), CsvAddressBookImporter.read(destination));
+    }
+
+    @Test
+    public void export_formulaLikeFields_arePrefixedAndRoundTrip() throws Exception {
+        Path destination = tempDir.resolve("contacts.csv");
+        List<Person> people = List.of(
+                new PersonBuilder().withName("李明").withPhone("+6591111131")
+                        .withAddress("=SUM(A1)").build(),
+                new PersonBuilder().withName("Alice").withAddress("-5 Road").build(),
+                new PersonBuilder().withName("Bob").withAddress("'@home").build(),
+                new PersonBuilder().withName("Carol").withAddress("+5 Road").build(),
+                new PersonBuilder().withName("Dan").withAddress("@home").build());
+
+        CsvAddressBookExporter.export(people, destination);
+
+        String csv = Files.readString(destination);
+        assertTrue(csv.contains("李明,'+6591111131,amy@gmail.com,'=SUM(A1),"));
+        assertTrue(csv.contains("Alice,85355255,amy@gmail.com,'-5 Road,"));
+        assertTrue(csv.contains("Bob,85355255,amy@gmail.com,''@home,"));
+        assertTrue(csv.contains("Carol,85355255,amy@gmail.com,'+5 Road,"));
+        assertTrue(csv.contains("Dan,85355255,amy@gmail.com,'@home,"));
+        assertEquals('n', csv.charAt(0)); // UTF-8 export deliberately has no BOM.
+        assertEquals(people, CsvAddressBookImporter.read(destination));
     }
 
     @Test

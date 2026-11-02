@@ -893,14 +893,16 @@ Export displayed members or bring existing member records into TrackCall.
 
 <p class="ug-topic"><strong>Opening exports in a spreadsheet</strong></p>
 
-- Export preserves member values for reimport; it does not neutralize spreadsheet formulas.
-  Spreadsheet apps may interpret values beginning with `=`, `+`, `-`, or `@` as formulas.
-  This includes addresses such as `=SUM(A1)` and `-5 Road`, and can also affect phone or email values.
-- Use your spreadsheet app's text/CSV import feature and explicitly set every column to **Text** before loading.
-  Avoid opening the CSV by double-clicking it with automatic formula interpretation enabled.
-  CSV quotation marks only protect commas, quotes, and line breaks; they do not prevent formula interpretation.
-- For an unchanged export/import round trip, import the original CSV directly into TrackCall.
-  Spreadsheet apps may change values when saving, even if you did not edit the cells.
+- Export prefixes cells beginning with `=`, `+`, `-`, or `@` with an apostrophe to prevent common
+  spreadsheet formula interpretation. This includes `+6591111131` in a phone field and `=SUM(A1)` in an address field.
+  Import removes the added apostrophe, preserving an export/import round trip. An original value
+  beginning with an apostrophe followed by one of those characters receives a second apostrophe.
+  When importing other CSV files, TrackCall also treats that apostrophe pattern as an export prefix.
+- Export writes UTF-8 **without a byte-order mark (BOM)**. In Excel, use **Data → From Text/CSV**,
+  choose **UTF-8** as the file origin, then use **Transform Data** to set every column's type to **Text** before loading.
+  This preserves non-ASCII names and phone formatting. Do not double-click the CSV to open it.
+- Import the original CSV directly into TrackCall for an unchanged round trip. Spreadsheet apps may
+  change values when saving, even if you did not edit the cells.
 
 - **Duplicate tag spellings:** If an imported CSV file or saved JSON roster contains case variants of one tag on the same member,
   TrackCall keeps the first spelling listed for that member. The retained spelling appears in the member

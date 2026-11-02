@@ -258,11 +258,11 @@ public final class CsvAddressBookImporter {
             throw rowError(row, String.format(MESSAGE_WRONG_FIELD_COUNT, record.size()));
         }
 
-        String nameValue = record.get(headerIndexes.get("name")).trim();
-        String phoneValue = record.get(headerIndexes.get("phone")).trim();
-        String emailValue = record.get(headerIndexes.get("email")).trim();
-        String addressValue = record.get(headerIndexes.get("address")).trim();
-        String tagsValue = record.get(headerIndexes.get("tags")).trim();
+        String nameValue = CsvAddressBookCsv.unescapeSpreadsheet(record.get(headerIndexes.get("name")).trim());
+        String phoneValue = CsvAddressBookCsv.unescapeSpreadsheet(record.get(headerIndexes.get("phone")).trim());
+        String emailValue = CsvAddressBookCsv.unescapeSpreadsheet(record.get(headerIndexes.get("email")).trim());
+        String addressValue = CsvAddressBookCsv.unescapeSpreadsheet(record.get(headerIndexes.get("address")).trim());
+        String tagsValue = CsvAddressBookCsv.unescapeSpreadsheet(record.get(headerIndexes.get("tags")).trim());
 
         if (!Name.isValidName(nameValue)) {
             throw rowError(row, Name.MESSAGE_CONSTRAINTS);
