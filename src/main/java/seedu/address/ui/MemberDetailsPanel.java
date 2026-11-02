@@ -106,6 +106,12 @@ public class MemberDetailsPanel extends UiPart<Region> {
     }
 
     @FXML
+    private void copyName() {
+        // Copy the displayed text, which is composed Unicode, so the clipboard matches what the user sees.
+        copy(name.getText());
+    }
+
+    @FXML
     private void copyPhone() {
         copy(selectedPerson.getPhone().value);
     }

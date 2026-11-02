@@ -987,6 +987,36 @@ public class MainWindowTest {
     }
 
     @Test
+    public void copyNameButton_copiesTheNameShownInTheDetailsPanel() throws Exception {
+        onJavaFxThread(() -> {
+            ListView<?> list = (ListView<?>) window.getPrimaryStage().getScene().lookup("#personListView");
+            // Roster cards also use the id "name", so search only inside the details panel.
+            ScrollPane details = (ScrollPane) window.getPrimaryStage().getScene().lookup("#detailsScroll");
+            Label name = (Label) details.getContent().lookup("#name");
+            Button copyName = (Button) window.getPrimaryStage().getScene().lookup("#copyNameButton");
+            Clipboard clipboard = Clipboard.getSystemClipboard();
+            Map<DataFormat, Object> originalClipboardContent = new HashMap<>();
+            for (DataFormat format : clipboard.getContentTypes()) {
+                originalClipboardContent.put(format, clipboard.getContent(format));
+            }
+            try {
+                // The panel shows composed Unicode, so the copied text matches what the user sees.
+                enter("add n/Zoe\u0308 p/90000003 e/zoe@example.com");
+                list.getSelectionModel().select(2);
+                copyName.fire();
+                assertEquals("Zo\u00EB", name.getText());
+                assertEquals(name.getText(), clipboard.getString());
+
+                list.getSelectionModel().select(0);
+                copyName.fire();
+                assertEquals("Alice Tan", clipboard.getString());
+            } finally {
+                clipboard.setContent(originalClipboardContent);
+            }
+        });
+    }
+
+    @Test
     public void enter_tagWithDetailsHidden_reportsOnlyNameAndTagsAndSavesMember() throws Exception {
         Person original = new PersonBuilder().withName("Alice Tan").withPhone("90000123")
                 .withEmail("alice@example.com").withAddress("12 Test Road").withTags("zebra", "friends").build();

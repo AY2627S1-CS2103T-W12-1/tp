@@ -550,7 +550,7 @@ cumulative and repeat-detection rules for names.
 **Display responsibilities**
 
 - `PersonCard`: show index, name and sorted tags.
-- `MemberDetailsPanel`: show and copy the selected member's phone, email and address.
+- `MemberDetailsPanel`: show and copy the selected member's name, phone, email and address.
   Disable address copying when the selected member has no address.
 - `Messages#format(Person)`: produce labelled contact lines and sorted tags for command results.
 - `MainWindow`: hide contact lines from successful add/edit/delete command messages.
