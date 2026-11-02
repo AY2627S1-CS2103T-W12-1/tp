@@ -170,6 +170,9 @@ This reduces their dependence on each other's implementation details, as shown b
 
 - `MainWindow` contains the command box, result display, member list, details panel and status bar.
 - These visible parts extend `UiPart`. JavaFX layouts are defined in `src/main/resources/view`.
+pls- `CommandBox` rejects any edit containing a control character, such as a pasted tab or line break, because the
+  text field would otherwise remove it silently and could alter a value before validation. A rejected edit keeps
+  the earlier text and shows a warning, and Enter does nothing until the next accepted edit.
 - `HelpWindow` builds command cards from `CommandHelp` in Logic.
 - `WindowPlacement` restores a usable window position and size.
 - `MainApp` opens `RosterRecoveryDialog` before exposing an invalid roster for editing.
@@ -232,6 +235,8 @@ roster even though it writes a separate CSV file.
 - If a filter is removed, show the confirmation prompt again beneath the filter feedback.
 - If saving fails, keep the deletion in memory and show retry guidance. See [save failures](#failed-saves).
 - Without a pending confirmation, `yes` is an unknown command.
+- A rejected paste such as `y<TAB>es` leaves the box unchanged, and Enter is ignored while the warning shows,
+  so it cannot cancel the deletion by accident.
 
 **Design decisions**
 
@@ -669,6 +674,8 @@ showing file contents. A missing or null `persons` list also explains the requir
 ### 7. Command parsing
 
 **Purpose:** reject malformed input before changing data or view state.
+
+`CommandBox` refuses tabs and line breaks before parsing, so parsers never receive them from typed or pasted input.
 
 1. `AddressBookParser` reads a case-sensitive keyword and selects its parser.
 2. Command-specific parsers check argument structure, indexes and field values.
