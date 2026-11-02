@@ -94,13 +94,9 @@ public class CommandBoxTest {
     }
 
     @Test
-    public void paste_tabOrInternalLineBreak_rejectsWholePasteAndBlocksEnter() throws Exception {
+    public void paste_tabOrInternalLineBreak_rejectsWholePaste() throws Exception {
         onJavaFxThread(() -> {
-            List<String> executed = new ArrayList<>();
-            CommandBox box = new CommandBox(command -> {
-                executed.add(command);
-                return new CommandResult("Done.");
-            });
+            CommandBox box = new CommandBox(command -> new CommandResult("Done."));
             TextField field = field(box);
             Label warning = warning(box);
             // EP: tabs and line breaks at command, prefix and keyword boundaries, inside values, and in replies.
@@ -113,9 +109,31 @@ public class CommandBoxTest {
                 assertEquals("", field.getText());
                 assertTrue(warning.isVisible());
                 assertEquals(CommandBox.PASTE_REJECTED_MESSAGE, warning.getText());
-                field.fireEvent(new ActionEvent());
             }
+        });
+    }
+
+    @Test
+    public void paste_rejectedReplyWhileConfirming_blocksEnterUntilReplyIsTyped() throws Exception {
+        onJavaFxThread(() -> {
+            List<String> executed = new ArrayList<>();
+            CommandBox box = new CommandBox(command -> {
+                executed.add(command);
+                return new CommandResult("Done.");
+            });
+            TextField field = field(box);
+            box.setAwaitingConfirmation(true);
+            field.replaceSelection("y\tes");
+            assertEquals("", field.getText());
+            // An empty Enter would otherwise cancel the pending command, so this only passes while Enter is blocked.
+            field.fireEvent(new ActionEvent());
             assertEquals(List.of(), executed);
+            assertTrue(warning(box).isVisible());
+
+            field.replaceSelection("no");
+            assertFalse(warning(box).isVisible());
+            field.fireEvent(new ActionEvent());
+            assertEquals(List.of("no"), executed);
         });
     }
 

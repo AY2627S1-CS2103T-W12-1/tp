@@ -1495,6 +1495,8 @@ Use `list` and check the displayed indices before any indexed command. Back up t
    part of an existing command, or as `y<TAB>es` while a deletion awaits confirmation.
    **Expect:** the whole paste is rejected, the earlier text stays, a warning appears, and Enter does nothing.
    Edit the command. **Expect:** the warning clears and Enter works again.
+   For the confirmation case, Enter on the empty box does not cancel the deletion while the warning shows.
+   Type `no`. **Expect:** the deletion is cancelled as usual.
 
 ### Search, filter and selection
 
