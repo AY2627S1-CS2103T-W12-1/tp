@@ -175,6 +175,7 @@ public enum CommandHelp {
             "Validates a UTF-8 CSV file and appends member records without overwriting existing members.",
             "Imports valid new members, skips duplicate contacts and restores the complete roster.",
             "The header must contain name, phone, email, address and tags exactly once, in any order. "
+                    + "Column names are case-insensitive. "
                     + "Duplicate names ignore case and repeated spaces when other contact fields match; "
                     + "tags are not merged. "
                     + "Names keep their formatting. Use edit to update a skipped contact. "

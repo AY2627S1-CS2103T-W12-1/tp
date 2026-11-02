@@ -226,7 +226,7 @@ public final class CsvAddressBookImporter {
     }
 
     /**
-     * Validates that CSV headers are recognized, unique, and complete, then indexes their columns.
+     * Validates that CSV headers are recognized, unique, and complete regardless of case, then indexes their columns.
      *
      * @param record The first CSV record containing the headers.
      * @return A mapping from each header name to its column index.
@@ -235,7 +235,7 @@ public final class CsvAddressBookImporter {
     private static Map<String, Integer> parseHeaders(CSVRecord record) throws CsvImportException {
         Map<String, Integer> indexes = new HashMap<>();
         for (int index = 0; index < record.size(); index++) {
-            String header = record.get(index);
+            String header = record.get(index).toLowerCase(Locale.ROOT);
             if (!CsvAddressBookCsv.ENCODED_HEADERS.contains(header) || indexes.putIfAbsent(header, index) != null) {
                 throw new CsvImportException(MESSAGE_INVALID_HEADER);
             }
