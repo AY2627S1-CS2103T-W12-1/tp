@@ -10,9 +10,12 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 public class Phone {
 
 
+    public static final int MAX_LENGTH = 32;
+
     public static final String MESSAGE_CONSTRAINTS =
             "Phone numbers must contain at least 3 ASCII digits, with an optional leading + and internal spaces; "
-                    + "the first and last characters after + must be digits";
+                    + "the first and last characters after + must be digits; at most "
+                    + MAX_LENGTH + " characters including formatting";
     public static final String VALIDATION_REGEX = "\\+?[0-9][0-9 ]*[0-9]";
     public final String value;
 
@@ -31,7 +34,7 @@ public class Phone {
      * Returns true if a given string is a valid phone number.
      */
     public static boolean isValidPhone(String test) {
-        return test.matches(VALIDATION_REGEX)
+        return test.length() <= MAX_LENGTH && test.matches(VALIDATION_REGEX)
                 && test.chars().filter(character -> character >= '0' && character <= '9').count() >= 3;
     }
 

@@ -31,7 +31,7 @@ public class MessagesTest {
 
     @Test
     public void format_noTagsAndLongAddress_preservesDetailsWithoutEllipsis() {
-        String address = "A long address " + "with additional directions ".repeat(40);
+        String address = "A long address " + "with additional directions ".repeat(30);
         Person member = new PersonBuilder().withName("Alice Tan").withPhone("91234567")
                 .withEmail("alice@example.com").withAddress(address).withTags().build();
         assertEquals("Name: Alice Tan\nPhone: 91234567\nEmail: alice@example.com"

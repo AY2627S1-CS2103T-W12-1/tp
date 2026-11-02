@@ -30,9 +30,9 @@ public class EmailTest {
         String hyphenatedDomain = "a-".repeat(10000) + "aa";
         String dottedDomain = "a.".repeat(10000) + "aa";
         assertTimeoutPreemptively(Duration.ofSeconds(2), () -> {
-            assertTrue(Email.isValidEmail(local + "@example.com"));
-            assertTrue(Email.isValidEmail("alice@" + hyphenatedDomain));
-            assertTrue(Email.isValidEmail("alice@" + dottedDomain));
+            assertFalse(Email.isValidEmail(local + "@example.com"));
+            assertFalse(Email.isValidEmail("alice@" + hyphenatedDomain));
+            assertFalse(Email.isValidEmail("alice@" + dottedDomain));
             assertFalse(Email.isValidEmail(local + ".@example.com"));
             assertFalse(Email.isValidEmail("alice@" + hyphenatedDomain + "!"));
             assertFalse(Email.isValidEmail("alice@" + dottedDomain + "!"));
@@ -171,7 +171,7 @@ public class EmailTest {
         assertFalse(Email.isValidEmail("alice@example..xn--p1ai"));
         String label = "xn" + "-".repeat(20000) + "p1ai";
         assertTimeoutPreemptively(Duration.ofSeconds(2), () -> {
-            assertTrue(Email.isValidEmail("alice@example." + label));
+            assertFalse(Email.isValidEmail("alice@example." + label));
             assertFalse(Email.isValidEmail("alice@example." + label + "-"));
         });
     }

@@ -11,9 +11,12 @@ import java.util.regex.Pattern;
  */
 public class Name {
 
+    public static final int MAX_LENGTH = 200;
+
     public static final String MESSAGE_CONSTRAINTS =
             "Names must start with a letter or ASCII digit and contain only Unicode letters, combining marks, "
-                    + "ASCII digits, spaces, periods, slashes, hyphens and apostrophes";
+                    + "ASCII digits, spaces, periods, slashes, hyphens and apostrophes; at most "
+                    + MAX_LENGTH + " UTF-16 code units";
     public static final String VALIDATION_REGEX = "[\\p{L}0-9][\\p{L}\\p{M}0-9 ./'\u2019-]*";
 
     /** Shared spacing rule for new-contact duplicate matching and stored-roster sorting. */
@@ -36,7 +39,7 @@ public class Name {
      * Returns true if a given string is a valid name.
      */
     public static boolean isValidName(String test) {
-        return test.matches(VALIDATION_REGEX);
+        return test.length() <= MAX_LENGTH && test.matches(VALIDATION_REGEX);
     }
 
 

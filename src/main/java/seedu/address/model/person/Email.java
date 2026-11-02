@@ -9,11 +9,14 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
  */
 public class Email {
 
+    public static final int MAX_LENGTH = 254;
+
     public static final String MESSAGE_CONSTRAINTS = "Emails must use the format local-part@domain.\n"
             + "1. The local part uses ASCII letters, digits, +, _, apostrophe or -, with single periods "
             + "between nonempty parts.\n"
             + "2. Domain labels use ASCII letters, digits and internal hyphens, separated by single periods.\n"
-            + "3. The final domain label must contain at least 2 characters.";
+            + "3. The final domain label must contain at least 2 characters.\n"
+            + "4. Emails must be at most " + MAX_LENGTH + " UTF-16 code units long.";
     // Possessive runs prevent backtracking and stack growth on long inputs.
     private static final String LOCAL_ATOM = "[A-Za-z0-9+_'-]++";
     private static final String LOCAL_PART_REGEX = "^" + LOCAL_ATOM + "(?:\\." + LOCAL_ATOM + ")*+";
@@ -40,7 +43,7 @@ public class Email {
      * Returns true if a given string is a valid email.
      */
     public static boolean isValidEmail(String test) {
-        return test.matches(VALIDATION_REGEX);
+        return test.length() <= MAX_LENGTH && test.matches(VALIDATION_REGEX);
     }
 
     @Override
