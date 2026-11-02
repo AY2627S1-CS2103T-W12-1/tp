@@ -177,6 +177,21 @@ public class CsvAddressBookImporterTest {
     }
 
     @Test
+    public void read_headersIgnoreCase_acceptsLegacyAndMarkedFiles() throws Exception {
+        Person maya = new PersonBuilder().withName("Maya Chen").withPhone("91234567")
+                .withEmail("maya@example.com").withAddress("=SUM(A1)").build();
+        for (String header : List.of("Name,Phone,Email,Address,Tags",
+                "NAME,PHONE,EMAIL,ADDRESS,TAGS", " name , phone,EMAIL,Address,tags")) {
+            Path file = write(header + "\nMaya Chen,91234567,maya@example.com,=SUM(A1),\n");
+            assertEquals(List.of(maya), CsvAddressBookImporter.read(file));
+        }
+
+        Path marked = write("TRACKCALL_ENCODING,Address,Email,PHONE,Name,Tags\n"
+                + "apostrophe-v1,'=SUM(A1),maya@example.com,91234567,Maya Chen,\n");
+        assertEquals(List.of(maya), CsvAddressBookImporter.read(marked));
+    }
+
+    @Test
     public void read_exportedRecord_normalisesSurroundingWhitespace() throws Exception {
         Person person = new PersonBuilder().withName("Alice ").withAddress("Main Street ").build();
         Person expected = new PersonBuilder(person).withName("Alice").withAddress("Main Street").build();
@@ -199,10 +214,10 @@ public class CsvAddressBookImporterTest {
 
     @Test
     public void read_invalidHeader_rejectsEmptyIncorrectAndExtraColumns() throws Exception {
-        for (String contents : List.of("", "Name,phone,email,address,tags\n", "name,phone,email,address\n",
-                "name,phone,email,address,tags,extra\n", "name,name,email,address,tags\n",
+        for (String contents : List.of("", "name,phone,email,address\n",
+                "name,phone,email,address,tags,extra\n", "Name,name,Email,Address,Tags\n",
                 "name,phone,email,address,trackcall_encoding\n",
-                "name,phone,email,address,trackcall_encoding,trackcall_encoding\n",
+                "name,phone,email,address,trackcall_encoding,TRACKCALL_ENCODING\n",
                 "name,phone,email,address,tags,trackcall_encoding,trackcall_encoding\n",
                 "name,phone,email,address,tags,trackcall_encoding,extra\n")) {
             Path file = write(contents);

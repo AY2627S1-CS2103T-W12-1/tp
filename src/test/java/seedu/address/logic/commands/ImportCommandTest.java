@@ -71,6 +71,20 @@ public class ImportCommandTest {
     }
 
     @Test
+    public void execute_capitalisedHeader_importsMember() throws Exception {
+        Path file = write("Name,Phone,Email,Address,Tags\n"
+                + "Maya Chen,91234567,maya@example.com,,\n");
+        Model model = new ModelManager();
+
+        CommandResult result = new ImportCommand(file).execute(model);
+
+        assertEquals(String.format(ImportCommand.MESSAGE_SUCCESS, 1, file.toAbsolutePath().normalize(), 0),
+                result.getFeedbackToUser());
+        assertEquals(List.of(new PersonBuilder().withName("Maya Chen").withPhone("91234567")
+                .withEmail("maya@example.com").withAddress("").build()), model.getAddressBook().getPersonList());
+    }
+
+    @Test
     public void execute_paddedDuplicates_skipsExistingAndEarlierImportedMembers() throws Exception {
         Person existing = new PersonBuilder().withName("Alice").withPhone("111")
                 .withEmail("alice@example.com").withAddress("Home").withTags("old").build();
@@ -177,7 +191,7 @@ public class ImportCommandTest {
     @Test
     public void execute_invalidHeader_preservesRosterAndUsesCompleteSentence() throws Exception {
         Model model = new ModelManager();
-        Path file = write("Name,phone,email,address,tags\n");
+        Path file = write("Name,phone,email,address,unknown\n");
 
         CommandException error = assertThrows(CommandException.class, () -> new ImportCommand(file).execute(model));
 

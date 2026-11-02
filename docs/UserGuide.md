@@ -1001,14 +1001,15 @@ import p/"data/member list.csv"
 
 <p class="ug-topic"><strong>Header</strong></p>
 
-The first row must contain these five column names exactly once, in any order:
+The first row must contain these five column names exactly once, in any order and letter case:
 
 ```text
 name,phone,email,address,tags
 ```
 
-TrackCall exports add a sixth `trackcall_encoding` column. Each member row in that format must contain
-`apostrophe-v1` in this column. Import removes spreadsheet escape apostrophes only for this marked format.
+TrackCall exports add a sixth `trackcall_encoding` column; its name is also case-insensitive. Each member row
+in that format must contain `apostrophe-v1` in this column. Import removes spreadsheet escape apostrophes
+only for this marked format.
 In five-column files, apostrophes are literal, including those in older TrackCall exports.
 
 When editing an export in a spreadsheet:
