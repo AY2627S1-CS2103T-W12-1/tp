@@ -7,7 +7,7 @@ TrackCall helps membership secretaries keep their organisation's member records 
 It is a desktop app designed for around 500 members, although this is not a hard limit.
 Type commands to find members and update their contact details quickly.
 
-## Features in v1.5
+## Features in v1.6
 
 * Add, edit, list, and find member records by name with `find`, by email with `findemail`, and show selected members by displayed number with `show`.
 * Narrow the displayed members by tag with `filter t/TAG [t/MORE_TAGS]...`. Tags in one command mean *or*, separate commands mean *and*, and each condition appears as a box under the command field that you can remove.
