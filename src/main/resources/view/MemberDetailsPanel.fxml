@@ -23,7 +23,14 @@
         <padding><Insets top="6" right="6" bottom="8" left="6" /></padding>
         <VBox spacing="4" minWidth="0">
           <Label fx:id="displayedIndex" styleClass="details-index" />
-          <Label fx:id="name" wrapText="true" styleClass="details-name" />
+          <HBox spacing="8" alignment="CENTER_LEFT" minWidth="0">
+            <Label fx:id="name" wrapText="true" minWidth="0" HBox.hgrow="ALWAYS" styleClass="details-name" />
+            <Button fx:id="copyNameButton" accessibleText="Copy name"
+                    onAction="#copyName" styleClass="copy-button">
+              <graphic><SVGPath content="M6 2 H15 V13 H6 Z M3 5 H12 V16 H3 Z" styleClass="copy-icon" /></graphic>
+              <tooltip><Tooltip text="Copy name" /></tooltip>
+            </Button>
+          </HBox>
         </VBox>
         <VBox spacing="5" minWidth="0">
           <Label text="PHONE" styleClass="member-field-label" />
