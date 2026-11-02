@@ -1118,8 +1118,8 @@ Remove one member or the whole roster with confirmation.
 <p class="ug-topic"><strong>Confirmation and near misses</strong></p>
 
 - Only `yes`, typed exactly in lowercase, confirms (spaces before or after it are ignored).
-- Type confirmation replies manually. Pasting `y<TAB>es` (where `<TAB>` is a literal tab) displays `yes`
-  and confirms if you press Enter.
+- Type confirmation replies manually. A paste containing a tab, such as `y<TAB>es` (where `<TAB>` is a literal
+  tab), is rejected and neither confirms nor cancels; the prompt stays pending.
 - `y`, or `yes` in any other letter case (such as `Y`, `YES`, or `Yes`), does not confirm or cancel:
   it keeps the prompt pending and reminds you:
   `To confirm, type yes exactly, in lowercase, and press Enter, or type anything else to cancel (except yes or y in any letter case).`
@@ -1322,7 +1322,9 @@ ideas for later versions in its requirements appendix.
    If the entire roster is empty, use `clear` to retry saving it.
 
 - **Import failures:** the complete imported batch remains in memory. TrackCall reports
-  `Could not save data to file: DETAILS`, followed by the unsaved-change warning and retry instructions.
+  `Could not save data to file: DETAILS`, or for a permission problem
+  `Could not save data to file FILE due to insufficient permissions to write to the file or the folder.`
+  (`FILE` is the roster file), followed by the unsaved-change warning and retry instructions.
 
 > **Before exiting:** complete a successful retry; otherwise, unsaved changes are lost.
 
