@@ -482,7 +482,7 @@ the retained input is the answer `yes`; choose `clear` or `clear /all` again to 
 **Flow**
 
 1. `SortCommand` calls `Model#sortPersonsByName()` to reorder the complete stored roster, including hidden members.
-2. `Name#getComparisonKey()` strips surrounding Unicode whitespace and collapses repeated whitespace for comparison.
+2. `Name#getComparisonKey()` applies NFC, strips surrounding Unicode whitespace and collapses repeated whitespace.
 3. Compare keys without regard to case; preserve stored spellings and the relative order of ties.
 4. `LogicManager` saves the reordered roster through the normal data-changing command path, even if empty or unchanged.
 
@@ -533,7 +533,7 @@ cumulative and repeat-detection rules for names.
 - Keep earlier name searches, email searches, tag filters, `show` selections and stored order. Each distinct search
   adds its own box in application order; removing a box retains the other conditions, and `list` clears all.
 - **Repeats:** `ActiveFilter#hasSameSearch` compares keyword sets of the same kind, ignoring keyword case,
-  order and repetition. Names use `String.CASE_INSENSITIVE_ORDER` and emails use `Locale.ROOT` lowercase,
+  order and repetition. Names first apply NFC then use `String.CASE_INSENSITIVE_ORDER`; emails use `Locale.ROOT` lowercase,
   matching their predicates. A repeat keeps the original box and label. Both model search methods return
   whether a condition was added.
 - **Feedback:** a repeat reports that the search is already active. A different query that leaves the displayed
@@ -992,8 +992,10 @@ consistent spelling.
   retain the last value. Numeric JSON values in text fields become text. Comments and trailing commas fail.
 - Deletion and clearing a non-empty roster require confirmation. Neither has undo after confirmation.
 - The backup retains the previous distinct saved roster, not a full history. Later changed saves replace it.
-- Names are compared and searched as entered, without Unicode normalisation. Sorting uses Java's
-  case-insensitive order, so accented names can sort after `Z`.
+- Names retain their stored spelling. Duplicate-input checks, name searches and sorting compare NFC forms;
+  name-search repeat detection also normalizes keywords without changing the displayed label. Legacy JSON identity
+  stays literal so existing records are not silently merged. Accents and compatibility characters remain distinct.
+  Sorting uses Java's case-insensitive order, so accented names can sort after `Z`.
 - After an accidental clear, stop changing data and follow the [manual recovery steps](UserGuide.html#automatic-backup-and-recovery).
 
 ## Development workflow {id="documentation-logging-testing-dev-ops"}

@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.CommandHelp;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ModelManager;
@@ -32,7 +33,8 @@ import seedu.address.storage.StorageManager;
 /** Checks ordinary name punctuation consistently across commands, CSV and persisted member records. */
 public class CommonNamePunctuationWorkflowTest {
     private static final List<String> COMMON_NAMES = List.of("Ravi s/o Kumar", "Ravi S/O Kumar", "Ravi S/o Kumar",
-            "Priya d/o Raman", "Priya D/O Raman", "Priya d/O Raman", "J. Tan", "J.Tan");
+            "Priya d/o Raman", "Priya D/O Raman", "Priya d/O Raman", "J. Tan", "J.Tan",
+            "Lee, Ann", "Mary (Jane)", "Tan (Jr.), Alex");
 
     @TempDir
     public Path temporaryFolder;
@@ -87,7 +89,8 @@ public class CommonNamePunctuationWorkflowTest {
         Session session = new Session(temporaryFolder.resolve("controls"));
         List<String> controls = List.of("Anne-Marie", "O'Connor", "D’Arcy", "José Garcia", "Jose\u0301 Garcia", "李明");
         for (String name : controls) {
-            session.logic.execute(add(name));
+            session.logic.execute("add n/" + name + " p/" + (123 + controls.indexOf(name))
+                    + " e/member@example.com a/Block 1");
         }
         session.logic.execute("edit 1 a/Block A-12 c/o Reception");
         assertEquals(controls, names(session.saved()));
@@ -119,7 +122,8 @@ public class CommonNamePunctuationWorkflowTest {
         session.logic.execute(add("Existing Member"));
         byte[] saved = Files.readAllBytes(session.file);
         List<Person> original = session.saved();
-        for (String name : List.of("", " ", ".Tan", "/Ravi", "Ravi@Kumar", "Alice\tBob", "😀")) {
+        for (String name : List.of("", " ", ".Tan", "/Ravi", "Ravi@Kumar", "Alice\tBob",
+                "😀", ",Lee", "(Mary)", "Lee; Ann")) {
             assertThrows(ParseException.class, () -> session.logic.execute(add(name)), name);
             assertThrows(ParseException.class, () -> session.logic.execute("edit 1 n/" + name), name);
             assertEquals(original, session.model.getAddressBook().getPersonList());
@@ -174,6 +178,24 @@ public class CommonNamePunctuationWorkflowTest {
             assertArrayEquals(saved, Files.readAllBytes(session.file));
             assertArrayEquals(source, Files.readAllBytes(csv));
         }));
+    }
+
+    @Test
+    public void execute_punctuatedNames_searchSortAndShowPreserveText() throws Exception {
+        Session session = new Session(temporaryFolder.resolve("punctuated-view"));
+        session.logic.execute(add("Mary (Jane)"));
+        session.logic.execute(add("Lee, Ann"));
+        session.logic.execute("show 1 2");
+        assertEquals("Lee, Ann; Mary (Jane)", session.model.getActiveFilters().getFirst().getShowSelectionNames());
+        session.logic.execute("sort");
+        assertEquals(List.of("Lee, Ann", "Mary (Jane)"), names(session.saved()));
+        session.logic.execute("find Lee,");
+        assertEquals(List.of("Lee, Ann"), names(session.model.getFilteredPersonList()));
+        session.logic.execute("list");
+        session.logic.execute("find (Jane)");
+        assertEquals(List.of("Mary (Jane)"), names(session.model.getFilteredPersonList()));
+        assertTrue(CommandHelp.ADD.getNotes().contains("commas and parentheses"));
+        assertTrue(CommandHelp.EDIT.getNotes().contains("Block A-12"));
     }
 
     private static String add(String name) {

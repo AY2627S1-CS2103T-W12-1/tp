@@ -113,6 +113,23 @@ public class NameContainsKeywordsPredicateTest {
     }
 
     @Test
+    public void test_canonicalEquivalence_preservesAccentAndCompatibilityDistinctions() {
+        for (String[] pair : List.of(new String[] {"Zoë", "Zoe\u0308"},
+                new String[] {"Åke", "A\u030ake"}, new String[] {"가", "\u1100\u1161"})) {
+            for (String stored : pair) {
+                for (String query : pair) {
+                    assertTrue(new NameContainsKeywordsPredicate(List.of(query))
+                            .test(new PersonBuilder().withName(stored).build()));
+                }
+            }
+        }
+        assertFalse(new NameContainsKeywordsPredicate(List.of("Zoe"))
+                .test(new PersonBuilder().withName("Zoë").build()));
+        assertFalse(new NameContainsKeywordsPredicate(List.of("Alice"))
+                .test(new PersonBuilder().withName("Ａlice").build()));
+    }
+
+    @Test
     public void toStringMethod() {
         List<String> keywords = List.of("keyword1", "keyword2");
         NameContainsKeywordsPredicate predicate = new NameContainsKeywordsPredicate(keywords);

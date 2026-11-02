@@ -42,7 +42,7 @@ public class CommonContactFormatsWorkflowTest {
         List<String> names = List.of("Anne-Marie", "Jos\u00e9 Garcia", "Jose\u0301 Garcia", "O'Connor",
                 "D\u2019Arcy", "\u674e\u660e");
         for (String name : names) {
-            logic.execute("add n/" + name + " p/123 e/alice@example.com");
+            logic.execute("add n/" + name + " p/" + (123 + names.indexOf(name)) + " e/alice@example.com");
         }
         assertEquals(names, model.getAddressBook().getPersonList().stream()
                 .map(person -> person.getName().fullName).toList());

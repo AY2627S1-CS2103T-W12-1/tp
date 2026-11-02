@@ -3,6 +3,7 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import java.text.Normalizer;
 import java.util.regex.Pattern;
 
 /**
@@ -15,9 +16,9 @@ public class Name {
 
     public static final String MESSAGE_CONSTRAINTS =
             "Names must start with a letter or ASCII digit and contain only Unicode letters, combining marks, "
-                    + "ASCII digits, spaces, periods, slashes, hyphens and apostrophes; at most "
+                    + "ASCII digits, spaces, periods, slashes, hyphens, apostrophes, commas and parentheses; at most "
                     + MAX_LENGTH + " UTF-16 code units";
-    public static final String VALIDATION_REGEX = "[\\p{L}0-9][\\p{L}\\p{M}0-9 ./'\u2019-]*";
+    public static final String VALIDATION_REGEX = "[\\p{L}0-9][\\p{L}\\p{M}0-9 .,()/'\u2019-]*";
 
     /** Shared spacing rule for new-contact duplicate matching and stored-roster sorting. */
     private static final Pattern WHITESPACE = Pattern.compile("(?U)\\s+");
@@ -43,9 +44,9 @@ public class Name {
     }
 
 
-    /** Returns a spacing-normalized comparison value without changing spelling or letter case. */
+    /** Returns an NFC- and spacing-normalized key without changing stored spelling or letter case. */
     public String getComparisonKey() {
-        return WHITESPACE.matcher(fullName).replaceAll(" ").trim();
+        return WHITESPACE.matcher(Normalizer.normalize(fullName, Normalizer.Form.NFC)).replaceAll(" ").trim();
     }
 
     @Override

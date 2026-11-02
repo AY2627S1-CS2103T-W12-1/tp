@@ -83,7 +83,8 @@ public enum CommandHelp {
             "Adds Alice Tan and shows the complete roster after the record is saved.",
             "Fields can appear in any order. Use one t/ prefix per tag. " + memberFieldRules(),
             "Include name, phone and email once. Omit a/ if the address is unknown; a/ needs a value when used. "
-                    + "Duplicates ignore name case and repeated spaces when phone, email and address match. "
+                    + "Duplicates ignore name case, canonical Unicode form and repeated spaces "
+                    + "when other contact fields match. "
                     + "Names keep their formatting. Use find and edit for an existing member. "
                     + "If saving fails, the member "
                     + "remains in this session and the command box clears; follow the recovery guidance before "
@@ -97,7 +98,7 @@ public enum CommandHelp {
             "Give the full tag set you want to keep. Use edit 1 t/ to remove all tags, "
                     + "or edit 1 a/ to clear the address. " + memberFieldRules(),
             "Use a current positive list number and supply at least one field. Invalid values or duplicate contact "
-                    + "details are rejected, ignoring name case and repeated spaces when other contact fields match. "
+                    + "details are rejected, ignoring name case, canonical Unicode form and repeated spaces. "
                     + "Your own record is excluded. If saving fails, the edit remains in this session "
                     + "and the command box "
                     + "clears; follow the recovery guidance before exiting."),
@@ -248,7 +249,7 @@ public enum CommandHelp {
     private static String memberFieldRules() {
         return Name.MESSAGE_CONSTRAINTS + ".\n" + Phone.MESSAGE_CONSTRAINTS + ".\n"
                 + "Phone formatting is preserved; country codes are not inferred.\n"
-                + "Within an address, A/ followed by a digit stays literal, as in a/Block A/12.\n"
+                + "Use hyphen unit labels such as Block A-12; standalone labels such as A/12 are rejected.\n"
                 + Email.MESSAGE_CONSTRAINTS + "\n" + Tag.MESSAGE_CONSTRAINTS
                 + ". Tag matching ignores letter case.";
     }

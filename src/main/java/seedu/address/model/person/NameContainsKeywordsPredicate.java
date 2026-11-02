@@ -1,5 +1,6 @@
 package seedu.address.model.person;
 
+import java.text.Normalizer;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -8,7 +9,7 @@ import seedu.address.commons.util.ToStringBuilder;
 
 /**
  * Tests that a {@code Person}'s {@code Name} contains any keyword as a complete or partial word,
- * ignoring case.
+ * ignoring case and canonical Unicode representation.
  */
 public class NameContainsKeywordsPredicate implements Predicate<Person> {
     private final List<String> keywords;
@@ -25,8 +26,9 @@ public class NameContainsKeywordsPredicate implements Predicate<Person> {
 
     @Override
     public boolean test(Person person) {
-        return keywords.stream()
-                .anyMatch(keyword -> StringUtil.containsPartialWordIgnoreCase(person.getName().fullName, keyword));
+        String name = Normalizer.normalize(person.getName().fullName, Normalizer.Form.NFC);
+        return keywords.stream().anyMatch(keyword -> StringUtil.containsPartialWordIgnoreCase(
+                name, Normalizer.normalize(keyword, Normalizer.Form.NFC)));
     }
 
     @Override

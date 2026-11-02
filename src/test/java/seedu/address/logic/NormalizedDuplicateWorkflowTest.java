@@ -55,7 +55,7 @@ public class NormalizedDuplicateWorkflowTest {
                     logic.execute("add n/" + name + " p/123 e/alice@example.com a/Home t/new"));
 
             assertEquals(AddCommand.MESSAGE_DUPLICATE_PERSON, error.getMessage());
-            assertTrue(error.getMessage().contains("name case and repeated spaces"));
+            assertTrue(error.getMessage().contains("name case, canonical Unicode form"));
             assertEquals(List.of(original), model.getAddressBook().getPersonList());
             assertEquals(List.of(original), model.getFilteredPersonList());
             assertEquals(filters, model.getActiveFilters());
