@@ -74,9 +74,17 @@ public class MainApp extends Application {
     /** Held for the whole production session so another launch cannot save a stale roster. */
     private AppInstanceLock instanceLock;
 
+    /** Lock failure deferred to the JavaFX thread so startup can show a visible error. */
+    private IOException startupLockFailure;
+
     @Override
     public void init() throws Exception {
-        instanceLock = AppInstanceLock.acquire(FileUtil.getHomeFolder().resolve(AppInstanceLock.FILE_NAME));
+        try {
+            instanceLock = AppInstanceLock.acquire(FileUtil.getHomeFolder().resolve(AppInstanceLock.FILE_NAME));
+        } catch (IOException exception) {
+            startupLockFailure = exception;
+            return;
+        }
         try {
             init(USER_PREFS_FILE_PATH, ADDRESS_BOOK_FILE_PATH);
         } catch (Exception exception) {
@@ -137,6 +145,15 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        if (startupLockFailure != null) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("TrackCall could not start");
+            alert.setHeaderText("Unable to open this TrackCall folder");
+            alert.setContentText(startupLockFailure.getMessage());
+            alert.showAndWait();
+            Platform.exit();
+            return;
+        }
         logger.info("Starting TrackCall " + MainApp.VERSION);
         logger.info("Using data file : " + storage.getAddressBookFilePath());
         try {
@@ -235,7 +252,9 @@ public class MainApp extends Application {
     public void stop() {
         logger.info("============================ [ Stopping TrackCall ] =============================");
         try {
-            storage.saveUserPrefs(model.getUserPrefs());
+            if (storage != null) {
+                storage.saveUserPrefs(model.getUserPrefs());
+            }
         } catch (IOException e) {
             logger.severe("Failed to save preferences " + StringUtil.getDetails(e));
         } finally {

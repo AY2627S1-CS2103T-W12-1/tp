@@ -53,7 +53,8 @@ Try the examples in this guide on them, then use `clear /all` to remove them whe
 > **One window per folder**
 >
 > Only one TrackCall window can use a folder at a time. If a second launch reports
-> `TrackCall is already running from this folder.`, use the existing window or close it before restarting.
+> `TrackCall is already running from this folder.`, dismiss the message to exit the second launch.
+> The original window stays open; use it or close it before restarting.
 > A `.trackcall.lock` file may remain in the folder after you exit; you do not need to delete it.
 
 ### Read the interface
