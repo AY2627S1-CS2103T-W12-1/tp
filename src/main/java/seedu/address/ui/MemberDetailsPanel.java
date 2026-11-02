@@ -54,6 +54,7 @@ public class MemberDetailsPanel extends UiPart<Region> {
         requireNonNull(person);
         selectedPerson = person;
         displayedIndex.setText("MEMBER " + index);
+        // Same display-only normalization as PersonCard, so both views show identical code points.
         name.setText(Normalizer.normalize(person.getName().fullName, Normalizer.Form.NFC));
         phone.setText(person.getPhone().value);
         email.setText(person.getEmail().value);

@@ -42,13 +42,13 @@ public class MemberDetailsPanelTest {
     public void showPerson_nameWithCombiningMark_showsComposedName() throws Exception {
         onJavaFxThread(() -> {
             MemberDetailsPanel panel = new MemberDetailsPanel();
-            panel.showPerson(new PersonBuilder().withName("Aléx").build(), 1);
+            panel.showPerson(new PersonBuilder().withName("Ale\u0301x").build(), 1);
             // The ScrollPane content is only reachable by lookup once the panel is in a styled scene.
             StackPane container = new StackPane(panel.getRoot());
             new Scene(container, 430, 260);
             container.applyCss();
             container.layout();
-            assertEquals("Aléx", ((Label) panel.getRoot().lookup("#name")).getText());
+            assertEquals("Al\u00e9x", ((Label) panel.getRoot().lookup("#name")).getText());
         });
     }
 
