@@ -1,5 +1,6 @@
 package seedu.address.model;
 
+import java.text.Normalizer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -42,11 +43,11 @@ public final class ActiveFilter {
         searchKeywords = normalizeSearchKeywords(kind, keywords);
     }
 
-    /** Uses the same case rules as each search predicate, without changing its displayed keywords. */
+    /** Uses the same case and Unicode rules as each search predicate, without changing its displayed keywords. */
     private static Set<String> normalizeSearchKeywords(Kind kind, List<String> keywords) {
         if (kind == Kind.NAME) {
             Set<String> normalized = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-            normalized.addAll(keywords);
+            keywords.forEach(keyword -> normalized.add(Normalizer.normalize(keyword, Normalizer.Form.NFC)));
             return Collections.unmodifiableSet(normalized);
         }
         return keywords.stream().map(keyword -> keyword.toLowerCase(Locale.ROOT))

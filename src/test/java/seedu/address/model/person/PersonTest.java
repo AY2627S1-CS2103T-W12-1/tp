@@ -33,10 +33,10 @@ public class PersonTest {
     }
 
     @Test
-    public void isDuplicateContactOf_accentsAndPunctuation_remainDistinct() {
+    public void isDuplicateContactOf_canonicalAccentsMatch_otherSpellingRemainsDistinct() {
         Person first = new PersonBuilder(ALICE).withName("Émile").build();
         assertFalse(first.isDuplicateContactOf(new PersonBuilder(first).withName("Emile").build()));
-        assertFalse(first.isDuplicateContactOf(new PersonBuilder(first).withName("E\u0301mile").build()));
+        assertTrue(first.isDuplicateContactOf(new PersonBuilder(first).withName("E\u0301mile").build()));
         assertFalse(first.isDuplicateContactOf(new PersonBuilder(first).withName("Émile-Tan").build()));
     }
 

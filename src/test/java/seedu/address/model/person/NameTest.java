@@ -43,14 +43,21 @@ public class NameTest {
     public void unicodeNamesAndPunctuation_preserveSpellingAndRejectCommandCharacters() {
         for (String value : new String[] {"Anne-Marie", "Jos\u00e9 Garcia", "Jose\u0301 Garcia",
             "O'Connor", "D\u2019Arcy", "\u674e\u660e", "Ravi s/o Kumar", "Priya d/o Raman", "J. Tan",
-            "Alice/Other"}) {
+            "Alice/Other", "Lee, Ann", "Mary (Jane)"}) {
             assertTrue(Name.isValidName(value));
             assertEquals(value, new Name(value).fullName);
         }
         for (String value : new String[] {"-Anne", "'Connor", "\u0301", "Alice\nBob",
-            "Alice\tBob", "Alice@Bob", "\ud83d\ude00"}) {
+            "Alice\tBob", "Alice@Bob", "\ud83d\ude00", ",Ann", "(Jane)", "Lee; Ann"}) {
             assertFalse(Name.isValidName(value));
         }
+    }
+
+    @Test
+    public void getComparisonKey_canonicalAndSpacingVariants_shareKeyWithoutChangingValue() {
+        Name name = new Name("Zoe\u0308  Tan");
+        assertEquals(new Name("Zoë Tan").getComparisonKey(), name.getComparisonKey());
+        assertEquals("Zoe\u0308  Tan", name.fullName);
     }
 
     @Test

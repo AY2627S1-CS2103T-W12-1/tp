@@ -520,7 +520,7 @@ Keep member contact details up to date.
 
 | Field | Current rule |
 | --- | --- |
-| Name | Start with a Unicode letter or ASCII digit. Unicode letters, combining marks, ASCII digits, spaces, periods, slashes, hyphens, and straight or curly apostrophes are accepted. |
+| Name | Start with a Unicode letter or ASCII digit. Unicode letters, combining marks, ASCII digits, spaces, periods, slashes, hyphens, straight or curly apostrophes, commas, and parentheses are accepted. |
 | Phone | At least three ASCII digits, with an optional leading `+` and spaces between digits. Formatting is preserved. Hyphens and parentheses are rejected. Internal tabs are invalid; a command-box paste containing a tab is rejected. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text when provided; Unicode-space-only values are rejected. `edit INDEX a/` clears an address. |
@@ -529,13 +529,15 @@ Keep member contact details up to date.
 <p class="ug-topic"><strong>Names, phone numbers and Unicode</strong></p>
 
 - **Names and phone formatting:** Names such as `Anne-Marie`, `José Garcia`, and `O'Connor` keep their entered spelling,
-  including combining accents. Names such as `Ravi s/o Kumar`, `Priya d/o Raman`, and `J. Tan` also keep their punctuation.
+  including combining accents. Names such as `Ravi s/o Kumar`, `Priya d/o Raman`, `J. Tan`, `Lee, Ann`, and `Mary (Jane)` also keep their punctuation.
 - Phone examples include `+6591234567` and `9123 4567`.
 - Phone formatting is stored, displayed, copied, and exported as entered; the app does not infer country
   codes or treat differently formatted numbers as equal. Multiple spaces between digit groups are accepted.
 
-- **Unicode and sorting:** Names retain their Unicode representation, so visually identical accented spellings can match differently in searches
-  or duplicate checks. Sorting uses case-insensitive text order rather than a language-specific alphabet;
+- **Unicode and sorting:** Names retain their entered spelling. Canonically equivalent spellings such as `Zoë`
+  and `Zoë` match in name searches and duplicate checks; accents are not removed (`Zoe` remains distinct).
+  Sorting compares these forms equally and keeps their relative order. It uses case-insensitive text order
+  rather than a language-specific alphabet;
   for example, `Émile` sorts after `Zara`.
 
 Member fields have generous maximum lengths: name **200**, phone **32** (including `+` and spaces),

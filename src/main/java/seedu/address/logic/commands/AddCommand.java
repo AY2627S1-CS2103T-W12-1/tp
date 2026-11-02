@@ -34,7 +34,8 @@ public class AddCommand extends Command {
 
     public static final String MESSAGE_SUCCESS = "Added member\n%1$s";
     public static final String MESSAGE_DUPLICATE_PERSON =
-            "A member with these contact details already exists (name case and repeated spaces are ignored). "
+            "A member with these contact details already exists (name case, canonical Unicode form "
+                    + "and repeated spaces are ignored). "
             + "Use find to locate the member and edit to update it.";
 
     private final Person toAdd;

@@ -81,7 +81,7 @@ public class Person {
 
     /**
      * Checks duplicate contact input without changing stored names or the legacy storage identity rule.
-     * Name case and repeated whitespace are ignored; phone spacing and email-domain case are ignored.
+     * Name case, canonical Unicode form and repeated whitespace are ignored; phone spacing and email-domain case too.
      * Other contact fields are trimmed and compared exactly.
      * Tags are ignored. Existing JSON records continue to use {@link #isSamePerson(Person)} when loading.
      */
