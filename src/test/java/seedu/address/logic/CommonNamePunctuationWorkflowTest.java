@@ -89,9 +89,9 @@ public class CommonNamePunctuationWorkflowTest {
         for (String name : controls) {
             session.logic.execute(add(name));
         }
-        session.logic.execute("edit 1 a/Block A/12 c/o Reception");
+        session.logic.execute("edit 1 a/Block A-12 c/o Reception");
         assertEquals(controls, names(session.saved()));
-        assertEquals("Block A/12 c/o Reception", session.saved().getFirst().getAddress().value);
+        assertEquals("Block A-12 c/o Reception", session.saved().getFirst().getAddress().value);
     }
 
     @Test

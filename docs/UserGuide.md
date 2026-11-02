@@ -512,8 +512,8 @@ Keep member contact details up to date.
 - The standalone abbreviations `c/o`, `s/o`, and `d/o` (in any letter case), URLs, numeric slashes such as `12/3`,
   and slashes embedded in words remain address text.
 
-- **Address text:** Within an `a/` value, uppercase `A/` followed by a digit is also literal address text,
-  so `a/Block A/12` is accepted. Other uppercase or unknown field prefixes remain invalid.
+- **Unit labels:** Standalone single-letter slash labels such as `Block A/12` and `Block B/12`
+  are rejected in `add` and `edit`. Use `Block A-12` or `Block B-12` instead.
 
 <p class="ug-topic"><strong>Field rules</strong></p>
 
@@ -1257,8 +1257,8 @@ Read command instructions offline and close TrackCall when you are finished.
 
 - **Accepted prefixes:** both `add` and `edit` reject unknown or uppercase single-letter field prefixes,
   including inside an address.
-- **Address exception:** uppercase `A/` immediately followed by a digit within an `a/` value is literal text.
-  For example, `a/Block A/12` is valid in both commands. Other unsupported prefixes remain invalid.
+- **Unit labels:** use `a/Block A-12` or `a/Block B-12`. Standalone single-letter slash labels
+  such as `A/12` and `B/12` are rejected in both commands.
 - **Other address text:** standalone `c/o`, `s/o`, and `d/o`, URLs, numeric slashes such as `12/3`, and slashes inside words remain valid.
 
 > **Correction example:** `edit 1 a/Main Road T/committee` reports invalid input; use lowercase `t/` to assign a tag.

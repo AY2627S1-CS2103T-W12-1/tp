@@ -44,7 +44,7 @@ public class ExportRoundTripTest {
     public void execute_exportSupportedPaths_importsSameMembers() throws Exception {
         ModelManager model = new ModelManager();
         Logic logic = createLogic(model, "source");
-        logic.execute("add n/Alice p/+65 123 e/alice@example.com a/Block A/12 t/year-1");
+        logic.execute("add n/Alice p/+65 123 e/alice@example.com a/Block A-12 t/year-1");
         for (String filename : List.of("members.csv", "member list.CsV", "O'Brien-é.csv")) {
             Path destination = folder.resolve(filename);
             logic.execute("export " + destination);

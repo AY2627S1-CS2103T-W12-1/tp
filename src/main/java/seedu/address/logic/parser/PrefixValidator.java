@@ -22,8 +22,7 @@ final class PrefixValidator {
 
     /**
      * Reserves whitespace-delimited ASCII single-letter slash prefixes for member fields.
-     * The standalone care-of abbreviation (c/o, case-insensitive) remains literal text;
-     * A/ followed by a digit is also literal inside an address, as in Block A/12.
+     * Standalone c/o, s/o and d/o abbreviations (case-insensitive) remain literal text.
      * URLs, numeric slashes and slashes embedded in words are not field prefixes.
      *
      * @param args Arguments to validate before tokenization.
@@ -31,7 +30,6 @@ final class PrefixValidator {
      * @throws ParseException if an unsupported member field prefix is present.
      */
     static void verifySupportedPrefixes(String args, String commandUsage) throws ParseException {
-        boolean inAddress = false;
         for (int i = 0; i + 1 < args.length(); i++) {
             char letter = args.charAt(i);
             boolean isAsciiLetter = (letter >= 'a' && letter <= 'z') || (letter >= 'A' && letter <= 'Z');
@@ -43,13 +41,10 @@ final class PrefixValidator {
                     && (i + 3 == args.length() || Character.isWhitespace(args.charAt(i + 3)));
             String prefix = args.substring(i, i + 2);
             if (SUPPORTED_PREFIXES.contains(prefix)) {
-                inAddress = prefix.equals(PREFIX_ADDRESS.getPrefix());
                 continue;
             }
-            boolean isAddressUnit = inAddress && letter == 'A' && i + 2 < args.length()
-                    && args.charAt(i + 2) >= '0' && args.charAt(i + 2) <= '9';
             // Preserve s/o and d/o.
-            if (!isCareOf && !isAddressUnit && !args.substring(i).matches("(?is)[sd]/o(?:\\p{javaWhitespace}.*)?")) {
+            if (!isCareOf && !args.substring(i).matches("(?is)[sd]/o(?:\\p{javaWhitespace}.*)?")) {
                 throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, commandUsage));
             }
         }
