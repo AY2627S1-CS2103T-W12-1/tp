@@ -681,7 +681,8 @@ showing file contents. A missing or null `persons` list also explains the requir
 - Add/edit accept fields in any order and reject repeated non-tag prefixes.
 - Reject unsupported whitespace-delimited ASCII single-letter prefixes in add/edit, including wrong-case prefixes.
 - Preserve standalone `c/o`, `s/o`, and `d/o` abbreviations in any letter case, URLs, numeric slashes and slashes embedded within words in add/edit.
-  `A/` followed by a digit is also literal within an address, as in `Block A/12`.
+  Reject standalone single-letter slash unit labels such as `Block A/12` and `Block B/12`;
+  use `Block A-12` or `Block B-12` instead. This command-only check does not reject legacy CSV or JSON data.
   A supported lowercase prefix still ends the address.
 - Field validation lives in the model value classes (`Name`, `Phone`, `Email`, `Address`, `Tag`) through
   `isValidXyz` methods, not in the parsers. The command parsers, the JSON loader and the CSV importer therefore
@@ -1496,8 +1497,11 @@ Use `list` and check the displayed indices before any indexed command. Back up t
    and appending `x/extra` or `T/committee`. **Expect:** rejection without changes.
 3. Add Alice's contact details with different tags, then repeat using `alice tan` and `Alice  Tan`.
    **Expect:** duplicate rejection each time. Change the phone and retry. **Expect:** a separate record.
-4. Add `n/Chloé O'Connor p/+65 9123 4567 e/chloe.o'connor@example.com a/Block A/12 t/year-1`.
-   **Expect:** accepted with spelling preserved. Also check `Ravi s/o Kumar` and `J. Tan` as names.
+4. Add `n/Chloé O'Connor p/+65 9123 4567 e/chloe.o'connor@example.com a/Block A-12 t/year-1`.
+   **Expect:** accepted with spelling preserved after save/reload; also check `Block B-12`.
+   Both `add` and `edit` must reject `Block A/12` and `Block B/12` without changing saved records.
+   Also check `Ravi s/o Kumar` and `J. Tan` as names, and `c/o`, `d/o`, `12/3`, `Tanjong/1324` and URLs.
+   Existing CSV/JSON addresses containing `Block A/12` or `Block B/12` must still load unchanged.
    Then try one invalid value at a time: `n/-Anne`, `n/Alice@Other`, `p/1 2`, `p/65+`,
    `e/john..doe@example.com`, and `a/` followed only by a nonbreaking space (U+00A0).
    **Expect:** a field-specific error each time, with no record added.

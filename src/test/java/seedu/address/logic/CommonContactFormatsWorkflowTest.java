@@ -88,20 +88,45 @@ public class CommonContactFormatsWorkflowTest {
     }
 
     @Test
-    public void address_uppercaseUnitLabel_preservedWhileUnknownPrefixesAreRejected() throws Exception {
-        logic.execute("add n/Alice p/123 e/alice@example.com a/Block A/12");
-        logic.execute("add a/Block A/12 n/Bob p/456 e/bob@example.com");
-        assertEquals("Block A/12", model.getAddressBook().getPersonList().getFirst().getAddress().value);
-        logic.execute("edit 1 a/Block A/24 t/committee");
-        assertEquals("Block A/24", model.getAddressBook().getPersonList().getFirst().getAddress().value);
+    public void address_slashUnitLabels_rejectedWithoutChangingRoster() throws Exception {
+        logic.execute("add n/Alice p/123 e/alice@example.com a/Block A-12");
         byte[] saved = Files.readAllBytes(roster);
-        for (String prefix : List.of("x/extra", "T/committee", "P/12345678", "A/Block")) {
-            assertThrows(ParseException.class, () -> logic.execute("edit 1 a/Block A/12 " + prefix));
+        var expected = List.copyOf(model.getAddressBook().getPersonList());
+        for (char letter = 'A'; letter <= 'Z'; letter++) {
+            String address = "Block " + letter + "/12";
             assertThrows(ParseException.class, () ->
-                    logic.execute("add n/Other p/789 e/other@example.com a/Block A/12 " + prefix));
+                    logic.execute("add n/Bob p/456 e/bob@example.com a/" + address));
+            assertThrows(ParseException.class, () ->
+                    logic.execute("add a/" + address + " n/Bob p/456 e/bob@example.com"));
+            assertThrows(ParseException.class, () -> logic.execute("edit 1 a/" + address));
+            assertEquals(expected, model.getAddressBook().getPersonList());
             assertArrayEquals(saved, Files.readAllBytes(roster));
         }
-        assertThrows(ParseException.class, () -> logic.execute("add A/12 n/Other p/789 e/other@example.com"));
+    }
+
+    @Test
+    public void address_hyphenUnitsAndLiteralSlashes_preservedThroughAddEditAndRoundTrip() throws Exception {
+        for (String address : List.of("Block A-12", "Block B-12", "12/3", "Tanjong/1324",
+                "https://example.com/A/12", "c/o Reception", "C/O Reception", "s/o Kumar",
+                "S/O Kumar", "d/o Raman", "D/O Raman")) {
+            logic.execute("add n/Alice p/123 e/alice@example.com a/" + address);
+            int index = model.getAddressBook().getPersonList().size();
+            logic.execute("edit " + index + " a/" + address + " Annex");
+            assertEquals(address + " Annex", model.getAddressBook().getPersonList().getLast().getAddress().value);
+            assertRoundTrip();
+        }
+    }
+
+    @Test
+    public void address_legacySlashUnits_preservedThroughCsvImportAndJsonReload() throws Exception {
+        Path csv = directory.resolve("legacy.csv");
+        Files.writeString(csv, "name,phone,email,address,tags\n"
+                + "Alice,123,alice@example.com,Block A/12,\n"
+                + "Bob,456,bob@example.com,Block B/12,\n");
+        logic.execute("import p/" + csv);
+        assertEquals(List.of("Block A/12", "Block B/12"), model.getAddressBook().getPersonList().stream()
+                .map(person -> person.getAddress().value).toList());
+        logic.execute("edit 1 t/committee");
         assertRoundTrip();
     }
 
