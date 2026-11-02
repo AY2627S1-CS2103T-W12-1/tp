@@ -19,23 +19,24 @@ public class EmailTest {
     }
 
     @Test
-    public void isValidEmail_longInvalidDomain_finishesPromptly() {
+    public void validationRegex_longInvalidDomain_finishesPromptly() {
         String email = "alice@" + "a".repeat(20000) + "!";
-        assertTimeoutPreemptively(Duration.ofSeconds(2), () -> assertFalse(Email.isValidEmail(email)));
+        assertTimeoutPreemptively(Duration.ofSeconds(2), () -> assertFalse(email.matches(Email.VALIDATION_REGEX)));
     }
 
     @Test
-    public void isValidEmail_longSeparatedParts_finishesPromptly() {
+    public void validationRegex_longSeparatedParts_finishesPromptly() {
+        // Bypass the length guard so valid and malformed large inputs still exercise regex backtracking.
         String local = "a.".repeat(10000) + "a";
         String hyphenatedDomain = "a-".repeat(10000) + "aa";
         String dottedDomain = "a.".repeat(10000) + "aa";
         assertTimeoutPreemptively(Duration.ofSeconds(2), () -> {
-            assertFalse(Email.isValidEmail(local + "@example.com"));
-            assertFalse(Email.isValidEmail("alice@" + hyphenatedDomain));
-            assertFalse(Email.isValidEmail("alice@" + dottedDomain));
-            assertFalse(Email.isValidEmail(local + ".@example.com"));
-            assertFalse(Email.isValidEmail("alice@" + hyphenatedDomain + "!"));
-            assertFalse(Email.isValidEmail("alice@" + dottedDomain + "!"));
+            assertTrue((local + "@example.com").matches(Email.VALIDATION_REGEX));
+            assertTrue(("alice@" + hyphenatedDomain).matches(Email.VALIDATION_REGEX));
+            assertTrue(("alice@" + dottedDomain).matches(Email.VALIDATION_REGEX));
+            assertFalse((local + ".@example.com").matches(Email.VALIDATION_REGEX));
+            assertFalse(("alice@" + hyphenatedDomain + "!").matches(Email.VALIDATION_REGEX));
+            assertFalse(("alice@" + dottedDomain + "!").matches(Email.VALIDATION_REGEX));
         });
     }
 
@@ -159,7 +160,7 @@ public class EmailTest {
         assertFalse(email.equals(new Email("other.valid@email")));
     }
     @Test
-    public void isValidEmail_expandedBoundariesAndLongHyphens() {
+    public void isValidEmail_expandedBoundaries_matchesDocumentedRules() {
         for (String punctuation : new String[] {"+", "_", "'", "-"}) {
             assertTrue(Email.isValidEmail(punctuation + "alice@example.com"));
             assertTrue(Email.isValidEmail("alice" + punctuation + "@example.com"));
@@ -169,10 +170,15 @@ public class EmailTest {
         assertFalse(Email.isValidEmail("alice@-xn--p1ai.example"));
         assertFalse(Email.isValidEmail("alice@xn--p1ai-.example"));
         assertFalse(Email.isValidEmail("alice@example..xn--p1ai"));
+    }
+
+    @Test
+    public void validationRegex_longHyphens_finishesPromptly() {
+        // Exercise regex hardening directly: the public validator rejects these lengths before matching.
         String label = "xn" + "-".repeat(20000) + "p1ai";
         assertTimeoutPreemptively(Duration.ofSeconds(2), () -> {
-            assertFalse(Email.isValidEmail("alice@example." + label));
-            assertFalse(Email.isValidEmail("alice@example." + label + "-"));
+            assertTrue(("alice@example." + label).matches(Email.VALIDATION_REGEX));
+            assertFalse(("alice@example." + label + "-").matches(Email.VALIDATION_REGEX));
         });
     }
 }

@@ -542,8 +542,8 @@ bidirectional control characters (U+061C, U+200E–U+200F, U+202A–U+202E, U+20
 ordinary Arabic and Hebrew letters remain allowed.
 
 These rules apply to `add`, `edit`, CSV imports, and saved JSON files. Import errors identify
-the invalid row. If a hand-edited JSON file violates a rule, startup enters roster recovery
-and preserves the original file. You can close TrackCall, correct the offending field in the
+the invalid row. If any saved member violates a rule, startup enters recovery for the whole roster
+and preserves the original file. This also applies to previously accepted long values saved by an older version. You can close TrackCall, correct the offending field in the
 original JSON file, and restart; or use the offered backup recovery. Values are never truncated.
 
 <p class="ug-topic"><strong>Email rules:</strong></p>
