@@ -108,7 +108,8 @@ public class CsvAddressBookExporterTest {
                 new PersonBuilder().withName("Alice").withAddress("-5 Road").build(),
                 new PersonBuilder().withName("Bob").withAddress("'@home").build(),
                 new PersonBuilder().withName("Carol").withAddress("+5 Road").build(),
-                new PersonBuilder().withName("Dan").withAddress("@home").build());
+                new PersonBuilder().withName("Dan").withAddress("@home").build(),
+                new PersonBuilder().withName("Eve").withAddress("'").build());
 
         CsvAddressBookExporter.export(people, destination);
 
@@ -118,6 +119,7 @@ public class CsvAddressBookExporterTest {
         assertTrue(csv.contains("Bob,85355255,amy@gmail.com,''@home,"));
         assertTrue(csv.contains("Carol,85355255,amy@gmail.com,'+5 Road,"));
         assertTrue(csv.contains("Dan,85355255,amy@gmail.com,'@home,"));
+        assertTrue(csv.contains("Eve,85355255,amy@gmail.com,',"));
         assertEquals('n', csv.charAt(0)); // UTF-8 export deliberately has no BOM.
         assertEquals(people, CsvAddressBookImporter.read(destination));
     }
