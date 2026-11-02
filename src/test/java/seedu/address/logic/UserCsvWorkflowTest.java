@@ -328,9 +328,11 @@ public class UserCsvWorkflowTest {
         IOException cause = assertInstanceOf(IOException.class, failure.getCause());
         assertTrue(failure.isChangeApplied(), "The imported batch must remain available for retry");
         // Windows reports AccessDeniedException for the directory blocker; Unix may report another IO failure.
+        // Mirrors LogicManager, which falls back to toString() when the exception has no message.
+        String causeDetails = cause.getMessage() == null ? cause.toString() : cause.getMessage();
         String expectedError = cause instanceof AccessDeniedException
                 ? String.format(LogicManager.FILE_OPS_PERMISSION_ERROR_FORMAT, rosterFile)
-                : String.format(ImportCommand.MESSAGE_SAVE_FAILURE, cause.getMessage());
+                : String.format(ImportCommand.MESSAGE_SAVE_FAILURE, causeDetails);
         assertEquals(expectedError + LogicManager.UNSAVED_CHANGE_GUIDANCE, failure.getMessage());
     }
 
