@@ -1,7 +1,5 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,12 +15,7 @@ public class ShowCommandParser implements Parser<ShowCommand> {
     public ShowCommand parse(String args) throws ParseException {
         List<Index> indexes = new ArrayList<>();
         for (String part : args.trim().split("\\s+")) {
-            try {
-                indexes.add(ParserUtil.parseIndex(part));
-            } catch (ParseException exception) {
-                throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, ShowCommand.MESSAGE_USAGE),
-                        exception);
-            }
+            indexes.add(ParserUtil.parseCommandIndex(part, ShowCommand.MESSAGE_USAGE));
         }
         return new ShowCommand(indexes);
     }

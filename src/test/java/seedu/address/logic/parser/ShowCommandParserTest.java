@@ -3,6 +3,7 @@ package seedu.address.logic.parser;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 
 import java.util.List;
 
@@ -24,10 +25,16 @@ public class ShowCommandParserTest {
     @Test
     public void parse_invalidIndexes_rejectsWholeCommand() {
         String error = String.format(MESSAGE_INVALID_COMMAND_FORMAT, ShowCommand.MESSAGE_USAGE);
-        String[] invalidArgs = {"", " ", "0", "-1", "one", "1, 3", "1,", ",1", "1,,2",
-            "1 2147483648"};
+        String[] invalidArgs = {"", " ", "one", "1, 3", "1,", ",1", "1,,2"};
         for (String args : invalidArgs) {
             assertParseFailure(parser, args, error);
+        }
+    }
+
+    @Test
+    public void parse_invalidNumericIndex_reportsValueError() {
+        for (String args : new String[] {"0", "-1", "1 99999999999999999999"}) {
+            assertParseFailure(parser, args, MESSAGE_INVALID_INDEX);
         }
     }
 }
