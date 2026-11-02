@@ -1,8 +1,5 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,25 +25,7 @@ public class ArgumentTokenizer {
      */
     public static ArgumentMultimap tokenize(String argsString, Prefix... prefixes) {
         List<PrefixPosition> positions = findAllPrefixPositions(argsString, prefixes);
-        positions.sort((prefix1, prefix2) -> prefix1.getStartPosition() - prefix2.getStartPosition());
-        return extractArguments(argsString, withoutNameAbbreviations(argsString, positions));
-    }
-
-    /**
-     * Returns {@code sortedPositions} without address prefixes that start a standalone a/l or a/p in a name,
-     * so names such as "Ravi a/l Kumar" keep the abbreviation like s/o and d/o.
-     */
-    private static List<PrefixPosition> withoutNameAbbreviations(String argsString,
-            List<PrefixPosition> sortedPositions) {
-        List<PrefixPosition> kept = new ArrayList<>();
-        for (PrefixPosition position : sortedPositions) {
-            boolean isInName = !kept.isEmpty() && kept.getLast().getPrefix().equals(PREFIX_NAME);
-            if (!(isInName && position.getPrefix().equals(PREFIX_ADDRESS)
-                    && NameAbbreviation.startsAt(argsString, position.getStartPosition()))) {
-                kept.add(position);
-            }
-        }
-        return kept;
+        return extractArguments(argsString, positions);
     }
 
     /**
@@ -107,10 +86,13 @@ public class ArgumentTokenizer {
      * {@code argsString}.
      *
      * @param argsString      Arguments string of the form: {@code preamble <prefix>value <prefix>value ...}
-     * @param prefixPositions Zero-based positions of all prefixes in {@code argsString}, sorted by position
+     * @param prefixPositions Zero-based positions of all prefixes in {@code argsString}
      * @return                ArgumentMultimap object that maps prefixes to their arguments
      */
     private static ArgumentMultimap extractArguments(String argsString, List<PrefixPosition> prefixPositions) {
+
+        // Sort by start position
+        prefixPositions.sort((prefix1, prefix2) -> prefix1.getStartPosition() - prefix2.getStartPosition());
 
         // Insert a PrefixPosition to represent the preamble
         PrefixPosition preambleMarker = new PrefixPosition(new Prefix(""), 0);

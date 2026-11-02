@@ -34,8 +34,7 @@ import seedu.address.storage.StorageManager;
 public class CommonNamePunctuationWorkflowTest {
     private static final List<String> COMMON_NAMES = List.of("Ravi s/o Kumar", "Ravi S/O Kumar", "Ravi S/o Kumar",
             "Priya d/o Raman", "Priya D/O Raman", "Priya d/O Raman", "J. Tan", "J.Tan",
-            "Lee, Ann", "Mary (Jane)", "Tan (Jr.), Alex", "Ravi a/l Kumar", "Ravi A/L Kumar", "Siti a/p Ahmad",
-            "Siti A/P Ahmad");
+            "Lee, Ann", "Mary (Jane)", "Tan (Jr.), Alex", "Ravi A/L Kumar", "Siti A/P Ahmad");
 
     @TempDir
     public Path temporaryFolder;
@@ -115,6 +114,29 @@ public class CommonNamePunctuationWorkflowTest {
         }
         assertThrows(ParseException.class, () -> session.logic.execute("add N/Alice p/123 e/alice@example.com"));
         assertThrows(ParseException.class, () -> session.logic.execute("edit 1 N/Alice"));
+    }
+
+    @Test
+    public void addEdit_lowercaseAlOrApAfterName_rejectedInsteadOfGuessingField() throws Exception {
+        Session session = new Session(temporaryFolder.resolve("ambiguous"));
+        session.logic.execute(add("Existing Member"));
+        byte[] saved = Files.readAllBytes(session.file);
+        List<Person> original = session.saved();
+        for (String command : List.of("add n/Ravi a/l Kumar p/123 e/ravi@example.com",
+                "add n/Ravi a/l Kumar p/123 e/ravi@example.com a/Block 5",
+                "add n/Alice a/p Street p/123 e/alice@example.com", "edit 1 n/Alice a/l Road", "edit 1 n/Ravi a/L")) {
+            ParseException failure = assertThrows(ParseException.class, () -> session.logic.execute(command), command);
+            assertTrue(failure.getMessage().contains("write A/L or A/P"), command);
+            assertEquals(original, session.model.getAddressBook().getPersonList());
+            assertArrayEquals(saved, Files.readAllBytes(session.file));
+        }
+
+        // When a/ does not directly follow the name, it starts the address as before.
+        session.logic.execute("add n/Alice p/456 e/alice@example.com a/p Street");
+        assertEquals("p Street", session.saved().getLast().getAddress().value);
+        session.logic.execute("edit 1 a/l Road n/Alice Tan");
+        assertEquals("Alice Tan", session.saved().getFirst().getName().fullName);
+        assertEquals("l Road", session.saved().getFirst().getAddress().value);
     }
 
     @Test
