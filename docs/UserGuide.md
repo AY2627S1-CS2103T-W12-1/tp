@@ -899,6 +899,8 @@ Export displayed members or bring existing member records into TrackCall.
   Import removes the added apostrophe only from files marked with `trackcall_encoding`, preserving an
   export/import round trip. An original value beginning with an apostrophe followed by one of those
   characters receives a second apostrophe. Older five-column exports keep their literal apostrophes on import.
+  Spreadsheet apps may display the added apostrophe as part of a Text cell, such as `'+65 9111 1131`.
+  Keep this escape prefix when editing an existing exported value; TrackCall removes it on reimport.
 - Export writes UTF-8 **without a byte-order mark (BOM)**. In Excel, use **Data → From Text/CSV**,
   choose **UTF-8** as the file origin, then use **Transform Data** to set every column's type to **Text** before loading.
   This preserves non-ASCII names and phone formatting. Do not double-click the CSV to open it.
@@ -992,6 +994,16 @@ name,phone,email,address,tags
 TrackCall exports add a sixth `trackcall_encoding` column. Each member row in that format must contain
 `apostrophe-v1` in this column. Import removes spreadsheet escape apostrophes only for this marked format.
 In five-column files, apostrophes are literal, including those in older TrackCall exports.
+
+When editing an export in a spreadsheet:
+
+- Keep the `trackcall_encoding` column and fill `apostrophe-v1` in every new member row.
+- Do not delete the column or change its marker values. Without it, escaped values are treated as literal;
+  an escaped international phone number then fails validation.
+- For a new value beginning with `=`, `+`, `-`, or `@`, add an apostrophe before it. If the original value
+  already starts with apostrophes followed by one of those characters, add one more apostrophe.
+- A blank or unknown encoding marker rejects the entire file. Correct the reported row and retry;
+  no members are imported from an invalid file.
 
 <p class="ug-topic"><strong>CSV fields and whitespace</strong></p>
 

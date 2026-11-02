@@ -48,7 +48,8 @@ public final class CsvAddressBookImporter {
     public static final String MESSAGE_INVALID_CSV = "invalid CSV syntax.";
     public static final String MESSAGE_MULTILINE_FIELD = "line breaks inside fields are not supported.";
     public static final String MESSAGE_WRONG_FIELD_COUNT = "expected %d fields but found %d.";
-    public static final String MESSAGE_INVALID_ENCODING = "invalid trackcall_encoding value.";
+    public static final String MESSAGE_INVALID_ENCODING =
+            "trackcall_encoding must be apostrophe-v1 in every member row. Keep this column when editing an export.";
 
     public static final int MAX_FILE_BYTES = 10 * 1024 * 1024;
     public static final int MAX_MEMBER_ROWS = 10_000;

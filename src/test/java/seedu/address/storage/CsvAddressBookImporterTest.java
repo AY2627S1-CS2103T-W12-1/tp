@@ -126,6 +126,12 @@ public class CsvAddressBookImporterTest {
                 + "Alice,91111111,'+alice@example.com,''@home,,unknown\n");
         CsvImportException error = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
         assertEquals("row 2: " + MESSAGE_INVALID_ENCODING, error.getMessage());
+        assertEquals("trackcall_encoding must be apostrophe-v1 in every member row. "
+                + "Keep this column when editing an export.", MESSAGE_INVALID_ENCODING);
+        write("name,phone,email,address,tags,trackcall_encoding\n"
+                + "Alice,91111111,alice@example.com,Home,,\n");
+        CsvImportException missing = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
+        assertEquals("row 2: " + MESSAGE_INVALID_ENCODING, missing.getMessage());
     }
 
     @Test
