@@ -170,9 +170,10 @@ This reduces their dependence on each other's implementation details, as shown b
 
 - `MainWindow` contains the command box, result display, member list, details panel and status bar.
 - These visible parts extend `UiPart`. JavaFX layouts are defined in `src/main/resources/view`.
-pls- `CommandBox` rejects any edit containing a control character, such as a pasted tab or line break, because the
+- `CommandBox` rejects any edit containing a control character, such as a pasted tab or line break, because the
   text field would otherwise remove it silently and could alter a value before validation. A rejected edit keeps
   the earlier text and shows a warning, and Enter does nothing until the next accepted edit.
+  A line break that ends both the paste and the command is accepted, because removing it joins nothing.
 - `HelpWindow` builds command cards from `CommandHelp` in Logic.
 - `WindowPlacement` restores a usable window position and size.
 - `MainApp` opens `RosterRecoveryDialog` before exposing an invalid roster for editing.
