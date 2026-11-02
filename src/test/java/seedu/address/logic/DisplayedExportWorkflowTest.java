@@ -78,7 +78,7 @@ public class DisplayedExportWorkflowTest {
             assertEquals(rosterTime, Files.getLastModifiedTime(roster));
             assertEquals(backupTime, Files.getLastModifiedTime(backup));
             if (displayed.isEmpty()) {
-                assertEquals("name,phone,email,address,tags\r\n", Files.readString(csv));
+                assertEquals("name,phone,email,address,tags,trackcall_encoding\r\n", Files.readString(csv));
             }
         }
     }
@@ -127,7 +127,7 @@ public class DisplayedExportWorkflowTest {
         logic.execute("find Nobody");
         assertEquals("Exported 0 displayed members to " + csv + " (3 hidden members not exported).",
                 logic.execute("export " + csv).getFeedbackToUser());
-        assertEquals("name,phone,email,address,tags\r\n", Files.readString(csv));
+        assertEquals("name,phone,email,address,tags,trackcall_encoding\r\n", Files.readString(csv));
 
         logic.execute("list");
         logic.execute("show 3");

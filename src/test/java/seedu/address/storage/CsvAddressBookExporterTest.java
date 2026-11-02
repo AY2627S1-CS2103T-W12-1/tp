@@ -3,6 +3,7 @@ package seedu.address.storage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -34,8 +35,8 @@ public class CsvAddressBookExporterTest {
 
         CsvAddressBookExporter.export(List.of(person), destination);
 
-        assertEquals("name,phone,email,address,tags\r\n"
-                + "Alice,001234,alice@example.com,\"Block 1, \"\"Caf\u00e9\"\"\",colleague;friend\r\n",
+        assertEquals("name,phone,email,address,tags,trackcall_encoding\r\n"
+                + "Alice,001234,alice@example.com,\"Block 1, \"\"Caf\u00e9\"\"\",colleague;friend,apostrophe-v1\r\n",
                 Files.readString(destination));
     }
 
@@ -46,7 +47,7 @@ public class CsvAddressBookExporterTest {
 
         CsvAddressBookExporter.export(List.of(), destination);
 
-        assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
+        assertEquals("name,phone,email,address,tags,trackcall_encoding\r\n", Files.readString(destination));
     }
 
     @Test
@@ -65,11 +66,12 @@ public class CsvAddressBookExporterTest {
                 CSVParser csvParser = CSVFormat.RFC4180.parse(reader)) {
             List<CSVRecord> records = csvParser.getRecords();
             assertEquals(501, records.size());
-            assertEquals(List.of("name", "phone", "email", "address", "tags"), records.getFirst().toList());
+            assertEquals(CsvAddressBookCsv.ENCODED_HEADERS, records.getFirst().toList());
             for (int i = 0; i < people.size(); i++) {
                 Person person = people.get(i);
                 assertEquals(List.of(person.getName().fullName, person.getPhone().value, person.getEmail().value,
-                        person.getAddress().value, i % 2 == 0 ? "committee;year1" : ""), records.get(i + 1).toList());
+                        person.getAddress().value, i % 2 == 0 ? "committee;year1" : "",
+                        CsvAddressBookCsv.SPREADSHEET_ENCODING), records.get(i + 1).toList());
             }
         }
     }
@@ -83,8 +85,8 @@ public class CsvAddressBookExporterTest {
 
         CsvAddressBookExporter.export(List.of(bob), destination);
 
-        assertEquals("name,phone,email,address,tags\r\n"
-                + "Bob,85355255,amy@gmail.com,Block 2,\r\n", Files.readString(destination));
+        assertEquals("name,phone,email,address,tags,trackcall_encoding\r\n"
+                + "Bob,85355255,amy@gmail.com,Block 2,,apostrophe-v1\r\n", Files.readString(destination));
     }
 
     @Test
@@ -96,6 +98,33 @@ public class CsvAddressBookExporterTest {
         CsvAddressBookExporter.export(List.of(alice), destination);
 
         assertEquals(List.of(alice), CsvAddressBookImporter.read(destination));
+    }
+
+    @Test
+    public void export_formulaLikeFields_arePrefixedAndRoundTrip() throws Exception {
+        Path destination = tempDir.resolve("contacts.csv");
+        List<Person> people = List.of(
+                new PersonBuilder().withName("李明").withPhone("+6591111131")
+                        .withAddress("=SUM(A1)").build(),
+                new PersonBuilder().withName("Alice").withAddress("-5 Road").build(),
+                new PersonBuilder().withName("Bob").withEmail("'+bob@example.com")
+                        .withAddress("'@home").build(),
+                new PersonBuilder().withName("Carol").withEmail("''+carol@example.com")
+                        .withAddress("+5 Road").build(),
+                new PersonBuilder().withName("Dan").withAddress("@home").build(),
+                new PersonBuilder().withName("Eve").withAddress("'").build());
+
+        CsvAddressBookExporter.export(people, destination);
+
+        String csv = Files.readString(destination);
+        assertTrue(csv.contains("李明,'+6591111131,amy@gmail.com,'=SUM(A1),,apostrophe-v1"));
+        assertTrue(csv.contains("Alice,85355255,amy@gmail.com,'-5 Road,,apostrophe-v1"));
+        assertTrue(csv.contains("Bob,85355255,''+bob@example.com,''@home,,apostrophe-v1"));
+        assertTrue(csv.contains("Carol,85355255,'''+carol@example.com,'+5 Road,,apostrophe-v1"));
+        assertTrue(csv.contains("Dan,85355255,amy@gmail.com,'@home,,apostrophe-v1"));
+        assertTrue(csv.contains("Eve,85355255,amy@gmail.com,',,apostrophe-v1"));
+        assertEquals('n', csv.charAt(0)); // UTF-8 export deliberately has no BOM.
+        assertEquals(people, CsvAddressBookImporter.read(destination));
     }
 
     @Test

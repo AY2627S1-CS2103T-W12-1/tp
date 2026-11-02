@@ -68,7 +68,8 @@ public class SaveFailureTransitionTest {
             assertEquals("999", model.getAddressBook().getPersonList().getFirst().getPhone().value);
         }
         // Independent CSV expectation: exporting may share the visible unsaved edit, but must not save the roster.
-        assertEquals("name,phone,email,address,tags\r\nAlice,999,alice@example.com,,team\r\n",
+        assertEquals("name,phone,email,address,tags,trackcall_encoding\r\n"
+                + "Alice,999,alice@example.com,,team,apostrophe-v1\r\n",
                 Files.readString(export));
 
         logic.execute("edit 1 p/999");

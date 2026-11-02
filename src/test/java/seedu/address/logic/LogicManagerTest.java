@@ -547,7 +547,7 @@ public class LogicManagerTest {
 
         logic.execute("export " + destination);
 
-        assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
+        assertEquals("name,phone,email,address,tags,trackcall_encoding\r\n", Files.readString(destination));
         assertFalse(Files.exists(temporaryFolder.resolve("addressBook.json")));
         assertFalse(Files.exists(temporaryFolder.resolve("userPrefs.json")));
     }

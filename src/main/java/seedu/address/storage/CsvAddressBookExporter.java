@@ -38,14 +38,17 @@ public final class CsvAddressBookExporter {
     private static void writeCsv(List<Person> people, Path filePath) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(filePath, StandardCharsets.UTF_8);
                 CSVPrinter csvPrinter = new CSVPrinter(writer, CsvAddressBookCsv.FORMAT)) {
-            csvPrinter.printRecord(CsvAddressBookCsv.HEADERS);
+            csvPrinter.printRecord(CsvAddressBookCsv.ENCODED_HEADERS);
             for (Person person : people) {
                 String tags = person.getTags().stream()
                         .map(tag -> tag.tagName)
                         .sorted()
                         .collect(joining(";"));
-                csvPrinter.printRecord(person.getName(), person.getPhone(), person.getEmail(),
-                        person.getAddress(), tags);
+                csvPrinter.printRecord(CsvAddressBookCsv.escapeForSpreadsheet(person.getName().toString()),
+                        CsvAddressBookCsv.escapeForSpreadsheet(person.getPhone().toString()),
+                        CsvAddressBookCsv.escapeForSpreadsheet(person.getEmail().toString()),
+                        CsvAddressBookCsv.escapeForSpreadsheet(person.getAddress().toString()),
+                        CsvAddressBookCsv.escapeForSpreadsheet(tags), CsvAddressBookCsv.SPREADSHEET_ENCODING);
             }
         }
     }

@@ -738,7 +738,11 @@ showing file contents. A missing or null `persons` list also explains the requir
 - Reject files over 10 MiB and more than 10,000 nonblank member rows before duplicate removal.
   Bound the byte read as well as checking file size, so a growing source cannot bypass the limit.
 - Read strict UTF-8, allowing an optional byte-order mark.
-- Require the five headers in any order; validate CSV quoting and every member field.
+- Require the five member headers in any order, with an optional `trackcall_encoding` column.
+  In marked files, every member row must contain `apostrophe-v1`; a blank or unknown marker rejects the entire file.
+- Decode one spreadsheet escape apostrophe only in marked files. Preserve literal apostrophes in legacy
+  five-column CSVs, so importing older exports cannot change contact identity or collapse distinct members.
+- Validate CSV quoting and every member field before appending any records.
 - Trim surrounding field/tag whitespace. Reject embedded line breaks.
 - Skip blank records but include them when reporting physical row numbers.
 - Report a missing source with its resolved path and ask the user to check its name and location. Other read
@@ -781,7 +785,11 @@ Commons CSV handles quoting instead of manual string splitting.
 
 **Rules and design**
 
-- Write UTF-8 with a header row. Sort each member's tags and join them with semicolons.
+- Write UTF-8 without a BOM, with the five member columns and a sixth `trackcall_encoding` column.
+  Write `apostrophe-v1` in every member row; retain this header even for an empty export.
+- Prefix formula-like values with an apostrophe when their first non-apostrophe character is `=`, `+`, `-` or `@`.
+  The marker lets import remove exactly one added prefix without changing legacy literal values.
+- Sort each member's tags and join them with semicolons.
 - Use Commons CSV for quoting and escaping. An empty displayed list produces a header-only file. Run `list` before exporting to include everyone.
 - `ExportCommandParser` requires a `.csv` extension, ignoring letter case.
 - Reject a double quote anywhere in the path, including directory names, because `import` cannot read such

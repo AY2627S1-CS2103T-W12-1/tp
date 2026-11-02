@@ -890,20 +890,25 @@ Export displayed members or bring existing member records into TrackCall.
 - `export [FILEPATH]` writes only the currently displayed members to a UTF-8 CSV file, in displayed order.
 - Searches, tag filters, and `show` selections determine which members are exported; their current stored
   order determines the export order. Run `list` first to export the complete roster in stored order.
-- The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
+- The columns are `name`, `phone`, `email`, `address`, `tags`, and `trackcall_encoding`, so the exported file can be imported directly.
+  The last column contains `apostrophe-v1` in every member row to identify the escaping used by this export.
 - Tags for each member are sorted in case-sensitive ASCII order (hyphens, digits, uppercase letters, then lowercase letters)
   and joined with semicolons.
 
 <p class="ug-topic"><strong>Opening exports in a spreadsheet</strong></p>
 
-- Export preserves member values for reimport; it does not neutralize spreadsheet formulas.
-  Spreadsheet apps may interpret values beginning with `=`, `+`, `-`, or `@` as formulas.
-  This includes addresses such as `=SUM(A1)` and `-5 Road`, and can also affect phone or email values.
-- Use your spreadsheet app's text/CSV import feature and explicitly set every column to **Text** before loading.
-  Avoid opening the CSV by double-clicking it with automatic formula interpretation enabled.
-  CSV quotation marks only protect commas, quotes, and line breaks; they do not prevent formula interpretation.
-- For an unchanged export/import round trip, import the original CSV directly into TrackCall.
-  Spreadsheet apps may change values when saving, even if you did not edit the cells.
+- Export prefixes cells beginning with `=`, `+`, `-`, or `@` with an apostrophe to prevent common
+  spreadsheet formula interpretation. This includes `+6591111131` in a phone field and `=SUM(A1)` in an address field.
+  Import removes the added apostrophe only from files marked with `trackcall_encoding`, preserving an
+  export/import round trip. An original value beginning with an apostrophe followed by one of those
+  characters receives a second apostrophe. Older five-column exports keep their literal apostrophes on import.
+  Spreadsheet apps may display the added apostrophe as part of a Text cell, such as `'+65 9111 1131`.
+  Keep this escape prefix when editing an existing exported value; TrackCall removes it on reimport.
+- Export writes UTF-8 **without a byte-order mark (BOM)**. In Excel, use **Data → From Text/CSV**,
+  choose **UTF-8** as the file origin, then use **Transform Data** to set every column's type to **Text** before loading.
+  This preserves non-ASCII names and phone formatting. Do not double-click the CSV to open it.
+- Import the original CSV directly into TrackCall for an unchanged round trip. Spreadsheet apps may
+  change values when saving, even if you did not edit the cells.
 
 - **Duplicate tag spellings:** If an imported CSV file or saved JSON roster contains case variants of one tag on the same member,
   TrackCall keeps the first spelling listed for that member. The retained spelling appears in the member
@@ -983,15 +988,30 @@ import p/"data/member list.csv"
 
 <p class="ug-topic"><strong>Header</strong></p>
 
-The first row must contain these column names exactly once, in any order:
+The first row must contain these five column names exactly once, in any order:
 
 ```text
 name,phone,email,address,tags
 ```
 
+TrackCall exports add a sixth `trackcall_encoding` column. Each member row in that format must contain
+`apostrophe-v1` in this column. Import removes spreadsheet escape apostrophes only for this marked format.
+In five-column files, apostrophes are literal, including those in older TrackCall exports.
+
+When editing an export in a spreadsheet:
+
+- Keep the `trackcall_encoding` column and fill `apostrophe-v1` in every new member row.
+- Do not delete the column or change its marker values. Without it, escaped values are treated as literal;
+  an escaped international phone number then fails validation.
+- For a new value beginning with `=`, `+`, `-`, or `@`, add an apostrophe before it. If the original value
+  already starts with apostrophes followed by one of those characters, add one more apostrophe.
+- A blank or unknown encoding marker rejects the entire file. Correct the reported row and retry;
+  no members are imported from an invalid file.
+
 <p class="ug-topic"><strong>CSV fields and whitespace</strong></p>
 
-- **CSV fields:** Every later non-blank row must have exactly five fields. CSV quoting supports commas and doubled double
+- **CSV fields:** Every later non-blank row must have five fields, or six when the header includes
+  `trackcall_encoding`. CSV quoting supports commas and doubled double
   quotes. A double quote inside an unquoted field, such as `Main" Street`, is invalid CSV syntax.
 - **Whitespace:** Surrounding spaces and tabs are trimmed from field values and individual tags before validation;
   internal spaces, tabs, and case are preserved.

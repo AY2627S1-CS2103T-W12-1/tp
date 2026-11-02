@@ -54,6 +54,23 @@ public class ImportCommandTest {
     }
 
     @Test
+    public void execute_legacyExport_keepsDistinctApostropheAddresses() throws Exception {
+        String csv = "name,phone,email,address,tags\r\n"
+                + "Alice,91111111,alice@example.com,'@home,\r\n"
+                + "Alice,91111111,alice@example.com,@home,\r\n";
+        Path file = write(csv);
+        Model model = new ModelManager();
+
+        CommandResult result = new ImportCommand(file).execute(model);
+
+        assertEquals(String.format(ImportCommand.MESSAGE_SUCCESS, 2, file.toAbsolutePath().normalize(), 0),
+                result.getFeedbackToUser());
+        assertEquals(List.of("'@home", "@home"), model.getAddressBook().getPersonList().stream()
+                .map(person -> person.getAddress().value).toList());
+        assertEquals(csv, Files.readString(file));
+    }
+
+    @Test
     public void execute_paddedDuplicates_skipsExistingAndEarlierImportedMembers() throws Exception {
         Person existing = new PersonBuilder().withName("Alice").withPhone("111")
                 .withEmail("alice@example.com").withAddress("Home").withTags("old").build();
@@ -165,7 +182,7 @@ public class ImportCommandTest {
         CommandException error = assertThrows(CommandException.class, () -> new ImportCommand(file).execute(model));
 
         assertEquals("Could not import CSV: invalid header. Expected the columns name, phone, email, address, and tags "
-                + "exactly once. "
+                + "exactly once, with an optional trackcall_encoding column. "
                 + "No members were imported.", error.getMessage());
         assertTrue(model.getAddressBook().getPersonList().isEmpty());
     }
