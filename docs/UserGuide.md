@@ -510,11 +510,15 @@ Keep member contact details up to date.
 - **Field prefixes:** Add reserves whitespace-delimited single ASCII letters followed by `/` for field prefixes.
   Only lowercase `n/`, `p/`, `e/`, `a/`, and `t/` are accepted; `x/extra` and `T/committee`
   report an invalid command format.
-- The standalone abbreviations `c/o`, `s/o`, and `d/o` (in any letter case), URLs, numeric slashes such as `12/3`,
-  and slashes embedded in words remain address text.
-
-- **Unit labels:** Standalone single-letter slash labels such as `Block A/12` and `Block B/12`
-  are rejected in `add` and `edit`. Use `Block A-12` or `Block B-12` instead.
+- **Why some slashes are rejected:** TrackCall finds each field by a space, one letter and `/`, so this pattern
+  cannot appear inside a name or address. `Block A/12`, `Block B/12` and `Alice Tan g/glory` are rejected;
+  use `Block A-12` or `Block B-12` instead.
+- **Slashes that are accepted:** a slash after two or more letters (`Block AB/12`), without a space before the letter
+  (`Alice/Glory`), or after a space (`Alice Tan /`). URLs, numeric slashes such as `12/3`, and the standalone
+  abbreviations `c/o`, `s/o`, and `d/o` (in any letter case) are also accepted.
+- **Prefixes inside a value:** a lowercase `n/`, `p/`, `e/`, `a/`, or `t/` inside a value starts that field.
+  For example, `n/Ravi a/l Kumar` saves the name `Ravi` and the address `l Kumar`; in `edit`, it also replaces
+  the existing address. Write such names without the slash, such as `Ravi al Kumar`, and check the result.
 
 <p class="ug-topic"><strong>Field rules</strong></p>
 
@@ -1291,7 +1295,8 @@ Read command instructions offline and close TrackCall when you are finished.
 <p class="ug-topic"><strong>Accepted input:</strong></p>
 
 - **Accepted prefixes:** both `add` and `edit` reject unknown or uppercase single-letter field prefixes,
-  including inside an address.
+  including inside a name or address. A supported lowercase prefix inside a value starts that field;
+  see [Field prefixes and address text](#add-a-member-add).
 - **Unit labels:** use `a/Block A-12` or `a/Block B-12`. Standalone single-letter slash labels
   such as `A/12` and `B/12` are rejected in both commands.
 - **Other address text:** standalone `c/o`, `s/o`, and `d/o`, URLs, numeric slashes such as `12/3`, and slashes inside words remain valid.

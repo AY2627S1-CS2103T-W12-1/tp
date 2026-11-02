@@ -691,7 +691,9 @@ showing file contents. A missing or null `persons` list also explains the requir
 - Preserve standalone `c/o`, `s/o`, and `d/o` abbreviations in any letter case, URLs, numeric slashes and slashes embedded within words in add/edit.
   Reject standalone single-letter slash unit labels such as `Block A/12` and `Block B/12`;
   use `Block A-12` or `Block B-12` instead. This command-only check does not reject legacy CSV or JSON data.
-  A supported lowercase prefix still ends the address.
+  The reason: `ArgumentTokenizer` starts a field at any supported prefix after whitespace, and `PrefixValidator`
+  rejects other single-letter prefixes so a mistyped one such as `T/` is not saved as text. A supported lowercase
+  prefix therefore still ends the current name or address; see [Known limitations](#limitations).
 - Field validation lives in the model value classes (`Name`, `Phone`, `Email`, `Address`, `Tag`) through
   `isValidXyz` methods, not in the parsers. The command parsers, the JSON loader and the CSV importer therefore
   apply one definition per field. The [User Guide](UserGuide.html#add-a-member-add) lists the accepted formats.
@@ -1008,6 +1010,9 @@ consistent spelling.
   stays literal so existing records are not silently merged. Accents and compatibility characters remain distinct.
   Sorting uses Java's case-insensitive order, so accented names can sort after `Z`.
 - After an accidental clear, stop changing data and follow the [manual recovery steps](UserGuide.html#automatic-backup-and-recovery).
+- A supported prefix inside a value starts that field. `n/Ravi a/l Kumar` saves the name `Ravi` and the address
+  `l Kumar`, and `edit` with that name replaces the existing address. Only `c/o`, `s/o` and `d/o` are exempt,
+  so names using `a/l` or `a/p` must be entered without the slash.
 
 ## Development workflow {id="documentation-logging-testing-dev-ops"}
 
