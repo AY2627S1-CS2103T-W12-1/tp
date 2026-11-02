@@ -42,12 +42,12 @@ public class CsvRoundTripRandomizedTest {
     }
 
     @Test
-    public void exportImport_veryLongFieldsAndManyTags_preservesEveryCharacter() throws Exception {
+    public void exportImport_boundedLongFieldsAndManyTags_preservesEveryCharacter() throws Exception {
         String[] tags = IntStream.range(0, 2000).mapToObj(index -> "Tag" + index).toArray(String[]::new);
-        Person extreme = new PersonBuilder().withName("Member" + "Ab9 ".repeat(4000) + "End")
-                .withPhone("0".repeat(16000) + "123")
-                .withEmail("a-b".repeat(4000) + "@example.com")
-                .withAddress("Start" + ",\"\t;\\\u4e2d\uD83C\uDFE0".repeat(16000) + "End")
+        Person extreme = new PersonBuilder().withName("Member" + "Ab9 ".repeat(47) + "End")
+                .withPhone("0".repeat(29) + "123")
+                .withEmail("a-b".repeat(80) + "@example.com")
+                .withAddress("Start" + ",\"\t;\\\u4e2d\uD83C\uDFE0".repeat(100) + "End")
                 .withTags(tags).build();
         Path file = directory.resolve("long fields.csv");
 

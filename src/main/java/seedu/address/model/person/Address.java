@@ -10,7 +10,10 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
  */
 public class Address {
 
-    public static final String MESSAGE_CONSTRAINTS = "Addresses should not be blank when provided";
+    public static final int MAX_LENGTH = 1000;
+
+    public static final String MESSAGE_CONSTRAINTS = "Addresses should not be blank when provided, should be at most "
+            + MAX_LENGTH + " UTF-16 code units long, and should not contain bidirectional control characters";
 
     /*
      * A non-empty address must not start with whitespace.
@@ -36,9 +39,20 @@ public class Address {
      * Returns true if a given string is a valid address.
      */
     public static boolean isValidAddress(String test) {
-        return test.isEmpty() || test.matches(VALIDATION_REGEX)
-                && test.codePoints().anyMatch(codePoint -> !Character.isWhitespace(codePoint)
-                        && !Character.isSpaceChar(codePoint));
+        return test.length() <= MAX_LENGTH && !containsBidiControl(test)
+                && (test.isEmpty() || (test.matches(VALIDATION_REGEX)
+                    && test.codePoints().anyMatch(codePoint -> !Character.isWhitespace(codePoint)
+                        && !Character.isSpaceChar(codePoint))));
+    }
+
+    /**
+     * Checks for Unicode Bidi_Control marks, embeddings, overrides, and isolates.
+     */
+    private static boolean containsBidiControl(String value) {
+        return value.codePoints().anyMatch(codePoint -> codePoint == 0x061c
+                || codePoint == 0x200e || codePoint == 0x200f
+                || codePoint >= 0x202a && codePoint <= 0x202e
+                || codePoint >= 0x2066 && codePoint <= 0x2069);
     }
 
     @Override
