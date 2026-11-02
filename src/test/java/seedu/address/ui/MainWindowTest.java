@@ -383,7 +383,7 @@ public class MainWindowTest {
             assertEquals(2, ((HBox) chips.getChildren().getFirst()).getChildren().size());
             Label showLabel = (Label) ((HBox) chips.getChildren().getFirst()).getChildren().getFirst();
             Button showRemove = (Button) ((HBox) chips.getChildren().getFirst()).getChildren().get(1);
-            assertEquals("Selected members: Alice Tan, Bob Lee",
+            assertEquals("Selected members: Alice Tan; Bob Lee",
                     showLabel.getTooltip().getText());
             assertNull(showRemove.getTooltip());
             assertEquals("Remove this show selection", showRemove.getAccessibleText());

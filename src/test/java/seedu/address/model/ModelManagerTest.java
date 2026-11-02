@@ -205,7 +205,7 @@ public class ModelManagerTest {
 
         Person renamedAlice = new PersonBuilder(ALICE).withName("Alice Renamed").build();
         modelManager.setPerson(ALICE, renamedAlice);
-        assertEquals("Alice Renamed, Benson Meier", showFilter.getShowSelectionNames());
+        assertEquals("Alice Renamed; Benson Meier", showFilter.getShowSelectionNames());
 
         modelManager.deletePerson(BENSON);
         assertEquals("Show: 1 selected", showFilter.getLabel());

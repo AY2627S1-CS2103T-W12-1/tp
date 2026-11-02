@@ -133,7 +133,10 @@ public final class ActiveFilter {
         return kind == Kind.SHOW ? getLabel() : label;
     }
 
-    /** Returns the selected names for a show condition's tooltip. */
+    /**
+     * Returns the selected names for a show condition's tooltip, separated by semicolons
+     * so that the separator cannot be confused with characters allowed in a name.
+     */
     public String getShowSelectionNames() {
         if (kind != Kind.SHOW) {
             throw new IllegalStateException("Only show conditions have selected members");
@@ -141,7 +144,7 @@ public final class ActiveFilter {
         return ((PersonSelectionPredicate) predicate).getSelectedPersons().stream()
                 .map(person -> person.getName().fullName)
                 .sorted(String.CASE_INSENSITIVE_ORDER)
-                .reduce((first, second) -> first + ", " + second)
+                .reduce((first, second) -> first + "; " + second)
                 .orElse("No selected members remain");
     }
 
