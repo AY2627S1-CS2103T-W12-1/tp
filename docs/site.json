@@ -102,6 +102,13 @@
       "frontmatter": {
         "pageNav": 6
       }
+    },
+    {
+      "src": "releases/v1.6/RELEASE_NOTES.md",
+      "title": "v1.6",
+      "frontmatter": {
+        "pageNav": 6
+      }
     }
   ],
   "timeZone": "Asia/Singapore",

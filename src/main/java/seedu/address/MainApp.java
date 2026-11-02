@@ -40,7 +40,7 @@ import seedu.address.ui.UiManager;
 public class MainApp extends Application {
 
     /** Version reported by the application and its startup log. */
-    public static final String VERSION = "v1.5";
+    public static final String VERSION = "v1.6";
 
     static final String REASON_NOT_UTF8 = "The data file is not saved as UTF-8 text. "
             + "Save it again with UTF-8 encoding in your text editor, then restart TrackCall.";
