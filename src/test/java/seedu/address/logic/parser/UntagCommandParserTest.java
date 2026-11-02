@@ -7,6 +7,7 @@ import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_TAG_TOO_L
 import static seedu.address.logic.parser.BulkTagArgumentParser.MESSAGE_WHITESPACE;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,10 +28,16 @@ public class UntagCommandParserTest {
     @Test
     public void parse_invalidIndexOrMissingTag_showsUsage() {
         String usage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, UntagCommand.MESSAGE_USAGE);
-        String[] invalid = {"", "1", "0 t/a", "-1 t/a", "1.5 t/a", "2147483648 t/a",
-            "t/a"};
+        String[] invalid = {"", "1", "1.5 t/a", "t/a"};
         for (String args : invalid) {
             assertParseFailure(parser, args, usage);
+        }
+    }
+
+    @Test
+    public void parse_invalidNumericIndex_reportsValueError() {
+        for (String index : new String[] {"0", "-5", "99999999999999999999"}) {
+            assertParseFailure(parser, index + " t/a", MESSAGE_INVALID_INDEX);
         }
     }
 

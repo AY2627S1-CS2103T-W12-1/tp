@@ -227,8 +227,15 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_malformedDelete_rejectsBeforeExecution() {
         String expectedError = String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteCommand.MESSAGE_USAGE);
-        for (String input : new String[] {"delete", "delete 0", "delete -1", "delete 1 2", "delete one"}) {
+        for (String input : new String[] {"delete", "delete 1 2", "delete one"}) {
             assertThrows(ParseException.class, expectedError, () -> parser.parseCommand(input));
+        }
+    }
+
+    @Test
+    public void parseCommand_invalidNumericDelete_reportsValueError() {
+        for (String input : new String[] {"delete 0", "delete -1", "delete 99999999999999999999"}) {
+            assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () -> parser.parseCommand(input));
         }
     }
 

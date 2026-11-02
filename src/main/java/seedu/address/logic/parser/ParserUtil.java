@@ -54,6 +54,18 @@ public class ParserUtil {
         return Index.fromOneBased(Integer.parseInt(trimmedIndex));
     }
 
+    /** Keeps invalid numeric indexes distinct from malformed command arguments. */
+    public static Index parseCommandIndex(String input, String usage) throws ParseException {
+        try {
+            return parseIndex(input);
+        } catch (ParseException exception) {
+            if (input.trim().matches("[+-]?[0-9]+")) {
+                throw exception;
+            }
+            throw new ParseException(String.format(Messages.MESSAGE_INVALID_COMMAND_FORMAT, usage), exception);
+        }
+    }
+
     /**
      * Parses a {@code String name} into a {@code Name}.
      * Leading and trailing whitespaces will be trimmed.

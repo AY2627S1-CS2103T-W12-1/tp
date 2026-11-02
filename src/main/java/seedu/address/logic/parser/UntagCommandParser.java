@@ -16,13 +16,7 @@ public class UntagCommandParser implements Parser<UntagCommand> {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, UntagCommand.MESSAGE_USAGE));
         }
 
-        Index index;
-        try {
-            index = ParserUtil.parseIndex(parts[0]);
-        } catch (ParseException exception) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, UntagCommand.MESSAGE_USAGE),
-                    exception);
-        }
+        Index index = ParserUtil.parseCommandIndex(parts[0], UntagCommand.MESSAGE_USAGE);
         Tag tag = BulkTagArgumentParser.parse(parts[1], UntagCommand.MESSAGE_USAGE);
         return new UntagCommand(index, tag);
     }
