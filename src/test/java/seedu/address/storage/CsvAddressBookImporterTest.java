@@ -195,7 +195,10 @@ public class CsvAddressBookImporterTest {
     public void read_invalidHeader_rejectsEmptyIncorrectAndExtraColumns() throws Exception {
         for (String contents : List.of("", "Name,phone,email,address,tags\n", "name,phone,email,address\n",
                 "name,phone,email,address,tags,extra\n", "name,name,email,address,tags\n",
-                "name,phone,email,address,trackcall_encoding\n")) {
+                "name,phone,email,address,trackcall_encoding\n",
+                "name,phone,email,address,trackcall_encoding,trackcall_encoding\n",
+                "name,phone,email,address,tags,trackcall_encoding,trackcall_encoding\n",
+                "name,phone,email,address,tags,trackcall_encoding,extra\n")) {
             Path file = write(contents);
             CsvImportException error = assertThrows(CsvImportException.class, () ->
                     CsvAddressBookImporter.read(file));

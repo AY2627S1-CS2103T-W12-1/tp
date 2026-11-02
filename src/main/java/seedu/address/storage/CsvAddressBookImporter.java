@@ -239,8 +239,8 @@ public final class CsvAddressBookImporter {
                 throw new CsvImportException(MESSAGE_INVALID_HEADER);
             }
         }
-        if (!indexes.keySet().containsAll(CsvAddressBookCsv.HEADERS)
-                || (indexes.size() != FIELD_COUNT && indexes.size() != CsvAddressBookCsv.ENCODED_HEADERS.size())) {
+        // Known, unique headers above leave only the optional encoding column beyond the required five.
+        if (!indexes.keySet().containsAll(CsvAddressBookCsv.HEADERS)) {
             throw new CsvImportException(MESSAGE_INVALID_HEADER);
         }
         return indexes;
