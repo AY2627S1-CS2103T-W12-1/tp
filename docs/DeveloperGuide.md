@@ -1492,6 +1492,12 @@ Use `list` and check the displayed indices before any indexed command. Back up t
    Then try one invalid value at a time: `n/-Anne`, `n/Alice@Other`, `p/1 2`, `p/65+`,
    `e/john..doe@example.com`, and `a/` followed only by a nonbreaking space (U+00A0).
    **Expect:** a field-specific error each time, with no record added.
+5. Paste text containing a literal tab or line break: between prefixes, inside a phone number, over a selected
+   part of an existing command, or as `y<TAB>es` while a deletion awaits confirmation.
+   **Expect:** the whole paste is rejected, the earlier text stays, a warning appears, and Enter does nothing.
+   Edit the command. **Expect:** the warning clears and Enter works again.
+   For the confirmation case, Enter on the empty box does not cancel the deletion while the warning shows.
+   Type `no`. **Expect:** the deletion is cancelled as usual.
 
 ### Search, filter and selection
 

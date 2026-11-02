@@ -129,9 +129,10 @@ retained and adapted for TrackCall. Each group explains the relevant commands, e
 
 > **Pasting commands**
 >
-> The command box removes pasted tab characters, which can join words or change contact values.
-> Replace tab separators with ordinary spaces before pasting, then check the displayed command and its
-> contact values before pressing Enter. Type confirmation replies manually.
+> The command box cannot hold tabs or line breaks. A paste containing one is rejected in full, the existing
+> command stays unchanged, and a warning appears below the command box. Enter does nothing until you edit the
+> command. Replace tabs and line breaks with ordinary spaces, then paste again.
+> A line break at the very end of a paste at the end of the command is ignored.
 
 > **Before trying an example**
 >
@@ -305,7 +306,7 @@ Searching does not save the data file.
 
 - Matching ignores letter case.
 - Spaces, including pasted nonbreaking spaces, separate keywords; any keyword can match.
-  Use ordinary spaces instead of tabs when pasting a search.
+  Use ordinary spaces instead of tabs when pasting a search; a paste containing a tab is rejected.
 - Keywords are literal text, not regular expressions; names and phone numbers are not searched.
 - Supply at least one keyword.
 - No matches produce `0 members listed.` and an empty list.
@@ -500,7 +501,7 @@ Keep member contact details up to date.
 
 - Provide a name, phone, and email. Address and tags are optional.
 - Required prefixes may appear in any order, but each must appear exactly once.
-- Separate each prefix from the preceding value with ordinary spaces; pasted tabs are removed.
+- Separate each prefix from the preceding value with ordinary spaces; a paste containing a tab is rejected.
 - Use `a/` if you have an address, and a separate `t/` for each tag.
 
 <p class="ug-topic"><strong>Field prefixes and address text</strong></p>
@@ -519,7 +520,7 @@ Keep member contact details up to date.
 | Field | Current rule |
 | --- | --- |
 | Name | Start with a Unicode letter or ASCII digit. Unicode letters, combining marks, ASCII digits, spaces, periods, slashes, hyphens, and straight or curly apostrophes are accepted. |
-| Phone | At least three ASCII digits, with an optional leading `+` and spaces between digits. Formatting is preserved. Hyphens and parentheses are rejected. Internal tabs are invalid, but command-box pasting removes them before validation. |
+| Phone | At least three ASCII digits, with an optional leading `+` and spaces between digits. Formatting is preserved. Hyphens and parentheses are rejected. Internal tabs are invalid; a command-box paste containing a tab is rejected. |
 | Email | A local part and domain separated by `@`, without spaces. See the email rules below. |
 | Address | Non-blank text when provided; Unicode-space-only values are rejected. `edit INDEX a/` clears an address. |
 | Tag | 1 to 30 ASCII letters or digits with optional internal hyphens, such as `year-1`. Spaces, underscores, other symbols such as `@ # $ % .`, and accented letters are not allowed. Matching ignores letter case. |
