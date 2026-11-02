@@ -72,9 +72,9 @@ Screenshots use fictional sample members. Each caption names the command and the
 - **Command box:** type commands here.
 - **Result area:** read success messages and errors.
 - **Roster:** view member numbers, names, and tags. Contact details are hidden here.
-- **Member details:** select a roster row to reveal that member's phone, email, and address.
-  Use the adjacent copy icons to copy the name or any of these fields. Press **F2** to focus the roster, use the arrow keys
-  to choose a member, and press **Escape** to hide the details and return to the command box.
+- **Member details:** select a roster row to reveal that member's name, phone, email, and address.
+  Use the copy icon beside any of them to copy it. Press **F2** to focus the roster, use the arrow
+  keys to choose a member, and press **Escape** to hide the details and return to the command box.
 - **Status bar:** see where your member data is saved.
 
 <p class="ug-topic"><strong>After running a command</strong></p>
