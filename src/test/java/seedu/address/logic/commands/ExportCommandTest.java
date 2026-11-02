@@ -111,7 +111,7 @@ public class ExportCommandTest {
 
         new ExportCommand(destination).execute(new ModelManager(), roster);
 
-        assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
+        assertEquals("name,phone,email,address,tags,trackcall_encoding\r\n", Files.readString(destination));
         assertFalse(Files.exists(roster));
     }
 
@@ -133,7 +133,7 @@ public class ExportCommandTest {
 
         CommandResult result = parser.parseCommand("export   " + destination + "   ").execute(model);
 
-        assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
+        assertEquals("name,phone,email,address,tags,trackcall_encoding\r\n", Files.readString(destination));
         assertEquals("Exported 0 displayed members to " + destination.toAbsolutePath().normalize()
                 + " (1 hidden member not exported).", result.getFeedbackToUser());
         assertEquals(List.of(person), model.getAddressBook().getPersonList());
@@ -164,7 +164,7 @@ public class ExportCommandTest {
         try {
             CommandResult result = parser.parseCommand("export " + destination).execute(new ModelManager());
 
-            assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
+            assertEquals("name,phone,email,address,tags,trackcall_encoding\r\n", Files.readString(destination));
             assertEquals(String.format(ExportCommand.MESSAGE_SUCCESS, 0, destination.toAbsolutePath().normalize()),
                     result.getFeedbackToUser());
         } finally {
@@ -180,7 +180,7 @@ public class ExportCommandTest {
 
         CommandResult result = new ExportCommand(destination).execute(model);
 
-        assertEquals("name,phone,email,address,tags\r\n", Files.readString(destination));
+        assertEquals("name,phone,email,address,tags,trackcall_encoding\r\n", Files.readString(destination));
         assertEquals(String.format(ExportCommand.MESSAGE_SUCCESS, 0, destination.toAbsolutePath().normalize()),
                 result.getFeedbackToUser());
         assertTrue(model.getAddressBook().getPersonList().isEmpty());
@@ -198,8 +198,8 @@ public class ExportCommandTest {
 
         CommandResult result = new ExportCommand(destination).execute(model);
 
-        assertEquals(List.of("name,phone,email,address,tags",
-                "Alice,85355255,amy@gmail.com,Block 1,"), Files.readAllLines(destination));
+        assertEquals(List.of("name,phone,email,address,tags,trackcall_encoding",
+                "Alice,85355255,amy@gmail.com,Block 1,,apostrophe-v1"), Files.readAllLines(destination));
         assertEquals("Exported 1 displayed member to " + destination.toAbsolutePath().normalize()
                 + " (1 hidden member not exported).", result.getFeedbackToUser());
         assertEquals(List.of(bob, alice), model.getAddressBook().getPersonList());

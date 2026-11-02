@@ -6,6 +6,7 @@ import static seedu.address.storage.CsvAddressBookImporter.MAX_FILE_BYTES;
 import static seedu.address.storage.CsvAddressBookImporter.MAX_MEMBER_ROWS;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_FILE_TOO_LARGE;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_CSV;
+import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_ENCODING;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_HEADER;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_RECORD_ENDING;
 import static seedu.address.storage.CsvAddressBookImporter.MESSAGE_INVALID_UTF8;
@@ -96,6 +97,38 @@ public class CsvAddressBookImporterTest {
     }
 
     @Test
+    public void read_legacyExport_preservesLiteralApostrophes() throws Exception {
+        String legacyCsv = "name,phone,email,address,tags\r\n"
+                + "Alice,91111111,alice@example.com,'@home,\r\n"
+                + "Alice,91111111,alice@example.com,@home,\r\n"
+                + "Bob,92222222,'+bob@example.com,''=office,\r\n"
+                + "Carol,93333333,''+carol@example.com,'''-road,\r\n";
+        Path file = write(legacyCsv);
+
+        List<Person> people = CsvAddressBookImporter.read(file);
+
+        assertEquals(List.of("'@home", "@home", "''=office", "'''-road"),
+                people.stream().map(person -> person.getAddress().value).toList());
+        assertEquals(List.of("alice@example.com", "alice@example.com", "'+bob@example.com",
+                "''+carol@example.com"), people.stream().map(person -> person.getEmail().value).toList());
+        assertEquals(legacyCsv, Files.readString(file));
+    }
+
+    @Test
+    public void read_markedExport_decodesOnlyWithValidEncodingMarker() throws Exception {
+        Path file = write("name,phone,email,address,tags,trackcall_encoding\n"
+                + "Alice,91111111,'+alice@example.com,''@home,,apostrophe-v1\n");
+        Person expected = new PersonBuilder().withName("Alice").withPhone("91111111")
+                .withEmail("+alice@example.com").withAddress("'@home").build();
+        assertEquals(List.of(expected), CsvAddressBookImporter.read(file));
+
+        write("name,phone,email,address,tags,trackcall_encoding\n"
+                + "Alice,91111111,'+alice@example.com,''@home,,unknown\n");
+        CsvImportException error = assertThrows(CsvImportException.class, () -> CsvAddressBookImporter.read(file));
+        assertEquals("row 2: " + MESSAGE_INVALID_ENCODING, error.getMessage());
+    }
+
+    @Test
     public void read_validRecords_decodesBomQuotesBlankRowsAndTags() throws Exception {
         Path file = write("\uFEFFname,phone,email,address,tags\r\n"
                 + "John Doe,98765432,john@example.com,\"John \"\"Main\"\" Street, Block 1\","
@@ -161,7 +194,8 @@ public class CsvAddressBookImporterTest {
     @Test
     public void read_invalidHeader_rejectsEmptyIncorrectAndExtraColumns() throws Exception {
         for (String contents : List.of("", "Name,phone,email,address,tags\n", "name,phone,email,address\n",
-                "name,phone,email,address,tags,extra\n", "name,name,email,address,tags\n")) {
+                "name,phone,email,address,tags,extra\n", "name,name,email,address,tags\n",
+                "name,phone,email,address,trackcall_encoding\n")) {
             Path file = write(contents);
             CsvImportException error = assertThrows(CsvImportException.class, () ->
                     CsvAddressBookImporter.read(file));

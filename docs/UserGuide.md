@@ -887,7 +887,8 @@ Export displayed members or bring existing member records into TrackCall.
 - `export [FILEPATH]` writes only the currently displayed members to a UTF-8 CSV file, in displayed order.
 - Searches, tag filters, and `show` selections determine which members are exported; their current stored
   order determines the export order. Run `list` first to export the complete roster in stored order.
-- The columns are `name`, `phone`, `email`, `address`, and `tags`, so the exported file can be imported directly.
+- The columns are `name`, `phone`, `email`, `address`, `tags`, and `trackcall_encoding`, so the exported file can be imported directly.
+  The last column contains `apostrophe-v1` in every member row to identify the escaping used by this export.
 - Tags for each member are sorted in case-sensitive ASCII order (hyphens, digits, uppercase letters, then lowercase letters)
   and joined with semicolons.
 
@@ -895,9 +896,9 @@ Export displayed members or bring existing member records into TrackCall.
 
 - Export prefixes cells beginning with `=`, `+`, `-`, or `@` with an apostrophe to prevent common
   spreadsheet formula interpretation. This includes `+6591111131` in a phone field and `=SUM(A1)` in an address field.
-  Import removes the added apostrophe, preserving an export/import round trip. An original value
-  beginning with an apostrophe followed by one of those characters receives a second apostrophe.
-  When importing other CSV files, TrackCall also treats that apostrophe pattern as an export prefix.
+  Import removes the added apostrophe only from files marked with `trackcall_encoding`, preserving an
+  export/import round trip. An original value beginning with an apostrophe followed by one of those
+  characters receives a second apostrophe. Older five-column exports keep their literal apostrophes on import.
 - Export writes UTF-8 **without a byte-order mark (BOM)**. In Excel, use **Data → From Text/CSV**,
   choose **UTF-8** as the file origin, then use **Transform Data** to set every column's type to **Text** before loading.
   This preserves non-ASCII names and phone formatting. Do not double-click the CSV to open it.
@@ -982,15 +983,20 @@ import p/"data/member list.csv"
 
 <p class="ug-topic"><strong>Header</strong></p>
 
-The first row must contain these column names exactly once, in any order:
+The first row must contain these five column names exactly once, in any order:
 
 ```text
 name,phone,email,address,tags
 ```
 
+TrackCall exports add a sixth `trackcall_encoding` column. Each member row in that format must contain
+`apostrophe-v1` in this column. Import removes spreadsheet escape apostrophes only for this marked format.
+In five-column files, apostrophes are literal, including those in older TrackCall exports.
+
 <p class="ug-topic"><strong>CSV fields and whitespace</strong></p>
 
-- **CSV fields:** Every later non-blank row must have exactly five fields. CSV quoting supports commas and doubled double
+- **CSV fields:** Every later non-blank row must have five fields, or six when the header includes
+  `trackcall_encoding`. CSV quoting supports commas and doubled double
   quotes. A double quote inside an unquoted field, such as `Main" Street`, is invalid CSV syntax.
 - **Whitespace:** Surrounding spaces and tabs are trimmed from field values and individual tags before validation;
   internal spaces, tabs, and case are preserved.

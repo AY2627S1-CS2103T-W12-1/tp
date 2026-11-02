@@ -425,10 +425,10 @@ public class CommandSequenceOracleTest {
         /** Reads CSV syntax independently of the application's importer and compares every field and row order. */
         private void assertCsv(Path csv, int step) throws Exception {
             List<List<String>> expected = new ArrayList<>();
-            expected.add(List.of("name", "phone", "email", "address", "tags"));
+            expected.add(List.of("name", "phone", "email", "address", "tags", "trackcall_encoding"));
             for (Member member : getVisibleMembers()) {
                 expected.add(List.of(member.name(), Integer.toString(100000 + member.id()), member.getEmail(), "",
-                        String.join(";", member.tags().stream().sorted().toList())));
+                        String.join(";", member.tags().stream().sorted().toList()), "apostrophe-v1"));
             }
             try (var reader = Files.newBufferedReader(csv); var parser = CSVFormat.DEFAULT.parse(reader)) {
                 assertEquals(expected, parser.getRecords().stream().map(record -> record.toList()).toList(),

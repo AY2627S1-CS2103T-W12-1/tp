@@ -190,8 +190,9 @@ public class UserCsvWorkflowTest {
 
         logic.execute("export " + csv);
 
-        assertEquals("name,phone,email,address,tags\r\n"
-                + "Alice,456,alice@example.com,\"Block 1, \"\"Main\"\" Street\",A;z\r\n", Files.readString(csv));
+        assertEquals("name,phone,email,address,tags,trackcall_encoding\r\n"
+                + "Alice,456,alice@example.com,\"Block 1, \"\"Main\"\" Street\",A;z,apostrophe-v1\r\n",
+                Files.readString(csv));
         assertEquals(visible, model.getFilteredPersonList());
         assertEquals(filters, model.getActiveFilters());
         assertArrayEquals(saved, Files.readAllBytes(rosterFile));

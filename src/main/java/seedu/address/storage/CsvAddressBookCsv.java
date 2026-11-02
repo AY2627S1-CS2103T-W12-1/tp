@@ -10,6 +10,10 @@ import org.apache.commons.csv.CSVFormat;
 final class CsvAddressBookCsv {
 
     static final List<String> HEADERS = List.of("name", "phone", "email", "address", "tags");
+    static final String ENCODING_HEADER = "trackcall_encoding";
+    static final String SPREADSHEET_ENCODING = "apostrophe-v1";
+    static final List<String> ENCODED_HEADERS = List.of("name", "phone", "email", "address", "tags",
+            ENCODING_HEADER);
     static final CSVFormat FORMAT = CSVFormat.RFC4180.builder()
             .setIgnoreSurroundingSpaces(true)
             .get();
@@ -24,7 +28,7 @@ final class CsvAddressBookCsv {
         return hasFormulaPrefix(value) ? "'" + value : value;
     }
 
-    /** Reverses one export prefix; preserves any apostrophes that were part of the original value. */
+    /** Reverses one export prefix in a file explicitly marked with {@link #SPREADSHEET_ENCODING}. */
     static String unescapeSpreadsheet(String value) {
         return value.startsWith("'") && hasFormulaPrefix(value.substring(1)) ? value.substring(1) : value;
     }

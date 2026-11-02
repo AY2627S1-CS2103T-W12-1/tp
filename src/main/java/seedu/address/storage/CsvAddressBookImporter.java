@@ -42,12 +42,13 @@ public final class CsvAddressBookImporter {
 
     public static final String EXPECTED_HEADER = "name, phone, email, address, and tags";
     public static final String MESSAGE_INVALID_HEADER = "invalid header. Expected the columns " + EXPECTED_HEADER
-            + " exactly once.";
+            + " exactly once, with an optional trackcall_encoding column.";
     public static final String MESSAGE_INVALID_UTF8 = "invalid UTF-8 encoding.";
     public static final String MESSAGE_INVALID_RECORD_ENDING = "invalid CSV record ending.";
     public static final String MESSAGE_INVALID_CSV = "invalid CSV syntax.";
     public static final String MESSAGE_MULTILINE_FIELD = "line breaks inside fields are not supported.";
-    public static final String MESSAGE_WRONG_FIELD_COUNT = "expected 5 fields but found %d.";
+    public static final String MESSAGE_WRONG_FIELD_COUNT = "expected %d fields but found %d.";
+    public static final String MESSAGE_INVALID_ENCODING = "invalid trackcall_encoding value.";
 
     public static final int MAX_FILE_BYTES = 10 * 1024 * 1024;
     public static final int MAX_MEMBER_ROWS = 10_000;
@@ -234,11 +235,12 @@ public final class CsvAddressBookImporter {
         Map<String, Integer> indexes = new HashMap<>();
         for (int index = 0; index < record.size(); index++) {
             String header = record.get(index);
-            if (!CsvAddressBookCsv.HEADERS.contains(header) || indexes.putIfAbsent(header, index) != null) {
+            if (!CsvAddressBookCsv.ENCODED_HEADERS.contains(header) || indexes.putIfAbsent(header, index) != null) {
                 throw new CsvImportException(MESSAGE_INVALID_HEADER);
             }
         }
-        if (indexes.size() != FIELD_COUNT) {
+        if (!indexes.keySet().containsAll(CsvAddressBookCsv.HEADERS)
+                || (indexes.size() != FIELD_COUNT && indexes.size() != CsvAddressBookCsv.ENCODED_HEADERS.size())) {
             throw new CsvImportException(MESSAGE_INVALID_HEADER);
         }
         return indexes;
@@ -254,15 +256,21 @@ public final class CsvAddressBookImporter {
      */
     private static Person parsePerson(CSVRecord record, Map<String, Integer> headerIndexes) throws CsvImportException {
         long row = record.getRecordNumber();
-        if (record.size() != FIELD_COUNT) {
-            throw rowError(row, String.format(MESSAGE_WRONG_FIELD_COUNT, record.size()));
+        boolean isEncoded = headerIndexes.containsKey(CsvAddressBookCsv.ENCODING_HEADER);
+        int expectedFieldCount = isEncoded ? CsvAddressBookCsv.ENCODED_HEADERS.size() : FIELD_COUNT;
+        if (record.size() != expectedFieldCount) {
+            throw rowError(row, String.format(MESSAGE_WRONG_FIELD_COUNT, expectedFieldCount, record.size()));
+        }
+        if (isEncoded && !CsvAddressBookCsv.SPREADSHEET_ENCODING.equals(
+                record.get(headerIndexes.get(CsvAddressBookCsv.ENCODING_HEADER)).trim())) {
+            throw rowError(row, MESSAGE_INVALID_ENCODING);
         }
 
-        String nameValue = CsvAddressBookCsv.unescapeSpreadsheet(record.get(headerIndexes.get("name")).trim());
-        String phoneValue = CsvAddressBookCsv.unescapeSpreadsheet(record.get(headerIndexes.get("phone")).trim());
-        String emailValue = CsvAddressBookCsv.unescapeSpreadsheet(record.get(headerIndexes.get("email")).trim());
-        String addressValue = CsvAddressBookCsv.unescapeSpreadsheet(record.get(headerIndexes.get("address")).trim());
-        String tagsValue = CsvAddressBookCsv.unescapeSpreadsheet(record.get(headerIndexes.get("tags")).trim());
+        String nameValue = csvValue(record, headerIndexes, "name", isEncoded);
+        String phoneValue = csvValue(record, headerIndexes, "phone", isEncoded);
+        String emailValue = csvValue(record, headerIndexes, "email", isEncoded);
+        String addressValue = csvValue(record, headerIndexes, "address", isEncoded);
+        String tagsValue = csvValue(record, headerIndexes, "tags", isEncoded);
 
         if (!Name.isValidName(nameValue)) {
             throw rowError(row, Name.MESSAGE_CONSTRAINTS);
@@ -280,6 +288,13 @@ public final class CsvAddressBookImporter {
         Set<Tag> tags = parseTags(tagsValue, row);
         return new Person(new Name(nameValue), new Phone(phoneValue), new Email(emailValue),
                 new Address(addressValue), tags);
+    }
+
+    /** Legacy five-column files contain literal values; only marked exports use spreadsheet escaping. */
+    private static String csvValue(CSVRecord record, Map<String, Integer> headerIndexes, String header,
+            boolean isEncoded) {
+        String value = record.get(headerIndexes.get(header)).trim();
+        return isEncoded ? CsvAddressBookCsv.unescapeSpreadsheet(value) : value;
     }
 
     /**
