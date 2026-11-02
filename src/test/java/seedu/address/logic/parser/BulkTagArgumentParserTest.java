@@ -78,7 +78,8 @@ public class BulkTagArgumentParserTest {
     public void parse_otherFieldPrefix_identifiesUnsupportedField() {
         assertParseRejected("Field n/ is not supported. This command accepts only t/TAG parameters.\n"
                 + USAGE,
-                " t/friend n/Bob", " t/friend\tn/Bob", " t/friend n/", " n/Bob t/friend", " t/a t/b n/Bob");
+                " t/friend n/Bob", " t/friend\tn/Bob", " t/friend n/", " n/Bob t/friend", " t/a t/b n/Bob",
+                " t/friend n/Ravi a/l Kumar");
         assertParseRejected("Field p/ is not supported. This command accepts only t/TAG parameters.\n"
                 + USAGE,
                 " t/friend p/91234567");
@@ -87,7 +88,7 @@ public class BulkTagArgumentParserTest {
                 " t/year1 e/year1@gmail.com");
         assertParseRejected("Field a/ is not supported. This command accepts only t/TAG parameters.\n"
                 + USAGE,
-                " t/friend a/Clementi");
+                " t/friend a/Clementi", " t/friend a/l Road");
     }
 
     @Test

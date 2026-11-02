@@ -515,10 +515,12 @@ Keep member contact details up to date.
   `Alice Tan g/glory` are rejected; use `Block A-12` or `Block B-12` instead.
 - **Slashes that are accepted:** a slash after two or more letters (`Block AB/12`), without a space before the letter
   (`Alice/Glory`), or after a space (`Alice Tan /`). URLs, numeric slashes such as `12/3`, and the standalone
-  abbreviations `c/o`, `s/o`, `d/o`, `a/l`, and `a/p` (in any letter case) are also accepted, so
-  `Ravi a/l Kumar` and `Siti A/P Ahmad` keep their full names.
+  abbreviations `c/o`, `s/o`, and `d/o` (in any letter case) are also accepted.
+- **Names with `a/l` or `a/p`:** inside a name only, standalone `a/l` and `a/p` (in any letter case) are also kept,
+  so `Ravi a/l Kumar` and `Siti A/P Ahmad` keep their full names. Elsewhere, `A/L` and `A/P` are rejected.
 - **Prefixes inside a value:** any other lowercase `n/`, `p/`, `e/`, `a/`, or `t/` inside a value starts that field.
-  For example, `n/Alice t/year1` saves the name `Alice` with the tag `year1`.
+  For example, `n/Alice t/year1` saves the name `Alice` with the tag `year1`. For an address whose first word is
+  `l` or `p`, put `a/` before `n/`, as in `a/p Street n/Alice`; otherwise it is read as part of the name.
 
 <p class="ug-topic"><strong>Field rules</strong></p>
 
@@ -1299,8 +1301,7 @@ Read command instructions offline and close TrackCall when you are finished.
   see [Field prefixes and address text](#add-a-member-add).
 - **Unit labels:** use `a/Block A-12` or `a/Block B-12`. Standalone single-letter slash labels
   such as `A/12` and `B/12` are rejected in both commands.
-- **Other address text:** standalone `c/o`, `s/o`, `d/o`, and uppercase `A/L` or `A/P`, URLs,
-  numeric slashes such as `12/3`, and slashes inside words remain valid.
+- **Other address text:** standalone `c/o`, `s/o`, and `d/o`, URLs, numeric slashes such as `12/3`, and slashes inside words remain valid.
 
 > **Correction example:** `edit 1 a/Main Road T/committee` reports invalid input; use lowercase `t/` to assign a tag.
 

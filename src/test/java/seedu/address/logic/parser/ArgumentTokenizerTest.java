@@ -156,6 +156,23 @@ public class ArgumentTokenizerTest {
     }
 
     @Test
+    public void tokenize_alOrApDirectlyAfterName_staysInName() {
+        // At the end of the input.
+        ArgumentMultimap arguments = ArgumentTokenizer.tokenize(" n/Ravi a/l", PREFIX_NAME, PREFIX_ADDRESS);
+        assertArgumentPresent(arguments, PREFIX_NAME, "Ravi a/l");
+        assertArgumentAbsent(arguments, PREFIX_ADDRESS);
+
+        // With no later address, an address starting with a lone l or p word is read as part of the name;
+        // putting a/ before n/ keeps it as the address.
+        arguments = ArgumentTokenizer.tokenize(" n/Alice a/p Street", PREFIX_NAME, PREFIX_ADDRESS);
+        assertArgumentPresent(arguments, PREFIX_NAME, "Alice a/p Street");
+        assertArgumentAbsent(arguments, PREFIX_ADDRESS);
+        arguments = ArgumentTokenizer.tokenize(" a/p Street n/Alice", PREFIX_NAME, PREFIX_ADDRESS);
+        assertArgumentPresent(arguments, PREFIX_NAME, "Alice");
+        assertArgumentPresent(arguments, PREFIX_ADDRESS, "p Street");
+    }
+
+    @Test
     public void tokenize_multipleArgumentsWithRepeats() {
         // Two arguments repeated, some have empty values
         String argsString = "SomePreambleString -t dashT-Value ^Q ^Q -t another dashT value p/ pSlash value -t";

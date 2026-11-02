@@ -28,22 +28,21 @@ public class ArgumentTokenizer {
      */
     public static ArgumentMultimap tokenize(String argsString, Prefix... prefixes) {
         List<PrefixPosition> positions = findAllPrefixPositions(argsString, prefixes);
-        return extractArguments(argsString, keepNameAbbreviations(argsString, positions));
+        positions.sort((prefix1, prefix2) -> prefix1.getStartPosition() - prefix2.getStartPosition());
+        return extractArguments(argsString, withoutNameAbbreviations(argsString, positions));
     }
 
     /**
-     * Drops an address prefix that forms a standalone {@code a/l} or {@code a/p} inside a name, in any letter case,
+     * Returns {@code sortedPositions} without address prefixes that start a standalone a/l or a/p in a name,
      * so names such as "Ravi a/l Kumar" keep the abbreviation like s/o and d/o.
      */
-    private static List<PrefixPosition> keepNameAbbreviations(String argsString, List<PrefixPosition> positions) {
-        positions.sort((prefix1, prefix2) -> prefix1.getStartPosition() - prefix2.getStartPosition());
+    private static List<PrefixPosition> withoutNameAbbreviations(String argsString,
+            List<PrefixPosition> sortedPositions) {
         List<PrefixPosition> kept = new ArrayList<>();
-        for (PrefixPosition position : positions) {
+        for (PrefixPosition position : sortedPositions) {
             boolean isInName = !kept.isEmpty() && kept.getLast().getPrefix().equals(PREFIX_NAME);
-            boolean isAbbreviation = position.getPrefix().equals(PREFIX_ADDRESS)
-                    && argsString.substring(position.getStartPosition())
-                            .matches("(?is)a/[lp](?:\\p{javaWhitespace}.*)?");
-            if (!(isInName && isAbbreviation)) {
+            if (!(isInName && position.getPrefix().equals(PREFIX_ADDRESS)
+                    && NameAbbreviation.startsAt(argsString, position.getStartPosition()))) {
                 kept.add(position);
             }
         }
@@ -108,13 +107,10 @@ public class ArgumentTokenizer {
      * {@code argsString}.
      *
      * @param argsString      Arguments string of the form: {@code preamble <prefix>value <prefix>value ...}
-     * @param prefixPositions Zero-based positions of all prefixes in {@code argsString}
+     * @param prefixPositions Zero-based positions of all prefixes in {@code argsString}, sorted by position
      * @return                ArgumentMultimap object that maps prefixes to their arguments
      */
     private static ArgumentMultimap extractArguments(String argsString, List<PrefixPosition> prefixPositions) {
-
-        // Sort by start position
-        prefixPositions.sort((prefix1, prefix2) -> prefix1.getStartPosition() - prefix2.getStartPosition());
 
         // Insert a PrefixPosition to represent the preamble
         PrefixPosition preambleMarker = new PrefixPosition(new Prefix(""), 0);

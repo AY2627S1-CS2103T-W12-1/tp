@@ -22,7 +22,8 @@ final class PrefixValidator {
 
     /**
      * Reserves whitespace-delimited ASCII single-letter slash prefixes for member fields.
-     * Standalone c/o, s/o, d/o, a/l and a/p abbreviations (case-insensitive) remain literal text.
+     * Standalone c/o, s/o and d/o abbreviations (case-insensitive) remain literal text,
+     * as do a/l and a/p inside a name.
      * URLs, numeric slashes and slashes embedded in words are not field prefixes.
      *
      * @param args Arguments to validate before tokenization.
@@ -30,6 +31,7 @@ final class PrefixValidator {
      * @throws ParseException if an unsupported member field prefix is present.
      */
     static void verifySupportedPrefixes(String args, String commandUsage) throws ParseException {
+        String currentPrefix = "";
         for (int i = 0; i + 1 < args.length(); i++) {
             char letter = args.charAt(i);
             boolean isAsciiLetter = (letter >= 'a' && letter <= 'z') || (letter >= 'A' && letter <= 'Z');
@@ -40,11 +42,15 @@ final class PrefixValidator {
             boolean isCareOf = args.regionMatches(true, i, "c/o", 0, 3)
                     && (i + 3 == args.length() || Character.isWhitespace(args.charAt(i + 3)));
             String prefix = args.substring(i, i + 2);
-            if (SUPPORTED_PREFIXES.contains(prefix)) {
+            if (currentPrefix.equals(PREFIX_NAME.getPrefix()) && NameAbbreviation.startsAt(args, i)) {
                 continue;
             }
-            // Preserve s/o, d/o and uppercase A/L or A/P.
-            if (!isCareOf && !args.substring(i).matches("(?is)(?:[sd]/o|a/[lp])(?:\\p{javaWhitespace}.*)?")) {
+            if (SUPPORTED_PREFIXES.contains(prefix)) {
+                currentPrefix = prefix;
+                continue;
+            }
+            // Preserve s/o and d/o.
+            if (!isCareOf && !args.substring(i).matches("(?is)[sd]/o(?:\\p{javaWhitespace}.*)?")) {
                 throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, commandUsage));
             }
         }

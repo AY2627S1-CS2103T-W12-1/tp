@@ -690,7 +690,8 @@ showing file contents. A missing or null `persons` list also explains the requir
 - Reject unsupported whitespace-delimited ASCII single-letter prefixes in add/edit, including wrong-case prefixes.
 - Preserve standalone `c/o`, `s/o`, and `d/o` abbreviations in any letter case, URLs, numeric slashes and slashes embedded within words in add/edit.
   Inside a name, `ArgumentTokenizer` also keeps standalone `a/l` and `a/p` in any letter case, so the `a/`
-  does not start the address; `PrefixValidator` accepts their uppercase forms.
+  does not start the address. `PrefixValidator` uses the same `NameAbbreviation` check, so uppercase `A/L`
+  and `A/P` are accepted only in a name.
   Reject standalone single-letter slash unit labels such as `Block A/12` and `Block B/12`;
   use `Block A-12` or `Block B-12` instead. This command-only check does not reject legacy CSV or JSON data.
   The reason: `ArgumentTokenizer` starts a field at any supported prefix after whitespace, and `PrefixValidator`
@@ -1015,6 +1016,7 @@ consistent spelling.
 - After an accidental clear, stop changing data and follow the [manual recovery steps](UserGuide.html#automatic-backup-and-recovery).
 - A supported prefix inside a value starts that field, so `n/Alice t/year1` saves the name `Alice` with the tag
   `year1`. Only standalone `c/o`, `s/o`, `d/o`, and, inside a name, `a/l` and `a/p` are kept as text.
+  Because of that exception, an address whose first word is `l` or `p` must come before `n/`.
 
 ## Development workflow {id="documentation-logging-testing-dev-ops"}
 
