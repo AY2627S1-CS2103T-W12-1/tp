@@ -809,8 +809,8 @@ Commons CSV handles quoting instead of manual string splitting.
 - Repeated indexes collapse to one member. Argument order does not reorder the display.
 - Each `show` can only narrow the view. Record replacement updates selected references.
 - Each distinct selection has a **Show: N selected** chip in command order alongside other filters.
-  Its tooltip lists selected names alphabetically, ignoring case, separated by `; ` because a name
-  may contain a comma. Repeating the same member set
+  Its tooltip lists selected names alphabetically, ignoring case, separated by `; `, which cannot
+  appear in a name. Repeating the same member set
   creates no extra chip.
 - Removing a chip removes only that selection. Its count reflects the remaining selected records,
   including those hidden by other conditions. Deleting every selected record leaves a removable

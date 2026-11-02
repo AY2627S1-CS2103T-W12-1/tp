@@ -202,7 +202,7 @@ shows `Selected members: No selected members remain`; select its **X** to remove
 <p class="ug-topic"><strong>Hover text:</strong></p>
 
 Names in a `show` box's hover text are separated by semicolons and listed alphabetically, ignoring
-case, for example `Selected members: Bob Tan; Lee, Ann`. This does not change the displayed roster
+case, for example `Selected members: Alice Tan; Bob Lee`. This does not change the displayed roster
 order.
 
 <p class="ug-topic"><strong>Valid input:</strong></p>

@@ -135,7 +135,7 @@ public final class ActiveFilter {
 
     /**
      * Returns the selected names for a show condition's tooltip, separated by semicolons
-     * because a name may itself contain a comma.
+     * so that the separator cannot be confused with characters allowed in a name.
      */
     public String getShowSelectionNames() {
         if (kind != Kind.SHOW) {
