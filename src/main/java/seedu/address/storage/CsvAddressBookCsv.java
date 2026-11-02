@@ -10,10 +10,10 @@ import org.apache.commons.csv.CSVFormat;
 final class CsvAddressBookCsv {
 
     static final List<String> HEADERS = List.of("name", "phone", "email", "address", "tags");
-    private static final String FORMULA_PREFIXES = "=+-@";
     static final CSVFormat FORMAT = CSVFormat.RFC4180.builder()
             .setIgnoreSurroundingSpaces(true)
             .get();
+    private static final String FORMULA_PREFIXES = "=+-@";
 
     private CsvAddressBookCsv() {
         // Utility class.
