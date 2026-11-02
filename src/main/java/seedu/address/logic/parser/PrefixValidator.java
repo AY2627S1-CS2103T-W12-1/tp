@@ -22,7 +22,7 @@ final class PrefixValidator {
 
     /**
      * Reserves whitespace-delimited ASCII single-letter slash prefixes for member fields.
-     * Standalone c/o, s/o and d/o abbreviations (case-insensitive) remain literal text.
+     * Standalone c/o, s/o, d/o, a/l and a/p abbreviations (case-insensitive) remain literal text.
      * URLs, numeric slashes and slashes embedded in words are not field prefixes.
      *
      * @param args Arguments to validate before tokenization.
@@ -43,8 +43,8 @@ final class PrefixValidator {
             if (SUPPORTED_PREFIXES.contains(prefix)) {
                 continue;
             }
-            // Preserve s/o and d/o.
-            if (!isCareOf && !args.substring(i).matches("(?is)[sd]/o(?:\\p{javaWhitespace}.*)?")) {
+            // Preserve s/o, d/o and uppercase A/L or A/P.
+            if (!isCareOf && !args.substring(i).matches("(?is)(?:[sd]/o|a/[lp])(?:\\p{javaWhitespace}.*)?")) {
                 throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, commandUsage));
             }
         }

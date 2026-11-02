@@ -34,7 +34,8 @@ import seedu.address.storage.StorageManager;
 public class CommonNamePunctuationWorkflowTest {
     private static final List<String> COMMON_NAMES = List.of("Ravi s/o Kumar", "Ravi S/O Kumar", "Ravi S/o Kumar",
             "Priya d/o Raman", "Priya D/O Raman", "Priya d/O Raman", "J. Tan", "J.Tan",
-            "Lee, Ann", "Mary (Jane)", "Tan (Jr.), Alex");
+            "Lee, Ann", "Mary (Jane)", "Tan (Jr.), Alex", "Ravi a/l Kumar", "Ravi A/L Kumar", "Siti a/p Ahmad",
+            "Siti A/P Ahmad");
 
     @TempDir
     public Path temporaryFolder;

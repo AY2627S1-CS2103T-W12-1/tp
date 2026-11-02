@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 
 import org.junit.jupiter.api.Test;
 
@@ -137,6 +139,20 @@ public class ArgumentTokenizerTest {
         ArgumentMultimap arguments = ArgumentTokenizer.tokenize(
                 "\tp/https://example.com/p/123 c/o Alice", pSlash);
         assertArgumentPresent(arguments, pSlash, "https://example.com/p/123 c/o Alice");
+    }
+
+    @Test
+    public void tokenize_alOrApInName_staysInNameWhileAddressPrefixStillWorks() {
+        ArgumentMultimap arguments = ArgumentTokenizer.tokenize(
+                " n/Ravi a/l Kumar A/P Lee a/Block 5", PREFIX_NAME, PREFIX_ADDRESS);
+        assertArgumentPresent(arguments, PREFIX_NAME, "Ravi a/l Kumar A/P Lee");
+        assertArgumentPresent(arguments, PREFIX_ADDRESS, "Block 5");
+
+        // Outside a name, or when not standalone, a/ still starts the address.
+        assertArgumentPresent(ArgumentTokenizer.tokenize(" p/1 a/l Road", pSlash, PREFIX_ADDRESS),
+                PREFIX_ADDRESS, "l Road");
+        assertArgumentPresent(ArgumentTokenizer.tokenize(" n/Tan a/lane", PREFIX_NAME, PREFIX_ADDRESS),
+                PREFIX_ADDRESS, "lane");
     }
 
     @Test

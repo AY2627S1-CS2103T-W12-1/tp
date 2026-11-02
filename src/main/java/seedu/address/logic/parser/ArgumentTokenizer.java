@@ -1,5 +1,8 @@
 package seedu.address.logic.parser;
 
+import static seedu.address.logic.parser.CliSyntax.PREFIX_ADDRESS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,7 +28,26 @@ public class ArgumentTokenizer {
      */
     public static ArgumentMultimap tokenize(String argsString, Prefix... prefixes) {
         List<PrefixPosition> positions = findAllPrefixPositions(argsString, prefixes);
-        return extractArguments(argsString, positions);
+        return extractArguments(argsString, keepNameAbbreviations(argsString, positions));
+    }
+
+    /**
+     * Drops an address prefix that forms a standalone {@code a/l} or {@code a/p} inside a name, in any letter case,
+     * so names such as "Ravi a/l Kumar" keep the abbreviation like s/o and d/o.
+     */
+    private static List<PrefixPosition> keepNameAbbreviations(String argsString, List<PrefixPosition> positions) {
+        positions.sort((prefix1, prefix2) -> prefix1.getStartPosition() - prefix2.getStartPosition());
+        List<PrefixPosition> kept = new ArrayList<>();
+        for (PrefixPosition position : positions) {
+            boolean isInName = !kept.isEmpty() && kept.getLast().getPrefix().equals(PREFIX_NAME);
+            boolean isAbbreviation = position.getPrefix().equals(PREFIX_ADDRESS)
+                    && argsString.substring(position.getStartPosition())
+                            .matches("(?is)a/[lp](?:\\p{javaWhitespace}.*)?");
+            if (!(isInName && isAbbreviation)) {
+                kept.add(position);
+            }
+        }
+        return kept;
     }
 
     /**
