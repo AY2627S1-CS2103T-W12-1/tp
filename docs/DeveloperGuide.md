@@ -289,13 +289,13 @@ The model separates stored records from display state. The diagrams show one res
 - There is no separate shared tag registry.
 
 **Contact identity:** `Person#isDuplicateContactOf` checks new add/edit/import input against the
-whole roster, including hidden members. It ignores name case and repeated whitespace, compares the
-phone after removing ASCII spaces, compares email local parts exactly and domains without regard to ASCII case,
-and compares trimmed addresses exactly; tags are ignored. A phone's leading `+` remains significant. Name case
-is compared with `equalsIgnoreCase` after whitespace is collapsed, not by lowercasing, because lowercasing
+whole roster, including hidden members. It compares names after NFC normalisation, ignoring case and repeated
+whitespace; compares the phone after removing ASCII spaces; compares email local parts exactly and domains
+without regard to ASCII case; and compares trimmed addresses exactly. Tags are ignored. A phone's leading `+`
+remains significant. Name case is compared with `equalsIgnoreCase`, not by lowercasing, because lowercasing
 changes Greek sigma by its position in the word. `Person#isSamePerson` retains exact name matching for JSON
-loading, so older name variants remain loadable. `EditCommand` checks for duplicates
-only when contact details change; tag-only and unchanged-contact edits remain possible on those records.
+loading, so older name variants remain loadable. `EditCommand` checks for duplicates only when contact details
+change; tag-only and unchanged-contact edits remain possible on those records.
 
 **3. Display pipeline**
 
@@ -646,7 +646,7 @@ showing file contents. A missing or null `persons` list also explains the requir
 
 **Safeguards and limits**
 
-- Hold the instance lock through shutdown. A second instance is rejected; do not delete the lock file.
+- Hold the instance lock through shutdown. A second instance shows an error dialog and exits; do not delete the lock file.
 - Accept one optional leading UTF-8 byte-order mark in JSON. Trim surrounding member-field and tag whitespace;
   name case and internal spacing are preserved.
 - Reject null roots, null members, null tags and invalid or duplicate member values.
@@ -697,6 +697,13 @@ showing file contents. A missing or null `persons` list also explains the requir
   apply one definition per field. The [User Guide](UserGuide.html#add-a-member-add) lists the accepted formats.
   `Address` is the only optional field: an empty value is valid, but a non-empty value must contain a character
   other than whitespace or Unicode spaces, so `edit` can tell "clear the address" from "blank address".
+- The value classes also bound length through their `MAX_LENGTH` constants: `Name` 200, `Phone` 32, `Email` 254 and
+  `Address` 1000 UTF-16 code units. `Address` rejects Unicode bidirectional control characters, and `Name`
+  accepts commas and parentheses.
+- Indexed parsers call `ParserUtil#parseCommandIndex` on each index they read. A numeric but invalid index (`0`,
+  signed, or too large to parse) reports `Index must be a positive integer.`, whereas other malformed text, such as
+  `1.5` or `1a`, reports the command usage. A valid index beyond the displayed list is rejected later, by the
+  command, with the displayed-index error.
 - Tag parsers name unsupported member fields, preambles and missing `t/` prefixes in their diagnostics,
   followed by the command usage. Invalid tag values receive only the specific reason.
 - `clear` accepts only an optional `/all`; `list`, `sort` and `exit` take no arguments. Each other command enforces its own grammar.
@@ -795,9 +802,13 @@ Commons CSV handles quoting instead of manual string splitting.
 **Rules and design**
 
 - Write UTF-8 without a BOM, with the five member columns and a sixth `trackcall_encoding` column.
-  Write `apostrophe-v1` in every member row; retain this header even for an empty export.
-- Prefix formula-like values with an apostrophe when their first non-apostrophe character is `=`, `+`, `-` or `@`.
-  The marker lets import remove exactly one added prefix without changing legacy literal values.
+  Put `apostrophe-v1` in this column of every member row, and keep the header even for an empty export.
+- A spreadsheet runs any cell that starts with `=`, `+`, `-` or `@` as a formula. To prevent that, export puts an
+  apostrophe in front of a value whose first character, after any leading apostrophes, is one of these. The
+  spreadsheet then shows the cell as text.
+- `apostrophe-v1` tells import that the file was written this way, so import removes exactly that one added
+  apostrophe: the first one, when the rest of the value (after any further apostrophes) starts with `=`, `+`, `-`
+  or `@`. A file without the column is imported as it is, so legacy values are not changed.
 - Sort each member's tags and join them with semicolons.
 - Use Commons CSV for quoting and escaping. An empty displayed list produces a header-only file. Run `list` before exporting to include everyone.
 - `ExportCommandParser` requires a `.csv` extension, ignoring letter case.
@@ -1118,7 +1129,7 @@ These contracts apply across commands. Feature sections explain their implementa
 1. **Input validation:** use lowercase keywords and prefixes; trim surrounding field whitespace.
    Reject invalid input before changing records, filters, stored order or files. Submitting any command
    still clears the highlighted row and its details. See [command parsing](#7-command-parsing) for field rules.
-2. **Duplicate identity:** add/edit/import compare normalised names (case and repeated whitespace ignored),
+2. **Duplicate identity:** add/edit/import compare normalised names (case, canonical Unicode form and repeated whitespace ignored),
    phone numbers with ASCII spaces removed (keeping a leading `+` significant), email local parts exactly with
    domains compared without regard to ASCII case, and trimmed addresses exactly. Tags and the edited record are ignored.
    Preserve stored spelling. JSON loading keeps the legacy exact-contact rule; tag-only and unchanged-contact
@@ -1134,7 +1145,8 @@ These contracts apply across commands. Feature sections explain their implementa
    conditions. Zero matches is a valid result.
 6. **Displayed indexes:** indexed commands use the current filtered display in stored order, numbered from 1.
    Accept ASCII positive integers and leading zeroes; reject signs, decimals, internal spaces and
-   out-of-range values. A view change can renumber members.
+   out-of-range values. Invalid numbers and malformed text report different errors (see
+   [command parsing](#7-command-parsing)). A view change can renumber members.
 7. **Individual updates:** `edit` changes supplied fields only; supplied tags replace the entire tag set.
    Bare `a/` clears an address and bare `t/` clears tags. `tag`/`untag` change one assignment.
    Re-evaluate conditions after updates, so a changed member can leave the view without being deleted.
