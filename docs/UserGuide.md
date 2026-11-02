@@ -1322,8 +1322,9 @@ ideas for later versions in its requirements appendix.
    If the entire roster is empty, use `clear` to retry saving it.
 
 - **Import failures:** the complete imported batch remains in memory. TrackCall reports
-  `Could not save data to file: DETAILS`, or a permission message naming the roster file, followed by the
-  unsaved-change warning and retry instructions.
+  `Could not save data to file: DETAILS`, or for a permission problem
+  `Could not save data to file FILE due to insufficient permissions to write to the file or the folder.`
+  (`FILE` is the roster file), followed by the unsaved-change warning and retry instructions.
 
 > **Before exiting:** complete a successful retry; otherwise, unsaved changes are lost.
 
