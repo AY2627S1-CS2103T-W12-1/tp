@@ -21,7 +21,7 @@ We are a team based in the [School of Computing, National University of Singapor
 [[GitHub](https://github.com/CAYOPAN)]
 
 * Role: Testing & Code Quality Lead
-* Responsibilities: Exit, delete, and find commands; `tag` and `untag` commands.
+* Responsibilities: Exit, delete, and find commands; `tag` and `untag` commands; `import` command.
 
 </section>
 
@@ -74,7 +74,7 @@ We are a team based in the [School of Computing, National University of Singapor
 [[GitHub](https://github.com/Asdao)]
 
 * Role: Developer Lead
-* Responsibilities: CLI workflows for adding and editing member records, and command help; partial-word name search.
+* Responsibilities: CLI workflows for adding and editing member records, and command help; partial-word name search; `export` command.
 
 </section>
 </div>
