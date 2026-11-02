@@ -292,6 +292,17 @@
       "headingKeywords": {}
     },
     {
+      "src": "releases/v1.6/RELEASE_NOTES.md",
+      "title": "v1.6",
+      "headings": {
+        "v1-6-trackcall": "v1.6 - TrackCall",
+        "changes-since-v1-5": "Changes since v1.5",
+        "install-and-upgrade": "Install and upgrade",
+        "guides-and-remaining-limits": "Guides and remaining limits"
+      },
+      "headingKeywords": {}
+    },
+    {
       "src": "team/manutd1234.md",
       "title": "Ian Abiel Wangsa - Project Portfolio",
       "headings": {
