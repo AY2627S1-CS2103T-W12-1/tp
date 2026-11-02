@@ -289,14 +289,13 @@ The model separates stored records from display state. The diagrams show one res
 - There is no separate shared tag registry.
 
 **Contact identity:** `Person#isDuplicateContactOf` checks new add/edit/import input against the
-whole roster, including hidden members. It ignores name case, canonical Unicode form (NFC) and repeated
-whitespace, compares the
-phone after removing ASCII spaces, compares email local parts exactly and domains without regard to ASCII case,
-and compares trimmed addresses exactly; tags are ignored. A phone's leading `+` remains significant. Name case
-is compared with `equalsIgnoreCase` after NFC normalisation and whitespace collapsing, not by lowercasing, because lowercasing
+whole roster, including hidden members. It compares names after NFC normalisation, ignoring case and repeated
+whitespace; compares the phone after removing ASCII spaces; compares email local parts exactly and domains
+without regard to ASCII case; and compares trimmed addresses exactly. Tags are ignored. A phone's leading `+`
+remains significant. Name case is compared with `equalsIgnoreCase`, not by lowercasing, because lowercasing
 changes Greek sigma by its position in the word. `Person#isSamePerson` retains exact name matching for JSON
-loading, so older name variants remain loadable. `EditCommand` checks for duplicates
-only when contact details change; tag-only and unchanged-contact edits remain possible on those records.
+loading, so older name variants remain loadable. `EditCommand` checks for duplicates only when contact details
+change; tag-only and unchanged-contact edits remain possible on those records.
 
 **3. Display pipeline**
 
@@ -701,9 +700,10 @@ showing file contents. A missing or null `persons` list also explains the requir
 - The value classes also bound length through their `MAX_LENGTH` constants: `Name` 200, `Phone` 32, `Email` 254 and
   `Address` 1000 UTF-16 code units. `Address` rejects Unicode bidirectional control characters, and `Name`
   accepts commas and parentheses.
-- Indexed parsers call `ParserUtil#parseCommandIndex`. A numeric but invalid index (`0`, signed, or too large to
-  parse) reports the invalid-index error, whereas other malformed text, such as `1.5` or `1 2`, reports the
-  command usage.
+- Indexed parsers call `ParserUtil#parseCommandIndex` on each index they read. A numeric but invalid index (`0`,
+  signed, or too large to parse) reports `Index must be a positive integer.`, whereas other malformed text, such as
+  `1.5` or `1a`, reports the command usage. A valid index beyond the displayed list is rejected later, by the
+  command, with the displayed-index error.
 - Tag parsers name unsupported member fields, preambles and missing `t/` prefixes in their diagnostics,
   followed by the command usage. Invalid tag values receive only the specific reason.
 - `clear` accepts only an optional `/all`; `list`, `sort` and `exit` take no arguments. Each other command enforces its own grammar.
@@ -804,9 +804,11 @@ Commons CSV handles quoting instead of manual string splitting.
 - Write UTF-8 without a BOM, with the five member columns and a sixth `trackcall_encoding` column.
   Put `apostrophe-v1` in this column of every member row, and keep the header even for an empty export.
 - A spreadsheet runs any cell that starts with `=`, `+`, `-` or `@` as a formula. To prevent that, export puts an
-  apostrophe in front of such a value, so the spreadsheet shows it as text.
-- `apostrophe-v1` tells import that the file was written this way, so import removes one leading apostrophe from
-  such values. A file without the column is imported as it is, so legacy values are not changed.
+  apostrophe in front of a value whose first character, after any leading apostrophes, is one of these. The
+  spreadsheet then shows the cell as text.
+- `apostrophe-v1` tells import that the file was written this way, so import removes exactly that one added
+  apostrophe: the first one, when the rest of the value (after any further apostrophes) starts with `=`, `+`, `-`
+  or `@`. A file without the column is imported as it is, so legacy values are not changed.
 - Sort each member's tags and join them with semicolons.
 - Use Commons CSV for quoting and escaping. An empty displayed list produces a header-only file. Run `list` before exporting to include everyone.
 - `ExportCommandParser` requires a `.csv` extension, ignoring letter case.
