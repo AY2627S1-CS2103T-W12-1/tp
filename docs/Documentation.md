@@ -58,10 +58,14 @@ pageNav: 6
 
 ### Application screenshots
 
-- Use a **1600 × 1200** white canvas, a centered window, proportional scaling, and the same soft shadow.
-- Keep the title bar and status bar visible. Keep original captures alongside framed images.
-- Use the framing recipe in `docs/scripts/release-gallery-frames.json` and `release-gallery-frames.html`.
-- Export PNG files and check their dimensions.
+- For the current User Guide, keep the complete native window and its natural aspect ratio; the page supplies
+  the consistent image frame. Keep the title bar and, for the main window, the status bar visible.
+- Store original PNG captures in `docs/images/user-guide/features/raw/` beside the JPEG derivatives.
+  Do not crop, retouch or regenerate application text, fields or results.
+- Update `capture-manifest.json` with the release JAR checksum, source revision, capture date,
+  scenarios and checksums for both formats. Visually inspect every image against its caption.
+- Historical v1.3–v1.5 galleries use a **1600 × 1200** white canvas, proportional scaling and a soft shadow.
+  Their framing recipe remains in `docs/scripts/release-gallery-frames.json` and `release-gallery-frames.html`.
 - When updating published screenshots or release notes, keep website assets, GitHub release assets,
   and the SHA-256 manifest in sync. Preserve the release executable and its original validation history.
 

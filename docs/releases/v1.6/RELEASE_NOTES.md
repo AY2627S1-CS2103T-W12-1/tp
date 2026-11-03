@@ -34,12 +34,21 @@ Use **Java 25** and follow the [Quick start](../../UserGuide.html#quick-start).
 
 1. Back up your existing application folder, including its `data` folder.
 2. Put `trackcall.jar` in a writable folder. Keep the JAR and data together when moving an installation.
-3. Check `java -version` reports Java 25, then run `java -ea -jar trackcall.jar` from a terminal.
+3. Check `java -version` reports Java 25, then run `java -jar trackcall.jar` from a terminal.
 4. Use `help` or `help COMMAND` for offline instructions. If recovery opens, follow its choices;
    do not discard the preserved original merely to bypass validation.
 
 The GitHub release contains the executable, its SHA-256 checksum and a validation record identifying
 its exact source revision. Verify the downloaded file against that checksum.
+
+## Screenshot refresh — 3 November 2026
+
+All 23 User Guide screenshots and the website interface image were recaptured from the published
+v1.6 JAR at source `3b33b8c306b00959ccd13ba60cceb7eaeb5463b9` using Java 25.0.4 on macOS.
+The executable is unchanged: SHA-256 `cfb659e640ac3a3cb3c14dc2eec08c2eb324631674e3cf1fed95c9e56a5a602c`.
+The [capture manifest](../../images/user-guide/features/capture-manifest.json) records the original PNGs,
+JPEG derivatives and scenarios. Deletion and clearing images show pending prompts that were cancelled;
+the exit image shows `help exit`, rather than execution of `exit`.
 
 ## Guides and remaining limits
 

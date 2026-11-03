@@ -61,6 +61,10 @@ Try the examples in this guide on them, then use `clear /all` to remove them whe
 
 Screenshots use fictional sample members. Each caption names the command and the visible result; your counts and member numbers depend on your roster. Select any screenshot to open it at full size.
 
+All 23 screenshots were recaptured on **3 November 2026** using the published **v1.6 JAR**.
+The [capture manifest](images/user-guide/features/capture-manifest.json) records the exact source revision,
+JAR checksum, original PNG checksums and screenshot scenarios.
+
 <figure class="ug-figure">
 <a class="ug-screenshot" href="images/user-guide/features/interface.jpg" aria-label="Open full-size screenshot: TrackCall with Bernice selected and her contact details displayed">
 <img src="images/user-guide/features/interface.jpg" alt="TrackCall with Bernice selected and her contact details displayed" loading="lazy">
