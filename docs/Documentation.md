@@ -64,6 +64,10 @@ pageNav: 6
   Do not crop, retouch or regenerate application text, fields or results.
 - Update `capture-manifest.json` with the release JAR checksum, source revision, capture date,
   scenarios and checksums for both formats. Visually inspect every image against its caption.
+- Keep the capture JAR in a plain application folder so visible data and CSV paths follow the Quick start.
+  If native capture requires a temporary launcher, point it at that external JAR; do not use a copy inside
+  an `.app/Contents` directory. Keep capture dates and checksum details here, in the manifest and release
+  notes rather than in the end-user walkthrough.
 - Historical v1.3–v1.5 galleries use a **1600 × 1200** white canvas, proportional scaling and a soft shadow.
   Their framing recipe remains in `docs/scripts/release-gallery-frames.json` and `release-gallery-frames.html`.
 - When updating published screenshots or release notes, keep website assets, GitHub release assets,

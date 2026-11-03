@@ -45,6 +45,10 @@ its exact source revision. Verify the downloaded file against that checksum.
 
 All 23 User Guide screenshots and the website interface image were recaptured from the published
 v1.6 JAR at source `3b33b8c306b00959ccd13ba60cceb7eaeb5463b9` using Java 25.0.4 on macOS.
+Following review, the 21 main-window screenshots were captured again with the JAR in a plain
+`TrackCall` folder. Their status bars now show `data/addressbook.json` beside that JAR, matching
+the Quick start; export and import feedback uses the same folder. The two offline-help images
+remain from the earlier capture of the same JAR and contain no installation paths.
 The executable is unchanged: SHA-256 `cfb659e640ac3a3cb3c14dc2eec08c2eb324631674e3cf1fed95c9e56a5a602c`.
 The [capture manifest](../../images/user-guide/features/capture-manifest.json) records the original PNGs,
 JPEG derivatives and scenarios. Deletion and clearing images show pending prompts that were cancelled;
