@@ -1301,7 +1301,9 @@ Read command instructions offline and close TrackCall when you are finished.
   including inside a name or address. A supported lowercase prefix inside a value starts that field;
   see [Field prefixes and address text](#add-a-member-add).
 - **Unit labels:** use `a/Block A-12` or `a/Block B-12`. Standalone single-letter slash labels
-  such as `A/12` and `B/12` are rejected in both commands.
+  such as `A/12` and `B/12` are rejected in both commands, because a space followed by one letter
+  and `/` is how TrackCall finds the start of a field
+  (see [Field prefixes and address text](#add-a-member-add)).
 - **Other address text:** standalone `c/o`, `s/o`, and `d/o`, URLs, numeric slashes such as `12/3`,
   and slashes inside words remain valid.
 
