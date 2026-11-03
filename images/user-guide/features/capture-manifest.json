@@ -1,40 +1,178 @@
 {
-  "captured_on": "2026-10-31",
-  "source_commit": "a256c7115f914f3f200b3573a5b638eca78b470b",
-  "jar_sha256": "2246380923884f317515db6342e65ad86446f10bf465ba389b1940aa8b3229d8",
-  "runtime": "Java 25.0.4 on macOS",
-  "method": "Native application screenshots captured through CUA. No generated or retouched UI. Synthetic sample contacts only.",
-  "window": "Main window 1000 x 720 logical pixels; help retains its own proportions in the same CSS frame.",
+  "captured_on": "2026-11-03",
+  "source_commit": "3b33b8c306b00959ccd13ba60cceb7eaeb5463b9",
+  "jar_sha256": "cfb659e640ac3a3cb3c14dc2eec08c2eb324631674e3cf1fed95c9e56a5a602c",
+  "jar_bytes": 14811426,
+  "runtime": "Microsoft OpenJDK 25.0.4 on macOS (Apple Silicon)",
+  "method": "Native CUA screenshots from the unmodified published v1.6 JAR. Following review, all 21 main-window scenarios were recaptured with the JAR in /private/tmp/TrackCall/; a temporary jpackage launcher pointed its classpath at that external JAR solely for native app targeting. The two path-free offline-help images are retained from the earlier 3 November capture of the same JAR. The JAR was neither rebuilt nor modified. Synthetic sample contacts only.",
+  "window": "Main window 1000 x 720 logical pixels (2000 x 1440 PNG); help 880 x 740 logical pixels (1760 x 1480 PNG). Full native window extents retained.",
+  "processing": "Original PNGs retained in raw/. JPEG derivatives use quality 95 and no chroma subsampling; no crop, resize, text replacement or UI retouching. Existing page CSS supplies the frame.",
   "verification": [
-    "All 23 images visually inspected.",
-    "Saved JSON verified: eight expected members; updated Bob phone/email; year2 renamed to seniors on Alex and Irfan.",
-    "committee.csv independently checked: Alex, Bob and Charlotte only; four hidden members excluded.",
-    "Deletion and both clear screenshots show pending prompts. Each prompt was cancelled; the screenshots do not claim a completed deletion.",
-    "exit-help shows help exit, not execution of exit."
+    "All 23 images visually inspected against their captions and saved accessibility states.",
+    "Saved JSON independently verified: eight expected members; updated Bob phone/email; seniors tags on Alex and Irfan.",
+    "committee.csv independently verified: Alex, Bob and Charlotte only; four hidden members excluded.",
+    "Deletion and both clear images show pending prompts. Each was cancelled after capture; no deletion or clearing was confirmed.",
+    "exit-help shows help exit, not execution of exit.",
+    "JAR SHA-256 verified before and after capture; no application source or runtime resource changed.",
+    "All 21 recaptured main-window accessibility states show /private/tmp/TrackCall/data/addressbook.json and no .app/Contents path; CSV feedback uses the same plain folder."
   ],
   "files": {
-    "add.jpg": "2e2af23261bdfe16c8d33a430c4c1472a13b5ac574c7670f2dab041bc1e96306",
-    "clear-all.jpg": "a2a615656f9f39fb926cdfb2b9020439d88a5fe35e07eaae8e9abfb9b2ea6731",
-    "clear-displayed.jpg": "2d2e42f65d508bc5e266a3b6f14293b80e050f216ab8b5756fb89204317f210b",
-    "combined-filters.jpg": "30e5666fa2033552bf7b25f723a43711279f3181c58997ca7a4bcd7ade01f339",
-    "delete.jpg": "48176bd807596b0e62771106138627a9938a17e0d3524c80a1ccdc65df33e563",
-    "edit.jpg": "73ff1656ae10146da27d1e947b0efb7f52cc4e17e8d4e1b0c1ac96d2b94dccb7",
-    "exit-help.jpg": "8dbf427e255981180d15181df868b19fd6a25b9fe55fe0ee7de3a9267c2f023e",
-    "export.jpg": "33536960d0f67ab0dc80b2463ac65dfa3c458af3e331f20fbb1c3218dc46b78e",
-    "filter.jpg": "6617fd7e5e52bef4c4f4faa421b1f9c1da5c22d0107490aa8018952fd0682737",
-    "find.jpg": "2bc6c2e3ada824b4968f8cc1dc920525e0e2ca21c3e0f6d58c083ed174b0cb5f",
-    "findemail.jpg": "77b416a8ada2c5a4925ca1a48814da0f8a6384ffe2d403f53a12eef580b1455b",
-    "help.jpg": "453589ca4a43b057e9b0ac379ee7e7ca04917bad768078a2d37d7a9252a829f4",
-    "import.jpg": "afe0b08b29b261db58219584c8df44960aa152101d3850330b9746f7e83ae91f",
-    "interface.jpg": "1a01f14009d6a5ffd927b5a7615ff931c3e42254352143152b3d1184c3caa2d0",
-    "list.jpg": "0e69c4ab1e13dfe30a3204ed141c8f14bad42481e65a11950ba3699c2730d53d",
-    "renametag.jpg": "f8dd8feef899c3ec9ae25d9b365c39970c815b75ab8c61129d6db48dc8fb2e0b",
-    "show.jpg": "e2e24d6ea961becb55e085f93f2bea96de5a10cea7c6ef48b25936a1ee794dc7",
-    "sort.jpg": "9d2949acbf64f75df2ec0e33f24e118785b694f3cb4a2166112a0e9f83d3c664",
-    "tag.jpg": "180650e0285a34e1aefe9476352c8bb056d0b2a49144d7f2c7a14bae4b3e40e9",
-    "tagall.jpg": "a80a4f1c1f3b75e99075fb44648c219239af5dd607cbef50765e39a095a55783",
-    "untag.jpg": "32ee9592233772a87e7cd52444a0be298f2d8f9ee207f285bf1d57ea86640bde",
-    "untagall.jpg": "cc3bd2376cf8b9c8449a0ab8718af485909bdc6992e91f044bacad6e8d33b9d5",
-    "validation.jpg": "4c8e9ba2716b547abfa69d21c6cd2bf697b8c67bf13165ff400139ef0d61c0d8"
+    "add.jpg": "5034a2d90dd06a86107863bef633a2f0c6442b0f79b7925eabcdeffe0b2e6a6f",
+    "clear-all.jpg": "e0f50f6b2af86f364761821f25c6fe14e137b5c69c5391f7cf13de19f2e4574c",
+    "clear-displayed.jpg": "23818aa14b2b3a461cb4c1b0255931a669eb9e869e0e88ddee9823339cd6cbb2",
+    "combined-filters.jpg": "3ce570cb8591dba86fe0658a9370499816531a264b35e0e252b1e472f0099ecf",
+    "delete.jpg": "513221ba752bae3a207b748af6774f72523f4560d7797a07756c7871af6a29df",
+    "edit.jpg": "c2d8f0d77ca8e6b19e5ad70f84bd6442c30985af62c9a44aac89a00c086d8b86",
+    "exit-help.jpg": "93b883fce1b070ac8041231660071bbebc8149391f23ecec7155dce28bcd3337",
+    "export.jpg": "c8b34be375f02fd859fff43d8496e81b282d429b6a3ce343053cd77d37813498",
+    "filter.jpg": "e6cddc82976497ed1c5fc4c1886e0ec371bfc8af4f4084ed60ef896fc35b2958",
+    "find.jpg": "43fe0af75ef1e9dfa24b0929166ec328602e9b1a730b2a0680ccc243821783f9",
+    "findemail.jpg": "96e1ebd98ce003b29c16e8a363c72304eef3c79ab67168ed9217ab8bb70facfb",
+    "help.jpg": "1c849d5f27192fd1ba7ea86a461e6c490f191a5835f47094261a687af1867b4d",
+    "import.jpg": "62978c07aa62a6ccf76860c82ef5c54c2d23aed76799d2d04ecc19c5a18587dd",
+    "interface.jpg": "eb8eab9475a32c1818f91f502cddf38cab1b01a01250fe85b980a5a6ac4f7119",
+    "list.jpg": "d2e8bf0086c937c664e2c46b3f4469c77e370655296ac9315296f551a60049a7",
+    "renametag.jpg": "a131d245289eefe147dd68b15517f965d4e5f803ab5534e41257007dd8923364",
+    "show.jpg": "90f7bb41622a2769446d78e500d064ce90edc48ea99ccec84d940221fd3e6790",
+    "sort.jpg": "2944a763fff4ffd8eb625c8aae4e127dc86370d19c6eaa54bc488176e89ad1c5",
+    "tag.jpg": "cd95dd4d52a0d83b538ef1253491eb5782ca17ad94308961a3a8f2c6a2ad0e8c",
+    "tagall.jpg": "9b3cee99eb66a7b76b0f6563af964f00e4dda83aa03f29c5cb3eb43d972f918a",
+    "untag.jpg": "daf43a40f451da2348452e94d5f0fc9062fb034cfb321dadd65f54bbae671d81",
+    "untagall.jpg": "23ea2f2554c56299378c0d26cfe3710c20234353e216fe9aeb3cf29660be6140",
+    "validation.jpg": "df6514af5675447cb7baa325847964970a0b75409d20d607bb1fc1377dfdb9e9"
+  },
+  "raw_files": {
+    "raw/add.png": "cd6881312eaa978d6298b666651b4b4c06a4c1a7cf8cb07dd7665703b4b7cf52",
+    "raw/clear-all.png": "cdf1ae34f1e00c0e75d91d824eba0f2d503e9f1c5b89869ddedfa8ec958f7f7e",
+    "raw/clear-displayed.png": "11cfd7f9c0e6f3282446bb1d05a70b758031fe6f02bed0cd64e0b6b4f86726a3",
+    "raw/combined-filters.png": "4aeec3886fd0403a206087fa5516b09da01b314698efad7df63d5fbd8f68a546",
+    "raw/delete.png": "29b24831450655019bb3269ee913f1b2127081faae9b6f471cf09ff259b6d643",
+    "raw/edit.png": "d2728b43f6ae580889a2eb9f02b94b35556a7fae6078f8956b38ebd68549e7af",
+    "raw/exit-help.png": "3d8b6a189b15de90b3dc262db53b3898c785641f3254129f61a7fbccee85459e",
+    "raw/export.png": "db246fdac12d108d6e9bdc75612bbd8de6455b84e260e45dffe04f8206a4235b",
+    "raw/filter.png": "294bb3250d396f941836a51747c1eb612955137de2006377a14360aafdc6744c",
+    "raw/find.png": "6330f27f769f98ce39348022e22b8ebd8b19519ec18ddbc1832f40471c243519",
+    "raw/findemail.png": "6eb26b39eb8d543857c87b27c7d833d8e54ef7f7f6e544b81b61c8a9b766e185",
+    "raw/help.png": "7b266b94a9ad8ceaa4dc524a38a244212c1b1932424b8155b16faa255970090c",
+    "raw/import.png": "bf362d2c0912377c3d990f8126d78820650717374b590432da9c4b80f8dd0c6e",
+    "raw/interface.png": "0ba9a062b2c18ed355d1d1c7253eedacd7cf43cce5ddfb06ed14cb78c35f70ff",
+    "raw/list.png": "801bb64540b48c64a332e224caa5d6f9e673721e77e7430689a4dff7dc311800",
+    "raw/renametag.png": "771bb796b809e4a62a0a866861cca7c108dd300a400bd22ce4d8034438f903f7",
+    "raw/show.png": "4ffd2f2155520f219029f2c527b9835008091731c7cec7eeb213654a80b0292d",
+    "raw/sort.png": "b57ef8e3b9f81b36de0234bd6c9b987bdaf9932f28d1d194086898e6adaeac71",
+    "raw/tag.png": "a79714c2900b0f78174b43cdfcfd9156eae57811ef9641076d33c208d72353d1",
+    "raw/tagall.png": "ea2eb55f09be81a848b0419224fabb4fd7d584a6c70a40bd16c0398891cacf01",
+    "raw/untag.png": "e770daa4bb1490b190859842d14d7b9c868bae6f53f49cff51b93d4263ab3748",
+    "raw/untagall.png": "a07a84d61b1abb9ac1447f2db102f624db8d968f1a7e2f4c0ff1291ff8cfc4e8",
+    "raw/validation.png": "6d874f3ce938d5fca51d6214a6b9dfb7e8d277f2306ac982b7424a812103ceec"
+  },
+  "homepage_image": {
+    "path": "../../Ui.png",
+    "sha256": "0ba9a062b2c18ed355d1d1c7253eedacd7cf43cce5ddfb06ed14cb78c35f70ff",
+    "source": "raw/interface.png"
+  },
+  "scenarios": {
+    "add.jpg": {
+      "actions": "Add Bob with the UG example; F2; End.",
+      "expected": "Bob is member 7, selected with the original phone/email/address and two tags."
+    },
+    "clear-all.jpg": {
+      "actions": "Same view after cancelling; clear /all.",
+      "expected": "Pending clear targets all 8 members despite 3 displayed. Cancelled with no after capture."
+    },
+    "clear-displayed.jpg": {
+      "actions": "Eight members; list; filter t/committee; clear.",
+      "expected": "Pending clear targets 3 displayed members and keeps 5 hidden. Cancelled with no after capture."
+    },
+    "combined-filters.jpg": {
+      "actions": "Six sample members; list; filter t/year1; find David.",
+      "expected": "Only David; Tag: year1 and Name: David conditions."
+    },
+    "delete.jpg": {
+      "actions": "Eight members; delete 2.",
+      "expected": "Pending deletion names Bernice; no member removed. Prompt cancelled with no after capture."
+    },
+    "edit.jpg": {
+      "actions": "After sort; edit 3 p/98765432 e/bob.new@example.com; select Bob.",
+      "expected": "Bob has both new contact values and retains address/tags."
+    },
+    "exit-help.jpg": {
+      "actions": "help exit.",
+      "expected": "Offline exit topic; the captured screen is help rather than execution of exit."
+    },
+    "export.jpg": {
+      "actions": "Seven members; list; filter t/committee; export committee.csv.",
+      "expected": "Three exported: Alex, Bob, Charlotte; four hidden members excluded."
+    },
+    "filter.jpg": {
+      "actions": "Six sample members; list; filter t/year1.",
+      "expected": "Bernice and David; Tag: year1 condition."
+    },
+    "find.jpg": {
+      "actions": "Six sample members; list; find David.",
+      "expected": "Only David Li; Name: David condition."
+    },
+    "findemail.jpg": {
+      "actions": "Six sample members; list; findemail @school.edu.",
+      "expected": "Only Charlotte; Email: @school.edu condition."
+    },
+    "help.jpg": {
+      "actions": "help.",
+      "expected": "Offline command overview; roster unchanged."
+    },
+    "import.jpg": {
+      "actions": "Same committee view; import p/new-members.csv (UG example).",
+      "expected": "One Maya added; zero duplicates; complete eight-member list restored."
+    },
+    "interface.jpg": {
+      "actions": "Six sample members; select Bernice Yu.",
+      "expected": "Bernice contact details are visible; six members remain."
+    },
+    "list.jpg": {
+      "actions": "Six sample members; list.",
+      "expected": "Showing 6 members; no active view conditions."
+    },
+    "renametag.jpg": {
+      "actions": "Same year2 view; renametag t/year2 t/seniors.",
+      "expected": "Two members changed; retained year2 condition matches zero members."
+    },
+    "show.jpg": {
+      "actions": "Six sample members; list; show 1 3.",
+      "expected": "Alex and Charlotte are displayed as members 1 and 2."
+    },
+    "sort.jpg": {
+      "actions": "Seven members including Bob; sort; F2; Home.",
+      "expected": "Sorted all 7 members; Bob is number 3 between Bernice and Charlotte."
+    },
+    "tag.jpg": {
+      "actions": "Seven sorted members; tag 2 t/volunteer.",
+      "expected": "Bernice gains volunteer and retains batch2026/year1."
+    },
+    "tagall.jpg": {
+      "actions": "list; filter t/year2; tagall t/event2026.",
+      "expected": "Alex and Irfan both have event2026."
+    },
+    "untag.jpg": {
+      "actions": "After tag; untag 2 t/volunteer.",
+      "expected": "Bernice retains batch2026/year1; volunteer is absent."
+    },
+    "untagall.jpg": {
+      "actions": "Same year2 view; untagall t/event2026.",
+      "expected": "Both lose event2026; their other tags remain."
+    },
+    "validation.jpg": {
+      "actions": "Eight members; list; edit 1 a/Main Road T/committee.",
+      "expected": "Rejected command remains visible; saved data is unchanged."
+    }
+  },
+  "capture_installation": {
+    "jar": "/private/tmp/TrackCall/trackcall.jar",
+    "data": "/private/tmp/TrackCall/data/addressbook.json",
+    "launch_equivalence": "The same unchanged JAR was also launched directly with java -jar trackcall.jar from this folder; native CUA used the temporary launcher pointing at the external JAR for captures.",
+    "main_window_recaptures": 21,
+    "retained_offline_help_images": [
+      "help.jpg",
+      "exit-help.jpg"
+    ]
   }
 }
