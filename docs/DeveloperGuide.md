@@ -678,7 +678,7 @@ showing file contents. A missing or null `persons` list also explains the requir
 
 `CommandBox` refuses tabs and line breaks before parsing, so parsers never receive them from typed or pasted input.
 
-1. `AddressBookParser` reads a case-sensitive keyword and selects its parser.
+1. `AddressBookParser` reads a case-insensitive command keyword and selects its parser.
 2. Command-specific parsers check argument structure, indexes and field values.
 3. Add/edit use tokenized prefixes and `PrefixValidator`. Tag commands use `BulkTagArgumentParser`
    to validate tag values and reject other member-field prefixes.
@@ -1135,7 +1135,7 @@ not promised releases, in line with the
 
 These contracts apply across commands. Feature sections explain their implementation and exceptions.
 
-1. **Input validation:** use lowercase keywords and prefixes; trim surrounding field whitespace.
+1. **Input validation:** ignore case for command keywords and require lowercase field prefixes; trim surrounding field whitespace.
    Reject invalid input before changing records, filters, stored order or files. Submitting any command
    still clears the highlighted row and its details. See [command parsing](#7-command-parsing) for field rules.
 2. **Duplicate identity:** add/edit/import compare normalised names (case, canonical Unicode form and repeated whitespace ignored),

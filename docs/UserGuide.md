@@ -121,7 +121,7 @@ retained and adapted for TrackCall. Each group explains the relevant commands, e
 
 <p class="ug-topic"><strong>Command syntax</strong></p>
 
-- Use lowercase keywords without a leading slash: `help`, not `/help`.
+- Command keywords ignore letter case: `help` and `Help` both work. Omit the leading slash.
 - Replace `UPPER_CASE` placeholders with your own values.
 - Square brackets mark optional input. `[a/ADDRESS]` means the address may be omitted;
   `[t/TAG]...` means zero or more tags.

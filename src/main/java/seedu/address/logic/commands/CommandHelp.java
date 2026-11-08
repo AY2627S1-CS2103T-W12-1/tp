@@ -16,7 +16,7 @@ public enum CommandHelp {
             "Shows the complete roster in stored order, clearing searches, tag filters and show selections. "
                     + "The saved roster order is retained.",
             "Use list before choosing a member by number. List numbers can change after an edit or deletion.",
-            "Use the lowercase command list with no extra arguments."),
+            "Use the command list with no extra arguments."),
     SHOW("Browse members", "show", "Show only selected members", "show INDEX [MORE_INDEXES]...", "show 1 3",
             "Show only the members at the specified numbers in the current list.",
             "Shows members 1 and 3 in their current order, then renumbers the displayed list.",
@@ -219,7 +219,7 @@ public enum CommandHelp {
             "Closes TrackCall. Successful changes have already been saved automatically.",
             "The main window and help window close.",
             "Exit does not retry a failed save. Resolve any storage error before leaving if you need to keep changes.",
-            "Use the lowercase command exit with no extra arguments.");
+            "Use the command exit with no extra arguments.");
 
     private final String category;
     private final String keyword;

@@ -103,7 +103,7 @@ public class AddressBookParserTest {
         assertEquals(new FindEmailCommand(new EmailContainsKeywordsPredicate(List.of("@example.com", "alice+"))),
                 parser.parseCommand("  findemail   @example.com\talice+  "));
         assertEquals(new HelpCommand("findemail"), parser.parseCommand("help findemail"));
-        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("FINDEMAIL alice"));
+        assertEquals(parser.parseCommand("findemail alice"), parser.parseCommand("FINDEMAIL alice"));
     }
 
     @Test
@@ -243,6 +243,14 @@ public class AddressBookParserTest {
     public void parseCommand_unrecognisedInput_throwsParseException() {
         assertThrows(ParseException.class, String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE), ()
             -> parser.parseCommand(""));
+    }
+
+    @Test
+    public void parseCommand_mixedCaseKeyword_preservesArguments() throws Exception {
+        assertTrue(parser.parseCommand("LiST") instanceof ListCommand);
+        assertEquals(parser.parseCommand("find Alice"), parser.parseCommand("FiND Alice"));
+        assertEquals(parser.parseCommand("add n/Alice Tan p/91234567 e/Alice@example.com"),
+                parser.parseCommand("ADD n/Alice Tan p/91234567 e/Alice@example.com"));
     }
 
     @Test
