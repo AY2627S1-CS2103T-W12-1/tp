@@ -199,17 +199,22 @@ public class PackagedFileAccessTest {
 
     @Test
     public void startup_cacheUnavailable_reportsWritableFolderInTerminal() throws Exception {
-        checkBlockedCache(true);
+        checkBlockedCache(true, false);
     }
 
     @Test
     public void startup_cacheUnavailable_showsRecoveryDialogBeforeExiting() throws Exception {
         assumeTrue(!GraphicsEnvironment.isHeadless(), "The desktop dialog needs a display");
-        checkBlockedCache(false);
+        checkBlockedCache(false, true);
+    }
+
+    @Test
+    public void startup_headlessCacheFailure_requestsUnsuccessfulExit() throws Exception {
+        checkBlockedCache(true, true);
     }
 
     /** Launches in isolation and verifies that the reported cause locates the blocked cache. */
-    private void checkBlockedCache(boolean headless) throws Exception {
+    private void checkBlockedCache(boolean headless, boolean observeExit) throws Exception {
         Path home = Files.createDirectory(temporaryFolder.resolve("home")).toRealPath();
         Path blocked = home.resolve(".javafx-cache");
         Files.writeString(blocked, "keep");
@@ -222,17 +227,21 @@ public class PackagedFileAccessTest {
             command.addAll(TestUtil.childCoverageArguments(Path.of(System.getProperty("test.lifecycleCoverageFile",
                     home.resolve("lifecycle.exec").toString()))));
             command.addAll(List.of("-Djava.awt.headless=" + headless, "-cp", classpath,
-                    headless ? Main.class.getName() : DialogObserver.class.getName()));
+                    observeExit ? StartupObserver.class.getName() : Main.class.getName()));
             Process launcher = new ProcessBuilder(command)
                     .directory(home.toFile()).redirectErrorStream(true).redirectOutput(log.toFile()).start();
             try {
                 assertTrue(launcher.waitFor(15, TimeUnit.SECONDS));
-                assertEquals(1, launcher.exitValue());
+                assertEquals(observeExit ? 0 : 1, launcher.exitValue(), Files.readString(log));
                 String feedback = Files.readString(log);
                 assertTrue(feedback.contains(blocked.toString()), feedback);
                 assertTrue(feedback.contains("writable location and restart"), feedback);
+                if (observeExit) {
+                    assertTrue(feedback.contains("Requested exit: 1"), feedback);
+                }
                 if (!headless) {
-                    assertTrue(feedback.contains("Opened dialog: TrackCall could not start"), feedback);
+                    int opened = feedback.indexOf("Opened dialog: TrackCall could not start");
+                    assertTrue(opened >= 0 && opened < feedback.indexOf("Requested exit: 1"), feedback);
                 }
                 assertEquals("keep", Files.readString(blocked));
             } finally {
@@ -242,16 +251,18 @@ public class PackagedFileAccessTest {
     }
 
     /** Observes and dismisses the desktop error dialog inside a disposable launcher process. */
-    public static class DialogObserver {
+    public static class StartupObserver {
         /** Starts the actual launcher with a listener for its visible error window. */
         public static void main(String[] args) {
-            Toolkit.getDefaultToolkit().addAWTEventListener(event -> {
-                if (event.getID() == WindowEvent.WINDOW_OPENED && event.getSource() instanceof JDialog dialog) {
-                    System.out.println("Opened dialog: " + dialog.getTitle());
-                    dialog.dispose();
-                }
-            }, AWTEvent.WINDOW_EVENT_MASK);
-            Main.main(args);
+            if (!GraphicsEnvironment.isHeadless()) {
+                Toolkit.getDefaultToolkit().addAWTEventListener(event -> {
+                    if (event.getID() == WindowEvent.WINDOW_OPENED && event.getSource() instanceof JDialog dialog) {
+                        System.out.println("Opened dialog: " + dialog.getTitle());
+                        dialog.dispose();
+                    }
+                }, AWTEvent.WINDOW_EVENT_MASK);
+            }
+            Main.launch(args, status -> System.out.println("Requested exit: " + status));
         }
     }
 

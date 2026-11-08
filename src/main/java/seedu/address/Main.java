@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.function.IntConsumer;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 import javax.swing.JOptionPane;
@@ -81,6 +82,11 @@ public class Main {
      * @param args Command-line arguments forwarded to the application.
      */
     public static void main(String[] args) {
+        launch(args, System::exit);
+    }
+
+    /** Starts TrackCall, requesting termination after any startup diagnostic has been presented. */
+    static void launch(String[] args, IntConsumer exit) {
         try {
             prepareCache();
         } catch (IOException exception) {
@@ -90,7 +96,7 @@ public class Main {
                     + "to a writable location and restart.\n\nDetails: " + exception.getMessage();
             System.err.println(message);
             if (GraphicsEnvironment.isHeadless()) {
-                System.exit(1);
+                exit.accept(1);
             } else {
                 // The JavaFX toolkit is unavailable until these files are ready.
                 EventQueue.invokeLater(() -> {
@@ -98,7 +104,7 @@ public class Main {
                         JOptionPane.showMessageDialog(null, message, "TrackCall could not start",
                                 JOptionPane.ERROR_MESSAGE);
                     } finally {
-                        System.exit(1);
+                        exit.accept(1);
                     }
                 });
             }
