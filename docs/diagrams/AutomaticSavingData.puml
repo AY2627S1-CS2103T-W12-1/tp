@@ -11,17 +11,18 @@ skinparam ActivityEndColor #382E25
 
 start
 :Parse and execute user input;
-if (Parsing and execution succeeded?) then (no)
+if () then ([parsing or execution failed])
     :Show error;
     note right: Roster and saved file\nare unchanged
     stop
-else (yes)
+else ([else])
 endif
 
-if (Read-only command, pending confirmation,\nor cancelled confirmation?) then (yes)
+if () then ([else])
     :Show result without saving;
+    note right: Read-only command or confirmation\npending or cancelled
     stop
-else (no)
+else ([roster save required])
 endif
 
 :Attempt to save the complete roster;
@@ -32,16 +33,16 @@ when member data differs, including tag spelling.
 Write to a sibling temporary file, then replace atomically.
 If that write fails, roll back the backup rotation.
 end note
-if (Save succeeded?) then (yes)
+if () then ([else])
     :Show result;
     stop
-else (no)
+else ([save failed])
 endif
 
-if (Was the command clear?) then (yes)
+if () then ([command was clear])
     :Restore the previous roster and view;
     :Show clear save error;
-else (no)
+else ([else])
     :Keep the change in memory only;
     :Show save error with unsaved-change
 warning and retry instructions;
