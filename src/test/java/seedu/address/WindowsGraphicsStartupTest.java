@@ -1,8 +1,10 @@
 package seedu.address;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.awt.GraphicsEnvironment;
 import java.nio.charset.Charset;
@@ -13,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.swing.JDialog;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 
 import org.junit.jupiter.api.Test;
@@ -26,6 +29,42 @@ import seedu.address.testutil.TestUtil;
 public class WindowsGraphicsStartupTest {
     @TempDir
     public Path directory;
+
+    @Test
+    public void requiresRelocation_onlyWindowsToolkitFailuresWithUnrepresentablePathsMatch() {
+        Charset western = Charset.forName("windows-1252");
+        Path eastAsian = Path.of("TrackCall-東京");
+        RuntimeException toolkitFailure = new RuntimeException("No toolkit found");
+        assertTrue(WindowsGraphicsStartup.requiresRelocation(toolkitFailure, "Windows 11", western, eastAsian));
+        assertFalse(WindowsGraphicsStartup.requiresRelocation(toolkitFailure, "Linux", western, eastAsian));
+        assertFalse(WindowsGraphicsStartup.requiresRelocation(toolkitFailure, "Windows 11",
+                StandardCharsets.UTF_8, eastAsian));
+        assertFalse(WindowsGraphicsStartup.requiresRelocation(new RuntimeException("Could not read roster"),
+                "Windows 11", western, eastAsian));
+    }
+
+    @Test
+    public void recoveryDialog_withoutJavaFxToolkit_displaysTheStartupTitle() throws Exception {
+        assumeFalse(GraphicsEnvironment.isHeadless());
+        boolean[] shown = {false};
+        SwingUtilities.invokeAndWait(() -> {
+            Timer dismiss = new Timer(200, event -> {
+                for (java.awt.Window window : java.awt.Window.getWindows()) {
+                    if (window instanceof JDialog dialog && dialog.isShowing()) {
+                        shown[0] |= "TrackCall startup".equals(dialog.getTitle());
+                        dialog.dispose();
+                    }
+                }
+            });
+            dismiss.start();
+            try {
+                WindowsGraphicsStartup.showRecoveryMessage();
+            } finally {
+                dismiss.stop();
+            }
+        });
+        assertTrue(shown[0]);
+    }
 
     @Test
     public void startup_windowsGraphicsFailure_explainsUnrepresentableFolderOnly() throws Exception {

@@ -2,6 +2,7 @@ package seedu.address;
 
 import java.awt.GraphicsEnvironment;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import javax.swing.JOptionPane;
 
 import seedu.address.commons.util.FileUtil;
@@ -17,13 +18,20 @@ final class WindowsGraphicsStartup {
 
     /** Shows a message independently of JavaFX if its toolkit failed on an unrepresentable Windows path. */
     static void explainFailure(RuntimeException failure) {
-        if (!"No toolkit found".equals(failure.getMessage()) || !System.getProperty("os.name").startsWith("Windows")) {
-            return;
+        if (requiresRelocation(failure, System.getProperty("os.name"),
+                Charset.forName(System.getProperty("native.encoding")), FileUtil.getHomeFolder())) {
+            showRecoveryMessage();
         }
-        Charset codePage = Charset.forName(System.getProperty("native.encoding"));
-        if (codePage.newEncoder().canEncode(FileUtil.getHomeFolder().toString())) {
-            return;
-        }
+    }
+
+    /** Distinguishes a path-related toolkit failure from unrelated errors and supported Unicode paths. */
+    static boolean requiresRelocation(RuntimeException failure, String osName, Charset codePage, Path folder) {
+        return "No toolkit found".equals(failure.getMessage()) && osName.startsWith("Windows")
+                && !codePage.newEncoder().canEncode(folder.toString());
+    }
+
+    /** The console also gets the message when a graphical desktop is unavailable. */
+    static void showRecoveryMessage() {
         System.err.println(RECOVERY_MESSAGE);
         if (!GraphicsEnvironment.isHeadless()) {
             JOptionPane.showMessageDialog(null, RECOVERY_MESSAGE, "TrackCall startup", JOptionPane.ERROR_MESSAGE);
