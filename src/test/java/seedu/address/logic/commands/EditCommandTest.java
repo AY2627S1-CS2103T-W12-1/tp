@@ -83,9 +83,7 @@ public class EditCommandTest {
     @Test
     public void execute_noFieldSpecifiedUnfilteredList_success() {
         EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptor());
-        Person editedPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
-
-        String expectedMessage = String.format(EditCommand.MESSAGE_NO_CHANGES, Messages.format(editedPerson));
+        String expectedMessage = EditCommand.MESSAGE_NO_CHANGES;
 
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
 
@@ -112,7 +110,7 @@ public class EditCommandTest {
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
 
         assertCommandSuccess(command, model,
-                String.format(EditCommand.MESSAGE_NO_CHANGES, Messages.format(original)), expectedModel);
+                EditCommand.MESSAGE_NO_CHANGES, expectedModel);
         assertFalse(command.isReadOnly());
     }
 
@@ -126,7 +124,7 @@ public class EditCommandTest {
         showPersonAtIndex(expectedModel, INDEX_FIRST_PERSON);
 
         assertCommandSuccess(command, model,
-                String.format(EditCommand.MESSAGE_NO_CHANGES, Messages.format(original)), expectedModel);
+                EditCommand.MESSAGE_NO_CHANGES, expectedModel);
     }
 
     @Test

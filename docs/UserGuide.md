@@ -620,8 +620,8 @@ add n/Bob Lee p/92345678 e/bob@example.com a/20 College Road t/committee t/year1
 <p class="ug-topic"><strong>Result and current view</strong></p>
 
 - This changes the first displayed member's phone and email. Omitted fields stay unchanged.
-- If every supplied value already matches the member, TrackCall reports `No changes were made.` and
-  shows the unchanged member details. This valid command still saves the roster.
+- If every supplied value already matches the member, TrackCall reports `No changes were made.` without displaying contact details.
+  This valid command still saves the roster. Select the member to inspect their contact details.
 - Use `edit INDEX a/` to remove an address that is no longer known; the details panel then shows `(none)`.
 - After saving, TrackCall confirms the member's name and tags and keeps the active search, tag filters, and roster order.
   Changing a name does not move the member; run `sort` again to reorder the roster.

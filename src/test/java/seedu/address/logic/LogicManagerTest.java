@@ -95,7 +95,7 @@ public class LogicManagerTest {
 
         CommandResult result = logic.execute("edit 1 n/" + AMY.getName().fullName);
 
-        assertEquals(String.format(EditCommand.MESSAGE_NO_CHANGES, Messages.format(AMY)),
+        assertEquals(EditCommand.MESSAGE_NO_CHANGES,
                 result.getFeedbackToUser());
         JsonAddressBookStorage saved = new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
         assertEquals(model.getAddressBook(), saved.readAddressBook().orElseThrow());
