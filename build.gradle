@@ -140,4 +140,12 @@ shadowJar {
     }
 }
 
+// The Windows startup smoke test launches the same portable JAR users receive.
+if (System.getProperty('os.name').startsWith('Windows')) {
+    tasks.named('test') {
+        dependsOn shadowJar
+        systemProperty 'test.releaseJar', shadowJar.archiveFile.get().asFile
+    }
+}
+
 defaultTasks 'clean', 'test'

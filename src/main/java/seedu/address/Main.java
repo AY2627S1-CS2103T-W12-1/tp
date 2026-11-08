@@ -1,16 +1,13 @@
 package seedu.address;
 
-import java.awt.GraphicsEnvironment;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
-import javax.swing.JOptionPane;
 
 import javafx.application.Application;
 import seedu.address.commons.core.LogsCenter;
@@ -92,18 +89,7 @@ public class Main {
         try {
             Application.launch(MainApp.class, args);
         } catch (RuntimeException failure) {
-            if ("No toolkit found".equals(failure.getMessage()) && System.getProperty("os.name").startsWith("Windows")
-                    && !Charset.forName(System.getProperty("native.encoding")).newEncoder()
-                            .canEncode(FileUtil.getHomeFolder().toString())) {
-                String message = "TrackCall could not start its graphics system from this folder.\n"
-                        + "Move the entire TrackCall folder, including its data, to a writable location\n"
-                        + "with only basic Latin letters or digits in every folder name, then launch the JAR again.";
-                System.err.println(message);
-                // JavaFX cannot show an alert before its toolkit starts.
-                if (!GraphicsEnvironment.isHeadless()) {
-                    JOptionPane.showMessageDialog(null, message, "TrackCall startup", JOptionPane.ERROR_MESSAGE);
-                }
-            }
+            WindowsGraphicsStartup.explainFailure(failure);
             throw failure;
         }
     }

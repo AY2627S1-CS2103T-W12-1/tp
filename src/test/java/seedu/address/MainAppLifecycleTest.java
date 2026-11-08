@@ -7,17 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.awt.GraphicsEnvironment;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import javax.swing.JDialog;
-import javax.swing.Timer;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -29,6 +24,7 @@ import javafx.scene.control.DialogPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import seedu.address.storage.AppInstanceLock;
+import seedu.address.testutil.TestUtil;
 
 /** Runs actual application shutdown in an isolated JVM and retains its separate JaCoCo execution data. */
 public class MainAppLifecycleTest {
@@ -68,73 +64,19 @@ public class MainAppLifecycleTest {
     }
 
     @Test
-    public void startup_windowsGraphicsFailure_explainsUnrepresentableFolderOnly() throws Exception {
-        for (String folderName : List.of("TrackCall-東京", "TrackCall-café")) {
-            Path folder = Files.createDirectory(directory.resolve(folderName));
-            Path log = folder.resolve("launch.log");
-            boolean showDialog = System.getProperty("os.name").startsWith("Windows")
-                    && !GraphicsEnvironment.isHeadless() && folderName.contains("東京");
-            List<String> command = newCoveredJavaCommand();
-            command.addAll(List.of("-Djava.awt.headless=" + !showDialog, "-Djavafx.toolkit=MissingTestToolkit",
-                    "-cp", System.getProperty("test.runtimeClasspath"), GraphicsFailureLauncher.class.getName()));
-            Process process = new ProcessBuilder(command).directory(folder.toFile())
-                    .redirectErrorStream(true).redirectOutput(log.toFile()).start();
-            try {
-                assertTrue(process.waitFor(30, TimeUnit.SECONDS), "Startup did not finish");
-                String output = Files.readString(log, StandardCharsets.ISO_8859_1);
-                assertTrue(output.contains("No toolkit found"), output);
-                assertTrue(process.exitValue() != 0, output);
-                assertEquals(showDialog, output.contains("Displayed recovery dialog"), output);
-                assertEquals(folderName.contains("東京"), output.contains("Move the entire TrackCall folder"), output);
-            } finally {
-                process.destroyForcibly();
-            }
-        }
-    }
-
-    /** Exercises the real JavaFX failure path using a fixed Windows code page on all test platforms. */
-    public static class GraphicsFailureLauncher {
-        /** Runs in a separate JVM to isolate toolkit selection and platform settings from other tests. */
-        public static void main(String[] args) {
-            System.setProperty("os.name", "Windows 11");
-            System.setProperty("native.encoding", "windows-1252");
-            if (!GraphicsEnvironment.isHeadless()) {
-                Timer timer = new Timer(100, event -> {
-                    for (java.awt.Window window : java.awt.Window.getWindows()) {
-                        if (window instanceof JDialog dialog && dialog.isShowing()
-                                && "TrackCall startup".equals(dialog.getTitle())) {
-                            System.out.println("Displayed recovery dialog");
-                            dialog.dispose();
-                            Timer dialogWatcher = (Timer) event.getSource();
-                            dialogWatcher.stop();
-                        }
-                    }
-                });
-                timer.start();
-            }
-            Main.main(args);
-        }
-    }
-
-    /** Shares the Gradle coverage agent with each isolated entry-point process. */
-    private List<String> newCoveredJavaCommand() {
-        List<String> command = new ArrayList<>();
-        command.add(Path.of(System.getProperty("java.home"), "bin", "java").toString());
-        List<String> agents = ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
-                .filter(argument -> argument.startsWith("-javaagent:") && argument.contains("jacoco"))
-                .map(argument -> argument.split("=", 2)[0] + "=destfile=" + coverageFile() + ",append=true").toList();
-        command.addAll(agents);
-        return command;
-    }
-
-    private Path coverageFile() {
-        return Path.of(System.getProperty("test.lifecycleCoverageFile",
-                directory.resolve("lifecycle.exec").toString()));
+    public void startup_writableFolder_opensMainWindowFromProductionEntryPoint() throws Exception {
+        runChild("welcome");
+        assertTrue(Files.exists(directory.resolve("opened.txt")));
     }
 
     /** Runs one real JavaFX startup and requires a clean exit, retaining coverage from every child. */
     private void runChild(String scenario) throws Exception {
-        List<String> command = newCoveredJavaCommand();
+        List<String> command = new ArrayList<>();
+        command.add(Path.of(System.getProperty("java.home"), "bin", "java").toString());
+        Path coverage = Path.of(System.getProperty("test.lifecycleCoverageFile",
+                directory.resolve("lifecycle.exec").toString()));
+        List<String> agents = TestUtil.childCoverageArguments(coverage);
+        command.addAll(agents);
         command.addAll(List.of("-cp", System.getProperty("test.runtimeClasspath",
                 System.getProperty("java.class.path")), Launcher.class.getName(), scenario));
         Path log = directory.resolve(scenario + ".log");
@@ -148,15 +90,48 @@ public class MainAppLifecycleTest {
                 process.destroyForcibly();
             }
         }
-        if (command.stream().anyMatch(argument -> argument.startsWith("-javaagent:"))) {
-            assertTrue(Files.exists(coverageFile()), "The child JVM did not produce coverage data");
+        if (!agents.isEmpty()) {
+            assertTrue(Files.exists(coverage), "The child JVM did not produce coverage data");
         }
     }
 
     /** Supplies a main class separate from Application, matching the production launcher arrangement. */
     public static class Launcher {
         public static void main(String[] args) {
+            if (args[0].equals("welcome")) {
+                observeWindow();
+                Main.main(args);
+                return;
+            }
             Application.launch(args[0].equals("blocked") ? BlockedStartupApp.class : CancelRecoveryApp.class, args);
+        }
+
+        /** Closes a successful production launch after recording that its main window became visible. */
+        private static void observeWindow() {
+            Thread.startVirtualThread(() -> {
+                try {
+                    while (!Files.exists(Path.of("opened.txt"))) {
+                        try {
+                            Platform.runLater(() -> {
+                                if (Window.getWindows().stream().anyMatch(window -> window instanceof Stage stage
+                                        && stage.isShowing() && stage.getTitle().contains("TrackCall"))) {
+                                    try {
+                                        Files.writeString(Path.of("opened.txt"), "TrackCall opened");
+                                    } catch (IOException e) {
+                                        throw new IllegalStateException(e);
+                                    }
+                                    Platform.exit();
+                                }
+                            });
+                        } catch (IllegalStateException notStarted) {
+                            // The observer starts before JavaFX initializes its event queue.
+                        }
+                        Thread.sleep(100);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            });
         }
     }
 

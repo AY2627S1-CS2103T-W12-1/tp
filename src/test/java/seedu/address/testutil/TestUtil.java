@@ -1,9 +1,11 @@
 package seedu.address.testutil;
 
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.model.Model;
@@ -18,6 +20,13 @@ public class TestUtil {
      * Folder used for temp files created during testing. Ignored by Git.
      */
     private static final Path SANDBOX_FOLDER = Paths.get("src", "test", "data", "sandbox");
+
+    /** Returns child JVM arguments that append coverage to the given execution data file. */
+    public static List<String> childCoverageArguments(Path coverage) {
+        return ManagementFactory.getRuntimeMXBean().getInputArguments().stream()
+                .filter(argument -> argument.startsWith("-javaagent:") && argument.contains("jacoco"))
+                .map(argument -> argument.split("=", 2)[0] + "=destfile=" + coverage + ",append=true").toList();
+    }
 
     /**
      * Appends {@code fileName} to the sandbox folder path and returns the resulting path.
