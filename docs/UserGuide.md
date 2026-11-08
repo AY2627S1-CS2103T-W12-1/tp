@@ -1514,7 +1514,7 @@ Follow [Correcting errors](#correcting-errors) before exiting.
 | **Show everyone** | `list` | `list` restores the complete roster. |
 | **Show selected members** | `show INDEX [MORE_INDEXES]...` | `show 1 3` shows only members 1 and 3 from the current list. |
 | **Sort by name** | `sort` | Reorders and saves the entire roster from A to Z, ignoring letter case. |
-| **Update a member** | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | `edit 1 p/98765432` changes member 1's phone. |
+| **Update a member** | `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]...` | Supply at least one field. For example, `edit 1 p/98765432` changes member 1's phone. |
 | **Add one tag** | `tag INDEX t/TAG` | `tag 2 t/committee` adds one tag to displayed member 2. |
 | **Remove one tag** | `untag INDEX t/TAG` | `untag 2 t/year1` removes one tag from displayed member 2. |
 | **Find by name** | `find KEYWORD [MORE_KEYWORDS]...` | `find Alice Tan` shows names containing Alice or Tan. |
