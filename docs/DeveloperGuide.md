@@ -1401,11 +1401,6 @@ alter the roster, view or JSON file.
 
 **Extensions**
 
-* **1a.** After a valid roster was loaded or saved, an outside edit changes its member data.
-  The next save is refused. Restart to load the outside version and discard this session's unsaved changes,
-  or deliberately retry a roster-changing command to replace it. A successful retry copies the warned-about outside
-  version into `.bak` even when its member values match the session. See
-  [storage safeguards](#startup-and-validation) for the full outside-edit and backup rules.
 * **3a.** The file is missing. TrackCall loads sample members and logs that the file was missing.
   It creates the file only after a valid data-changing command saves successfully. The use case ends.
 * **3b.** The file is invalid or unreadable. TrackCall preserves its bytes in a uniquely named
@@ -1414,6 +1409,9 @@ alter the roster, view or JSON file.
   is loaded. The use case ends after the chosen recovery action.
 * **3c.** TrackCall cannot preserve the damaged file. It reports the failure and closes without
   opening an editable roster. The secretary fixes access or restores a backup, then retries step 2.
+
+If someone edits the file while TrackCall is already running, see
+[storage safeguards](#startup-and-validation) for how to keep the outside version or retry the save.
 
 ### Non-functional requirements
 
