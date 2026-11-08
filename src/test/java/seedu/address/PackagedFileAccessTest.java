@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -21,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.logging.FileHandler;
@@ -124,7 +126,7 @@ public class PackagedFileAccessTest {
         Files.writeString(cache.resolve("cached.txt"), "keep");
         System.setProperty("os.name", "Linux");
         try (URLClassLoader loader = packagedLoader(home, true)) {
-            initialize(loader, Main.class.getName());
+            prepareCache(loader);
             assertEquals(home.resolve(".javafx-cache").toString(), System.getProperty("javafx.cachedir"));
             assertEquals(System.getProperty("javafx.cachedir"), System.getProperty("java.io.tmpdir"));
             assertEquals("keep", Files.readString(cache.resolve("cached.txt")));
@@ -139,7 +141,7 @@ public class PackagedFileAccessTest {
             Path home = Files.createDirectory(temporaryFolder.resolve(arch)).toRealPath();
             String folder = arch.equals("x86_64") ? "mac-x64" : "mac-arm64";
             try (URLClassLoader loader = packagedLoader(home, true)) {
-                initialize(loader, Main.class.getName());
+                prepareCache(loader);
                 Path natives = home.resolve(".javafx-cache").resolve(folder);
                 assertEquals(natives.toString(), System.getProperty("java.library.path"));
                 for (String library : LIBRARIES) {
@@ -171,7 +173,7 @@ public class PackagedFileAccessTest {
         System.setProperty("os.name", "Mac OS X");
         System.setProperty("os.arch", "x86_64");
         try (URLClassLoader loader = packagedLoader(home, false)) {
-            initialize(loader, Main.class.getName());
+            prepareCache(loader);
             assertFalse(Files.exists(home.resolve(".javafx-cache/mac-x64")));
         }
     }
@@ -181,9 +183,35 @@ public class PackagedFileAccessTest {
         Path home = Files.createDirectory(temporaryFolder.resolve("home"));
         Files.writeString(home.resolve(".javafx-cache"), "keep");
         try (URLClassLoader loader = packagedLoader(home, true)) {
-            assertThrows(ExceptionInInitializerError.class, () -> initialize(loader, Main.class.getName()));
+            assertTrue(assertThrows(InvocationTargetException.class, () -> prepareCache(loader))
+                    .getCause() instanceof IOException);
             assertEquals(originalProperties.get("java.io.tmpdir"), System.getProperty("java.io.tmpdir"));
             assertEquals("keep", Files.readString(home.resolve(".javafx-cache")));
+        }
+    }
+
+    @Test
+    public void startup_cacheUnavailable_reportsWritableFolderAndExits() throws Exception {
+        Path home = Files.createDirectory(temporaryFolder.resolve("home")).toRealPath();
+        Path blocked = home.resolve(".javafx-cache");
+        Files.writeString(blocked, "keep");
+        try (URLClassLoader loader = packagedLoader(home, false)) {
+            String classpath = Path.of(loader.getURLs()[0].toURI()) + File.pathSeparator
+                    + System.getProperty("test.runtimeClasspath");
+            Path log = temporaryFolder.resolve("startup.log");
+            Process launcher = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
+                    "-Djava.awt.headless=true", "-cp", classpath, Main.class.getName())
+                    .directory(home.toFile()).redirectErrorStream(true).redirectOutput(log.toFile()).start();
+            try {
+                assertTrue(launcher.waitFor(15, TimeUnit.SECONDS));
+                assertEquals(1, launcher.exitValue());
+                String feedback = Files.readString(log);
+                assertTrue(feedback.contains(blocked.toString()), feedback);
+                assertTrue(feedback.contains("writable location and restart"), feedback);
+                assertEquals("keep", Files.readString(blocked));
+            } finally {
+                launcher.destroyForcibly();
+            }
         }
     }
 
@@ -192,7 +220,8 @@ public class PackagedFileAccessTest {
         Path home = Files.createDirectory(temporaryFolder.resolve("home"));
         createLink(home.resolve(".javafx-cache"), temporaryFolder);
         try (URLClassLoader loader = packagedLoader(home, true)) {
-            assertThrows(ExceptionInInitializerError.class, () -> initialize(loader, Main.class.getName()));
+            assertTrue(assertThrows(InvocationTargetException.class, () -> prepareCache(loader))
+                    .getCause() instanceof IOException);
             assertFalse(Files.exists(temporaryFolder.resolve("mac-arm64")));
         }
     }
@@ -208,6 +237,13 @@ public class PackagedFileAccessTest {
             assertFalse(Arrays.stream(logger.getHandlers()).anyMatch(handler -> handler instanceof FileHandler));
             assertEquals("keep", Files.readString(outside));
         }
+    }
+
+    /** Runs cache preparation from the isolated JAR without launching the JavaFX toolkit. */
+    private void prepareCache(ClassLoader loader) throws ReflectiveOperationException {
+        var prepare = loader.loadClass(Main.class.getName()).getDeclaredMethod("prepareCache");
+        prepare.setAccessible(true);
+        prepare.invoke(null);
     }
 
     /** Initializes isolated startup code and tracks log handlers so Windows can remove temporary files afterwards. */

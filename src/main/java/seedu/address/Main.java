@@ -1,5 +1,7 @@
 package seedu.address;
 
+import java.awt.EventQueue;
+import java.awt.GraphicsEnvironment;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -8,6 +10,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
+import javax.swing.JOptionPane;
 
 import javafx.application.Application;
 import seedu.address.commons.core.LogsCenter;
@@ -30,27 +33,22 @@ import seedu.address.commons.util.FileUtil;
  * to be the entry point of the application, we avoid this issue.
  */
 public class Main {
-    static {
-        try {
-            Path cache = FileUtil.resolvePath(FileUtil.getHomeFolder().resolve(".javafx-cache"));
-            if (Files.exists(cache)) {
-                try (Stream<Path> paths = Files.walk(cache)) {
-                    for (Path path : paths.toList()) {
-                        FileUtil.resolvePath(path);
-                    }
+    /** Prepares JavaFX files inside the application folder before starting its toolkit. */
+    private static void prepareCache() throws IOException {
+        Path cache = FileUtil.resolvePath(FileUtil.getHomeFolder().resolve(".javafx-cache"));
+        if (Files.exists(cache)) {
+            try (Stream<Path> paths = Files.walk(cache)) {
+                for (Path path : paths.toList()) {
+                    FileUtil.resolvePath(path);
                 }
             }
-            Files.createDirectories(cache);
-            System.setProperty("javafx.cachedir", cache.toString());
-            // JavaFX also uses this folder if its primary cache is unavailable.
-            System.setProperty("java.io.tmpdir", cache.toString());
-            prepareMacLibraries(cache);
-        } catch (IOException e) {
-            throw new IllegalStateException("Could not use the JavaFX cache inside the application folder.", e);
         }
+        Files.createDirectories(cache);
+        System.setProperty("javafx.cachedir", cache.toString());
+        // JavaFX also uses this folder if its primary cache is unavailable.
+        System.setProperty("java.io.tmpdir", cache.toString());
+        prepareMacLibraries(cache);
     }
-
-    private static Logger logger = LogsCenter.getLogger(Main.class);
 
     /**
      * Extracts the matching Mac libraries inside the JAR folder before JavaFX starts.
@@ -83,7 +81,31 @@ public class Main {
      * @param args Command-line arguments forwarded to the application.
      */
     public static void main(String[] args) {
+        try {
+            prepareCache();
+        } catch (IOException exception) {
+            String message = "TrackCall could not prepare its startup files in:\n"
+                    + FileUtil.getHomeFolder().resolve(".javafx-cache")
+                    + "\n\nMake sure the application folder allows writing, or move the TrackCall folder "
+                    + "to a writable location and restart.\n\nDetails: " + exception.getMessage();
+            System.err.println(message);
+            if (GraphicsEnvironment.isHeadless()) {
+                System.exit(1);
+            } else {
+                // The JavaFX toolkit is unavailable until these files are ready.
+                EventQueue.invokeLater(() -> {
+                    try {
+                        JOptionPane.showMessageDialog(null, message, "TrackCall could not start",
+                                JOptionPane.ERROR_MESSAGE);
+                    } finally {
+                        System.exit(1);
+                    }
+                });
+            }
+            return;
+        }
 
+        Logger logger = LogsCenter.getLogger(Main.class);
         logger.warning("The warnings about a 'restricted method in java.lang.System' "
             + "and 'enabling native access' appearing below (if any) can be ignored.");
         Application.launch(MainApp.class, args);
