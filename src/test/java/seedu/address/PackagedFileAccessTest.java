@@ -6,6 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.awt.AWTEvent;
+import java.awt.GraphicsEnvironment;
+import java.awt.Toolkit;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +20,7 @@ import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,6 +34,7 @@ import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JDialog;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +43,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.FileUtil;
+import seedu.address.testutil.TestUtil;
 
 /** Tests the released application's file boundary and native preparation without launching a GUI. */
 public class PackagedFileAccessTest {
@@ -191,7 +198,18 @@ public class PackagedFileAccessTest {
     }
 
     @Test
-    public void startup_cacheUnavailable_reportsWritableFolderAndExits() throws Exception {
+    public void startup_cacheUnavailable_reportsWritableFolderInTerminal() throws Exception {
+        checkBlockedCache(true);
+    }
+
+    @Test
+    public void startup_cacheUnavailable_showsRecoveryDialogBeforeExiting() throws Exception {
+        assumeTrue(!GraphicsEnvironment.isHeadless(), "The desktop dialog needs a display");
+        checkBlockedCache(false);
+    }
+
+    /** Launches in isolation and verifies that the reported cause locates the blocked cache. */
+    private void checkBlockedCache(boolean headless) throws Exception {
         Path home = Files.createDirectory(temporaryFolder.resolve("home")).toRealPath();
         Path blocked = home.resolve(".javafx-cache");
         Files.writeString(blocked, "keep");
@@ -199,8 +217,13 @@ public class PackagedFileAccessTest {
             String classpath = Path.of(loader.getURLs()[0].toURI()) + File.pathSeparator
                     + System.getProperty("test.runtimeClasspath");
             Path log = temporaryFolder.resolve("startup.log");
-            Process launcher = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
-                    "-Djava.awt.headless=true", "-cp", classpath, Main.class.getName())
+            List<String> command = new ArrayList<>();
+            command.add(Path.of(System.getProperty("java.home"), "bin", "java").toString());
+            command.addAll(TestUtil.childCoverageArguments(Path.of(System.getProperty("test.lifecycleCoverageFile",
+                    home.resolve("lifecycle.exec").toString()))));
+            command.addAll(List.of("-Djava.awt.headless=" + headless, "-cp", classpath,
+                    headless ? Main.class.getName() : DialogObserver.class.getName()));
+            Process launcher = new ProcessBuilder(command)
                     .directory(home.toFile()).redirectErrorStream(true).redirectOutput(log.toFile()).start();
             try {
                 assertTrue(launcher.waitFor(15, TimeUnit.SECONDS));
@@ -208,10 +231,27 @@ public class PackagedFileAccessTest {
                 String feedback = Files.readString(log);
                 assertTrue(feedback.contains(blocked.toString()), feedback);
                 assertTrue(feedback.contains("writable location and restart"), feedback);
+                if (!headless) {
+                    assertTrue(feedback.contains("Opened dialog: TrackCall could not start"), feedback);
+                }
                 assertEquals("keep", Files.readString(blocked));
             } finally {
                 launcher.destroyForcibly();
             }
+        }
+    }
+
+    /** Observes and dismisses the desktop error dialog inside a disposable launcher process. */
+    public static class DialogObserver {
+        /** Starts the actual launcher with a listener for its visible error window. */
+        public static void main(String[] args) {
+            Toolkit.getDefaultToolkit().addAWTEventListener(event -> {
+                if (event.getID() == WindowEvent.WINDOW_OPENED && event.getSource() instanceof JDialog dialog) {
+                    System.out.println("Opened dialog: " + dialog.getTitle());
+                    dialog.dispose();
+                }
+            }, AWTEvent.WINDOW_EVENT_MASK);
+            Main.main(args);
         }
     }
 
