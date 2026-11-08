@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -60,6 +61,37 @@ public class MainAppLifecycleTest {
         }
         try (AppInstanceLock restartedSession = AppInstanceLock.acquire(lockFile)) {
             assertNotNull(restartedSession, "The lock must be available after the first session closes");
+        }
+    }
+
+    @Test
+    public void startup_windowsGraphicsFailure_explainsUnrepresentableFolderOnly() throws Exception {
+        for (String folderName : List.of("TrackCall-東京", "TrackCall-café")) {
+            Path folder = Files.createDirectory(directory.resolve(folderName));
+            Path log = folder.resolve("launch.log");
+            Process process = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
+                    "-Djava.awt.headless=true", "-Djavafx.toolkit=MissingTestToolkit", "-cp",
+                    System.getProperty("test.runtimeClasspath"), GraphicsFailureLauncher.class.getName())
+                    .directory(folder.toFile()).redirectErrorStream(true).redirectOutput(log.toFile()).start();
+            try {
+                assertTrue(process.waitFor(30, TimeUnit.SECONDS), "Startup did not finish");
+                String output = Files.readString(log, StandardCharsets.ISO_8859_1);
+                assertTrue(output.contains("No toolkit found"), output);
+                assertTrue(process.exitValue() != 0, output);
+                assertEquals(folderName.contains("東京"), output.contains("Move the entire TrackCall folder"), output);
+            } finally {
+                process.destroyForcibly();
+            }
+        }
+    }
+
+    /** Exercises the real JavaFX failure path using a fixed Windows code page on all test platforms. */
+    public static class GraphicsFailureLauncher {
+        /** Runs in a separate JVM to isolate toolkit selection and platform settings from other tests. */
+        public static void main(String[] args) {
+            System.setProperty("os.name", "Windows 11");
+            System.setProperty("native.encoding", "windows-1252");
+            Main.main(args);
         }
     }
 

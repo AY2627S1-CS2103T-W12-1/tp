@@ -45,6 +45,11 @@ Start with [Quick start](#quick-start), browse the [feature groups](#commands), 
    java -jar trackcall.jar
    ```
 
+If the graphics system fails to start on Windows, check the whole folder path, including your Windows
+profile name. Some characters cannot be used by the graphics loader under the current Windows language
+settings. Move the entire TrackCall folder, including its data, to a writable location with a simple
+path such as `D:\TrackCall`, then launch the JAR there.
+
 <p class="ug-topic"><strong>First launch</strong></p>
 
 TrackCall opens with six sample club members and a welcome message on your first launch.
