@@ -19,6 +19,17 @@ public class AppInstanceLockTest {
     public Path folder;
 
     @Test
+    public void acquire_cannotOpenLockFile_explainsHowToRestoreAccess() throws Exception {
+        Path blocked = Files.createDirectory(folder.resolve(AppInstanceLock.FILE_NAME));
+        IOException failure = assertThrows(IOException.class, () -> AppInstanceLock.acquire(blocked));
+        assertTrue(failure.getMessage().contains(blocked.toString()));
+        assertTrue(failure.getMessage().contains("allows writing"));
+        assertTrue(failure.getMessage().contains("restart TrackCall"));
+        assertTrue(failure.getCause() instanceof IOException);
+        assertTrue(Files.isDirectory(blocked));
+    }
+
+    @Test
     public void acquire_secondSession_rejectedUntilFirstCloses() throws Exception {
         Path file = folder.resolve(".trackcall.lock");
         try (AppInstanceLock first = AppInstanceLock.acquire(file)) {

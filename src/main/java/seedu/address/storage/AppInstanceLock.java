@@ -33,7 +33,14 @@ public final class AppInstanceLock implements AutoCloseable {
      */
     public static AppInstanceLock acquire(Path file) throws IOException {
         Path resolved = FileUtil.resolvePath(file);
-        FileChannel channel = FileChannel.open(resolved, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        FileChannel channel;
+        try {
+            channel = FileChannel.open(resolved, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        } catch (IOException exception) {
+            throw new IOException("TrackCall could not open its session lock for writing:\n" + resolved
+                    + "\nCheck that the application folder allows writing and that " + FILE_NAME
+                    + " is a writable file if it already exists. Then restart TrackCall.", exception);
+        }
         try {
             FileLock lock;
             try {
